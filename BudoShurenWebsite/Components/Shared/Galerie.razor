@@ -1,0 +1,143 @@
+﻿@rendermode InteractiveServer
+
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Buttons
+
+<div class="default-container">
+    <div class="component-container">
+
+        <div class="control-container">
+            <SfCarousel ShowIndicators="true" AutoPlay="false">
+                <ChildContent>
+                    <CarouselItem>
+                        <div class="carousel-item-container">
+                            <div class="img-container">
+                                <img src="/images/dojo1.jpg" />
+                            </div>
+                            <div class="text-container">
+                                <div class="headline">
+                                    <h4>Galerie</h4>
+                                    <p>Unser Dojo 1</p>
+                                </div>
+
+                                <div class="beschreibung-container">
+                                    <p>Bildbeschreibungen, die den Betrachter erklären was er da genau sieht, beispielsweise iene Aufführung, oder anderweitige Events.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                    <CarouselItem>
+                        <div class="carousel-item-container">
+                            <div class="img-container">
+                                <img src="/images/pagode.jpg" />
+                            </div>
+                            <div class="text-container">
+                                <div class="headline">
+                                    <h4>Galerie</h4>
+                                    <p>Unser Dojo 1</p>
+                                </div>
+
+                                <div class="beschreibung-container">
+                                    <p>Bildbeschreibungen, die den Betrachter erklären was er da genau sieht, beispielsweise iene Aufführung, oder anderweitige Events.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                    <CarouselItem>
+                        <div class="carousel-item-container">
+                            <div class="img-container">
+                                <img src="/images/dojo3.jpg" />
+                            </div>
+                            <div class="text-container">
+                                <div class="headline">
+                                    <h4>Galerie</h4>
+                                    <p>Unser Dojo 1</p>
+                                </div>
+
+                                <div class="beschreibung-container">
+                                    <p>Bildbeschreibungen, die den Betrachter erklären was er da genau sieht, beispielsweise iene Aufführung, oder anderweitige Events.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                </ChildContent>
+                <IndicatorsTemplate>
+                    @{
+                        <div class="indicator">
+                            <div class="fs-6"></div>
+                        </div>
+                    }
+                </IndicatorsTemplate>
+                <PreviousButtonTemplate>
+                    <SfButton CssClass="e-flat e-outline nav-btn" title="Previous">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                            <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                        </svg>
+                    </SfButton>
+                </PreviousButtonTemplate>
+                <NextButtonTemplate>
+                    <SfButton CssClass="e-flat e-outline nav-btn" title="Next">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                            <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                        </svg>
+                    </SfButton>
+                </NextButtonTemplate>
+            </SfCarousel>
+        </div>
+    </div>
+</div>
+
+<style>
+    .e-carousel .e-carousel-navigators .e-btn:active,
+    .e-carousel .e-carousel-navigators .e-btn:hover {
+        background-color: transparent !important;
+    }
+
+    .e-carousel .e-carousel-navigators .e-btn svg {
+        fill: none;
+        stroke: #2A6749;
+        stroke-linecap: square;
+        stroke-width: 2px;
+        height: 2rem;
+        vertical-align: middle;
+        width: 2rem;
+    }
+
+    .e-carousel .e-carousel-navigators .e-previous .e-btn svg {
+        transform: rotate(180deg);
+    }
+
+    .e-carousel .slide-content {
+        align-items: center;
+        display: flex;
+        font-size: 1.25rem;
+        height: 100%;
+        justify-content: center;
+    }
+
+    .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar .indicator {
+        background-color: #ECECEC;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        display: flex;
+        height: 6px;
+        justify-content: center;
+        margin: 0.5rem;
+        width: 24px;
+    }
+
+        .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar .indicator .fs-6 {
+            margin: auto;
+        }
+
+    .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar.e-active .indicator {
+        background-color: #2A6749;
+        color: #fff;
+    }
+
+</style>
+
+
+@code {
+
+}

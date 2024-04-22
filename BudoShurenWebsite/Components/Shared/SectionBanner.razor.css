@@ -1,0 +1,16 @@
+﻿
+
+/*h3 {
+    font-size:12px
+}*/
+
+/* Solid border */
+hr.solid {
+    border-top: 1px solid #000000;
+    margin-top: 5px;
+}
+
+
+#section-container {
+    margin: 50px 20.97% 25px 20.97%
+}

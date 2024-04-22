@@ -1,0 +1,41 @@
+﻿
+@* <div class="default-container">
+    <div id="header-container">
+        <h1>@Titel</h1>
+        <h2>@Untertitel</h2>
+        <p id="anekdote">@Anekdote</p>
+    </div>
+</div>
+ *@
+
+
+ <div class="default-container">
+     <div class="grid-container">
+        <div></div>
+        <div class="grid-item-headline">
+            <h1>@Titel</h1>
+        </div>
+        <div></div>
+        <div></div>
+        <div class="grid-item">
+            <h2>@Untertitel</h2>
+        </div>
+        <div></div>
+        <div></div>
+        <div class="grid-item">
+            <p id="anekdote-text">@Anekdote</p>
+        </div>
+        <div></div>
+    </div>
+ </div>
+
+@code {
+    [Parameter]
+    public string? Titel { get; set; }
+
+    [Parameter]
+    public string? Untertitel { get; set; }
+
+    [Parameter]
+    public string? Anekdote { get; set; }
+}

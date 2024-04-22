@@ -1,0 +1,27 @@
+﻿@page "/"
+@using BudoShurenWebsite.Components.Shared
+@using BudoShurenWebsite.Components.Pages
+
+<PageTitle>Budo Shuren Dojo</PageTitle>
+
+<div class="default-container">
+    <div>
+        <Überschrift Titel="武道修練道場"
+                     Untertitel="Budoshuren Dojo"
+                     Anekdote="Augsburg" />
+
+    </div>
+    <div><SectionBanner Titel="Neuigkeiten" /></div>
+    <div><Neuigkeiten /></div>
+    <div><SectionBanner Titel="Wer sind wir" /></div>
+    <div><DojoText /></div>
+    <div><SectionBanner Titel="Unsere Kampfkünste" /></div>
+    <div><Kampfkünste /></div>
+    <div><SectionBanner Titel="Aktuelle Termine" /></div>
+    <div><SectionBanner Titel="Galerie" /></div>
+    <div><Galerie /></div>
+</div>
+
+@code {
+
+}

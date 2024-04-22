@@ -1,0 +1,161 @@
+﻿
+
+/*Blöcke mit Kanji*/
+.section {
+    margin: 100px 29.72% 0 29.72%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-rows: auto auto;
+    margin-bottom: 150px;
+}
+
+    .grid-container span {
+        text-align: center;
+    }
+
+    .grid-container p {
+        text-align: center;
+    }
+
+.block-container {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.inner-block {
+    border-color: black;
+    border: 3px;
+    border-style: solid;
+    width: 82px;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-family: "Yuji Syuku", serif;
+    font-size: 44px;
+    line-height: 75px;
+    text-align: center;
+    letter-spacing: .4em;
+    padding-top: 12px;
+    margin-bottom: 15px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+.kampfkunst {
+    font-family: "Yuji Syuku", serif;
+    font-size: 18px;
+    text-align: center;
+    letter-spacing: 0.4em;
+}
+
+/*Allgemeines Content-zeugs*/
+
+.component-container {
+}
+
+.control-container {
+    margin: 0 13.33%;
+    height:800px;
+}
+
+
+
+/*Karusell-Zeugs*/
+
+.carousel-item-container {
+    position: relative;
+    margin: 0 10.42%;
+}
+
+    .carousel-item-container::after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+
+.img-container {
+    float: left;
+    height: 100%;
+    width: 54.66%;
+}
+
+    .img-container img {
+        object-fit: contain;
+        width: 100%;
+        height: 100%;
+    }
+
+
+.text-container {
+    float: right;
+    height: 100%;
+    width: 35.76%;
+}
+
+    .text-container h4 {
+        font-family: "Yuji Syuku", serif;
+        font-size: 31px;
+        text-align: start;
+        letter-spacing: 0.1em;
+        line-height: 44.89px;
+        color: #2A6749;
+        margin-bottom: 50px;
+    }
+
+/*    .text-container p {
+        padding-bottom: 10px;
+    }*/
+
+.trainingszeiten {
+    position: absolute;
+    right: 0;
+    width: 35.76%;
+}
+
+    .trainingszeiten a {
+        float: right;
+    }
+
+    .trainingszeiten::after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+.trainingszeiten .zeit:first-of-type{
+    margin-top: 5px;
+}
+
+.zeit{
+    margin:0;
+}
+
+.zeit p{
+    padding-bottom: 0;
+    margin-bottom:5px;
+}
+    .zeit::after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+    .zeit p:first-of-type {
+        float: left;
+    }
+
+    .zeit p:last-of-type {
+        float: right;
+    }

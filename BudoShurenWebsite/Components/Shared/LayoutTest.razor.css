@@ -1,0 +1,167 @@
+﻿
+
+div {
+    min-height:50px;
+}
+.fixed {
+    margin: 5px 0
+}
+
+.fixed:after{
+    content:"";
+    display:block;
+    clear: both;
+}
+
+#grid-visualizer{
+    min-height:200px;
+    background-color:coral;
+}
+
+#page-padding {
+    float: left;
+    width: 192px;
+    background-color: red;
+}
+#page-padding-right {
+    float: right;
+    width: 192px;
+    background-color: red;
+}
+
+#content-padding {
+    float: left;
+    width: 110px;
+    background-color: yellow;
+}
+#content-padding-right {
+    float: right;
+    width: 110px;
+    background-color: yellow;
+}
+
+#inner-content-padding {
+    float: left;
+    width: 210px;
+    background-color: red;
+}
+#inner-content-padding-right {
+    float: right;
+    width: 136px;
+    background-color: red;
+}
+
+#content-separator-padding {
+    float: left;
+    width: 154px;
+    background-color: yellow;
+}
+
+#content-separator-padding-right {
+    float: right;
+    width: 169px;
+    background-color: yellow;
+}
+
+
+
+
+#page-padding-percent {
+    float: left;
+    width: 13.33%;
+    background-color: red;
+}
+
+#page-padding-right-percent {
+    float: right;
+    width: 13.33%;
+    background-color: red;
+}
+
+#content-padding-percent {
+    float: left;
+    width: 7.63%;
+    background-color: yellow;
+}
+
+#content-padding-right-percent {
+    float: right;
+    width: 7.63%;
+    background-color: yellow;
+}
+
+#inner-content-padding-percent {
+    float: left;
+    width:14.58%;
+    background-color: red;
+}
+
+#inner-content-padding-right-percent {
+    float: right;
+    width: 9.44%;
+    background-color: red;
+}
+
+#content-separator-padding-percent {
+    float: left;
+    width: 10.69%;
+    background-color: yellow;
+}
+
+#content-separator-padding-right-percent {
+    float: right;
+    width: 11.73%;
+    background-color: yellow;
+}
+
+
+
+
+.default-grid {
+    display: grid;
+    grid-template-columns: 13.40% /*193*/
+    07.56% /* 302 -> 109 diff*/
+    09.44% /* 438 -> 136 diff*/
+    05.55% /* 518 ->  80 diff*/
+    05.13% /* 592 ->  74 diff*/
+    11.66% /* 760 -> 168 diff*/
+    05.55% /* 840 ->  80 diff*/
+    06.11% /* 928 ->  88 diff*/
+    05.55% /*1008 ->  80 diff*/
+    09.02% /*1138 -> 130 diff*/
+    07.63% /*1248 -> 110 diff*/
+    13.40% /*193*/;
+    grid-gap: 0;
+}
+
+
+
+.grid-item {
+    background-color: #ddd;
+    text-align: center;
+    grid-auto-flow: dense;
+    height: 50px;
+}
+
+    .grid-item:nth-child(even) {
+        background-color: lightblue; /* Set your desired background color here */
+    }
+
+.start-column-1 {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    background-color: red;
+}
+.start-column-2 {
+    grid-column-start: 2;
+    background-color: blue;
+}
+.start-column-3 {
+    grid-column-start: 3;
+    background-color: green;
+}
+.start-column-4 {
+    grid-column-start: 4;
+    background-color: yellow;
+}
+

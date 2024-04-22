@@ -1,0 +1,33 @@
+﻿s
+.headline {
+    grid-area: header;
+    background-color:red;
+}
+.untertitel {
+    grid-area: untertitel;
+}
+.anekdote {
+    grid-area: anekdote;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    margin-bottom: 100px;
+    margin-top:20px;
+}
+.grid-item {
+    text-align: right;
+}
+
+.grid-item-headline {
+    text-align: right;
+}
+
+
+    #anekdote-text {
+        font-size: 24px;
+        text-align: right;
+        letter-spacing: .14em;
+        margin-right: -.14em;
+    }

@@ -1,0 +1,49 @@
+﻿#main-nav {
+    background-color: #FFFFFF;
+}
+
+    #main-nav:after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+
+    #main-nav a {
+        color: #000000;
+        text-decoration: none;
+        text-underline-offset:8px;
+    }
+
+    #main-nav ul {
+        margin:10px 193px;
+        display: flex;
+        align-items:stretch;
+        list-style: none;
+    }
+
+        #main-nav ul li {
+            display: block;
+            flex: 0 1 auto;
+            margin: 0 auto;
+        }
+
+            #main-nav ul li a {
+                display: block;
+                padding: 10px;
+                font-size: 14px;
+                text-align: center;
+            }
+
+                #main-nav ul li a:hover {
+                    text-decoration: underline;
+                }
+
+                #main-nav ul li a.active-page {
+                    text-decoration: underline;
+                }
+
+    #main-nav h1 {
+        float: left;
+        color: coral;
+        padding-top: 20px;
+    }

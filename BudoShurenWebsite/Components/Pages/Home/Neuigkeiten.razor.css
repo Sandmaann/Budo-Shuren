@@ -1,0 +1,74 @@
+﻿.control-container {
+    height: 450px;
+    margin: 0 13.33%;
+}
+
+.carousel-item-container {
+    position:relative;
+    margin: 0 10.42%;
+}
+
+    .carousel-item-container:after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+
+.carousel-headline {
+    position: relative;
+    margin: 0 0 20px 0
+}
+
+.headline {
+    font-family: "Yuji Syuku", serif;
+    font-size: 32px;
+    letter-spacing: .10em;
+    margin-right: -.10em;
+}
+
+.headline-annotation {
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    right: 0;
+    text-align: right;
+    vertical-align: central;
+    font-family: "PT Sans", sans-serif;
+    font-size: 14px;
+}
+
+.text-container {
+    width: 25.83%;
+    height: auto;
+    float: left;
+}
+
+.img-container {
+    width:65.31%;
+    max-height: 374px;
+    float:right;
+}
+
+.carousel-item-container img {
+    object-fit: contain;
+    max-width: 65.31%;
+    height: 374px;
+    float:right;
+}
+
+
+    .carousel-headline:after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+
+p .bold {
+    font-weight: 700;
+}
+
+
+
+/*Gesamtbreite:   836*/
+/*Gesamtbreite: 1.056*/

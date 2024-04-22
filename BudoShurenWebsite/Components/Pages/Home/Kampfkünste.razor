@@ -1,0 +1,187 @@
+﻿@rendermode InteractiveServer
+
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Buttons
+
+<div class="default-container">
+    <div class="component-container">
+
+        <section class="section">
+            <div class="container">
+                <div class="grid-container">
+                    <span class="inner-block">居合道</span>
+                    <p class="kampfkunst">Aikido</p>
+                </div>
+                <div class="grid-container">
+                    <span class="inner-block">合気道</span>
+                    <p class="kampfkunst">Genbukan</p>
+                </div>
+                <div class="grid-container">
+                    <span class="inner-block">武神館</span>
+                    <p class="kampfkunst">Bujinkan</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="control-container">
+            <SfCarousel ShowIndicators="true" AutoPlay="false">
+                <ChildContent>
+                    <CarouselItem>
+                        <div class="carousel-item-container">
+                            <div class="img-container">
+                                <img src="/images/aikido.jpg" />
+                            </div>
+                            <div class="text-container">
+                                <h4>Aikido</h4>
+                                <p>
+                                    Aikido, eine japanische Kampfkunst, die in den frühen 1920er Jahren von Morihei Ueshiba entwickelt wurde, betont die Idee der friedlichen Konfliktlösung und Selbstverteidigung ohne den Einsatz von Waffen. Charakterisiert durch fließende Bewegungen und die Nutzung der Kraft des Gegners, zielt Aikido darauf ab, Angriffe umzuleiten und den Angreifer durch Techniken wie Würfe, Hebel und Haltegriffe zu kontrollieren, ohne ihm ernsthaften Schaden zuzufügen. In der Praxis fördert Aikido nicht nur körperliche Fitness, sondern auch geistige Disziplin und emotionales Gleichgewicht, indem es den Praktizierenden lehrt, mit Aggression und Konflikten auf eine harmonische Weise umzugehen.
+                                </p>
+                                <div class="trainingszeiten">
+                                    <p>Trainingszeiten:</p>
+                                    <div class="zeit">
+                                        <p>Dienstag</p>
+                                        <p>18:00 - 21:00 Uhr</p>
+                                    </div>
+                                    <div class="zeit">
+                                        <p>Donnerstag</p>
+                                        <p>18:00 - 21:00 Uhr</p>
+                                    </div>
+                                    <a href="/Aikido" class="default-text-link">→ Weitere Infos</a>
+                                </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                    <CarouselItem>
+                        <div class="carousel-item-container">
+                            <div class="img-container">
+                                <img src="/images/iaido.jpg" />
+                            </div>
+                            <div class="text-container">
+                                <h4>Genbukan</h4>
+                                <p>
+                                    Genbukan ist eine japanische Kampfkunstschule, die von Shoto Tanemura gegründet wurde und sich auf die Erhaltung und Weitergabe traditioneller Samurai-Kampfkünste konzentriert. Eine der Disziplinen, die im Genbukan gelehrt wird, ist Iaido, eine Kunst, die sich auf das Ziehen des Schwertes und die unmittelbare Reaktion auf einen Angriff konzentriert. Im Gegensatz zu vielen anderen Kampfkünsten legt Iaido weniger Wert auf den Kampf gegen einen physischen Gegner und konzentriert sich stattdessen auf die Perfektion von Bewegungen und die Entwicklung von innerer Ruhe und Klarheit des Geistes. Durch langsame und präzise Bewegungen lernen die Schüler, sich auf den Moment zu konzentrieren und ihren Geist zu beruhigen. Iaido wird oft als eine meditative Praxis angesehen, die sowohl körperliche Geschicklichkeit als auch geistige Disziplin fördert, während sie gleichzeitig die traditionelle Samurai-Ethik und -Philosophie ehrt.
+                                </p>
+                                <div class="trainingszeiten">
+                                    <p>Trainingszeiten:</p>
+                                    <div class="zeit">
+                                        <p>Dienstag</p>
+                                        <p>18:00 - 21:00 Uhr</p>
+                                    </div>
+                                    <div class="zeit">
+                                        <p>Donnerstag</p>
+                                        <p>18:00 - 21:00 Uhr</p>
+                                    </div>
+                                    <a href="/Genbukan" class="default-text-link">→ Weitere Infos</a>
+                                </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                    <CarouselItem>
+                        <div class="carousel-item-container">
+                            <div class="img-container">
+                                <img src="/images/budo.jpg" />
+                            </div>
+                            <div class="text-container">
+                                <h4>Bujinkan</h4>
+                                <p>
+                                    Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe.
+                                </p>
+                                <p>
+                                    Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe.
+                                </p>
+                                <div class="trainingszeiten">
+                                    <p>Trainingszeiten:</p>
+                                    <div class="zeit">
+                                        <p>Dienstag</p>
+                                        <p>18:00 - 21:00 Uhr</p>
+                                    </div>
+                                    <div class="zeit">
+                                        <p>Donnerstag</p>
+                                        <p>18:00 - 21:00 Uhr</p>
+                                    </div>
+                                    <a href="/Bujinkan" class="default-text-link">→ Weitere Infos</a>
+                                </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                </ChildContent>
+                <IndicatorsTemplate>
+                    @{
+                        <div class="indicator">
+                            <div class="fs-6"></div>
+                        </div>
+                    }
+                </IndicatorsTemplate>
+                <PreviousButtonTemplate>
+                    <SfButton CssClass="e-flat e-outline nav-btn" title="Previous">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                            <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                        </svg>
+                    </SfButton>
+                </PreviousButtonTemplate>
+                <NextButtonTemplate>
+                    <SfButton CssClass="e-flat e-outline nav-btn" title="Next">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                            <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                        </svg>
+                    </SfButton>
+                </NextButtonTemplate>
+            </SfCarousel>
+        </div>
+    </div>
+</div>
+
+<style>
+    .e-carousel .e-carousel-navigators .e-btn:active,
+    .e-carousel .e-carousel-navigators .e-btn:hover {
+        background-color: transparent !important;
+    }
+
+    .e-carousel .e-carousel-navigators .e-btn svg {
+        fill: none;
+        stroke: #2A6749;
+        stroke-linecap: square;
+        stroke-width: 2px;
+        height: 2rem;
+        vertical-align: middle;
+        width: 2rem;
+    }
+
+    .e-carousel .e-carousel-navigators .e-previous .e-btn svg {
+        transform: rotate(180deg);
+    }
+
+    .e-carousel .slide-content {
+        align-items: center;
+        display: flex;
+        font-size: 1.25rem;
+        height: 100%;
+        justify-content: center;
+    }
+
+    .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar .indicator {
+        background-color: #ECECEC;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        display: flex;
+        height: 6px;
+        justify-content: center;
+        margin: 0.5rem;
+        width: 24px;
+    }
+
+        .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar .indicator .fs-6 {
+            margin: auto;
+        }
+
+    .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar.e-active .indicator {
+        background-color: #2A6749;
+        color: #fff;
+    }
+
+</style>
+
+
+@code {
+
+}
