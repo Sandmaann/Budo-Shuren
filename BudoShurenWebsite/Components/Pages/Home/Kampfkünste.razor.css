@@ -2,7 +2,7 @@
 
 /*Blöcke mit Kanji*/
 .section {
-    margin: 100px 29.72% 0 29.72%;
+    margin: 0px 29.72% 0 29.72%;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -37,7 +37,7 @@
 }
 
 .inner-block {
-    border-color: black;
+    color:black;
     border: 3px;
     border-style: solid;
     width: 82px;

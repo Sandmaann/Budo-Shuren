@@ -1,5 +1,6 @@
 ﻿#main-nav {
     background-color: #FFFFFF;
+    /*positon: TODO*/
 }
 
     #main-nav:after {
@@ -37,7 +38,6 @@
                 #main-nav ul li a:hover {
                     text-decoration: underline;
                 }
-
                 #main-nav ul li a.active-page {
                     text-decoration: underline;
                 }

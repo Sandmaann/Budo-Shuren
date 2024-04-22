@@ -1,33 +1,21 @@
 ﻿
-@* <div class="default-container">
-    <div id="header-container">
-        <h1>@Titel</h1>
-        <h2>@Untertitel</h2>
-        <p id="anekdote">@Anekdote</p>
+
+<div class="default-container überschrift-container">
+    <div id="headline-grid">
+        <div id="inner-grid">
+            <div id="headline">
+                <h2>@Titel</h2>
+            </div>
+            <div id="untertitel">
+                <h1>@Untertitel</h1>
+            </div>
+            <div id="anekdote">
+                <p>@Anekdote</p>
+            </div>
+        </div>
     </div>
+    <span id="vertical-content">武道修練道場</span>
 </div>
- *@
-
-
- <div class="default-container">
-     <div class="grid-container">
-        <div></div>
-        <div class="grid-item-headline">
-            <h1>@Titel</h1>
-        </div>
-        <div></div>
-        <div></div>
-        <div class="grid-item">
-            <h2>@Untertitel</h2>
-        </div>
-        <div></div>
-        <div></div>
-        <div class="grid-item">
-            <p id="anekdote-text">@Anekdote</p>
-        </div>
-        <div></div>
-    </div>
- </div>
 
 @code {
     [Parameter]

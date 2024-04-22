@@ -7,6 +7,7 @@
 #text-container {
     grid-column-start: 3;
     grid-column-end: 7;
+    margin-bottom:100px;
 }
 
     #text-container p {
@@ -54,15 +55,15 @@
     .subsection-container .unterricht-text-container {
         grid-column-start: 7;
         grid-column-end: 11;
+        margin-bottom:100px;
     }
 
         .subsection-container .unterricht-text-container p {
             padding-bottom: 10px;
         }
 
+
 /*-------- Der Lehrer-------- */
-
-
 .lehrer-img-container {
     grid-column-start: 3;
     grid-column-end: 5;

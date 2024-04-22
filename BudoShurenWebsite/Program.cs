@@ -1,4 +1,5 @@
 using BudoShurenWebsite.Components;
+using BudoShurenWebsite.Services;
 using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSyncfusionBlazor();
 builder.Services.AddRouting(ctx => ctx.LowercaseUrls = false);
 
+builder.Services.AddSingleton<IDataService, DataService>();
 
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
 

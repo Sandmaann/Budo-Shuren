@@ -1,7 +1,8 @@
 ﻿@page "/Wie-fange-ich-an"
 @rendermode InteractiveServer
+@inject IDataService DataService
 
-@using Syncfusion.Blazor.DropDowns;y
+@using Syncfusion.Blazor.DropDowns;
 
 <div class="default-container">
     <div>
@@ -36,8 +37,11 @@
                     <p>Empfänger</p>
                 </div>
                 <div class="input-container">
-                    <SfDropDownList TValue="string" TItem="Abteilung" Placeholder="Wähle eine Abteilung aus"
-                                    @bind-Value="@DropVal" DataSource="@LocalData">
+                    <SfDropDownList TValue="string"
+                                    TItem="Abteilung"
+                                    Placeholder="Wähle eine Abteilung aus"
+                                    @bind-Value="@DropVal"
+                                    DataSource="@LocalData">
                         <DropDownListTemplates TItem="Abteilung">
                             <ItemTemplate>
                                 <div class="dropdown-item-container">
@@ -174,6 +178,11 @@
             </div>
         </div>
     </section>
+    <section>
+        <div id="bis-bald-container">
+            <p>Bis Bald!</p>
+        </div>
+    </section>
 </div>
 
 <style>
@@ -238,18 +247,14 @@
 
 @code {
 
-    public string DropVal = "Aikido";
+    public string DropVal = string.Empty;
 
-    public class Abteilung
+    protected override async Task OnInitializedAsync()
     {
-        public string ID { get; set; }
-        public string Name { get; set; }
-        public string Abteilungsleiter { get; set; }
+        await base.OnInitializedAsync();
+        LocalData = await DataService.GetAbteilungenAsync();
     }
-    List<Abteilung> LocalData = new List<Abteilung> {
-    new Abteilung() { ID= "Aikido", Name= "Aikido", Abteilungsleiter = "(Karin Oetzel)" },
-    new Abteilung() { ID= "Bujinkan", Name= "Bujinkan", Abteilungsleiter = "(Johannes Schiebl)" },
-    new Abteilung() { ID= "Genbukan", Name= "Genbukan", Abteilungsleiter = "(Henry Schubert)" },
-  };
+
+    private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
 
 }

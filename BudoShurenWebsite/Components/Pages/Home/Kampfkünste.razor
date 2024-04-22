@@ -8,23 +8,24 @@
 
         <section class="section">
             <div class="container">
-                <div class="grid-container">
-                    <span class="inner-block">居合道</span>
-                    <p class="kampfkunst">Aikido</p>
+                <div class="grid-container" @onclick="(() => KampfkunstClick(0))">
+                    <span class="inner-block" style=@AikidoStyle>居合道</span>
+                    <p class="kampfkunst" style=@AikidoStyle>Aikido</p>
                 </div>
-                <div class="grid-container">
-                    <span class="inner-block">合気道</span>
-                    <p class="kampfkunst">Genbukan</p>
+                <div class="grid-container" @onclick="(() => KampfkunstClick(1))">
+                    <span class="inner-block" style=@GenbukanStyle>合気道</span>
+                    <p class="kampfkunst" style=@GenbukanStyle>Genbukan</p>
                 </div>
-                <div class="grid-container">
-                    <span class="inner-block">武神館</span>
-                    <p class="kampfkunst">Bujinkan</p>
+                <div class="grid-container" @onclick="(() => KampfkunstClick(2))">
+                    <span class="inner-block" style=@BujinkanStyle>武神館</span>
+                    <p class="kampfkunst" style=@BujinkanStyle>Bujinkan</p>
                 </div>
             </div>
         </section>
 
         <div class="control-container">
-            <SfCarousel ShowIndicators="true" AutoPlay="false">
+            <SfCarousel ShowIndicators="true"
+                        @bind-SelectedIndex="@CurrentIndex">
                 <ChildContent>
                     <CarouselItem>
                         <div class="carousel-item-container">
@@ -183,5 +184,50 @@
 
 
 @code {
+    private int currentIndex = 0;
+    public int CurrentIndex
+    {
+        get => currentIndex;
+        set
+        {
+            currentIndex = value;
+            OnCurrentIndexChanged();
+        }
+    }
+
+    private void OnCurrentIndexChanged()
+    {
+        switch (CurrentIndex)
+        {
+            case 0:
+                AikidoStyle = focusedInnerBlockStyle;
+                GenbukanStyle = defaultInnerBlockStyle;
+                BujinkanStyle = defaultInnerBlockStyle;
+                break;
+            case 1:
+                AikidoStyle = defaultInnerBlockStyle;
+                GenbukanStyle = focusedInnerBlockStyle;
+                BujinkanStyle = defaultInnerBlockStyle;
+                break;
+            case 2:
+                AikidoStyle = defaultInnerBlockStyle;
+                GenbukanStyle = defaultInnerBlockStyle;
+                BujinkanStyle = focusedInnerBlockStyle;
+                break;
+        }
+    }
+
+    private void KampfkunstClick(int args)
+    {
+        CurrentIndex = args;
+    }
+
+    string defaultInnerBlockStyle = "color: var(--default-text-color);";
+    string focusedInnerBlockStyle = "color: var(--highlight-text-color);";
+
+    string AikidoStyle { get; set; } = "color: var(--highlight-text-color);";
+    string BujinkanStyle { get; set; } = "color: var(--default-text-color);";
+    string GenbukanStyle { get; set; } = "color: var(--default-text-color);";
+
 
 }

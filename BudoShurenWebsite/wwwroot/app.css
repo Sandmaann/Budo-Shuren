@@ -75,16 +75,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-    font-size: 96px;
-    font-weight: 400;
-}
-
-h2 {
     font-size: 27px;
     font-weight: 400;
     letter-spacing: .85em;
     margin-right: -.85em;
 }
+
+h2 {
+    font-size: 96px;
+    font-weight: 400;
+}
+
 
 
 h3 {
@@ -151,9 +152,16 @@ h4 {
 .grid-test-item {
     background-color: #ddd;
     text-align: center;
+    min-height: 50px;
 }
 
     .grid-test-item:nth-child(even) {
         background-color: lightblue; /* Set your desired background color here */
     }
 
+
+
+:root {
+    --default-text-color: #000;
+    --highlight-text-color: #2A6749;
+}

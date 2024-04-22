@@ -1,6 +1,108 @@
 ﻿@page "/Verein"
 
-<h3>Verein</h3>
+
+<div class="default-container">
+
+@*     <div class="default-grid">
+        <div class="grid-test-item">193</div>
+        <div class="grid-test-item">302</div>
+        <div class="grid-test-item">438</div>
+        <div class="grid-test-item">518</div>
+        <div class="grid-test-item">592</div>
+        <div class="grid-test-item">759</div>
+        <div class="grid-test-item">834</div>
+        <div class="grid-test-item">928</div>
+        <div class="grid-test-item">1008</div>
+        <div class="grid-test-item">1138</div>
+        <div class="grid-test-item">1248</div>
+        <div class="grid-test-item">1440</div>
+    </div>
+ *@
+
+    <div>
+        <Überschrift Titel="友の会"
+                     Untertitel="Verein" />
+    </div>
+
+    <section>
+        <SectionBanner Titel="Mitgliedschaft" />
+
+        <div class="default-grid mitgliedschaft-container">
+            <h4>Werde Mitglied!</h4>
+            <div>
+                <p>Als Teil des Budo Shuren Dojos kannst du an <span class="bold-pt">allen Kampfkünsten</span> und <span class="bold-pt">Veranstaltungen</span> unseres Vereines Teilnehmen und hilfst mit deinem Beitrag dabei, dass das Budo Shuren Dojo bestehen bleibt und auch <span class="bold-pt">weiterhin aktiv sein kann.</span></p>
+                <p>Bei den Kampfkünsten gibt es jeweils bis zu <span class="bold-pt">3 Mal Probetraining.</span> Danach solltest du dich entscheiden, ob du usnerem Verein beitreten möchtest.</p>
+                <p>Weiter unten findest du dann die <span class="bold-pt">Beitrittserklärung</span> mit mehr informationen und das <span class="bold-pt">Anmeldeformular</span>, welches du einfach beim nächsten Training ausgefüllt mitbringen kannst.</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <SectionBanner Titel="Mitgliedsbeitrag" />
+        <div class="default-grid kosten-grid">
+            <p id="erwachsene"><span class="bold-pt">Erwachsene</span></p>
+            <p id="schüler"><span class="bold-pt">Schüler</span> über 16 Jahre, <span class="bold-pt">Studenten</span> und sonstige <span class="bold-pt">Ermäßigte</span></p>
+            <p id="erstes-kind"><span class="bold-pt">Erstes Kind</span> bis 16 Jahr</p>
+            <p id="weitere-kinder"><span class="bold-pt">Weitere Kinder</span>Weitere Kinder bis 16 Jahre</p>
+            <p id="elternteil"><span class="bold-pt">Ein Elternteil + ein Kind</span></p>
+            <p id="familie"><span class="bold-pt">Familie</span></p>
+
+            <hr />
+
+            <p id="erwachsene-kosten"><span class="bold-pt">38 €</span> / Monat</p>
+            <p id="schüler-kosten"><span class="bold-pt">29 €</span> / Monat</p>
+            <p id="erstes-kind-kosten"><span class="bold-pt">24 €</span> / Monat</p>
+            <p id="weitere-kinder-kosten"><span class="bold-pt">14 €</span> / Monat</p>
+            <p id="elternteil-kosten"><span class="bold-pt">44 €</span> / Monat</p>
+            <p id="familie-kosten"><span class="bold-pt">58 €</span> / Monat</p>
+
+            <p id="erwachsene-anmeldegebühr"><span class="bold-pt">30 €</span> Anmeldegebühr</p>
+            <p id="schüler-anmeldegebühr"><span class="bold-pt">25 €</span> Anmeldegebühr</p>
+            <p id="erstes-kind-anmeldegebühr"><span class="bold-pt">20 €</span> Anmeldegebühr</p>
+            <p id="weitere-kinder-anmeldegebühr"><span class="bold-pt">15 €</span> Anmeldegebühr</p>
+            <p id="elternteil-anmeldegebühr"><span class="bold-pt">40 € </span> Anmeldegebühr</p>
+            <p id="familie-anmeldegebühr"><span class="bold-pt">50 €</span> Anmeldegebühr</p>
+        </div>
+    </section>
+
+    <section>
+        <SectionBanner Titel="Dokumente" />
+        <div class="default-grid dokumente-container anmeldeformular-container">
+            <p>Anmmeldeformular</p>
+            <a href="#">
+                <img src="/images/aikido.jpg" />
+                <div class="dokument-container-image-label">
+                    <span>Dokumentname.pdf</span>
+                </div>
+            </a>
+        </div>
+        <div class="default-grid dokumente-container satzung-container">
+            <p>Satzung</p>
+            <a href="#">
+                <img src="/images/aikido.jpg" />
+                <div class="dokument-container-image-label">
+                    <span>Vereinssatzung.pdf</span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+
+@*     <div class="default-grid">
+        <div class="grid-test-item">193</div>
+        <div class="grid-test-item">302</div>
+        <div class="grid-test-item">438</div>
+        <div class="grid-test-item">518</div>
+        <div class="grid-test-item">592</div>
+        <div class="grid-test-item">759</div>
+        <div class="grid-test-item">834</div>
+        <div class="grid-test-item">928</div>
+        <div class="grid-test-item">1008</div>
+        <div class="grid-test-item">1138</div>
+        <div class="grid-test-item">1248</div>
+        <div class="grid-test-item">1440</div>
+    </div> *@
+</div>
 
 @code {
 

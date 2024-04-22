@@ -1,15 +1,13 @@
 ﻿/*Allgemeines Content-zeugs*/
 
 .component-container {
-    margin: 100px auto
+    margin: 0 auto
 }
 
 .control-container {
     margin: 0 13.33%;
     height: 420px;
 }
-
-
 
 /*Karusell-Zeugs*/
 

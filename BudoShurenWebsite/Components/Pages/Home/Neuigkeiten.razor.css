@@ -1,32 +1,39 @@
-﻿.control-container {
+﻿
+
+/*----- carousel - neu -----*/
+.control-container {
     height: 450px;
     margin: 0 13.33%;
 }
 
-.carousel-item-container {
-    position:relative;
+.carousel-item-container-neu {
+    position: relative;
+    height: 450px;
     margin: 0 10.42%;
 }
 
-    .carousel-item-container:after {
-        content: "";
-        display: block;
-        clear: both;
-    }
-
-.carousel-headline {
+.carousel-item-headline-neu {
     position: relative;
-    margin: 0 0 20px 0
+    height: 42px;
+    margin-bottom:35px;
 }
 
-.headline {
+.headline-container-neu {
+    float: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.headline-neu {
     font-family: "Yuji Syuku", serif;
     font-size: 32px;
     letter-spacing: .10em;
     margin-right: -.10em;
 }
 
-.headline-annotation {
+.headline-annotation-neu {
     position: absolute;
     top: 50%;
     -ms-transform: translateY(-50%);
@@ -38,37 +45,24 @@
     font-size: 14px;
 }
 
-.text-container {
-    width: 25.83%;
-    height: auto;
-    float: left;
+.carousel-body-container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center
 }
 
-.img-container {
-    width:65.31%;
-    max-height: 374px;
-    float:right;
+.carousel-image-container img{
+    object-fit:contain;
+    max-height: 375px;
 }
 
-.carousel-item-container img {
-    object-fit: contain;
-    max-width: 65.31%;
-    height: 374px;
-    float:right;
+.carousel-text-container {
+    padding-right: 8.85%;
 }
 
 
-    .carousel-headline:after {
-        content: "";
-        display: block;
-        clear: both;
-    }
-
-p .bold {
-    font-weight: 700;
+.carousel-body-container::after {
+    content: "";
+    display: block;
+    clear: both;
 }
-
-
-
-/*Gesamtbreite:   836*/
-/*Gesamtbreite: 1.056*/

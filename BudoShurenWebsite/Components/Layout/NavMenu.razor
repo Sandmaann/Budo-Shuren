@@ -1,13 +1,82 @@
 ﻿<nav id="main-nav">
     <div class="default-container">
         <ul>
-            <li><a class="active-page" href="/">Home</a></li>
+            @*                         <li><a class="active-page" href="/">Home</a></li>
+
             <li><a href="/aikido">Aikido</a></li>
             <li><a href="/genbukan">Genbukan</a></li>
             <li><a href="/bujinkan">Bujinkan</a></li>
             <li><a href="/wie-fange-ich-an">Wie fange ich an?</a></li>
             <li><a href="/verein">Verein</a></li>
-            <li><a href="/kontakt">Kontakt</a></li>
+            <li><a href="/kontakt">Kontakt</a></li> *@
+
+            <li class="nav-item">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    Home
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/Aikido" Match="NavLinkMatch.All">
+                    Aikido
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/Genbukan" Match="NavLinkMatch.All">
+                    Genbukan
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/Bujinkan" Match="NavLinkMatch.All">
+                    Bujinkan
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/wie-fange-ich-an" Match="NavLinkMatch.All">
+                    Wie fange ich an
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/Verein" Match="NavLinkMatch.All">
+                    Verein
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/Kontakt" Match="NavLinkMatch.All">
+                    Kontakt
+                </NavLink>
+            </li>
+
         </ul>
     </div>
 </nav>
+
+<style>
+
+    .nav-item {
+        display: block;
+        flex: 0 1 auto;
+        margin: 0 auto;
+    }
+
+    .nav-link {
+        color: #000000;
+        text-decoration: none;
+        text-underline-offset: 8px;
+        display: block;
+        padding: 10px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .nav-item .nav-link:hover {
+        text-decoration: underline;
+    }
+
+    .nav-item .nav-link.active {
+        text-decoration: underline;
+    }
+</style>
+
+@code {
+
+}

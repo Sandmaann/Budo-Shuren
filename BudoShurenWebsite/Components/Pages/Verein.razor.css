@@ -1,2 +1,189 @@
-﻿body {
+﻿
+
+/*----- Mitgliedschaft ------*/
+
+.mitgliedschaft-container {
+    grid-template-rows: auto auto;
+    margin-bottom: 100px;
+}
+
+    .mitgliedschaft-container h4 {
+        grid-column-start: 3;
+        grid-column-end: 7;
+    }
+
+    .mitgliedschaft-container div {
+        grid-column-start: 6;
+        grid-column-end: 11;
+    }
+
+        .mitgliedschaft-container div p {
+            padding-bottom: 10px;
+        }
+
+/*----- Kosten / Mitgliedsbeitrag ------*/
+
+.kosten-grid {
+    grid-template-rows: auto auto auto auto auto auto;
+    grid-auto-flow: column;
+    margin-bottom: 150px;
+}
+
+    .kosten-grid p {
+        padding-bottom: 25px;
+    }
+
+    .kosten-grid hr {
+        grid-column-start: 5;
+        grid-column-end: 6;
+        grid-row-start: 1;
+        grid-row-end: 7;
+        width: 1px;
+        height: 340px;
+        margin-left: auto;
+    }
+
+    .kosten-grid #erwachsene {
+        grid-column-start: 3;
+        grid-column-end: 5;
+    }
+
+    .kosten-grid #schüler {
+        grid-column-start: 3;
+        grid-column-end: 5;
+        margin-right: -50px;
+    }
+
+    .kosten-grid #erstes-kind {
+        grid-column-start: 3;
+        grid-column-end: 5;
+    }
+
+    .kosten-grid #weitere-kinder {
+        grid-column-start: 3;
+        grid-column-end: 5;
+    }
+
+    .kosten-grid #elternteil {
+        grid-column-start: 3;
+        grid-column-end: 5;
+    }
+
+    .kosten-grid #familie {
+        grid-column-start: 3;
+        grid-column-end: 5;
+    }
+
+
+
+    .kosten-grid #erwachsene-kosten {
+        grid-column-start: 6;
+        grid-column-end: 7;
+        margin-left: auto;
+    }
+
+    .kosten-grid #schüler-kosten {
+        grid-column-start: 6;
+        grid-column-end: 7;
+        margin-left: auto;
+    }
+
+    .kosten-grid #erstes-kind-kosten {
+        grid-column-start: 6;
+        grid-column-end: 7;
+        margin-left: auto;
+    }
+
+    .kosten-grid #weitere-kinder-kosten {
+        grid-column-start: 6;
+        grid-column-end: 7;
+        margin-left: auto;
+    }
+
+    .kosten-grid #elternteil-kosten {
+        grid-column-start: 6;
+        grid-column-end: 7;
+        margin-left: auto;
+    }
+
+    .kosten-grid #familie-kosten {
+        grid-column-start: 6;
+        grid-column-end: 7;
+        margin-left: auto;
+    }
+
+
+    .kosten-grid #erwachsene-anmeldegebühr {
+        grid-column-start: 8;
+        grid-column-end: 11;
+    }
+
+    .kosten-grid #schüler-anmeldegebühr {
+        grid-column-start: 8;
+        grid-column-end: 11;
+    }
+
+    .kosten-grid #erstes-kind-anmeldegebühr {
+        grid-column-start: 8;
+        grid-column-end: 11;
+    }
+
+    .kosten-grid #weitere-kinder-anmeldegebühr {
+        grid-column-start: 8;
+        grid-column-end: 11;
+    }
+
+    .kosten-grid #elternteil-anmeldegebühr {
+        grid-column-start: 8;
+        grid-column-end: 11;
+    }
+
+    .kosten-grid #familie-anmeldegebühr {
+        grid-column-start: 8;
+        grid-column-end: 11;
+    }
+
+/*----- Anmeldeformular, Satzung, Dokumente ------*/
+
+.anmeldeformular-container {
+    margin-bottom: 50px;
+}
+
+.satzung-container {
+    margin-bottom: 250px;
+}
+
+.dokumente-container p {
+    grid-column-start: 3;
+    grid-column-end: 4;
+    margin: auto 0;
+}
+
+.dokumente-container a {
+    grid-column-start: 5;
+    grid-column-end: 8;
+}
+
+    .dokumente-container a img {
+        height: 64px;
+        width: 64px;
+        float: left;
+    }
+
+.dokument-container-image-label {
+    height: 64px;
+    line-height: 64px;
+}
+
+    .dokument-container-image-label span {
+        display: inline-block;
+        vertical-align: baseline;
+        line-height: normal;
+        margin-left: 25px;
+    }
+
+.dokumente-container::after {
+    content: "";
+    display: block;
+    clear: both;
 }

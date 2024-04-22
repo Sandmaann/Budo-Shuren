@@ -1,4 +1,7 @@
-﻿:root {
+﻿/*:root {
+    --default-text-color: #000;
+    --highlight-text-color: #2A6749;
+
     --pt-sans-regular-14-font-family: "PT Sans", Helvetica;
     --pt-sans-regular-14-font-weight: 400;
     --pt-sans-regular-14-font-size: 14px;
@@ -56,3 +59,4 @@
     --variable-collection-g90: rgba(63, 118, 91, 1);
     --variable-collection-g100: rgba(42, 103, 73, 1);
 }
+*/
