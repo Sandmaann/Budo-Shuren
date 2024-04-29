@@ -1,0 +1,202 @@
+﻿@page "/Account/Login"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using BudoShurenWebsite.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Login</PageTitle>
+
+<div class="default-container">
+@*     <div class="default-grid">
+        <div class="grid-test-item">193</div>
+        <div class="grid-test-item">302</div>
+        <div class="grid-test-item">438</div>
+        <div class="grid-test-item">518</div>
+        <div class="grid-test-item">592</div>
+        <div class="grid-test-item">759</div>
+        <div class="grid-test-item">834</div>
+        <div class="grid-test-item">928</div>
+        <div class="grid-test-item">1008</div>
+        <div class="grid-test-item">1138</div>
+        <div class="grid-test-item">1248</div>
+        <div class="grid-test-item">1440</div>
+    </div> *@
+
+    <Überschrift Titel="メンバーエリア" Untertitel="Login" />
+    <SectionBanner Titel="Mitgliederbereich" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+                <StatusMessage Message="@errorMessage" />
+
+                <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" role="alert" />
+
+                    <label for="email" class="form-label">E-Mail</label>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="E-Mail Adresse" />
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+                    <label for="password" class="form-label">Passwort</label>
+                    <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Passwort" />
+                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+                    <div class="checkbox mb-3">
+                        <label class="form-label">
+                            <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
+                            Eingeloggt bleiben
+                        </label>
+                    </div>
+                    <div>
+                        <button type="submit" class="default-button local-button">Log in</button>
+                    </div>
+                    <div>
+                        <p class="local-link">
+                            <a href="Account/ForgotPassword">Passwort vergessen?</a>
+                        </p>
+                        <p class="local-link">
+                            <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Neuen Zugang erstellen</a>
+                        </p>
+                        <p class="local-link">
+                            <a href="Account/ResendEmailConfirmation">Best&auml;tigungs E-Mail erneut versenden</a>
+                        </p>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+
+    .local-button {
+        margin-bottom: 35px;
+        margin-left:244px;
+    }
+
+
+
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+
+    .local-link {
+        margin-bottom: 35px;
+        color: #000000;
+        text-decoration: none;
+        text-underline-offset: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    a {
+        color: #000000;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem !important
+    }
+
+    .form-floating > .form-control {
+        padding: 1rem .75rem;
+        width: 380px;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    label {
+        display: inline-block;
+    }
+
+    .form-label {
+        margin-bottom: .5rem;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    .form-floating > label {
+        transition: none;
+    }
+
+</style>
+
+@code {
+    private string? errorMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        // This doesn't count login failures towards account lockout
+        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User logged in.");
+            RedirectManager.RedirectTo("Account/Member");
+        }
+        // else if (result.RequiresTwoFactor)
+        // {
+        //     RedirectManager.RedirectTo(
+        //         "Account/LoginWith2fa",
+        //         new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+        // }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            errorMessage = "Login nicht gültig. Sind die Zugangsdaten korrekt?";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Eingeloggt bleiben??")]
+        public bool RememberMe { get; set; }
+    }
+}

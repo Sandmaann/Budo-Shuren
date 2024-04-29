@@ -53,7 +53,9 @@ span .bold {
 }
 
 .default-button {
-    width: 136px;
+    min-width: 136px;
+    padding-left:10px;
+    padding-right:10px;
     height: 42px;
     flex-shrink: 0;
     border: 0;
@@ -65,6 +67,14 @@ span .bold {
         background-color: #2A6749;
         color: #FFFFFF;
     }
+
+
+
+/*----- Auth Login Style Stuff -----*/
+
+.text-danger {
+    color: rgba(220, 53, 69, 1) !important;
+}
 
 
 /*-------- Headline Styles -------- */

@@ -1,56 +1,86 @@
-﻿<nav id="main-nav">
-    <div class="default-container">
-        <ul>
-            @*                         <li><a class="active-page" href="/">Home</a></li>
+﻿@implements IDisposable
 
-            <li><a href="/aikido">Aikido</a></li>
-            <li><a href="/genbukan">Genbukan</a></li>
-            <li><a href="/bujinkan">Bujinkan</a></li>
-            <li><a href="/wie-fange-ich-an">Wie fange ich an?</a></li>
-            <li><a href="/verein">Verein</a></li>
-            <li><a href="/kontakt">Kontakt</a></li> *@
+@inject NavigationManager NavigationManager
+<div class="sticky">
+    <nav id="main-nav">
+        <div class="default-container">
+            <ul>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        Home
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/Aikido" Match="NavLinkMatch.All">
+                        Aikido
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/Genbukan" Match="NavLinkMatch.All">
+                        Genbukan
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/Bujinkan" Match="NavLinkMatch.All">
+                        Bujinkan
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/wie-fange-ich-an" Match="NavLinkMatch.All">
+                        Wie fange ich an
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/Verein" Match="NavLinkMatch.All">
+                        Verein
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/Kontakt" Match="NavLinkMatch.All">
+                        Kontakt
+                    </NavLink>
+                </li>
 
-            <li class="nav-item">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    Home
-                </NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="/Aikido" Match="NavLinkMatch.All">
-                    Aikido
-                </NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="/Genbukan" Match="NavLinkMatch.All">
-                    Genbukan
-                </NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="/Bujinkan" Match="NavLinkMatch.All">
-                    Bujinkan
-                </NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="/wie-fange-ich-an" Match="NavLinkMatch.All">
-                    Wie fange ich an
-                </NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="/Verein" Match="NavLinkMatch.All">
-                    Verein
-                </NavLink>
-            </li>
-            <li class="nav-item">
-                <NavLink class="nav-link" href="/Kontakt" Match="NavLinkMatch.All">
-                    Kontakt
-                </NavLink>
-            </li>
-
-        </ul>
-    </div>
-</nav>
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="Account/Member" Match="NavLinkMatch.All">
+                                Mitgliederbereich
+                            </NavLink>
+                        </div>
+                        <li class="nav-item">
+                            <form action="Account/Logout" method="post">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                                <button type="submit" class="nav-link">
+                                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="/Account/Login" Match="NavLinkMatch.All">
+                                Login
+                            </NavLink>
+                        </li>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </ul>
+        </div>
+    </nav>
+</div>
 
 <style>
+
+    .sticky{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 10px 0;
+        z-index: 1000;
+    }
 
     .nav-item {
         display: block;
@@ -59,6 +89,8 @@
     }
 
     .nav-link {
+        background-color:transparent;
+        border: none;
         color: #000000;
         text-decoration: none;
         text-underline-offset: 8px;
@@ -77,6 +109,24 @@
     }
 </style>
 
-@code {
 
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
 }

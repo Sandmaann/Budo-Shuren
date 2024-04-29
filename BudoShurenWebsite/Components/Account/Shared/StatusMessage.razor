@@ -1,0 +1,51 @@
+﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+{
+    var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
+    <div class="alert alert-@statusMessageClass" role="alert">
+        @DisplayMessage
+    </div>
+}
+
+
+<style>
+    .alert-danger {
+        background-color: #842029;
+        color: #FFabcF;
+    }
+
+    .alert {
+        display:inline-block;
+        padding: 1rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid black;
+        border-radius:0;
+        width:100%;
+    }
+
+    .alert-success {
+        color: #FFF;
+        background-color: #587246;
+    }
+</style>
+
+@code {
+    private string? messageFromCookie;
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private string? DisplayMessage => Message ?? messageFromCookie;
+
+    protected override void OnInitialized()
+    {
+        messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+
+        if (messageFromCookie is not null)
+        {
+            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+        }
+    }
+}

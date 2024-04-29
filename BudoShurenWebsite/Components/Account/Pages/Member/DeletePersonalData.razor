@@ -1,0 +1,153 @@
+﻿@page "/Account/Member/DeletePersonalData"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using BudoShurenWebsite.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<DeletePersonalData> Logger
+
+<PageTitle>Zugang löschen</PageTitle>
+<SectionBanner Titel="Persönliche Daten löschen" />
+
+<section>
+    <div class="default-grid">
+        <div id="local-container">
+            <StatusMessage Message="@message" />
+            <EditForm Model="Input" FormName="delete-user" OnValidSubmit="OnValidSubmitAsync" method="post">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" role="alert" />
+                @if (requirePassword)
+                {
+                    <label for="password" class="form-label">Passwort</label>
+                    <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Bitte geben Sie Ihr Passwort ein." />
+                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+                }
+                <button class="default-button local-button3" type="submit">Daten löschen und Zugang schließen</button>
+            </EditForm>
+        </div>
+    </div>
+</section>
+
+<style>
+    .local-button {
+        margin-bottom: 35px;
+        margin-left: 244px;
+    }
+
+    .local-button3 {
+        margin-left: 104px;
+        margin-top: 15px;
+        margin-bottom: 25px;
+        background-color: #842029;
+    }
+
+
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+
+    #local-container2 {
+        grid-column-start: 3;
+        grid-column-end: 6;
+    }
+
+    .local-link {
+        margin-bottom: 35px;
+        color: #000000;
+        text-decoration: none;
+        text-underline-offset: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    a {
+        color: #000000;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem !important
+    }
+
+    .form-floating > .form-control {
+        padding: 1rem .75rem;
+        width: 380px;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    label {
+        display: inline-block;
+    }
+
+    .form-label {
+        margin-bottom: .5rem;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    .form-floating > label {
+        transition: none;
+    }
+</style>
+
+@code {
+    private string? message;
+    private ApplicationUser user = default!;
+    private bool requirePassword;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        requirePassword = await UserManager.HasPasswordAsync(user);
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (requirePassword && !await UserManager.CheckPasswordAsync(user, Input.Password))
+        {
+            message = "Error: Incorrect password.";
+            return;
+        }
+
+        var result = await UserManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException("Es ist ein unerwarteter Fehler aufgetreten.");
+        }
+
+        await SignInManager.SignOutAsync();
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
+
+        RedirectManager.RedirectToCurrentPage();
+    }
+
+    private sealed class InputModel
+    {
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+    }
+}

@@ -1,0 +1,30 @@
+﻿@page "/Account/InvalidUser"
+
+<PageTitle>Invalid user</PageTitle>
+
+<h3>Invalid user</h3>
+
+<StatusMessage />
+
+<PageTitle>Ungültiger Benutzer</PageTitle>
+
+
+<div class="default-container">
+    <Überschrift Titel="間違い" Untertitel="Fehler" />
+    <SectionBanner Titel="Ungültiger Benutzer" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+                <StatusMessage Message="Dieser Benutzer ist nicht gültig." />
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+</style>

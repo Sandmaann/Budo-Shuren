@@ -1,0 +1,124 @@
+﻿@page "/Account/RegisterConfirmation"
+
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using BudoShurenWebsite.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Registrierung erfolgreich</PageTitle>
+
+<div class="default-container">
+@*     <div class="default-grid">
+        <div class="grid-test-item">193</div>
+        <div class="grid-test-item">302</div>
+        <div class="grid-test-item">438</div>
+        <div class="grid-test-item">518</div>
+        <div class="grid-test-item">592</div>
+        <div class="grid-test-item">759</div>
+        <div class="grid-test-item">834</div>
+        <div class="grid-test-item">928</div>
+        <div class="grid-test-item">1008</div>
+        <div class="grid-test-item">1138</div>
+        <div class="grid-test-item">1248</div>
+        <div class="grid-test-item">1440</div>
+    </div> *@
+
+    <Überschrift Titel="有難うございます" Untertitel="Registrierung erfolgreich" />
+    <SectionBanner Titel="Der Zugang wurde erstellt" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+                <StatusMessage Message="@statusMessage" />
+
+                <p>Ihr Zugang wurde erfolgreich erstellt.</p>
+                @if (emailConfirmationLink is not null)
+                {
+                    <p>Wir haben Ihnen eine <span class="bold-pt">E-Mail</span> mit einem <span class="bold-pt">Best&auml;tigungslink </span>geschickt.</p>
+                    <p>Bitte &uuml;berpr&uuml;fen Sie Ihr E-Mail Postfach und klicken auf diesen Link.</p>
+                    <br />
+                    <p>
+                        This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
+                        Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
+                    </p>
+                }
+                else
+                {
+                    <p>Wir haben Ihnen eine <span class="bold-pt">E-Mail</span> mit einem <span class="bold-pt">Best&auml;tigungslink </span>geschickt.</p>
+                    <p>Bitte &uuml;berpr&uuml;fen Sie Ihr E-Mail Postfach und klicken auf diesen Link.</p>
+                }
+                <br />
+
+                @if (isVerified)
+                {
+                    <p>Sobald Sie Ihre E-Mail Adresse best&auml;tigt haben, erhalten Sie Zugriff auf den Mitgliederbereich.</p>
+                }
+                else
+                {
+                    <p>Sobald Sie Ihre E-Mail Adresse best&auml;tigt haben, muss Ihr Zugang noch von einem Abteilungsleiter freigeschaltet werden.</p>
+                }
+                <p></p>
+
+
+            </div>
+        </div>
+    </section>
+</div>
+
+
+
+
+<style>
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+</style>
+
+@code {
+    private string? emailConfirmationLink;
+    private string? statusMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? Email { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private bool isVerified { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Email is null)
+        {
+            RedirectManager.RedirectTo("");
+        }
+
+        var user = await UserManager.FindByEmailAsync(Email);
+        if (user is null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            statusMessage = "Error finding user for unspecified email";
+        }
+        else if (EmailSender is IdentityNoOpEmailSender)
+        {
+            // Once you add a real email sender, you should remove this code that lets you confirm the account
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            emailConfirmationLink = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+            isVerified = user.EmailConfirmed;
+        }
+    }
+}
