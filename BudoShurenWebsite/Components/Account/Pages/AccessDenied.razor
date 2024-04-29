@@ -1,0 +1,23 @@
+﻿@page "/Account/AccessDenied"
+
+<PageTitle>Zugang verboten</PageTitle>
+<div class="default-container">
+    <Überschrift Titel="アクセス拒否" Untertitel="Zugang verboten" />
+    <SectionBanner Titel="Kein Zugriff auf diese Funktion" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+
+                <StatusMessage Message="Bitte loggen Sie sich mit einem gültigen Benutzer ein." />
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+</style>

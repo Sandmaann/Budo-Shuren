@@ -11,10 +11,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="25.1.40" />
-    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.1.40" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.1.40" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.1.40" />
+    <PackageReference Include="Azure.Identity" Version="1.11.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="25.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.1.41" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\Auth\" />
   </ItemGroup>
 
 </Project>

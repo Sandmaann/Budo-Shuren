@@ -1,0 +1,101 @@
+﻿@page "/Account/ConfirmEmail"
+
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using BudoShurenWebsite.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>E-Mail best&auml;tigen</PageTitle>
+
+
+<div class="default-container">
+    @*     <div class="default-grid">
+    <div class="grid-test-item">193</div>
+    <div class="grid-test-item">302</div>
+    <div class="grid-test-item">438</div>
+    <div class="grid-test-item">518</div>
+    <div class="grid-test-item">592</div>
+    <div class="grid-test-item">759</div>
+    <div class="grid-test-item">834</div>
+    <div class="grid-test-item">928</div>
+    <div class="grid-test-item">1008</div>
+    <div class="grid-test-item">1138</div>
+    <div class="grid-test-item">1248</div>
+    <div class="grid-test-item">1440</div>
+    </div> *@
+
+    <Überschrift Titel="有難うございます" Untertitel="E-Mail bestätigen" />
+    <SectionBanner Titel="E-Mail Adresse bestätigen" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+                @if (isSuccess)
+                {
+                    <p>Ihre E-Mail Adresse wurde erfolgreich bestätigt!</p>
+                    <br/>
+                    @if (isVerified)
+                    {
+                        <p>Sie können sich jetzt einloggen.</p>
+                    }
+                    else
+                    {
+                        <p>Ihr Zugang muss jetzt noch von einem Abteilungsleiter bestätigt werden!</p>
+                    }
+                }
+                else
+                {
+                    <StatusMessage Message="Ihr E-Mail Adresse konnte leider nicht bestätigt werden!" />
+                }
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+</style>
+
+@code {
+    private string? statusMessage;
+    private bool isSuccess;
+    private bool isVerified;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? Code { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId is null || Code is null)
+        {
+            RedirectManager.RedirectTo("");
+        }
+
+        var user = await UserManager.FindByIdAsync(UserId);
+        if (user is null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            statusMessage = $"Error loading user with ID {UserId}";
+        }
+        else
+        {
+            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+            var result = await UserManager.ConfirmEmailAsync(user, code);
+            isSuccess = result.Succeeded;
+            isVerified = user.Verified;
+            // statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Ihre E-Mail Adresse konnte leider nicht bestätigt werden.";
+        }
+    }
+}

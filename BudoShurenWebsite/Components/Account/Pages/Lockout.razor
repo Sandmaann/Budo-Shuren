@@ -1,0 +1,24 @@
+﻿@page "/Account/Lockout"
+
+
+<PageTitle>Zugang ausgesperrt</PageTitle>
+<div class="default-container">
+    <Überschrift Titel="アクセス拒否" Untertitel="Zugang gesperrt" />
+    <SectionBanner Titel="Kein Zugriff auf diese Funktion" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+
+                <StatusMessage Message="Dieser Zugang wurde ausgesperrt. Bitte versuchen Sie es später nochmals." />
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+</style>

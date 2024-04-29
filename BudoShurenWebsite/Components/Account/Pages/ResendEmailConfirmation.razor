@@ -1,0 +1,141 @@
+﻿@page "/Account/ResendEmailConfirmation"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using BudoShurenWebsite.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Bestätigungs E-Mail erneut schicken</PageTitle>
+
+
+
+
+<div class="default-container">
+
+    <Überschrift Titel="メンバーエリア" Untertitel="Bestätigungslink" />
+    <SectionBanner Titel="Bitte geben Sie Ihre E-Mail Adresse an" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+                <StatusMessage Message="@message" />
+                <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" role="alert" />
+                    <label for="email" class="form-label">E-Mail</label>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" class="form-control" aria-required="true" placeholder="E-Mail Adresse" />
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+                    <button type="submit" class="default-button local-button">Erneut senden</button>
+                </EditForm>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+
+<style>
+
+    .local-button {
+        margin-bottom: 35px;
+        margin-left: 244px;
+    }
+
+
+
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+
+    .local-link {
+        margin-bottom: 35px;
+        color: #000000;
+        text-decoration: none;
+        text-underline-offset: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    a {
+        color: #000000;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem !important
+    }
+
+    .form-floating > .form-control {
+        padding: 1rem .75rem;
+        width: 380px;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    label {
+        display: inline-block;
+    }
+
+    .form-label {
+        margin-bottom: .5rem;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    .form-floating > label {
+        transition: none;
+    }
+
+</style>
+
+
+@code {
+    private string? message;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    private async Task OnValidSubmitAsync()
+    {
+        var user = await UserManager.FindByEmailAsync(Input.Email!);
+        if (user is null)
+        {
+            message = "Verification email sent. Please check your email.";
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        message = "Verification email sent. Please check your email.";
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+    }
+}

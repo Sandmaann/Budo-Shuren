@@ -1,0 +1,248 @@
+﻿@page "/Account/Register"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using BudoShurenWebsite.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject ILogger<Register> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+@inject IDataService DataService
+
+<PageTitle>Neuen Zugang erstellen</PageTitle>
+
+<div class="default-container">
+    @*     <div class="default-grid">
+    <div class="grid-test-item">193</div>
+    <div class="grid-test-item">302</div>
+    <div class="grid-test-item">438</div>
+    <div class="grid-test-item">518</div>
+    <div class="grid-test-item">592</div>
+    <div class="grid-test-item">759</div>
+    <div class="grid-test-item">834</div>
+    <div class="grid-test-item">928</div>
+    <div class="grid-test-item">1008</div>
+    <div class="grid-test-item">1138</div>
+    <div class="grid-test-item">1248</div>
+    <div class="grid-test-item">1440</div>
+    </div> *@
+
+    <Überschrift Titel="メンバーエリア" Untertitel="Registrierung" />
+    <SectionBanner Titel="Neuen Zugang erstellen" />
+
+    <section>
+        <div class="default-grid">
+            <div id="local-container">
+                <StatusMessage Message="@Message" />
+                <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" role="alert" />
+                    <label for="email" class="form-label">E-Mail</label>
+                    <p class="form-label">Bitte geben Sie die gleiche E-Mail Adresse wie bei Ihrer Anmeldung beim Verein an!</p>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="E-Mail Adresse" />
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+
+                    <label for="abteilung" class="form-label">Abteilung</label>
+                    <div class="form-floating mb-3">
+                        <InputSelect @bind-Value="Input.Abteilung" class="form-control" aria-required="true" placeholder="Abteilung">
+                            @foreach(var abteilung in LocalData)
+                            {
+                                <option value="@abteilung.Name">@abteilung.Name - @abteilung.Abteilungsleiter</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Input.Abteilung" class="text-danger" />
+                    </div>
+
+                    <label for="password" class="form-label">Passwort</label>
+                    <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Passwort" />
+                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+
+                    <label class="form-label" for="confirm-password">Passwort best&auml;tigen</label>
+                    <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Passwort best&auml;tigen" />
+                        <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                    </div>
+                    <button type="submit" class="default-button local-button">Zugang erstellen</button>
+                </EditForm>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+
+<style>
+
+    .local-button {
+        margin-bottom: 35px;
+        margin-left: 244px;
+    }
+
+
+
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+
+    .local-link {
+        margin-bottom: 35px;
+        color: #000000;
+        text-decoration: none;
+        text-underline-offset: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    a {
+        color: #000000;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem !important
+    }
+
+    .form-floating > .form-control {
+        padding: 1rem .75rem;
+        width: 380px;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    label {
+        display: inline-block;
+    }
+
+    .form-label {
+        margin-bottom: .5rem;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    .form-floating > label {
+        transition: none;
+    }
+
+</style>
+
+@code {
+
+    private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
+
+    private IEnumerable<IdentityError>? identityErrors;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        LocalData = await DataService.GetAbteilungenAsync();
+    }
+
+    public async Task RegisterUser(EditContext editContext)
+    {
+        var user = CreateUser();
+
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        var emailStore = GetEmailStore();
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (!result.Succeeded)
+        {
+            identityErrors = result.Errors;
+            return;
+        }
+
+        Logger.LogInformation("User created a new account with password.");
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        if (UserManager.Options.SignIn.RequireConfirmedAccount)
+        {
+            RedirectManager.RedirectTo(
+                "Account/RegisterConfirmation",
+                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+        }
+
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        RedirectManager.RedirectTo(ReturnUrl);
+    }
+
+    private ApplicationUser CreateUser()
+    {
+        try
+        {
+            return Activator.CreateInstance<ApplicationUser>();
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        if (!UserManager.SupportsUserEmail)
+        {
+            throw new NotSupportedException("The default UI requires a user store with email support.");
+        }
+        return (IUserEmailStore<ApplicationUser>)UserStore;
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = "";
+
+
+        [Required]
+        public string Abteilung { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "Das {0} muss mindestens {2} und maximal {1} Zeichen lang sein.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Passwort")]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Passwort bestätigen")]
+        [Compare("Password", ErrorMessage = "Die beiden Passwörter stimmen nicht überein!")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

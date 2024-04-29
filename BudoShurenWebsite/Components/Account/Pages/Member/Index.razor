@@ -1,0 +1,350 @@
+﻿@page "/Account/Member"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using BudoShurenWebsite.Data
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.WebUtilities
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject ILogger<ChangePassword> Logger
+
+<PageTitle>Benutzerdaten</PageTitle>
+
+<SectionBanner Titel="Ihre persönlichen Daten" />
+<section>
+    <div class="default-grid">
+        <div id="local-container">
+            <StatusMessage Message="@message" />
+            <form @onsubmit="OnSendEmailVerificationAsync" @formname="send-verification" id="send-verification-form" method="post">
+                <AntiforgeryToken />
+            </form>
+            <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" role="alert" />
+
+                <h4>Benutzer</h4>
+                <label for="username" class="form-label">Benutzername</label>
+                <div class="form-floating mb-3">
+                    <input type="text" value="@username" class="form-control" placeholder="Bitte wählen Sie Ihren Benutzernamen" disabled />
+                </div>
+                <label for="name" class="form-label">Name</label>
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.Name" class="form-control" placeholder="Geben Sie bitte Ihren Nachnamen an." />
+                    <ValidationMessage For="() => Input.Name" class="text-danger" />
+                </div>
+                <label for="vorname" class="form-label">Vorname</label>
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.Vorname" class="form-control" placeholder="Geben Sie bitte Ihren Vornamen an." />
+                    <ValidationMessage For="() => Input.Vorname" class="text-danger" />
+                </div>
+
+                <h4>E-Mail Adresse</h4>
+
+                @if (isEmailConfirmed)
+                {
+                    <label for="email" class="form-label">Aktuelle E-Mail Adresse</label>
+                    <div class="form-floating mb-3 input-group">
+                        <input type="text" value="@email" class="form-control" placeholder="E-Mail Adresse" disabled />
+                        <div class="input-group-append">
+                            <span class="h-100 input-group-text text-success font-weight-bold">✓ Bestätigt</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <label for="email" class="form-label">Aktuelle E-Mail Adresse</label>
+                        <div class="form-floating mb-3">
+                            <input type="text" value="@email" class="form-control" placeholder="Bitte geben Sie eine E-Mail Adresse an" disabled />
+                        </div>
+                        <button type="submit" class="default-button email-verification-button" form="send-verification-form">Bestätigungsmail erneut schicken</button>
+                    </div>
+                }
+                <label for="new-email" class="form-label">Neue E-Mail Adresse</label>
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="E-Mail Adresse" />
+                    <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
+                </div>
+
+                <h4>Passwort</h4>
+
+                <label for="old-password" class="form-label">Bisheriges Passwort</label>
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.OldPassword" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your old password." />
+                    <ValidationMessage For="() => Input.OldPassword" class="text-danger" />
+                </div>
+                <label for="new-password" class="form-label">Neues Passwort</label>
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.NewPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please enter your new password." />
+                    <ValidationMessage For="() => Input.NewPassword" class="text-danger" />
+                </div>
+                <label for="confirm-password" class="form-label">Passwort bestätigen</label>
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Please confirm your new password." />
+                    <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                </div>
+                <button type="submit" class="default-button local-button">Speichern</button>
+            </EditForm>
+        </div>
+
+
+    </div>
+</section>
+
+<SectionBanner Titel="Personenbezogene Daten" />
+<section>
+    <div class="default-grid">
+        <div id="local-container2">
+            <div class="col-md-6">
+                <p>Ihr Konto enthält persönliche Daten, die Sie uns zur Verfügung gestellt haben. Diese Seite ermöglicht es Ihnen, diese Daten herunterzuladen oder zu löschen.</p>
+                <p>
+                    <span class="bold-pt">Das Löschen dieser Daten wird Ihr Konto dauerhaft entfernen, und dies kann nicht wiederhergestellt werden.</span>
+                </p>
+                <form action="Account/Member/DownloadPersonalData" method="post">
+                    <AntiforgeryToken />
+                    <button class="default-button local-button2" type="submit">Download</button>
+                </form>
+                <p>
+                    <a href="Account/Member/DeletePersonalData" class="btn btn-danger">Zugang löschen</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+
+
+<style>
+    .local-button {
+        margin-bottom: 35px;
+        margin-left: 244px;
+    }
+
+    .local-button2 {
+        margin-top: 15px;
+        margin-left: 244px;
+        margin-bottom: 25px;
+    }
+
+    .email-verification-button {
+        margin-bottom: 15px;
+        margin-left: 120px;
+    }
+
+
+    #local-container {
+        grid-column-start: 3;
+        grid-column-end: 11;
+    }
+
+    #local-container2 {
+        grid-column-start: 3;
+        grid-column-end: 6;
+    }
+
+    .local-link {
+        margin-bottom: 35px;
+        color: #000000;
+        text-decoration: none;
+        text-underline-offset: 8px;
+        display: block;
+        font-size: 14px;
+    }
+
+    a {
+        color: #000000;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem !important
+    }
+
+    .form-floating > .form-control {
+        padding: 1rem .75rem;
+        width: 380px;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    label {
+        display: inline-block;
+    }
+
+    .form-label {
+        margin-bottom: .5rem;
+        font-family: "PT Sans";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 1.4px;
+    }
+
+    .form-floating > label {
+        transition: none;
+    }
+</style>
+
+@code {
+    private string? message;
+
+    private ApplicationUser user = default!;
+    private string? email;
+    private bool isEmailConfirmed;
+    private string? username;
+    private string? vorname;
+    private string? name;
+    private bool hasPassword;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        email = await UserManager.GetEmailAsync(user);
+        isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
+        hasPassword = await UserManager.HasPasswordAsync(user);
+        if (!hasPassword)
+        {
+            RedirectManager.RedirectTo("Account/Member/SetPassword");
+        }
+        vorname = user?.Vorname;
+        name = user?.Name;
+
+        Input.Name ??= name;
+        Input.Vorname ??= vorname;
+    }
+
+    private async Task OnSendEmailVerificationAsync()
+    {
+        if (email is null)
+        {
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+
+        await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
+
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        bool any = false;
+
+        string localMessage = "Ihr Profil wurde aktualisiert.";
+        if (Input.Name != name)
+        {
+            any = true;
+            user.Name = Input.Name ?? string.Empty;
+        }
+        if (Input.Vorname != vorname)
+        {
+            any = true;
+            user.Vorname = Input.Vorname ?? string.Empty;
+        }
+        if (any)
+        {
+            var result = await UserManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Daten konnten nicht aktualisiert werden.", HttpContext);
+            }
+        }
+
+        if (Input.NewEmail != null && Input.NewEmail != email)
+        {
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
+                new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
+
+            await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
+            message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
+            localMessage = message;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Input.NewPassword) && !string.IsNullOrWhiteSpace(Input.ConfirmPassword))
+        {
+            var changePasswordResult = await UserManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+            if (!changePasswordResult.Succeeded)
+            {
+                localMessage = $"Error: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
+            }
+        }
+
+        await SignInManager.RefreshSignInAsync(user);
+        RedirectManager.RedirectToCurrentPageWithStatus(localMessage, HttpContext);
+    }
+
+    private sealed class InputModel
+    {
+        [Display(Name = "Name")]
+        public string? Name { get; set; }
+
+        [Display(Name = "Vorname")]
+        public string? Vorname { get; set; }
+
+        private string? newEmail;
+        [Display(Name = "Neue E-Mail Adresse")]
+        [EmailAddress(ErrorMessage = "Das Format der E-Mail Adresse ist nicht korrekt!")]
+        public string? NewEmail
+        {
+            get { return string.IsNullOrEmpty(newEmail) ? null : newEmail; }
+            set { newEmail = value; }
+        }
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Aktuelles Passwort")]
+        public string OldPassword { get; set; } = "";
+
+
+        private string? newPassword;
+        [StringLength(100, ErrorMessage = "Das {0} muss mindestens {2} und maximal {1} Zeichen lang sein.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Neues Passwort")]
+        public string? NewPassword
+        {
+            get { return string.IsNullOrEmpty(newPassword) ? null : newPassword; }
+            set { newPassword = value; }
+        }
+
+        private string? confirmPassword;
+        [DataType(DataType.Password)]
+        [Display(Name = "Passwort bestätigen")]
+        [Compare("NewPassword", ErrorMessage = "Das neue Passwort stimmt nicht mit der Bestätigung überein!")]
+        public string? ConfirmPassword
+        {
+            get { return string.IsNullOrEmpty(confirmPassword) ? null : confirmPassword; }
+            set { confirmPassword = value; }
+        }
+    }
+}
