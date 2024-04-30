@@ -1,20 +1,23 @@
-﻿
+﻿@rendermode InteractiveServer
 
-<div class="default-container überschrift-container">
-    <div id="headline-grid">
-        <div id="inner-grid">
-            <div id="headline">
-                <h2>@Titel</h2>
+<div class="relative w-full">
+    <div class="relative mb-28 mt-10 flex max-w-screen-xl flex-col items-center justify-center">
+        <div class="relative mx-auto flex flex-col items-center justify-center pb-10">
+            <div>
+                <h2 class="text-black text-5xl sm:text-7xl md:text-8xl font-normal font-['Yuji Syuku'] tracking-widest text-center">@Titel</h2>
             </div>
-            <div id="untertitel">
-                <h1>@Untertitel</h1>
+            <div>
+                <h2 class="text-black text-1xl sm:text-2xl font-normal font-['Yuji Syuku'] tracking-[1.2rem] sm:tracking-[1.3rem] md:tracking-[1.4rem] text-center">@Untertitel</h2>
             </div>
-            <div id="anekdote">
-                <p>@Anekdote</p>
+            <div class="pt-5 md:absolute md:bottom-0 md:right-0">
+                <p class="text-center md:text-right text-xl md:text-xl font-normal font-['Yuji Syuku'] tracking-[0.21rem]">@Anekdote</p>
             </div>
         </div>
+    </div> 
+    
+    <div class="absolute right-5 top-0 hidden md:block">
+        <div class="text-center text-black text-2xl font-normal font-['Yuji Syuku']">武<br />道<br />修<br />練<br />道<br />場</div>
     </div>
-    <span id="vertical-content">武道修練道場</span>
 </div>
 
 @code {

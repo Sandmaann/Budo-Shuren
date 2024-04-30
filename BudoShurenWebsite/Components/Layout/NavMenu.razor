@@ -1,107 +1,182 @@
 ﻿@implements IDisposable
-
+@rendermode InteractiveServer
 @inject NavigationManager NavigationManager
-<div class="sticky">
-    <nav id="main-nav">
-        <div class="default-container">
-            <ul>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+
+<div class="z-20 fixed start-0 top-0 w-full bg-white">
+    <div class="mx-auto max-w-screen-xl md:flex md:justify-between md:items-center">
+        <div class="flex items-center p-3 md:order-2">
+            <button @onclick="ToggleMenu" class="md:hidden" style="margin-right:1.5rem">
+                <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd"
+                          d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z" />
+                </svg>
+            </button>
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="md:order-2">
+                        <form action="Account/Logout" method="post">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                            <button type="submit" class="nav-link rounded px-3 py-2 text-black hover:underline active:underline">
+                                <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                            </button>
+                        </form>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <li class="nav-item list-none py-1">
+                        <NavLink href="/Account/Login" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Login
+                        </NavLink>
+                    </li>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+
+        <div class="flex-1 items-center justify-center">
+            @{
+                var menuVisibleClass = _menuVisible ? "" : "hidden";
+            }
+            <ul class="@($"flex flex-col {menuVisibleClass} flex-wrap px-4 py-2 md:flex md:flex-row items-center justify-center")">
+                <li class="nav-item px-3 py-1">
+                    <NavLink href="" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                         Home
                     </NavLink>
                 </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="/Aikido" Match="NavLinkMatch.All">
+@*                 <li class="nav-item px-3 py-1">
+                    <NavLink href="/Home-alt" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Home-alt
+                    </NavLink>
+                </li>   *@   
+                <li class="nav-item px-3 py-1">
+                    <NavLink href="/Aikido" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                         Aikido
                     </NavLink>
                 </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="/Genbukan" Match="NavLinkMatch.All">
-                        Genbukan
-                    </NavLink>
-                </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="/Bujinkan" Match="NavLinkMatch.All">
+                <li class="nav-item px-3 py-1">
+                    <NavLink href="/Bujinkan" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                         Bujinkan
                     </NavLink>
                 </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="/wie-fange-ich-an" Match="NavLinkMatch.All">
-                        Wie fange ich an
+                <li class="nav-item px-3 py-1">
+                    <NavLink href="/Genbukan" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Genbukan
                     </NavLink>
                 </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="/Verein" Match="NavLinkMatch.All">
+                <li class="nav-item px-3 py-1">
+                    <NavLink href="/wie-fange-ich-an" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                        <span class="text-center">Wie fange ich an?</span>
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3 py-1">
+                    <NavLink href="/Verein" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                         Verein
                     </NavLink>
                 </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="/Kontakt" Match="NavLinkMatch.All">
+                <li class="nav-item px-3 py-1">
+                    <NavLink href="/Kontakt" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                         Kontakt
                     </NavLink>
                 </li>
-
                 <AuthorizeView>
                     <Authorized>
-                        <div class="nav-item px-3">
-                            <NavLink class="nav-link" href="Account/Member" Match="NavLinkMatch.All">
+                        <li class="nav-item px-3 py-1">
+                            <NavLink href="/Account/Member" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                                 Mitgliederbereich
                             </NavLink>
-                        </div>
-                        <li class="nav-item">
-                            <form action="Account/Logout" method="post">
-                                <AntiforgeryToken />
-                                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                                <button type="submit" class="nav-link">
-                                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                                </button>
-                            </form>
                         </li>
                     </Authorized>
-                    <NotAuthorized>
-                        <li class="nav-item">
-                            <NavLink class="nav-link" href="/Account/Login" Match="NavLinkMatch.All">
-                                Login
-                            </NavLink>
-                        </li>
-                    </NotAuthorized>
                 </AuthorizeView>
             </ul>
         </div>
-    </nav>
+
+    </div>
 </div>
 
+@*
+<nav class="z-20 fixed start-0 top-0 w-full border-b bg-white">
+    <div class="mx-auto flex max-w-screen-xl flex-wrap justify-between p-4">
+
+        <div class="flex items-center justify-center md:order-2">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="flex flex-row justify-center">
+                        <div class="nav-item active:underline">
+                            <NavLink class="nav-link rounded px-3 py-2 text-black hover:underline active:underline" href="Account/Member" Match="NavLinkMatch.All">
+                                Mitgliederbereich
+                            </NavLink>
+                        </div>
+                        <div class="nav-item active:underline">
+                            <form action="Account/Logout" method="post">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                                <button type="submit" class="nav-link rounded px-3 py-2 text-black hover:underline active:underline">
+                                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <li class="nav-item list-none">
+                        <NavLink class="nav-link rounded px-3 py-2 text-black hover:underline active:underline" href="/Account/Login" Match="NavLinkMatch.All">
+                            Login
+                        </NavLink>
+                    </li>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <div class="flex-1">
+            <ul class="flex flex-row items-center justify-center">
+                <li class="nav-item active:underline">
+                    <NavLink href="" class="nav-link rounded px-3 py-2 text-black hover:underline active:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Home
+                    </NavLink>
+                </li>
+                <li class="nav-item active:underline">
+                    <NavLink href="/Aikido" class="nav-link rounded px-5 py-2 text-black hover:underline active:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Aikido
+                    </NavLink>
+                </li>
+                <li class="nav-item active:underline">
+                    <NavLink href="/Bujinkan" class="nav-link rounded px-5 py-2 text-black hover:underline active:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Bujinkan
+                    </NavLink>
+                </li>
+                <li class="nav-item active:underline">
+                    <NavLink href="/Genbukan" class="nav-link rounded px-5 py-2 text-black hover:underline active:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Genbukan
+                    </NavLink>
+                </li>
+                <li class="nav-item active:underline">
+                    <NavLink href="/wie-fange-ich-an" class="nav-link rounded px-5 py-2 text-black hover:underline active:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Wie fange ich an?
+                    </NavLink>
+                </li>
+                <li class="nav-item active:underline">
+                    <NavLink href="/Verein" class="nav-link rounded px-5 py-2 text-black hover:underline active:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Verein
+                    </NavLink>
+                </li>
+                <li class="nav-item active:underline">
+                    <NavLink href="/Kontakt" class="nav-link rounded px-5 py-2 text-black hover:underline active:underline" aria-current="page" Match="NavLinkMatch.All">
+                        Kontakt
+                    </NavLink>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav> *@
+
+
 <style>
-
-    .sticky{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 10px 0;
-        z-index: 1000;
-    }
-
     .nav-item {
-        display: block;
-        flex: 0 1 auto;
-        margin: 0 auto;
     }
 
     .nav-link {
-        background-color:transparent;
-        border: none;
-        color: #000000;
-        text-decoration: none;
-        text-underline-offset: 8px;
-        display: block;
-        padding: 10px;
-        font-size: 14px;
-        text-align: center;
-    }
-
-    .nav-item .nav-link:hover {
-        text-decoration: underline;
     }
 
     .nav-item .nav-link.active {
@@ -122,11 +197,21 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+
+        if (_menuVisible)
+            _menuVisible = false;
         StateHasChanged();
     }
 
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private bool _menuVisible = false;
+
+    private void ToggleMenu()
+    {
+        _menuVisible = !_menuVisible;
     }
 }

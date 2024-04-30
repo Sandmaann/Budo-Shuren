@@ -5,13 +5,13 @@
     font-family: "Yuji Syuku", serif;
 }
 
-p {
+/*p {
     font-family: "PT Sans", sans-serif;
     letter-spacing: .10em;
     margin-right: -.10em;
     font-size: 14px;
     line-height: 18.12px;
-}
+}*/
 
     p .bold {
         font-weight: 700;
@@ -37,18 +37,18 @@ span .bold {
 
 .default-grid {
     display: grid;
-    grid-template-columns: 13.40% /*193*/
-    07.56% /* 302 -> 109 diff*/
-    09.44% /* 438 -> 136 diff*/
-    05.55% /* 518 ->  80 diff*/
-    05.13% /* 592 ->  74 diff*/
-    11.66% /* 760 -> 168 diff*/
-    05.55% /* 840 ->  80 diff*/
-    06.11% /* 928 ->  88 diff*/
-    05.55% /*1008 ->  80 diff*/
-    09.02% /*1138 -> 130 diff*/
-    07.63% /*1248 -> 110 diff*/
-    13.40% /*193*/;
+    grid-template-columns: 13.40% 193
+    07.56%  302 -> 109 diff
+    09.44%  438 -> 136 diff
+    05.55%  518 ->  80 diff
+    05.13%  592 ->  74 diff
+    11.66%  760 -> 168 diff
+    05.55%  840 ->  80 diff
+    06.11%  928 ->  88 diff
+    05.55% 1008 ->  80 diff
+    09.02% 1138 -> 130 diff
+    07.63% 1248 -> 110 diff
+    13.40% 193;
     grid-gap: 0;
 }
 
@@ -70,14 +70,14 @@ span .bold {
 
 
 
-/*----- Auth Login Style Stuff -----*/
+----- Auth Login Style Stuff -----
 
 .text-danger {
     color: rgba(220, 53, 69, 1) !important;
 }
 
 
-/*-------- Headline Styles -------- */
+-------- Headline Styles -------- 
 
 h1, h2, h3, h4, h5, h6 {
     padding-bottom: 0px;
@@ -118,7 +118,7 @@ h4 {
 }
 
 
-/*-------- Link Styles -------- */
+-------- Link Styles -------- 
 .default-text-link {
     margin-top: 15px;
     color: #2A6749;
@@ -130,7 +130,7 @@ h4 {
 }
 
 
-/*-------- Error Styles, von Blazor erstellt -------- */
+-------- Error Styles, von Blazor erstellt -------- 
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
@@ -158,7 +158,7 @@ h4 {
     border-color: #929292;
 }
 
-/*-------- Zum testen des Grids -------- */
+-------- Zum testen des Grids -------- 
 .grid-test-item {
     background-color: #ddd;
     text-align: center;
@@ -166,7 +166,7 @@ h4 {
 }
 
     .grid-test-item:nth-child(even) {
-        background-color: lightblue; /* Set your desired background color here */
+        background-color: lightblue;  Set your desired background color here 
     }
 
 

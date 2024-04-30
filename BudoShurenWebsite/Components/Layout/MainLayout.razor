@@ -1,19 +1,22 @@
 ﻿@inherits LayoutComponentBase
 
 
-<header>
-    <NavMenu />
-</header>
 
-<main role="main">
-    <div style="margin-top:85px">
-        @Body
-    </div>
-</main>
 
-<footer>
-    <Footer />
-</footer>
+<div class="container mx-auto max-w-screen-xl">
+    <header>
+        <NavMenu />
+    </header>
+
+    <main role="main">
+        <div style="margin-top:85px">
+            @Body
+        </div>
+    </main>
+    <footer>
+        <Footer />
+    </footer>
+</div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
