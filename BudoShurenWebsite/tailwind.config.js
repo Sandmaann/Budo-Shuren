@@ -1,6 +1,21 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: ["-/../**/*.{razor,html,cshtml}"],
+    theme: {
+        extend: {
+            // Adds a new breakpoint in addition to the default breakpoints
+            colors: {
+                'primary': '#2A6749',
+            },
+            transitionProperty: {
+                'height': 'height'
+            },
+            fontFamily: {
+                'yuji' : 'Yuji Syuku',
+                'ptsans': 'PT Sans'
+            },
+        }
+    },
     //theme: {
     //    letterSpacing: {
     //        tightest: '-.075rem',
@@ -26,9 +41,9 @@ module.exports = {
     //        }],
     //    }
     //},
-    theme: {
-      extend: {},
-    },
+    //theme: {
+    //    extend: {},
+    //},
     plugins: [],
 }
 

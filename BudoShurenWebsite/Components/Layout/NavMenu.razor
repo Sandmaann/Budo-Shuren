@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 
+
 <div class="z-20 fixed start-0 top-0 w-full bg-white">
     <div class="mx-auto max-w-screen-xl md:flex md:justify-between md:items-center">
         <div class="flex items-center p-3 md:order-2">
@@ -11,7 +12,6 @@
                           d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z" />
                 </svg>
             </button>
-
             <AuthorizeView>
                 <Authorized>
                     <div class="md:order-2">
@@ -34,64 +34,72 @@
             </AuthorizeView>
         </div>
 
+        @{
+            //Lokale Variablen um die Nav-Bar zu verwalten
+            //1. Die Nav-Bar soll ausgeblendet sein, wenn Mobile-Size
+            //2. Die Nav-Bar soll in einem Drop-Down nach unten aufgehen in Mobile-Size
+            //3. Die Nav-Bar soll sich nach unten ausweiten, Transition !
+            //4. Die Desktop-Ansicht soll davon nicht betroffen sein!
 
-        <div class="flex-1 items-center justify-center">
-            @{
-                var menuVisibleClass = _menuVisible ? "" : "hidden";
-            }
-            <ul class="@($"flex flex-col {menuVisibleClass} flex-wrap px-4 py-2 md:flex md:flex-row items-center justify-center")">
-                <li class="nav-item px-3 py-1">
-                    <NavLink href="" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        Home
-                    </NavLink>
-                </li>
-@*                 <li class="nav-item px-3 py-1">
-                    <NavLink href="/Home-alt" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        Home-alt
-                    </NavLink>
-                </li>   *@   
-                <li class="nav-item px-3 py-1">
-                    <NavLink href="/Aikido" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        Aikido
-                    </NavLink>
-                </li>
-                <li class="nav-item px-3 py-1">
-                    <NavLink href="/Bujinkan" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        Bujinkan
-                    </NavLink>
-                </li>
-                <li class="nav-item px-3 py-1">
-                    <NavLink href="/Genbukan" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        Genbukan
-                    </NavLink>
-                </li>
-                <li class="nav-item px-3 py-1">
-                    <NavLink href="/wie-fange-ich-an" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        <span class="text-center">Wie fange ich an?</span>
-                    </NavLink>
-                </li>
-                <li class="nav-item px-3 py-1">
-                    <NavLink href="/Verein" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        Verein
-                    </NavLink>
-                </li>
-                <li class="nav-item px-3 py-1">
-                    <NavLink href="/Kontakt" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                        Kontakt
-                    </NavLink>
-                </li>
-                <AuthorizeView>
-                    <Authorized>
-                        <li class="nav-item px-3 py-1">
-                            <NavLink href="/Account/Member" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                                Mitgliederbereich
-                            </NavLink>
-                        </li>
-                    </Authorized>
-                </AuthorizeView>
-            </ul>
+            //Geteilte Werte
+            var basis = "transition-height ease-in-out duration-500 overflow-hidden";
+            //Expanded-Werte, Höhe muss angegeben werden ansonsten greift die Transition nicht
+            var expanded = "h-[272px] " + basis;
+            //Collapsed-Werte mit MediaQuery für Desktop
+            var collapsed = "h-0 md:h-auto " + basis;
+            //Sichtbarkeit der Nav-Bar je nach Button-Klick
+            var menuVisibleClass = _menuVisible ? "" : "hidden";
+        }
+        <div class="flex-1 @( _menuVisible ? expanded : collapsed)">
+            <div class="flex-1 items-center justify-center">
+                <ul class="@($"flex flex-col {menuVisibleClass} flex-wrap px-4 py-2 md:flex md:flex-row items-center justify-center transition overflow-hidden")">
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Home
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/Aikido" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Aikido
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/Bujinkan" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Bujinkan
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/Genbukan" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Genbukan
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/wie-fange-ich-an" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            <span class="text-center">Wie fange ich an?</span>
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/Verein" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Verein
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/Kontakt" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Kontakt
+                        </NavLink>
+                    </li>
+                    <AuthorizeView>
+                        <Authorized>
+                            <li class="nav-item px-3 py-1">
+                                <NavLink href="/Account/Member" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                                    Mitgliederbereich
+                                </NavLink>
+                            </li>
+                        </Authorized>
+                    </AuthorizeView>
+                </ul>
+            </div>
         </div>
-
     </div>
 </div>
 

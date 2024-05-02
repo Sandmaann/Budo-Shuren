@@ -2,4 +2,4 @@
  In CMD ausführen um Tailwind CLI zu starten:
  
  
-./../Tailwind/tailwindcss.exe -i ./Sty5les/budo-shuren.css -o ./wwwroot/budo-shuren.css --watch
+./../Tailwind/tailwindcss.exe -i ./Styles/budo-shuren.css -o ./wwwroot/budo-shuren.css --watch
