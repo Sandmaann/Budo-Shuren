@@ -1,0 +1,90 @@
+﻿@inject IDataService DataService
+@inject ILogger<InteresseFormular> Logger
+
+@* @rendermode InteractiveServer *@
+
+@using System.ComponentModel.DataAnnotations
+
+@* .text-danger {
+    color: rgba(220, 53, 69, 1) !important;
+} *@
+
+<div class="h-full">
+    <div class="font-yuji text-sm font-normal leading-tight tracking-wider text-black">Interesse? <br />Dann schreibe mir doch gerne eine Nachricht!</div>
+
+    <StatusMessage Message="@errorMessage" />
+    <EditForm Model="Input" method="post" OnValidSubmit="SubmitNachricht" FormName="nachricht" class="flex h-full flex-col">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="mt-8 text-error" role="alert" />
+        <div class="mt-4 text-right">
+            <label for="email" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Deine E-Mail</label>
+        </div>
+        <div>
+            <InputText @bind-Value="Input.Email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="email" aria-required="true" placeholder="E-Mail Adresse" />
+            <ValidationMessage For="() => Input.Email" class="text-error" />
+        </div>
+        <div class="mt-8 text-right">
+            <label for="nachricht" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Deine Nachricht</label>
+        </div>
+        <div class="grow">
+            <InputTextArea @bind-Value="Input.Text" class="font-ptsans h-full w-full max-w-full resize-none border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="nachricht" aria-required="true" placeholder="Was möchtest du schreiben?" />
+            <ValidationMessage For="() => Input.Text" class="text-error" />
+        </div>
+        <div class="mt-8 flex justify-end">
+            <button type="submit" class="font-yuji h-10 bg-black px-5 text-center text-sm font-normal leading-tight tracking-widest text-white hover:bg-primary">
+                <span class="text-center text-white">Senden</span>
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+<style>
+    .resize-horizontal {
+        resize: horizontal;
+        overflow: auto;
+    }
+
+</style>
+
+@code {
+    private string? errorMessage;
+
+
+    [Parameter]
+    public string? Abteilung { get; set; }
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    @code {
+        public string DropVal = string.Empty;
+
+        protected override async Task OnInitializedAsync()
+        {
+            await base.OnInitializedAsync();
+            LocalData = await DataService.GetAbteilungenAsync();
+        }
+
+        private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
+
+
+        public async Task SubmitNachricht()
+        {
+
+        }
+
+        private sealed class InputModel
+        {
+            [Required(ErrorMessage = "Bitte gebe eine E-Mail Adresse an, unter der wir dich erreichen können!")]
+            [Display(Name = "Deine E-Mail Adresse")]
+            [EmailAddress(ErrorMessage = "Das Format der E-Mail Adresse ist nicht korrekt!")]
+            public string Email { get; set; } = "";
+
+            [Required(ErrorMessage = "Bitte schreibe eine kurze Nachricht!")]
+            [Display(Name = "Deine Nachricht")]
+            [DataType(DataType.Text)]
+            public string Text { get; set; } = "";
+        }
+    }
+
+}

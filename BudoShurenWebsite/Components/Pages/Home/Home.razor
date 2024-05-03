@@ -1,32 +1,68 @@
-﻿@page "/Home-alt"
+﻿@page "/"
+@* @rendermode InteractiveServer *@
+
 @using BudoShurenWebsite.Components.Shared
 @using BudoShurenWebsite.Components.Pages
 
 <PageTitle>Budo Shuren Dojo</PageTitle>
 
-<div class="default-container">
+<div>
+    <Überschrift Titel="武道修練道場"
+                 Untertitel="Budoshuren Dojo"
+                 Anekdote="Augsburg" />
 
-@*     <div class="text-4xl font-bold">
-        Welcome to Tailwind-Shuren-Dojo
-    </div> *@
+</div>
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        <section>
+            <SectionBanner Titel="Neuigkeiten" />
 
-    <div>
-        <Überschrift Titel="武道修練道場"
-                     Untertitel="Budoshuren Dojo"
-                     Anekdote="Augsburg" />
+            <div>
+                <Neuigkeiten />
+            </div>
+        </section>
 
+        <section>
+            <SectionBanner Titel="Wer sind wir" />
+            <div class="font-ptsans text-sm font-normal tracking-wider text-black md:ml-52">
+                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                    Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe.
+                </p>
+                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                    Das Dojo legt großen Wert auf die traditionellen Werte des Budo, wie Respekt, Disziplin und Selbstbeherrschung. Die Schüler werden ermutigt, nicht nur ihre körperlichen Fähigkeiten zu verbessern, sondern auch ihre geistige Stärke und emotionale Ausgeglichenheit zu entwickeln.Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe.
+                </p>
+                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                    Das Dojo legt großen Wert auf die traditionellen Werte des Budo, wie Respekt.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Unsere Kampfkünste" />
+            <div>
+                <Kampfkünste />
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Termine" />
+            <div>
+                <Kalender />
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Bilder" />
+            <div>
+                <Galerie />
+            </div>
+        </section>
     </div>
-    <div><SectionBanner Titel="Neuigkeiten" /></div>
-    <div><Neuigkeiten /></div>
-    <div><SectionBanner Titel="Wer sind wir" /></div>
-    <div><DojoText /></div>
-    <div><SectionBanner Titel="Unsere Kampfkünste" /></div>
-    <div><Kampfkünste /></div>
-    <div><SectionBanner Titel="Aktuelle Termine" /></div>
-    <div><SectionBanner Titel="Galerie" /></div>
-    <div><Galerie /></div>
 </div>
 
-@code {
 
+
+
+@code {
+    bool Left { get; set; } = true;
 }

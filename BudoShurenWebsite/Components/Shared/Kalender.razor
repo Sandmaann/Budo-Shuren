@@ -1,0 +1,34 @@
+﻿@rendermode InteractiveServer
+
+<SfSchedule TValue="AppointmentData" Height="650px" @bind-SelectedDate="@CurrentDate" AllowDragAndDrop="false">
+    <ScheduleEventSettings DataSource="@DataSource"></ScheduleEventSettings>
+    <ScheduleViews>
+        <ScheduleView Option="View.Month"></ScheduleView>
+    </ScheduleViews>
+</SfSchedule>
+
+
+@code {
+
+    DateTime CurrentDate = DateTime.Today;
+    List<AppointmentData> DataSource = new List<AppointmentData>
+    {
+        new AppointmentData { Id = 1, Subject = "Paris", StartTime = DateTime.Today , EndTime= DateTime.Now },
+        new AppointmentData { Id = 2, Subject = "France", StartTime = DateTime.Today , EndTime= DateTime.Now },
+        new AppointmentData { Id = 3, Subject = "Germany", StartTime = new DateTime(2024, 5, 5, 10, 0, 0) , EndTime = new DateTime(2020, 5, 5, 12, 0, 0) }
+    };
+
+    public class AppointmentData
+    {
+        public int Id { get; set; }
+        public string Subject { get; set; }
+        public string Location { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Description { get; set; }
+        public bool IsAllDay { get; set; }
+        public string RecurrenceRule { get; set; }
+        public string RecurrenceException { get; set; }
+        public Nullable<int> RecurrenceID { get; set; }
+    }
+}

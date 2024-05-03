@@ -2,48 +2,39 @@
 module.exports = {
     content: ["-/../**/*.{razor,html,cshtml}"],
     theme: {
+        // Erweitert das Theme um eigene Farben und Schriftarten
         extend: {
-            // Adds a new breakpoint in addition to the default breakpoints
             colors: {
                 'primary': '#2A6749',
+                'error': '#DC3545',
             },
             transitionProperty: {
                 'height': 'height'
             },
             fontFamily: {
-                'yuji' : 'Yuji Syuku',
+                'yuji': 'Yuji Syuku',
                 'ptsans': 'PT Sans'
             },
+            height: {
+                '18': '4.5rem',
+                '75': '18.75rem',
+                '100': '25rem',
+                '112': '28rem',
+            },
+            width: {
+                '18': '4.5rem',
+                '75': '18.75rem',
+                '100': '25rem',
+                '112': '28rem',
+
+            },
+            spacing: {
+                '18': '4.5rem',
+                '75': '18.75rem',
+                '112': '28rem',
+            }
         }
     },
-    //theme: {
-    //    letterSpacing: {
-    //        tightest: '-.075rem',
-    //        tighter: '-.05rem',
-    //        tight: '-.025rem',
-    //        normal: '0',
-    //        wide: '.025rem',
-    //        wider: '.05rem',
-    //        widest: '1.4rem',
-    //    }
-    //},
-    //theme: {
-    //    fontSize: {
-    //        '2xl': ['1.5rem', {
-    //            lineHeight: '2rem',
-    //            letterSpacing: '-0.01em',
-    //            fontWeight: '500',
-    //        }],
-    //        '3xl': ['1.875rem', {
-    //            lineHeight: '2.25rem',
-    //            letterSpacing: '-0.02em',
-    //            fontWeight: '700',
-    //        }],
-    //    }
-    //},
-    //theme: {
-    //    extend: {},
-    //},
     plugins: [],
 }
 

@@ -29,42 +29,42 @@
     </div>
 
     <div class="-mx-10 md:-mx-20">
-        <SfCarousel ShowIndicators="true"
+        <SfCarousel ShowIndicators="true" AutoPlay="false"
                     @bind-SelectedIndex="@CurrentIndex">
             <ChildContent>
                 <CarouselItem>
-                    <div class="mx-10 md:mx-20">
-                        <div class="grid-cols-[auto_130px] grid md:flex md:flex-row">
+                    <div class="mx-10 mb-10 md:mx-20">
+                        <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
                             <div class="md:w-8/12">
                                 <img src="/images/aikido.jpg" />
                             </div>
-
                             @* Mobile-Ansicht *@
-                            <div class="min-h-[280px] relative flex-grow text-right md:hidden">
-                                <div class="font-yuji -mt-2 text-right text-xl font-normal tracking-widest text-primary">Aikido</div>
-                                <div class="mb-2">Trainingszeiten:</div>
+                            <div  class="min-h-[19rem] font-ptsans relative mb-2 ml-auto text-left text-sm font-normal tracking-wider text-black md:hidden">
+                                <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Aikido</div>
+                                <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                 <div>
-                                    <div>Dienstag</div>
-                                    <div>18:00 - 21:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                 </div>
                                 <div>
-                                    <div>Donnerstag</div>
-                                    <div>18:00 - 21:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                 </div>
-                                <div class="mb-2 mt-4">Kindertraining:</div>
+                                <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
                                 <div>
-                                    <div>Dienstag</div>
-                                    <div>17:00 - 18:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                 </div>
                                 <div>
-                                    <div>Donnerstag</div>
-                                    <div>17:00 - 18:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                 </div>
                                 <div class="absolute bottom-0 right-0">
-                                    <a href="/Aikido" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a>
+                                    <Weiterleitung Link="/Aikido" />
+                                    @* <a href="/Aikido" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a> *@
                                 </div>
                             </div>
-                            <div class="beschreibung col-span-2 mt-2 md:hidden">
+                            <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm md:hidden">
                                 Aikido, eine japanische Kampfkunst, die in den frühen 1920er Jahren von Morihei Ueshiba entwickelt wurde, betont die Idee der friedlichen Konfliktlösung und Selbstverteidigung ohne den Einsatz von Waffen. Charakterisiert durch fließende Bewegungen und die Nutzung der Kraft des Gegners, zielt Aikido darauf ab, Angriffe umzuleiten und den Angreifer durch Techniken wie Würfe, Hebel und Haltegriffe zu kontrollieren, ohne ihm ernsthaften Schaden zuzufügen. In der Praxis fördert Aikido nicht nur körperliche Fitness, sondern auch geistige Disziplin und emotionales Gleichgewicht, indem es den Praktizierenden lehrt, mit Aggression und Konflikten auf eine harmonische Weise umzugehen.
                             </div>
 
@@ -73,31 +73,32 @@
 
                             <div class="ml-20 hidden w-4/12 md:block">
                                 <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Aikido</div>
-                                <div class="text-left">
+                                <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
                                     Aikido, eine japanische Kampfkunst, die in den frühen 1920er Jahren von Morihei Ueshiba entwickelt wurde, betont die Idee der friedlichen Konfliktlösung und Selbstverteidigung ohne den Einsatz von Waffen. Charakterisiert durch fließende Bewegungen und die Nutzung der Kraft des Gegners, zielt Aikido darauf ab, Angriffe umzuleiten und den Angreifer durch Techniken wie Würfe, Hebel und Haltegriffe zu kontrollieren, ohne ihm ernsthaften Schaden zuzufügen. In der Praxis fördert Aikido nicht nur körperliche Fitness, sondern auch geistige Disziplin und emotionales Gleichgewicht, indem es den Praktizierenden lehrt, mit Aggression und Konflikten auf eine harmonische Weise umzugehen.
                                 </div>
 
-                                <div class="relative mt-10 min-h-48">
-                                    <div class="mb-2">Trainingszeiten:</div>
+                                <div class="font-ptsans relative mt-10 min-h-48 text-sm font-normal tracking-wider text-black">
+                                    <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Dienstag</div>
-                                        <div>18:00 - 21:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Donnerstag</div>
-                                        <div>18:00 - 21:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
-                                    <div class="mb-2 mt-4">Kindertraining:</div>
+                                    <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Dienstag</div>
-                                        <div>17:00 - 18:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Donnerstag</div>
-                                        <div>17:00 - 18:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
                                     <div class="absolute bottom-0 right-0">
-                                        <a href="/Aikido" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a>
+                                        <Weiterleitung Link="/Aikido" />
+                                        @* <a href="/Aikido" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a> *@
                                     </div>
                                 </div>
                             </div>
@@ -106,71 +107,75 @@
                 </CarouselItem>
 
                 <CarouselItem>
-                    <div class="mx-10 md:mx-20">
-                        <div class="grid-cols-[auto_130px] grid md:flex md:flex-row">
+                    <div class="mx-10 mb-10 md:mx-20">
+                        <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
                             <div class="md:w-8/12">
                                 <img src="/images/iaido.jpg" />
                             </div>
 
                             @* Mobile-Ansicht *@
-                            <div class="min-h-[280px] relative flex-grow text-right md:hidden">
-                                <div class="font-yuji -mt-2 text-right text-xl font-normal tracking-widest text-primary">Genbukan</div>
-                                <div class="mb-2">Trainingszeiten:</div>
+                            <div class="min-h-[19rem] font-ptsans relative mb-2 ml-auto flex-grow text-left text-sm font-normal tracking-wider text-black md:hidden">
+                                <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Genbukan</div>
+                                <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                 <div>
-                                    <div>Dienstag</div>
-                                    <div>18:00 - 21:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                 </div>
                                 <div>
-                                    <div>Donnerstag</div>
-                                    <div>18:00 - 21:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                 </div>
                                 <div class="mb-2 mt-4">Kindertraining:</div>
                                 <div>
-                                    <div>Dienstag</div>
-                                    <div>17:00 - 18:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                 </div>
                                 <div>
-                                    <div>Donnerstag</div>
-                                    <div>17:00 - 18:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                 </div>
                                 <div class="absolute bottom-0 right-0">
-                                    <a href="/Genbukan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a>
+                                    <Weiterleitung Link="/Genbukan" />
+
+                                    @* <a href="/Genbukan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a> *@
                                 </div>
                             </div>
-                            <div class="beschreibung col-span-2 mt-2 md:hidden">
+                            <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
                                 Genbukan ist eine japanische Kampfkunstschule, die von Shoto Tanemura gegründet wurde und sich auf die Erhaltung und Weitergabe traditioneller Samurai-Kampfkünste konzentriert. Eine der Disziplinen, die im Genbukan gelehrt wird, ist Iaido, eine Kunst, die sich auf das Ziehen des Schwertes und die unmittelbare Reaktion auf einen Angriff konzentriert. Im Gegensatz zu vielen anderen Kampfkünsten legt Iaido weniger Wert auf den Kampf gegen einen physischen Gegner und konzentriert sich stattdessen auf die Perfektion von Bewegungen und die Entwicklung von innerer Ruhe und Klarheit des Geistes. Durch langsame und präzise Bewegungen lernen die Schüler, sich auf den Moment zu konzentrieren und ihren Geist zu beruhigen. Iaido wird oft als eine meditative Praxis angesehen, die sowohl körperliche Geschicklichkeit als auch geistige Disziplin fördert, während sie gleichzeitig die traditionelle Samurai-Ethik und -Philosophie ehrt.
                             </div>
 
                             @* Desktop Ansicht *@
                             @* Ist getrennt, blöd aber ich finde keinen sinnvollen Weg diese Ansicht ansonsten zumzusetzen! *@
 
-                            <div class="ml-20 hidden w-4/12 md:block">
+                            <div class="font-ptsans mb-2 ml-20 hidden w-4/12 text-sm font-normal tracking-wider text-black md:block">
                                 <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Genbukan</div>
-                                <div class="text-left">
+                                <div class="font-ptsans text-left">
                                     Genbukan ist eine japanische Kampfkunstschule, die von Shoto Tanemura gegründet wurde und sich auf die Erhaltung und Weitergabe traditioneller Samurai-Kampfkünste konzentriert. Eine der Disziplinen, die im Genbukan gelehrt wird, ist Iaido, eine Kunst, die sich auf das Ziehen des Schwertes und die unmittelbare Reaktion auf einen Angriff konzentriert. Im Gegensatz zu vielen anderen Kampfkünsten legt Iaido weniger Wert auf den Kampf gegen einen physischen Gegner und konzentriert sich stattdessen auf die Perfektion von Bewegungen und die Entwicklung von innerer Ruhe und Klarheit des Geistes. Durch langsame und präzise Bewegungen lernen die Schüler, sich auf den Moment zu konzentrieren und ihren Geist zu beruhigen. Iaido wird oft als eine meditative Praxis angesehen, die sowohl körperliche Geschicklichkeit als auch geistige Disziplin fördert, während sie gleichzeitig die traditionelle Samurai-Ethik und -Philosophie ehrt.
                                 </div>
 
                                 <div class="relative mt-10 min-h-48">
-                                    <div class="mb-2">Trainingszeiten:</div>
+                                    <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Dienstag</div>
-                                        <div>18:00 - 21:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Donnerstag</div>
-                                        <div>18:00 - 21:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
-                                    <div class="mb-2 mt-4">Kindertraining:</div>
+                                    <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Dienstag</div>
-                                        <div>17:00 - 18:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Donnerstag</div>
-                                        <div>17:00 - 18:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
                                     <div class="absolute bottom-0 right-0">
-                                        <a href="/Genbukan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a>
+                                        <Weiterleitung Link="/Genbukan" />
+
+                                        @* <a href="/Genbukan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a> *@
                                     </div>
                                 </div>
                             </div>
@@ -179,38 +184,40 @@
                 </CarouselItem>
 
                 <CarouselItem>
-                    <div class="mx-10 md:mx-20">
-                        <div class="grid-cols-[auto_130px] grid md:flex md:flex-row">
+                    <div class="mx-10 mb-10 md:mx-20">
+                        <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
                             <div class="md:w-8/12">
                                 <img src="/images/budo.jpg" />
                             </div>
 
                             @* Mobile-Ansicht *@
-                            <div class="min-h-[280px] relative flex-grow text-right md:hidden">
-                                <div class="font-yuji -mt-2 text-right text-xl font-normal tracking-widest text-primary">Bujinkan</div>
-                                <div class="mb-2">Trainingszeiten:</div>
+                            <div class="min-h-[19rem] relative ml-auto flex-grow text-left md:hidden">
+                                <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Bujinkan</div>
+                                <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                 <div>
-                                    <div>Dienstag</div>
-                                    <div>18:00 - 21:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                 </div>
                                 <div>
-                                    <div>Donnerstag</div>
-                                    <div>18:00 - 21:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                 </div>
-                                <div class="mb-2 mt-4">Kindertraining:</div>
+                                <div class="mt-4c font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
                                 <div>
-                                    <div>Dienstag</div>
-                                    <div>17:00 - 18:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                 </div>
                                 <div>
-                                    <div>Donnerstag</div>
-                                    <div>17:00 - 18:00</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                 </div>
                                 <div class="absolute bottom-0 right-0">
-                                    <a href="/Bujinkan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a>
+                                    <Weiterleitung Link="/Bujinkan" />
+
+                                    @* <a href="/Bujinkan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a> *@
                                 </div>
                             </div>
-                            <div class="beschreibung col-span-2 mt-2 md:hidden">
+                            <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
                                 Bujinkan ist eine japanische Kampfkunstschule, die von Masaaki Hatsumi gegründet wurde und sich auf die Lehren der neun traditionellen Kampfkünste (Ryuha) konzentriert. Diese umfassen unter anderem Ninjutsu, Taijutsu und Jujutsu. Bujinkan betont nicht nur physische Techniken, sondern auch mentale Aspekte wie Strategie, Taktik und Philosophie. Es legt Wert auf die Entwicklung von Körper, Geist und Charakter und betont die Anwendung von Techniken in einer Vielzahl von Situationen, einschließlich Selbstverteidigung und Konfliktvermeidung.
                             </div>
 
@@ -219,31 +226,33 @@
 
                             <div class="ml-20 hidden w-4/12 md:block">
                                 <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Bujinkan</div>
-                                <div class="text-left">
+                                <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
                                     Bujinkan ist eine japanische Kampfkunstschule, die von Masaaki Hatsumi gegründet wurde und sich auf die Lehren der neun traditionellen Kampfkünste (Ryuha) konzentriert. Diese umfassen unter anderem Ninjutsu, Taijutsu und Jujutsu. Bujinkan betont nicht nur physische Techniken, sondern auch mentale Aspekte wie Strategie, Taktik und Philosophie. Es legt Wert auf die Entwicklung von Körper, Geist und Charakter und betont die Anwendung von Techniken in einer Vielzahl von Situationen, einschließlich Selbstverteidigung und Konfliktvermeidung.
                                 </div>
 
                                 <div class="relative mt-10 min-h-48">
-                                    <div class="mb-2">Trainingszeiten:</div>
+                                    <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Dienstag</div>
-                                        <div>18:00 - 21:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Donnerstag</div>
-                                        <div>18:00 - 21:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
-                                    <div class="mb-2 mt-4">Kindertraining:</div>
+                                    <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Dienstag</div>
-                                        <div>17:00 - 18:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
                                     <div class="flex flex-row justify-between">
-                                        <div>Donnerstag</div>
-                                        <div>17:00 - 18:00</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
                                     <div class="absolute bottom-0 right-0">
-                                        <a href="/Bujinkan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a>
+                                        <Weiterleitung Link="/Bujinkan" />
+
+                                        @* <a href="/Bujinkan" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">→ Weitere Infos</a> *@
                                     </div>
                                 </div>
                             </div>

@@ -19,13 +19,15 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="25.1.41" />
-    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.1.41" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.1.41" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="25.1.42" />
+    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.1.42" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.1.42" />
+    <PackageReference Include="Syncfusion.Blazor.Schedule" Version="25.1.42" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.1.42" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Shared\Inputs\" />
     <Folder Include="Models\Auth\" />
   </ItemGroup>
 
