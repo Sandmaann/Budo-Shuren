@@ -1,7 +1,90 @@
 ﻿@page "/Genbukan"
 <PageTitle>Genbukan</PageTitle>
 
-<h3>Genbukan</h3>
+<div>
+    <Überschrift Titel="合気道"
+                 Untertitel="Genbukan"
+                 Anekdote="" />
+</div>
+
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        <section class="mt-20 md:flex md:flex-row md:justify-between">
+            <div class="md:max-w-72 md:order-2">
+                <img src="/images/iaido2.jpg" />
+            </div>
+            <div class="mt-5 md:order-1 md:mt-0 md:mr-20">
+                <Fließtext Text="Genbukan ist eine japanische Kampfkunstschule, die von Shoto Tanemura gegründet wurde und sich auf die Erhaltung und Weitergabe traditioneller Samurai-Kampfkünste konzentriert. Eine der Disziplinen, die im Genbukan gelehrt wird, ist Iaido, eine Kunst, die sich auf das Ziehen des Schwertes und die unmittelbare Reaktion auf einen Angriff konzentriert. Im Gegensatz zu vielen anderen Kampfkünsten legt Iaido weniger Wert auf den Kampf gegen einen physischen Gegner und konzentriert sich stattdessen auf die Perfektion von Bewegungen und die Entwicklung von innerer Ruhe und Klarheit des Geistes. Durch langsame und präzise Bewegungen lernen die Schüler, sich auf den Moment zu konzentrieren und ihren Geist zu beruhigen. Iaido wird oft als eine meditative Praxis angesehen, die sowohl körperliche Geschicklichkeit als auch geistige Disziplin fördert, während sie gleichzeitig die traditionelle Samurai-Ethik und -Philosophie ehrt."/>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Das Training" />
+            <div>
+                <div>
+                    <Kalender />
+                </div>
+                <div class="mt-12 justify-between md:flex md:flex-row">
+                    <div class="md:w-52">
+                        <Zwischenüberschrift Text="Der Unterricht" />
+                    </div>
+                    <div class="flex-1 mt-5 md:ml-18 md:mt-0">
+                        <div>
+                            <Fließtext Text="Das Training im Genbukan ist geprägt von einer ausgewogenen Kombination aus körperlicher Technik, mentaler Entwicklung und spirituellem Wachstum. Unter der Anleitung erfahrener Lehrer werden Schüler in den verschiedenen Disziplinen der traditionellen japanischen Kampfkunst ausgebildet, darunter Taijutsu (unbewaffnete Kampfkunst), Kobudo (Waffenkunst) und Ninpo (Ninja-Kunst). Durch regelmäßige Übung und die Vertiefung der Techniken erlangen die Schüler nicht nur Kampffertigkeiten, sondern auch ein tieferes Verständnis für die philosophischen Prinzipien, die der Kampfkunst zugrunde liegen. Das Training im Genbukan fördert nicht nur körperliche Fitness und Selbstverteidigungsfähigkeiten, sondern auch Charakterstärke, Disziplin und Respekt für die japanische Kultur und Tradition." />
+                        </div>
+                        <div class="mt-5">
+                            <Fließtext Text="Die Atmosphäre im Genbukan-Dojo ist geprägt von Respekt, Hingabe und Gemeinschaftssinn. Schüler unterstützen sich gegenseitig beim Lernen und Wachsen, während sie gemeinsam den Weg des Genbukan beschreiten. Der Alltag im Genbukan ist nicht nur von körperlicher Disziplin geprägt, sondern auch von der Entwicklung mentaler Stärke und spiritueller Ausgeglichenheit. Durch die tägliche Praxis und das Engagement für die Prinzipien des Genbukan werden die Schüler nicht nur zu geschickten Kämpfern, sondern auch zu ausgeglichenen Individuen, die die Werte der Kampfkunst in ihr tägliches Leben integrieren." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Der Lehrer" />
+            <div class="md:flex md:flex-row md:justify-between md:h-auto">
+                <div class="md:mr-20">
+                    <div>
+                        <img class="md:h-80" src="/images/iaido3.jpg" />
+                    </div>
+                    <div class="mt-10">
+                        <Zwischenüberschrift Text="Henry Schubert" />
+                    </div>
+                    <div class="mt-10 md:w-100">
+                        <div>
+                            <Fließtext Text="Henry Schubert ist ein hoch angesehener Lehrer und Vertreter des Genbukan in Europa. Mit einer langjährigen Erfahrung und tiefem Wissen in den traditionellen japanischen Kampfkünsten hat er zahlreiche Schüler inspiriert und geführt. Seine leidenschaftliche Hingabe an die Kunst, kombiniert mit einem einfühlsamen und engagierten Lehransatz, ermöglicht es seinen Schülern, nicht nur ihre technischen Fähigkeiten zu verbessern, sondern auch eine tiefere Verbindung zu den philosophischen und spirituellen Aspekten der Kampfkunst zu entwickeln. Henry Schubert verkörpert die Werte des Genbukan und ist ein herausragendes Beispiel für die Bedeutung von Disziplin, Respekt und Kontinuität in der Kampfkunstausbildung." />
+                        </div>
+                    </div>
+                    <div class="mt-5">
+                        <Weiterleitung Link="https://Genbukanbusshindojoblog.wordpress.com/" Text="→ Zum Blog" />
+                    </div>
+                </div>
+
+                <div class="mt-10 md:max-w-72">
+                    <div class="md:h-100"></div>
+                    <div>
+                        <InteresseFormular Abteilung="@(Abteilung.Genbukan)" />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section>
+            <SectionBanner Titel="Aktuelles" />
+            <div>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Galerie" />
+            <div>
+                <Galerie />
+            </div>
+        </section>
+    </div>
+</div>
 
 @code {
 

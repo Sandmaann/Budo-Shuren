@@ -2,7 +2,7 @@
 
 /*----- Mitgliedschaft ------*/
 
-.mitgliedschaft-container {
+/*.mitgliedschaft-container {
     grid-template-rows: auto auto;
     margin-bottom: 100px;
 }
@@ -19,11 +19,11 @@
 
         .mitgliedschaft-container div p {
             padding-bottom: 10px;
-        }
+        }*/
 
 /*----- Kosten / Mitgliedsbeitrag ------*/
 
-.kosten-grid {
+/*.kosten-grid {
     grid-template-rows: auto auto auto auto auto auto;
     grid-auto-flow: column;
     margin-bottom: 150px;
@@ -141,11 +141,11 @@
     .kosten-grid #familie-anmeldegebühr {
         grid-column-start: 8;
         grid-column-end: 11;
-    }
+    }*/
 
 /*----- Anmeldeformular, Satzung, Dokumente ------*/
 
-.anmeldeformular-container {
+/*.anmeldeformular-container {
     margin-bottom: 50px;
 }
 
@@ -186,4 +186,4 @@
     content: "";
     display: block;
     clear: both;
-}
+}*/

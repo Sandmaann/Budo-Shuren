@@ -1,9 +1,9 @@
 ﻿@inject IDataService DataService
 @inject ILogger<InteresseFormular> Logger
-
-@* @rendermode InteractiveServer *@
+@rendermode InteractiveServer
 
 @using System.ComponentModel.DataAnnotations
+@using Syncfusion.Blazor.DropDowns;
 
 @* .text-danger {
     color: rgba(220, 53, 69, 1) !important;
@@ -16,6 +16,40 @@
     <EditForm Model="Input" method="post" OnValidSubmit="SubmitNachricht" FormName="nachricht" class="flex h-full flex-col">
         <DataAnnotationsValidator />
         <ValidationSummary class="mt-8 text-error" role="alert" />
+
+        @if (ShowAbteilung)
+        {
+            <div class="mt-4 text-right">
+                <label for="abteilung" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Empfänger</label>
+            </div>
+            <div>
+                <div>
+                    <SfDropDownList TValue="string"
+                                    TItem="Abteilung"
+                                    Placeholder="Wähle eine Abteilung aus"
+                                    @bind-Value="@Input.SelectedAbteilung"
+                                    DataSource="@LocalData">
+                        <DropDownListTemplates TItem="Abteilung">
+                            <ItemTemplate Context="itemContext">
+                                <div class="my-auto py-4 text-center">
+                                    <span class="font-ptsans text-sm font-bold tracking-wider text-black">@((itemContext as Abteilung).Name)</span>
+                                    <span class="font-ptsans text-sm font-normal tracking-wider text-black">@((itemContext as Abteilung).Abteilungsleiter)</span>
+                                </div>
+                            </ItemTemplate>
+                            <ValueTemplate Context="itemContext">
+                                <div class="my-auto py-4 text-center">
+                                    <span class="font-ptsans text-sm font-bold tracking-wider text-black">@((itemContext as Abteilung).Name)</span>
+                                    <span class="font-ptsans text-sm font-normal tracking-wider text-black">@((itemContext as Abteilung).Abteilungsleiter)</span>
+                                </div>
+                            </ValueTemplate>
+                        </DropDownListTemplates>
+                        <DropDownListFieldSettings Text="Name" Value="Abteilungsleiter"></DropDownListFieldSettings>
+                    </SfDropDownList>
+                </div>
+                <ValidationMessage For="() => Input.SelectedAbteilung" class="text-error" />
+            </div>
+        }
+
         <div class="mt-4 text-right">
             <label for="email" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Deine E-Mail</label>
         </div>
@@ -23,13 +57,15 @@
             <InputText @bind-Value="Input.Email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="email" aria-required="true" placeholder="E-Mail Adresse" />
             <ValidationMessage For="() => Input.Email" class="text-error" />
         </div>
+
         <div class="mt-8 text-right">
             <label for="nachricht" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Deine Nachricht</label>
         </div>
         <div class="grow">
-            <InputTextArea @bind-Value="Input.Text" class="font-ptsans h-full w-full max-w-full resize-none border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="nachricht" aria-required="true" placeholder="Was möchtest du schreiben?" />
+            <InputTextArea @bind-Value="Input.Text" class="font-ptsans h-full min-h-80 w-full max-w-full resize-none border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="nachricht" aria-required="true" placeholder="Was möchtest du schreiben?" />
             <ValidationMessage For="() => Input.Text" class="text-error" />
         </div>
+
         <div class="mt-8 flex justify-end">
             <button type="submit" class="font-yuji h-10 bg-black px-5 text-center text-sm font-normal leading-tight tracking-widest text-white hover:bg-primary">
                 <span class="text-center text-white">Senden</span>
@@ -44,6 +80,35 @@
         overflow: auto;
     }
 
+    .e-ddl.e-input-group.e-control-wrapper .e-ddl-icon::before {
+        color: #000000;
+        font-weight: 700;
+    }
+
+    .e-custom.e-input-group, .e-custom.e-input-group.e-control-wrapper {
+        height: 52px;
+        border-width: 1px;
+        border-color: #000000;
+        border-radius: 0;
+    }
+
+    .e-input-group:not(.e-success):not(.e-warning):not(.e-error), .e-input-group.e-control-wrapper:not(.e-success):not(.e-warning):not(.e-error) {
+        height: 52px;
+        border-color: #000000;
+        border-radius: 0;
+    }
+
+    .e-ddl.e-input-group.e-control-wrapper .e-input {
+        height: 52px;
+        border-color: #000000;
+        border-radius: 0;
+    }
+
+    .e-dropdownbase .e-list-item.e-active,
+    .e-dropdownbase .e-list-item.e-active.e-hover {
+        background-color: #2A6749;
+    }
+
 </style>
 
 @code {
@@ -52,39 +117,52 @@
 
     [Parameter]
     public string? Abteilung { get; set; }
+    [Parameter]
+    public bool ShowAbteilung { get; set; } = false;
+
+    // public string? SelectedAbteilung = string.Empty;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
-    @code {
-        public string DropVal = string.Empty;
 
-        protected override async Task OnInitializedAsync()
+    public string DropVal = string.Empty;
+    private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        LocalData = await DataService.GetAbteilungenAsync();
+
+        if (LocalData.FirstOrDefault(x => x.ID == Abteilung) is Abteilung auswahl)
         {
-            await base.OnInitializedAsync();
-            LocalData = await DataService.GetAbteilungenAsync();
+            Input.SelectedAbteilung = auswahl.ID;
         }
-
-        private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
-
-
-        public async Task SubmitNachricht()
+        else
         {
-
+            // Input.SelectedAbteilung = LocalData.FirstOrDefault()?.ID ?? "";
         }
+    }
 
-        private sealed class InputModel
-        {
-            [Required(ErrorMessage = "Bitte gebe eine E-Mail Adresse an, unter der wir dich erreichen können!")]
-            [Display(Name = "Deine E-Mail Adresse")]
-            [EmailAddress(ErrorMessage = "Das Format der E-Mail Adresse ist nicht korrekt!")]
-            public string Email { get; set; } = "";
+    public async Task SubmitNachricht()
+    {
 
-            [Required(ErrorMessage = "Bitte schreibe eine kurze Nachricht!")]
-            [Display(Name = "Deine Nachricht")]
-            [DataType(DataType.Text)]
-            public string Text { get; set; } = "";
-        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required(ErrorMessage = "Bitte gebe eine E-Mail Adresse an, unter der wir dich erreichen können!")]
+        [Display(Name = "Deine E-Mail Adresse")]
+        [EmailAddress(ErrorMessage = "Das Format der E-Mail Adresse ist nicht korrekt!")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Bitte schreibe eine kurze Nachricht!")]
+        [Display(Name = "Deine Nachricht")]
+        [DataType(DataType.Text)]
+        public string Text { get; set; } = "";
+
+        [Display(Name = "Abteilung")]
+        public string SelectedAbteilung { get; set; } = "";
     }
 
 }

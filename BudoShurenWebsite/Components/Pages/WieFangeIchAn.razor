@@ -2,260 +2,156 @@
 <PageTitle>Wie fange ich an?</PageTitle>
 @rendermode InteractiveServer
 @inject IDataService DataService
+@inject IJSRuntime JSRuntime
 
-@using Syncfusion.Blazor.DropDowns;
-
-<div class="default-container">
-    <div>
-        <Überschrift Titel="武道家"
-                     Untertitel="Budoka" />
-    </div>
-
-    <section>
-        <div class="default-grid">
-            <div id="text-container">
-                <p>Der Einstieg in Budo, sei es Karate, Judo, Kendo oder eine andere Disziplin, beginnt oft mit einer demütigen Geste: dem Betreten des Dojos. Hier, in diesem Ort der Kampfkunst, beginnt die Reise des Lernens und des Wachstums. Die ersten Schritte sind von Respekt und Offenheit geprägt. Man lernt, den eigenen Körper und Geist zu beherrschen, während man die Grundlagen der Techniken erlernt.</p>
-                <p>Die Anfangsstunden sind oft dem Aufwärmen und dem Erlernen grundlegender Bewegungen gewidmet, während man gleichzeitig die Etikette des Dojos und die Traditionen der jeweiligen Kampfkunst verinnerlicht. Es ist eine Zeit des Sammelns von Wissen, der Formung von Disziplin und der Entwicklung einer tiefen Achtung vor dem Weg des Budo. Mit der Zeit wird aus den ersten zaghaften Schritten ein fester Stand, aus der Unsicherheit entsteht Selbstvertrauen und aus der Neugierde erwächst eine tiefe Verbundenheit mit den Prinzipien des Budo.</p>
-            </div>
-        </div>
-    </section>
-
-    <section>
-        <SectionBanner Titel="Probetraining" />
-
-        <div class="default-grid">
-            <div class="probetraining-text-container">
-                <p>Ein Probetraining bietet eine großartige Gelegenheit, einen Einblick in die faszinierende Welt des Budo zu bekommen. Es ist eine Chance, die Atmosphäre des Dojos zu erleben, die Trainer kennenzulernen und erste Einblicke in die Techniken und Philosophie der jeweiligen Kampfkunst zu gewinnen. Während des Probetrainings werden in der Regel grundlegende Bewegungen und Techniken vermittelt, die es den Teilnehmern ermöglichen, die Grundlagen zu erlernen und erste Erfahrungen zu sammeln. Dabei steht nicht nur das körperliche Training im Vordergrund, sondern auch die Vermittlung von Respekt, Disziplin und Konzentration.</p>
-                <p>Für diejenigen, die neu im Budo sind, bietet das Probetraining eine entspannte und freundliche Umgebung, um herauszufinden, ob diese Disziplin ihren Interessen und Fähigkeiten entspricht. Es ist eine unverbindliche Möglichkeit, die eigene Komfortzone zu verlassen und neue Herausforderungen anzunehmen. Darüber hinaus ermöglicht es den Trainern, das individuelle Niveau und die Ziele der Teilnehmer besser zu verstehen, um sie auf ihrem Weg optimal zu unterstützen. Insgesamt ist das Probetraining ein wichtiger erster Schritt für alle, die daran interessiert sind, die Bereicherung und Transformation zu erleben, die das Budo bieten kann.</p>
-            </div>
-            <div class="interesse-container">
-                <div class="interesse-text-container">
-                    <p>Interesse?</p>
-                    <p>Dann schreibe mir doch</p>
-                    <p>einfach eine Nachricht!</p>
-                </div>
-                <div class="label-container">
-                    <p>Empfänger</p>
-                </div>
-                <div class="input-container">
-                    <SfDropDownList TValue="string"
-                                    TItem="Abteilung"
-                                    Placeholder="Wähle eine Abteilung aus"
-                                    @bind-Value="@DropVal"
-                                    DataSource="@LocalData">
-                        <DropDownListTemplates TItem="Abteilung">
-                            <ItemTemplate>
-                                <div class="dropdown-item-container">
-                                    <span class="abteilung">@((context as Abteilung).Name)</span>
-                                    <span class="abteilungsleiter">@((context as Abteilung).Abteilungsleiter)</span>
-                                </div>
-                            </ItemTemplate>
-                            <ValueTemplate>
-                                <div class="dropdown-item-container">
-                                    <span class="abteilung">@((context as Abteilung).Name)</span>
-                                    <span class="abteilungsleiter">@((context as Abteilung).Abteilungsleiter)</span>
-                                </div>
-                            </ValueTemplate>
-                        </DropDownListTemplates>
-                        <DropDownListFieldSettings Text="Name" Value="Abteilungsleiter"></DropDownListFieldSettings>
-                    </SfDropDownList>
-                </div>
-                <div class="label-container">
-                    <p>Deine E-Mail</p>
-                </div>
-                <div class="input-container">
-                    <input type="text" />
-                </div>
-                <div class="label-container">
-                    <p>Deine Nachricht</p>
-                </div>
-                <div class="big-input-box">
-                    <textarea />
-                </div>
-                <div class="label-container">
-                    <button class="default-button">Senden</button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section>
-        <SectionBanner Titel="Informationen für Neulinge" />
-
-        <div class="default-grid">
-            <h4 class="headline-neulinge">Was solltest du mitbringen?</h4>
-        </div>
-
-        <div class="default-grid">
-            <ul>
-                <li>
-                    Sportklamotten, in denen du dich gut bewegen kannst. Für Aikido und Bujinkan kann es von vorteil sein Oberteil mit Ärmeln zu tragen, da diese einfacher zu greifen sind. Und wer schon einen Gi besitzt kann den natürlich sehr gerne mitbringen!
-                </li>
-                <li>
-                    Ihr könnt eigene Hausschuhe mitbringen, allerdings haben wir auch Besucherhausschuhe da.
-                </li>
-                <li>
-                    Spaß an Bewegung und daran etwas neues zu lernen!
-                </li>
-                <li>
-                    Du brauchst keine Vorkenntnisse um bei uns vorbeizuschauen, also komm einfach vorbei!
-                </li>
-            </ul>
-        </div>
-
-        <div class="default-grid">
-            <h4 class="headline-neulinge">Die Verhaltensregeln im Dojo</h4>
-        </div>
-        <div class="default-grid">
-            <div id="verhaltensregeln-container">
-                <p>Nach japanischem Vorbild, gibt es auch bei uns einige Regeln, wenn man das Dojo (die Trainingshalle) betritt. Hier sind einmal die wichtigsten aufgelistet, aber macht euch keine Sorgen, wir werden euch vor Ort auch noch einmal alles Zeigen, also braucht ihr das nicht auswendig zu lernen :)</p>
-            </div>
-        </div>
-        <div class="default-grid verhaltensregeln-grid">
-            <img id="img1" src="/images/dojo4.jpg" />
-            <div id="beschreibung1">
-                <h5>Hausschuhe</h5>
-                <ul>
-                    <li>Wenn ihr über die Türschwelle kommt, seht ihr links von euch einige große Schuhschränke. Hier könnt ihr eure Straßenschuhe ablegen und euch welche von unseren Besucherhausschuhen ganz oben, neben der Tür nehmen.</li>
-                </ul>
-            </div>
-
-            <img id="img2" src="/images/dojo7.jpg" />
-            <div id="beschreibung2">
-                <h5>Umkleiden</h5>
-                <ul>
-                    <li>Die Umkleiden findet ihr geradeaus gegenüber der Eingangstür. Die erste Umkleide ist für Frauen und die zweite für Männer.</li>
-                </ul>
-            </div>
-
-            <img id="img3" src="/images/dojo5.jpg" />
-            <div id="beschreibung3">
-                <h5>Betreten der Trainingsflächen</h5>
-                <ul>
-                    <li>Wenn ihr umgezogen seid, könnt ihr auf die Trainingsfläche gehen. Hierbei lasst ihr, bevor ihr den Parkettboden betretet eure Hausschue davor stehen. Der Holzboden ist die Trainingsfläch für Iaido. Wenn ihr durch die Tür am Ende des parkettes geht kommt ihr in einen Raum, der mit Tatami-Matten ausgelegt ist. Dieser wird für Aikido und Bujinkan verwendet..</li>
-                </ul>
-            </div>
-
-            <img id="img4" src="/images/dojo6.jpg" />
-            <div id="beschreibung4">
-                <h5>Etikette</h5>
-                <ul>
-                    <li>Ebenso gilt bei uns eine gewisse Etikette. Diese Beinhaltet, dass man sich beim ersten Betreten der Holzfläche in Richtung der Schriftzüge auf er gegenüberliegenden linken Wand verbeugt, welche der Shomen (Schrein) des Iaido sind. Gleichermaßen wird sich am Ende des Trainings, wenn man die Trainingsfläche verlässt, vor dem Shomen verbeugt. Ebenso gibt es einen Schrein im hinteren Raum, vor dem sich ebenfalls, beim ersten eintreten und letzten austreten, verbeugt wird. (Wenn diese Verbeugungen mit jemandes Religion unvereinbar sind, können diese natürlich auch weggelassen werden.)</li>
-                    <li>Im Training ist es üblich vor dem Training anzugrüßen. Hierbei stellen sich zunächst alle Schüler in einer Reihe vor den Lehrer. Hierbei stehen die Ranghöchsten Schüler auf der rechten Seite und somit Neulinge auf der linken Seite. Der genaue Ablauf des Angrüßens unterscheidet sich je nach Kampfkunst.</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-    <section>
-        <SectionBanner Titel="Wegbeschreibung" />
-        <div class="default-grid">
-            <div id="wegbeschreibung-container">
-                <p>
-                    Das Budoshuren Dojo ist sowohl mit dem Auto, als auch mit den öffentlichen Verkehrsmitteln einfach zu erreichen.
-                    Vor dem Dojo sind ausreichend <span class="bold-pt">Parkplätze verfügbar</span>, die Sie gerne benutzen können.
-                    Hierbei würden wir Sie nur bitten die Ein- und Ausfahrt der hinteren Autowerkstatt frei zu halten.
-                </p>
-                <p>
-                    Mit den <span class="bold-pt">öffentlichen Verkehrsmitteln</span> empfehlen wir entweder die Haltestellen
-                    <span class="bold-pt">Dieselbrücke</span>,
-                    oder
-                    <span class="bold-pt">Bärenwirt</span>,
-                    zu verwenden.
-                    Diese finden Sie auf der Nachfolgenden Karte markiert.
-                    Sie erreichen diese Haltestellen mit den
-                    <span class="bold-pt">
-                        Buslienien 21, 35, 401, 420, 500, 501, 502 und 505,
-                    </span>
-                    und mit der
-                    <span class="bold-pt">
-                        Straßenbahnlinie 4.
-                    </span>
-                </p>
-            </div>
-        </div>
-        <div class="default-grid">
-            <div id="map-container">
-                <img src="/images/map.png" />
-            </div>
-        </div>
-    </section>
-    <section>
-        <div id="bis-bald-container">
-            <p>Bis Bald!</p>
-        </div>
-    </section>
+<div>
+    <Überschrift Titel="武道家"
+                 Untertitel="Budoka"
+                 Anekdote="" />
 </div>
 
-<style>
-    .e-ddl.e-input-group.e-control-wrapper .e-ddl-icon::before {
-        color: #000000;
-        font-weight: 700;
-    }
 
-    .e-custom.e-input-group, .e-custom.e-input-group.e-control-wrapper {
-        height: 42px;
-        border-width: 1px;
-        border-color: #000000;
-        border-radius: 0;
-    }
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        <section class="mt-20">
+            <div>
+                <Fließtext Text="Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe." />
+            </div>
+            <br />
+            <div>
+                <Fließtext Text="Das Dojo legt großen Wert auf die traditionellen Werte des Budo, wie Respekt, Disziplin und Selbstbeherrschung. Die Schüler werden ermutigt, nicht nur ihre körperlichen Fähigkeiten zu verbessern, sondern auch ihre geistige Stärke und emotionale Ausgeglichenheit zu entwickeln.Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe." />
+            </div>
+        </section>
 
-    .e-input-group:not(.e-success):not(.e-warning):not(.e-error), .e-input-group.e-control-wrapper:not(.e-success):not(.e-warning):not(.e-error) {
-        height: 42px;
-        border-color: #000000;
-        border-radius: 0;
-    }
+        <section>
+            <SectionBanner Titel="Probetraining" />
+            <div class="md:flex md:flex-row md:justify-between">
+                <div class="md:max-w-72">
+                    <Fließtext Text="Ein Probetraining bietet eine großartige Gelegenheit, einen Einblick in die faszinierende Welt des Budo zu bekommen. Es ist eine Chance, die Atmosphäre des Dojos zu erleben, die Trainer kennenzulernen und erste Einblicke in die Techniken und Philosophien der Kampfkunst zu gewinnen. Während des Probetrainings haben Teilnehmer die Möglichkeit, aktiv am Unterricht teilzunehmen, grundlegende Bewegungen zu erlernen und Fragen zu stellen. Darüber hinaus können sie die Dynamik und den Teamgeist der Trainingsgruppe spüren und feststellen, ob die Kampfkunst zu ihren persönlichen Zielen und Interessen passt. Ein Probetraining ist der ideale Einstiegspunkt für Anfänger, um ihre Reise im Budo zu beginnen, und bietet auch erfahrenen Praktizierenden die Möglichkeit, neue Techniken zu entdecken und ihre Fähigkeiten weiterzuentwickeln." />
+                </div>
+                <div class="mt-28 md:max-w-72">
+                    <div>
+                        <InteresseFormular ShowAbteilung="true" />
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    .e-ddl.e-input-group.e-control-wrapper .e-input {
-        height: 42px;
-        border-color: #000000;
-        border-radius: 0;
-    }
+        <section>
+            <SectionBanner Titel="Informationen für Neulinge" />
+            <div>
+                <div class="md:my-10">
+                    <Zwischenüberschrift Text="Was solltest du mitbringen?" />
+                </div>
+                <div class="mx-10 mt-5 md:ml-32">
+                    <ul class="list-disc">
+                        <li>
+                            <Fließtext Text="Sportkleidung, in der du dich gut bewegen kannst. Für Aikido und Bujinkan kann es von Vorteil sein, ein Oberteil mit Ärmeln zu tragen, da diese einfacher zu greifen sind. Wer bereits einen Gi besitzt, kann diesen gerne mitbringen!" />
+                        </li>
+                        <li class="mt-2">
+                            <Fließtext Text="Eigene Hausschuhe sind optional, aber wir haben auch Besucherhausschuhe vor Ort." />
+                        </li>
+                        <li class="mt-2">
+                            <Fließtext Text="Spaß an Bewegung und die Bereitschaft, etwas Neues zu lernen!" />
+                        </li>
+                        <li class="mt-2">
+                            <Fließtext Text="Keine Vorkenntnisse erforderlich - einfach vorbeikommen!" />
+                        </li>
+                    </ul>
+                </div>
+                <div class="mt-10 md:my-10">
+                    <Zwischenüberschrift Text="Reiho: Die Verhaltensregeln im Dojo" />
+                </div>
+                <div>
+                    <div class="mt-5">
+                        <Fließtext Text="Nach japanischem Vorbild gibt es auch im Budo Shuren Dojo einige Regeln (Reiho), die im Dojos zu beachten sind. Hier sind die wichtigsten aufgeführt, aber keine Sorge, wir zeigen sie Ihnen vor Ort noch einmal, sodass Sie sie nicht auswendig lernen müssen :)" />
+                    </div>
+                    <div>
+                        <div class="">
+                            <div class="mt-10 md:grid md:grid-cols-2 md:grid-rows-[2rem_auto]">
+                                <h5 class="font-yuji mb-2 text-sm font-bold tracking-wider text-black md:col-start-2 md:row-start-1 md:ml-16">Hausschuhe</h5>
+                                <img class="md:col-start-1 md:row-span-2" src="/images/dojo4.jpg" />
+                                <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
+                                    <li>
+                                        <Fließtext Text="Wenn ihr über die Türschwelle kommt, seht ihr links von euch einige große Schuhschränke. Hier könnt ihr eure Straßenschuhe ablegen und euch welche von unseren Besucherhausschuhen ganz oben, neben der Tür nehmen" />
+                                    </li>
+                                </ul>
+                            </div>
 
+                            <div class="mt-10 md:grid md:grid-cols-2 md:grid-rows-[2rem_auto]">
+                                <h5 class="font-yuji mb-2 text-sm font-bold tracking-wider text-black md:col-start-2 md:row-start-1 md:ml-16">Umkleiden</h5>
+                                <img class="md:col-start-1 md:row-span-2" src="/images/dojo7.jpg" />
+                                <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
+                                    <li>
+                                        <Fließtext Text="Die Umkleiden findet ihr geradeaus gegenüber der Eingangstür. Die erste Umkleide ist für Frauen und die zweite für Männer." />
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mt-10 md:grid md:grid-cols-2 md:grid-rows-[2rem_auto]">
+                                <h5 class="font-yuji mb-2 text-sm font-bold tracking-wider text-black md:col-start-2 md:row-start-1 md:ml-16">Betreten der Trainingsflächen</h5>
+                                <img class="md:col-start-1 md:row-span-2" src="/images/dojo5.jpg" />
+                                <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
+                                    <li>
+                                        <Fließtext Text="Wenn ihr umgezogen seid, könnt ihr auf die Trainingsfläche gehen. Hierbei lasst ihr, bevor ihr den Parkettboden betretet eure Hausschue davor stehen. Der Holzboden ist die Trainingsfläch für Iaido. Wenn ihr durch die Tür am Ende des parkettes geht kommt ihr in einen Raum, der mit Tatami-Matten ausgelegt ist. Dieser wird für Aikido und Bujinkan verwendet." />
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mt-10 md:grid md:grid-cols-2 md:grid-rows-[2rem_auto]">
+                                <h5 class="font-yuji mb-2 text-sm font-bold tracking-wider text-black md:col-start-2 md:row-start-1 md:ml-16">Etikette</h5>
+                                <img class="md:col-start-1 md:row-span-2" src="/images/dojo6.jpg" />
+                                <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
+                                    <li>
+                                        <Fließtext Text="Ebenso gilt bei uns eine gewisse Etikette. Diese Beinhaltet, dass man sich beim ersten Betreten der Holzfläche in Richtung der Schriftzüge auf er gegenüberliegenden linken Wand verbeugt, welche der Shomen (Schrein) des Iaido sind. Gleichermaßen wird sich am Ende des Trainings, wenn man die Trainingsfläche verlässt, vor dem Shomen verbeugt. Ebenso gibt es einen Schrein im hinteren Raum, vor dem sich ebenfalls, beim ersten eintreten und letzten austreten, verbeugt wird. (Wenn diese Verbeugungen mit jemandes Religion unvereinbar sind, können diese natürlich auch weggelassen werden.)" />
+                                    </li>
+                                    <li class="mt-2">
+                                        <Fließtext Text="Im Training ist es üblich vor dem Training anzugrüßen. Hierbei stellen sich zunächst alle Schüler in einer Reihe vor den Lehrer. Hierbei stehen die Ranghöchsten Schüler auf der rechten Seite und somit Neulinge auf der linken Seite. Der genaue Ablauf des Angrüßens unterscheidet sich je nach Kampfkunst." />
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    .e-dropdownbase .e-list-item.e-active,
-    .e-dropdownbase .e-list-item.e-active.e-hover {
-        background-color: #2A6749;
-    }
+        <section>
+            <SectionBanner Titel="Wegbeschreibung" />
+            <div>
+                <iframe class="mb-2 h-128 w-full md:mb-10" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3243.1908310842723!2d10.885072427775896!3d48.38838339763122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479ebd4539f8143d%3A0xab59b04a1f327971!2sBudo%20Shuren%20Dojo%20Augsburg!5e0!3m2!1sde!2sde!4v1715001601436!5m2!1sde!2sde" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                
+                <div>
+                    <div class="md:max-w-72">
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                            Das Budoshuren Dojo ist sowohl mit dem Auto, als auch mit den öffentlichen Verkehrsmitteln einfach zu erreichen.
+                            Vor dem Dojo sind ausreichend <span class="bold-pt">Parkplätze verfügbar</span>, die Sie gerne benutzen können.
+                            Hierbei würden wir Sie nur bitten die Ein- und Ausfahrt der hinteren Autowerkstatt frei zu halten.
+                        </p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                            Mit den <span class="bold-pt">öffentlichen Verkehrsmitteln</span> empfehlen wir entweder die Haltestellen
+                            <span class="bold-pt">Dieselbrücke</span>,
+                            oder
+                            <span class="bold-pt">Bärenwirt</span>,
+                            zu verwenden.
+                            Diese finden Sie auf der Nachfolgenden Karte markiert.
+                            Sie erreichen diese Haltestellen mit den
+                            <span class="bold-pt">
+                                Buslienien 21, 35, 401, 420, 500, 501, 502 und 505,
+                            </span>
+                            und mit der
+                            <span class="bold-pt">
+                                Straßenbahnlinie 4.
+                            </span>
+                        </p>
+                    </div>
+                </div>
 
-    .dropdown-item-container {
-        text-align: center;
-        padding: 10px 0;
-    }
+                <img class="mt-2 md:mt-10" src="/images/wegbeschreibung.jpg" />
+            </div>
+        </section>
+    </div>
+</div>
 
-    .abteilung {
-        text-align: center;
-        /* PT Sans bold 14 */
-        font-family: "PT Sans";
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 700;
-        line-height: normal;
-        letter-spacing: 1.4px;
-        padding-right: 5px;
-    }
-
-    .abteilungsleiter {
-        /* Pt Sans regular 14 */
-        font-family: "PT Sans";
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        letter-spacing: 1.4px;
-    }
-
-</style>
 
 @code {
-
-    public string DropVal = string.Empty;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-        LocalData = await DataService.GetAbteilungenAsync();
-    }
-
-    private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
 
 }

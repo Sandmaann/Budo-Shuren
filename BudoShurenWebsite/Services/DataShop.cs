@@ -24,9 +24,9 @@ namespace BudoShurenWebsite.Services
         private void InitializeDemoData()
         {
             this.abteilungen = new List<Abteilung> {
-                new Abteilung() { ID= "Aikido", Name= "Aikido", Abteilungsleiter = "(Karin Oetzel)" },
-                new Abteilung() { ID= "Bujinkan", Name= "Bujinkan", Abteilungsleiter = "(Johannes Schiebl)" },
-                new Abteilung() { ID= "Genbukan", Name= "Genbukan", Abteilungsleiter = "(Henry Schubert)" },
+                new Abteilung() { ID= "Aikido", Name= "Aikido", Abteilungsleiter = "Karin Oetzel" },
+                new Abteilung() { ID= "Bujinkan", Name= "Bujinkan", Abteilungsleiter = "Johannes Schiebl" },
+                new Abteilung() { ID= "Genbukan", Name= "Genbukan", Abteilungsleiter = "Henry Schubert" },
               };
         }
 

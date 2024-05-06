@@ -1,10 +1,12 @@
-* {
+/** {
     box-sizing: border-box;
     padding: 0px;
     margin: 0px;
     font-family: "Yuji Syuku", serif;
-}
+}*/
 
+
+/**/
 /*p {
     font-family: "PT Sans", sans-serif;
     letter-spacing: .10em;
@@ -13,22 +15,22 @@
     line-height: 18.12px;
 }*/
 
-    p .bold {
+/*    p .bold {
         font-weight: 700;
-    }
+    }*/
 
-.bold-pt {
+/*.bold-pt {
     font-weight: 700;
     font-family: "PT Sans", sans-serif;
     letter-spacing: .10em;
     margin-right: -.10em;
     font-size: 14px;
     line-height: 18.12px;
-}
-
+}*/
+/*
 span .bold {
     font-weight: 700;
-}
+}*/
 
 .default-container {
     max-width: 1440px;
