@@ -2,23 +2,11 @@
 
 
 <PageTitle>Zugang ausgesperrt</PageTitle>
-<div class="default-container">
-    <Überschrift Titel="アクセス拒否" Untertitel="Zugang gesperrt" />
-    <SectionBanner Titel="Kein Zugriff auf diese Funktion" />
 
-    <section>
-        <div class="default-grid">
-            <div id="local-container">
-
-                <StatusMessage Message="Dieser Zugang wurde ausgesperrt. Bitte versuchen Sie es später nochmals." />
-            </div>
-        </div>
+<Überschrift Titel="アクセス拒否" Untertitel="Zugang gesperrt" />
+<div class="container mx-auto max-w-screen-md">
+    <section class="mx-10">
+        <SectionBanner Titel="Kein Zugriff auf diese Funktion" />
+        <StatusMessage ShowAsError="true" Message="Dein Zugang wurde ausgesperrt. Bitte versuche es später nochmals." />
     </section>
 </div>
-
-<style>
-    #local-container {
-        grid-column-start: 3;
-        grid-column-end: 11;
-    }
-</style>

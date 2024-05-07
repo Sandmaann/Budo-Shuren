@@ -1,7 +1,7 @@
 ﻿
 /*----- Kontakt-Box incl Inputs -----*/
 
-.probetraining-text-container {
+/*.probetraining-text-container {
     grid-column-start: 3;
     grid-column-end: 6;
     margin-bottom: 50px;
@@ -30,8 +30,8 @@
         font-size: 14px;
         font-style: normal;
         font-weight: 400;
-        line-height: 19px; /* 135.714% */
-        letter-spacing: 1.4px;
+        line-height: 19px;*/ /* 135.714% */
+        /*letter-spacing: 1.4px;
     }
 
 
@@ -45,8 +45,8 @@
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
-    line-height: 19px; /* 135.714% */
-    letter-spacing: 6.16px;
+    line-height: 19px;*/ /* 135.714% */
+    /*letter-spacing: 6.16px;
 }
 
 .label-container button {
@@ -92,12 +92,12 @@ select option {
     grid-column-start: 6;
     grid-column-end: 11;
     margin-bottom: 100px;
-}
+}*/
 
 
 /*----- Wegbeschreibung / Anfahrt -----*/
 
-#wegbeschreibung-container {
+/*#wegbeschreibung-container {
     grid-column-start: 3;
     grid-column-end: 6;
     margin-bottom: 50px;
@@ -119,12 +119,12 @@ select option {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
-    }
+    }*/
 
 
 /*----- Impressum -----*/
 
-#impressum-container {
+/*#impressum-container {
     grid-column-start: 3;
     grid-column-end: 11;
     margin-bottom: 50px;
@@ -139,4 +139,4 @@ select option {
 
     #verantwortung-container p {
         padding-bottom: 10px;
-    }
+    }*/
