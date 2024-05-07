@@ -10,22 +10,36 @@
 
 <PageTitle>E-Mail best&auml;tigen</PageTitle>
 
+<Überschrift Titel="メール確認" Untertitel="Bestätigen" />
+<div class="container mx-auto max-w-screen-md">
+    <section class="mx-10">
+        <SectionBanner Titel="E-Mail Adresse bestätigen" />
+        <div>
+            @if (isSuccess)
+            {
+                <StatusMessage Message="Ihre E-Mail Adresse wurde erfolgreich bestätigt!" />
+                <br />
+
+                @if (isVerified)
+                {
+                    <Fließtext Text="Sie können sich jetzt einloggen." />
+                }
+                else
+                {
+                    <Fließtext Text="Ihr Zugang muss jetzt noch von einem Abteilungsleiter bestätigt werden!" />
+                }
+            }
+            else
+            {
+                <StatusMessage ShowAsError="true" Message="Ihr E-Mail Adresse konnte leider nicht bestätigt werden!" />
+            }
+        </div>
+
+    </section>
+</div>
+@* 
 
 <div class="default-container">
-    @*     <div class="default-grid">
-    <div class="grid-test-item">193</div>
-    <div class="grid-test-item">302</div>
-    <div class="grid-test-item">438</div>
-    <div class="grid-test-item">518</div>
-    <div class="grid-test-item">592</div>
-    <div class="grid-test-item">759</div>
-    <div class="grid-test-item">834</div>
-    <div class="grid-test-item">928</div>
-    <div class="grid-test-item">1008</div>
-    <div class="grid-test-item">1138</div>
-    <div class="grid-test-item">1248</div>
-    <div class="grid-test-item">1440</div>
-    </div> *@
 
     <Überschrift Titel="有難うございます" Untertitel="E-Mail bestätigen" />
     <SectionBanner Titel="E-Mail Adresse bestätigen" />
@@ -36,7 +50,7 @@
                 @if (isSuccess)
                 {
                     <p>Ihre E-Mail Adresse wurde erfolgreich bestätigt!</p>
-                    <br/>
+                    <br />
                     @if (isVerified)
                     {
                         <p>Sie können sich jetzt einloggen.</p>
@@ -60,7 +74,7 @@
         grid-column-start: 3;
         grid-column-end: 11;
     }
-</style>
+</style> *@
 
 @code {
     private string? statusMessage;

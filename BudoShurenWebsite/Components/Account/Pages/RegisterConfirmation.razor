@@ -10,75 +10,53 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Registrierung erfolgreich</PageTitle>
-
-<div class="default-container">
-@*     <div class="default-grid">
-        <div class="grid-test-item">193</div>
-        <div class="grid-test-item">302</div>
-        <div class="grid-test-item">438</div>
-        <div class="grid-test-item">518</div>
-        <div class="grid-test-item">592</div>
-        <div class="grid-test-item">759</div>
-        <div class="grid-test-item">834</div>
-        <div class="grid-test-item">928</div>
-        <div class="grid-test-item">1008</div>
-        <div class="grid-test-item">1138</div>
-        <div class="grid-test-item">1248</div>
-        <div class="grid-test-item">1440</div>
-    </div> *@
-
-    <Überschrift Titel="有難うございます" Untertitel="Registrierung erfolgreich" />
-    <SectionBanner Titel="Der Zugang wurde erstellt" />
-
-    <section>
-        <div class="default-grid">
-            <div id="local-container">
-                <StatusMessage Message="@statusMessage" />
-
-                <p>Ihr Zugang wurde erfolgreich erstellt.</p>
-                @if (emailConfirmationLink is not null)
-                {
-                    <p>Wir haben Ihnen eine <span class="bold-pt">E-Mail</span> mit einem <span class="bold-pt">Best&auml;tigungslink </span>geschickt.</p>
-                    <p>Bitte &uuml;berpr&uuml;fen Sie Ihr E-Mail Postfach und klicken auf diesen Link.</p>
-                    <br />
-                    <p>
-                        This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-                        Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
-                    </p>
-                }
-                else
-                {
-                    <p>Wir haben Ihnen eine <span class="bold-pt">E-Mail</span> mit einem <span class="bold-pt">Best&auml;tigungslink </span>geschickt.</p>
-                    <p>Bitte &uuml;berpr&uuml;fen Sie Ihr E-Mail Postfach und klicken auf diesen Link.</p>
-                }
-                <br />
-
-                @if (isVerified)
-                {
-                    <p>Sobald Sie Ihre E-Mail Adresse best&auml;tigt haben, erhalten Sie Zugriff auf den Mitgliederbereich.</p>
-                }
-                else
-                {
-                    <p>Sobald Sie Ihre E-Mail Adresse best&auml;tigt haben, muss Ihr Zugang noch von einem Abteilungsleiter freigeschaltet werden.</p>
-                }
-                <p></p>
+@if (hasError == true)
+{
+    <PageTitle>Fehler</PageTitle>
+    <Überschrift Titel="すみません" Untertitel="Fehler" />
+}
+else
+{
+    <PageTitle>Registrierung erfolgreich</PageTitle>
+    <Überschrift Titel="有難うございます" Untertitel="Bestätigt" />
+}
 
 
-            </div>
-        </div>
+
+<div class="container mx-auto max-w-screen-md">
+    <section class="mx-10">
+        @if (hasError == true)
+        {
+            <SectionBanner Titel="Es ist ein Fehler aufgetreten." />
+        }
+        else
+        {
+            <SectionBanner Titel="Dein Zugang wurde erstellt." />
+        }
+
+        <StatusMessage Message="@statusMessage" />
+        @if (hasError == false)
+        {
+            @if (emailConfirmationLink is not null)
+            {
+                <p class="font-ptsans text-sm tracking-wider">Wir haben dir eine <b>E-Mail</b> mit einem <b>Bestätigungslink</b> geschickt. </p>
+                <p class="font-ptsans text-sm tracking-wider">Bitte überprüfe dein E-Mail Postfach und klicke auf diesen Link, um deine E-Mail Adresse zu verifizieren.</p>
+                <p class="font-ptsans text-sm tracking-wider">Erst dann kann dein Zugang aktiviert werden!</p>
+
+                <p class="font-ptsans text-sm tracking-wider">
+                    This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
+                    Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
+                </p>
+            }
+            else
+            {
+                <p class="font-ptsans text-sm tracking-wider">Wir haben dir eine <b>E-Mail</b> mit einem <b>Bestätigungslink</b> geschickt. </p>
+                <p class="font-ptsans text-sm tracking-wider">Bitte überprüfe dein E-Mail Postfach und klicke auf diesen Link, um deine E-Mail Adresse zu verifizieren.</p>
+                <p class="font-ptsans text-sm tracking-wider">Erst dann kann dein Zugang aktiviert werden!</p>
+            }
+        }
     </section>
 </div>
-
-
-
-
-<style>
-    #local-container {
-        grid-column-start: 3;
-        grid-column-end: 11;
-    }
-</style>
 
 @code {
     private string? emailConfirmationLink;
@@ -94,9 +72,11 @@
     private string? ReturnUrl { get; set; }
 
     private bool isVerified { get; set; }
+    private bool hasError { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
+        return;
         if (Email is null)
         {
             RedirectManager.RedirectTo("");
@@ -106,10 +86,13 @@
         if (user is null)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-            statusMessage = "Error finding user for unspecified email";
+            // statusMessage = "Error finding user for unspecified email";
+            hasError = true;
+            statusMessage = "Error: Der Benutzer für diese E-Mail Adresse konnte nicht gefunden werden";
         }
         else if (EmailSender is IdentityNoOpEmailSender)
         {
+            hasError = false;
             // Once you add a real email sender, you should remove this code that lets you confirm the account
             var userId = await UserManager.GetUserIdAsync(user);
             var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);

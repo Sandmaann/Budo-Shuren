@@ -1,4 +1,4 @@
-﻿@page "/Account/Member/Email"
+﻿@* @page "/Account/Member/Email" *@
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -27,10 +27,10 @@
             <ValidationSummary class="text-danger" role="alert" />
             @if (isEmailConfirmed)
             {
-                <div class="form-floating mb-3 input-group">
+                <div class="form-floating input-group mb-3">
                     <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
                     <div class="input-group-append">
-                        <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
+                        <span class="input-group-text text-success font-weight-bold h-100">✓</span>
                     </div>
                     <label for="email" class="form-label">Email</label>
                 </div>
@@ -48,7 +48,7 @@
                 <label for="new-email" class="form-label">New email</label>
                 <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
+            <button type="submit" class="btn btn-lg btn-primary w-100">Change email</button>
         </EditForm>
     </div>
 </div>

@@ -1,0 +1,83 @@
+﻿@page "/Account/Member/DeletePersonalData"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using BudoShurenWebsite.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<DeletePersonalData> Logger
+
+<PageTitle>Zugang löschen</PageTitle>
+
+
+<div class="container mx-auto max-w-screen-md">
+    <section class="mx-10">
+        <SectionBanner Titel="Persönliche Daten löschen" />
+        <StatusMessage Message="@message" />
+
+        <EditForm Model="Input" FormName="delete-user" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            @if (requirePassword)
+            {
+                <label for="password" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Passwort</label>
+                <div class="mb-3">
+                    <InputText type="password" @bind-Value="Input.Password" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="current-password" aria-required="true" placeholder="Bitte geben Sie Ihr Passwort ein." />
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                </div>
+            }
+            <button class="font-yuji mt-8 h-10 bg-error px-5 text-center text-sm font-normal leading-tight tracking-widest text-white hover:bg-primary" type="submit">Daten löschen und Zugang schließen</button>
+        </EditForm>
+    </section>
+</div>
+
+@code {
+    private string? message;
+    private ApplicationUser user = default!;
+    private bool requirePassword;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        requirePassword = await UserManager.HasPasswordAsync(user);
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (requirePassword && !await UserManager.CheckPasswordAsync(user, Input.Password))
+        {
+            message = "Error: Das Passwort ist nicht korrekt.";
+            return;
+        }
+
+        var result = await UserManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException("Es ist ein unerwarteter Fehler aufgetreten.");
+        }
+
+        await SignInManager.SignOutAsync();
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
+
+        RedirectManager.RedirectToCurrentPage();
+    }
+
+    private sealed class InputModel
+    {
+        [Required(ErrorMessage = Messages.PasswordRequiredErrorMessage)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+    }
+}

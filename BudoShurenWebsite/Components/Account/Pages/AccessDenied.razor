@@ -1,23 +1,12 @@
 ﻿@page "/Account/AccessDenied"
 
-<PageTitle>Zugang verboten</PageTitle>
-<div class="default-container">
-    <Überschrift Titel="アクセス拒否" Untertitel="Zugang verboten" />
-    <SectionBanner Titel="Kein Zugriff auf diese Funktion" />
+<PageTitle>Zugriff verweigert</PageTitle>
 
-    <section>
-        <div class="default-grid">
-            <div id="local-container">
+<Überschrift Titel="アクセス拒否" Untertitel="Zugriff verweigert" />
+<div class="container mx-auto max-w-screen-md">
+    <section class="mx-10">
+        <SectionBanner Titel="Sie sind nicht berechtigt für den Zugriff" />
+        <StatusMessage ShowAsError="true" Message="Bitte loggen Sie sich mit einem gültigen Benutzer ein." />
 
-                <StatusMessage Message="Bitte loggen Sie sich mit einem gültigen Benutzer ein." />
-            </div>
-        </div>
     </section>
 </div>
-
-<style>
-    #local-container {
-        grid-column-start: 3;
-        grid-column-end: 11;
-    }
-</style>

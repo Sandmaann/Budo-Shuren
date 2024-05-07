@@ -5,8 +5,8 @@
 
 <div class="z-20 font-yuji fixed start-0 top-0 w-full bg-white">
     <div class="mx-auto max-w-screen-xl md:flex md:justify-between md:items-center">
-        <div class="flex items-center justify-between p-3 md:order-2">
-            <div class="mx-10 flex flex-row md:hidden">
+        <div class="flex flex-wrap items-center justify-between p-3 md:order-2">
+            <div class="ml-6 flex flex-row md:hidden">
                 <button @onclick="ToggleMenu" style="margin-right:1.5rem">
                     <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24">
                         <path fill-rule="evenodd"
@@ -21,7 +21,7 @@
                     </li>
                 </div>
             </div>
-            <div class="mx-10 md:mx-0">
+            <div class="mr-6 md:mr-0">
                 <AuthorizeView>
                     <Authorized>
                         <div class="md:order-2">
@@ -61,9 +61,9 @@
             //Sichtbarkeit der Nav-Bar je nach Button-Klick
             var menuVisibleClass = _menuVisible ? "" : "hidden";
         }
-        <div class="flex-1 @( _menuVisible ? expanded : collapsed)">
+        <div class="flex-1 @( _menuVisible ? expanded : collapsed)" @onmouseleave="@(() => _menuVisible = false)" @onfocusout="@(() => _menuVisible = false)">
             <div class="flex-1 items-center justify-center">
-                <ul class="@($"flex flex-col {menuVisibleClass} flex-wrap px-4 py-2 md:flex md:flex-row items-center justify-center transition overflow-hidden")">
+                <ul class="md:ml-16 @($"flex flex-col {menuVisibleClass} flex-wrap px-4 py-2 md:flex md:flex-row items-center justify-center transition overflow-hidden")">
                     <li class="nav-item px-3 py-1">
                         <NavLink href="" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                             Home
@@ -160,6 +160,10 @@
                 Title = "Mitgliederbereich"; break;
             case "Account/Login":
                 Title = "Mitgliederbereich"; break;
+            default:
+                if (currentUrl?.Contains("Account/Member/") == true)
+                    Title = "Mitgliederbereich";
+                break;
         }
         StateHasChanged();
 

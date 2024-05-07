@@ -2,112 +2,42 @@
 @using BudoShurenWebsite.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
-
-<div class="default-container">
-
-    <ul class="flex-column">
-
-        <li class="nav-item">
-            <NavLink class="nav-link" href="Account/Member" Match="NavLinkMatch.All">Profil</NavLink>
-        </li>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="Account/Member/Galerie" Match="NavLinkMatch.All">Galerie</NavLink>
-        </li>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="Account/Member/Kalender" Match="NavLinkMatch.All">Kalender</NavLink>
-        </li>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="Account/Member/Neuigkeiten" Match="NavLinkMatch.All">Neuigkeiten</NavLink>
-        </li>
-    </ul>
+<div class="relative">
+    <div class="z-10 font-yuji absolute start-0 top-12 w-full bg-white md:top-0">
+        <div class="flex-1 items-center justify-center">
+            <ul class="flex flex-row flex-wrap items-center justify-center px-4 py-2 transition">
+                <li class="nav-item px-3 py-1">
+                    <NavLink class="nav-link" href="Account/Member" Match="NavLinkMatch.All">Profil</NavLink>
+                </li>
+                <li class="nav-item px-3 py-1">
+                    <NavLink class="nav-link" href="Account/Member/Galerie" Match="NavLinkMatch.All">Galerie</NavLink>
+                </li>
+                <li class="nav-item px-3 py-1">
+                    <NavLink class="nav-link" href="Account/Member/Kalender" Match="NavLinkMatch.All">Kalender</NavLink>
+                </li>
+                <li class="nav-item px-3 py-1">
+                    <NavLink class="nav-link" href="Account/Member/Neuigkeiten" Match="NavLinkMatch.All">Neuigkeiten</NavLink>
+                </li> 
+                <li class="nav-item px-3 py-1">
+                    <NavLink class="nav-link" href="Account/Member/Mitglieder" Match="NavLinkMatch.All">Mitglieder</NavLink>
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <style>
-
-    .flex-column{
-        display:flex;
-        list-style:none;
-        align-items:center;
-        justify-content:center;
-        margin: 0 193px;
-    }
     .nav-item {
-        display: block;
-        flex: 0 1 auto;
-        margin: 0 10px;
     }
 
     .nav-link {
-        background-color: transparent;
-        border: none;
-        color: #000000;
-        text-decoration: none;
-        text-underline-offset: 8px;
-        display: block;
-        padding: 10px;
-        font-size: 14px;
-        text-align: center;
-    }
-
-    .nav-item .nav-link:hover {
-        text-decoration: underline;
     }
 
     .nav-item .nav-link.active {
         text-decoration: underline;
     }
-
-    #main-nav {
-        background-color: #FFFFFF;
-        /*positon: TODO*/
-    }
-
-        #main-nav:after {
-            content: "";
-            display: block;
-            clear: both;
-        }
-
-/*         #main-nav a {
-            color: #000000;
-            text-decoration: none;
-            text-underline-offset: 8px;
-        } */
-
-        #main-nav ul {
-            margin: 10px 193px;
-            display: flex;
-            align-items: stretch;
-            list-style: none;
-        }
-
-            #main-nav ul li {
-                display: block;
-                flex: 0 1 auto;
-                margin: 0 auto;
-            }
-
-                #main-nav ul li a {
-                    display: block;
-                    padding: 10px;
-                    font-size: 14px;
-                    text-align: center;
-                }
-
-                    #main-nav ul li a:hover {
-                        text-decoration: underline;
-                    }
-
-                    #main-nav ul li a.active-page {
-                        text-decoration: underline;
-                    }
-
-        #main-nav h1 {
-            float: left;
-            color: coral;
-            padding-top: 20px;
-        }
 </style>
+
 
 @code {
     private bool hasExternalLogins;

@@ -12,32 +12,30 @@
 
 <PageTitle>E-Mail bestätigen</PageTitle>
 
-<div class="default-container">
+@if (HasError)
+{
+    <Überschrift Titel="すみません" Untertitel="Bestätigen" />
+}
+else
+{
+    <Überschrift Titel="メール確認" Untertitel="Bestätigen" />
+}
 
-    <Überschrift Titel="すみません" Untertitel="E-Mail bestätigen" />
-    <SectionBanner Titel="E-Mail Adresse bestätigen" />
 
-    <section>
-        <div class="default-grid">
-            <div id="local-container">
-                <StatusMessage Message="@message" />
-            </div>
-        </div>
+<div class="container mx-auto max-w-screen-md">
+    <section class="mx-10">
+        <SectionBanner Titel="E-Mail Adresse bestätigen" />
+        <StatusMessage ShowAsError="@HasError" Message="@message" />
     </section>
 </div>
-
-<style>
-    #local-container {
-        grid-column-start: 3;
-        grid-column-end: 11;
-    }
-</style>
 
 @code {
     private string? message;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
+
+    private bool HasError { get; set; } = false;
 
     [SupplyParameterFromQuery]
     private string? UserId { get; set; }
@@ -53,13 +51,14 @@
         if (UserId is null || Email is null || Code is null)
         {
             RedirectManager.RedirectToWithStatus(
-                "Account/Login", "Error: Invalid email change confirmation link.", HttpContext);
+                "Account/Login", "Entschuldigung, aber der Link zur Bestätigung der E-Mail Änderung ist ungültig.", HttpContext);
         }
 
         var user = await UserManager.FindByIdAsync(UserId);
         if (user is null)
         {
-            message = "Unable to find user with Id '{userId}'";
+            HasError = true;
+            message = "Dein Benutzer konnte leider nicht gefunden werden!";
             return;
         }
 
@@ -67,7 +66,8 @@
         var result = await UserManager.ChangeEmailAsync(user, Email, code);
         if (!result.Succeeded)
         {
-            message = "Error changing email.";
+            HasError = true;
+            message = "Es tut uns leid, aber bei der Änderung deiner E-Mail Adresse ist ein Problem aufgetreten.";
             return;
         }
 
@@ -76,11 +76,14 @@
         var setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
         if (!setUserNameResult.Succeeded)
         {
-            message = "Error changing user name.";
+            HasError = true;
+            message = "Es tut uns leid, aber bei der Änderung deines Benutzernamens ist ein Problem aufgetreten.";
             return;
         }
 
         await SignInManager.RefreshSignInAsync(user);
-        message = "Thank you for confirming your email change.";
+        HasError = false;
+        message = "Vielen Dank dafür, dass du deine E-Mail Änderung bestätigt hast.";
+        // message = "Thank you for confirming your email change.";
     }
 }

@@ -2,7 +2,7 @@
 
 @if (!string.IsNullOrEmpty(DisplayMessage))
 {
-    var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
+    var statusMessageClass = (DisplayMessage.StartsWith("Error") || ShowAsError) ? "danger" : "success";
     <div class="alert alert-@statusMessageClass" role="alert">
         @DisplayMessage
     </div>
@@ -12,7 +12,7 @@
 <style>
     .alert-danger {
         background-color: #842029;
-        color: #FFabcF;
+        color: #FFF;
     }
 
     .alert {
@@ -35,6 +35,9 @@
 
     [Parameter]
     public string? Message { get; set; }
+
+    [Parameter]
+    public bool ShowAsError { get; set; }
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;

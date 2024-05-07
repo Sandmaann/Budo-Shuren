@@ -4,6 +4,9 @@ module.exports = {
     theme: {
         // Erweitert das Theme um eigene Farben und Schriftarten
         extend: {
+            screens: {
+                'xs': '390px',
+            },
             colors: {
                 'primary': '#2A6749',
                 'error': '#DC3545',
