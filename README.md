@@ -6,7 +6,7 @@ Die Webseite wird mit Blazor .NET 8 und TailwindCSS aufgebaut.
 
 Aktuelle ToDos:
 
-- Webseite hosten
+
 - Inhalte sammeln (Texte, Bilder)
 - Genbukan Seite designen und umsetzen
 - Registrierung fertigstellen (Zugänge genehmigen)
@@ -18,3 +18,10 @@ Aktuelle ToDos:
     - Mitgliederverwaltung
 - "Aktuelles" umsetzen wenn möglich
 - E-Mail Versand einrichten
+
+Allgemeine ToDos:
+
+- mögliche Optimierungen ermitteln (Performance)
+- Webseite hosten
+- SEO durchführen
+- Branchenbücher aktualisieren (wenn der Vertrag ausläuft!)
