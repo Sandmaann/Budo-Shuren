@@ -1,0 +1,22 @@
+﻿
+
+
+<div class="m-6 border shadow-lg">
+    <div class="relative h-48 w-full">
+        <img class="z-0 absolute inset-0 h-48 w-full object-cover" src="/images/castle.jpg" title="titel ???" />
+        <div class="opacity-0 z-10 absolute inset-0 flex items-start justify-end duration-300 hover:opacity-100">
+            <div class="m-1 flex items-center rounded-full bg-gray-500">
+                <span class="material-symbols-outlined m-0.5 text-white">done</span>
+            </div>
+        </div>
+    </div>
+    <div class="p-6">
+        <h3 class="mt-1 truncate text-xl">ImageDetails.Title</h3>
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public GalerieEintrag ImageDetails { get; set; }
+    }

@@ -1,17 +1,94 @@
 ﻿@page "/Account/Member/Galerie"
+@rendermode InteractiveServer
 
 @using BudoShurenWebsite.Data;
 
 @inject ApplicationDbContext DbContext;
 
+@* Dialog werde ich auch noch für Fehler-Meldungen brauchen? *@
+
+@* <SfDialog Width="250px" ShowCloseIcon="true">
+    <DialogTemplates>
+        <Header>This is a Header</Header>
+        <Content>
+            <EditGalerie />
+        </Content>
+    </DialogTemplates>
+</SfDialog> *@
+
+@*         Problem: wenn Handy-Size will ich keine Sidebar, sondern Full-Screen.
+        Entweder ich mache dann ein anders Control/ Popup z.B.
+        Oder ich nehme hier 2 Sidebars mit MediaQuery und breakpoints die sich dann abwechseln
+        Oder ich mache die MediaQuery mit einer C# Variable... *@
+
+<SfSidebar Width="100%" IsOpen="true" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="true" MediaQuery="(min-width: 0px) and (max-width: 600px)">
+    <ChildContent>
+        <div style="text-align: center;" class="text-content"> Sidebar </div>
+    </ChildContent>
+</SfSidebar>
+<SfSidebar Width="16rem" IsOpen="true" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="true" MediaQuery="(min-width: 600px)">
+    <ChildContent>
+        <div style="text-align: center;" class="text-content bg-red-500"> Sidebar GROS Bild </div>
+    </ChildContent>
+</SfSidebar>
+
+
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
+
+
         <SectionBanner Titel="Galerie verwalten" />
-        <div></div>
+
+        <div class="flex flex-col">
+            <div>
+
+            </div>
+        </div>
+        <div class="flex flex-row">
+            <div class="relative grow">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <!-- Add your span content here -->
+                    <span class="material-symbols-outlined">search</span>
+                    @*
+                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg> *@
+                </span>
+
+                <InputText @bind-Value="Suchtext"
+                           class="!outline-none w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6"
+                           placeholder="Suchen..." />
+            </div>
+            <div class="flex justify-end">
+                <button class="font-yuji flex h-10 flex-row items-center justify-between px-5 text-center text-sm font-normal leading-tight tracking-widest text-black hover:bg-primary hover:text-white">
+                    <span class="material-symbols-outlined mr-2">upload</span>
+                    <span class="hidden md:inline-block">hochladen</span>
+                </button>
+            </div>
+        </div>
+
+
+        <div class="mt-10">
+            <div class="grid-cols-2 grid grid-flow-row-dense">
+                <ImageCard />
+            </div>
+        </div>
     </div>
 </div>
 
+<style>
+    .e-sidebar {
+        background-color: #f8f8f8;
+        color: black;
+    }
+</style>
 
 @code {
+    string suchtext = string.Empty;
+    private string Suchtext { get => suchtext; set { suchtext = value; Suche(); } }
 
+    private void Suche()
+    {
+
+    }
 }
