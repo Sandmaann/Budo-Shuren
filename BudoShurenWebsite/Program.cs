@@ -25,6 +25,8 @@ namespace BudoShurenWebsite
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
             builder.Services.AddSyncfusionBlazor();
+            builder.Services.AddControllers();
+            builder.Services.AddHttpClient();
 
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();
@@ -97,6 +99,7 @@ namespace BudoShurenWebsite
                 app.UseHsts();
             }
 
+
             //Nur für Release oder bei Migration wichtig
             //MigrateDatabase(app);
 
@@ -110,6 +113,10 @@ namespace BudoShurenWebsite
 
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();
+            app.MapControllers();
+
+
+
 
             app.Run();
         }

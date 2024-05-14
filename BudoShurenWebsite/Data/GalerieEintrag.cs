@@ -14,7 +14,7 @@
 
         public string? ImagePath { get; set; }
 
-        public DateOnly? ImageDate { get; set; }
+        public DateTime? ImageDate { get; set; }
         public string? ImageCreatedBy { get; set; }
 
 

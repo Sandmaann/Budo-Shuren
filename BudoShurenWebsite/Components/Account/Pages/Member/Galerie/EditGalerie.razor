@@ -1,9 +1,261 @@
-﻿<h3>EditGalerie</h3>
-<div>
-    <div>Teste</div>
-    <div>Dis is a dialog ßody</div>
+﻿@inject IHttpClientFactory ClientFactory
+@inject HttpClient Http
+@inject ILogger<EditGalerie> Logger
+@using System.Net.Http.Headers
+@using System.Text.Json
+
+<div class="mx-5 flex h-screen flex-col">
+    <div>
+        <div class="mb-5 mr-5 mt-10 flex flex-row items-center justify-between">
+            <div class="grow">
+                @if (IsNew)
+                {
+                    <div class="flex flex-col items-center justify-center">
+                        <h3 class="text-2xl">Neue Bilder anlegen</h3>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex flex-col items-center justify-center">
+                        <h3 class="text-2xl">Einträge bearbeiten</h3>
+                    </div>
+                }
+            </div>
+            <div>
+                <button @onclick="CloseSidebar">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <StatusMessage ShowAsError="true" Message="@errorMessage" />
+        }
+    </div>
+    <div class="overflow-auto p-4">
+        <div>
+            <SfUploader @ref="uploadObj" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg" MaxFileSize=5242880>
+                <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
+                <UploaderEvents OnFailure="@OnFailureHandler" OnActionComplete="@OnActionCompleteHandler" BeforeUpload="@BeforeUploadHandler"></UploaderEvents>
+
+            </SfUploader>
+        </div>
+        <div class="flex flex-col">
+
+            <div class="mt-5">
+                <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Titel*</label>
+                <InputText @bind-Value="SelectedEintrag.Titel" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+            </div>
+
+            <div class="mt-2">
+                <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Untertitel</label>
+                <InputText @bind-Value="SelectedEintrag.Untertitel" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+            </div>
+
+            <div class="mt-2">
+                <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Beschreibung</label>
+                <InputText @bind-Value="SelectedEintrag.Beschreibung" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+            </div>
+
+            <div class="mt-2">
+                <div>
+                    <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Abteilung*</label>
+                    <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                        <InputCheckbox @bind-Value="SelectedEintrag.Home" class="h-4 w-4" />
+                        <span class="ml-2 mt-0.5">Home</span>
+                    </label>
+                    <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                        <InputCheckbox @bind-Value="SelectedEintrag.Aikido" class="h-4 w-4" />
+                        <span class="ml-2 mt-0.5">Aikido</span>
+                    </label>
+                    <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                        <InputCheckbox @bind-Value="SelectedEintrag.Bujinkan" class="h-4 w-4" />
+                        <span class="ml-2 mt-0.5">Bujinkan</span>
+                    </label>
+                    <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                        <InputCheckbox @bind-Value="SelectedEintrag.Genbukan" class="h-4 w-4" />
+                        <span class="ml-2 mt-0.5">Genbukan</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Datum*</label>
+                <InputDate @bind-Value="SelectedEintrag.ImageDate" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+            </div>
+
+            <div class="mt-2">
+                <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Fotograf</label>
+                <InputText @bind-Value="SelectedEintrag.ImageCreatedBy" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+            </div>
+        </div>
+    </div>
+    <div class="p-4">
+        @if (CanSave)
+        {
+            <button @onclick="onSave" class="h-10 w-full bg-black px-5 text-center text-white hover:bg-primary">
+                <div class="flex flex-row items-center justify-start">
+                    <span class="material-symbols-outlined">save</span>
+                    <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Speichern</span>
+                </div>
+            </button>
+        }
+        else
+        {
+            <button class="h-10 w-full bg-black px-5 text-center text-white disabled:opacity-50" disabled>
+                <div class="flex flex-row items-center justify-start">
+                    <span class="material-symbols-outlined">save</span>
+                    <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Speichern</span>
+                </div>
+            </button>
+        }
+    </div>
 </div>
 
 @code {
+    private SfUploader uploadObj { get; set; }
 
+    [Parameter]
+    public IEnumerable<GalerieEintrag> Einträge { get; set; } = new List<GalerieEintrag>();
+    [Parameter]
+    public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsOpen)
+        {
+            // Clear temporary data
+            if (Einträge?.Count() > 0)
+            {
+                SelectedEintrag = Einträge.First();
+            }
+            else
+            {
+                SelectedEintrag = new GalerieEintrag { ImageDate = DateTime.Today.Date };
+                await uploadObj.ClearAllAsync();
+            }
+        }
+        else
+        {
+            if (uploadObj != null)
+            {
+                var files = await uploadObj.GetFilesDataAsync();
+                if (files.Any())
+                {
+                    await uploadObj.RemoveAsync(files.ToArray());
+                    await uploadObj.ClearAllAsync();
+                }
+            }
+        }
+    }
+
+    private GalerieEintrag SelectedEintrag { get; set; } = new GalerieEintrag { ImageDate = DateTime.Today.Date };
+
+    private bool IsNew => Einträge == null || Einträge?.Count() == 0;
+    private bool CanSave { get; set; }
+
+    private void SetCanSave()
+    {
+        if (isUploading == true)
+        {
+            errorMessage = "Bitte warten, bis alle Bilder hochgeladen wurden.";
+            CanSave = false;
+        }
+        else if (filesUploaded == false)
+        {
+            errorMessage = "Kein gültiges Bilde auswählt!";
+            CanSave = false;
+        }
+        else if (string.IsNullOrWhiteSpace(SelectedEintrag.Titel))
+        {
+            errorMessage = "Bitte wähle einen Titel aus";
+            CanSave = false;
+        }
+        else
+        {
+            errorMessage = string.Empty;
+            CanSave = true;
+        }
+    }
+
+    private bool filesUploaded = false;
+    private string errorMessage = string.Empty;
+    private bool isUploading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    private async Task CloseSidebar()
+    {
+        await OnClose.InvokeAsync(false);
+    }
+
+    private void BeforeUploadHandler(BeforeUploadEventArgs args)
+    {
+        // You can prevent uploading by setting "args.Cancel" to true.
+        isUploading = true;
+    }
+
+    private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
+    {
+        // Here, you can customize your code.
+
+    }
+    private void OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
+    {
+        // Here, you can customize your code.
+        isUploading = false;
+
+        if (args.FileData?.Any(x => x.StatusCode == "2") != true)
+        {
+            filesUploaded = false;
+        }
+        else
+        {
+            filesUploaded = true;
+        }
+        SetCanSave();
+    }
+
+    private async Task onSave()
+    {
+        try
+        {
+            var files = await uploadObj.GetFilesDataAsync();
+            foreach (var file in files)
+            {
+                var neuerEintrag = new GalerieEintrag
+                    {
+                        Titel = SelectedEintrag.Titel,
+                        Untertitel = SelectedEintrag.Untertitel,
+                        Beschreibung = SelectedEintrag.Beschreibung,
+                        ImageDate = SelectedEintrag.ImageDate,
+                        ImageCreatedBy = SelectedEintrag.ImageCreatedBy,
+                        Home = SelectedEintrag.Home,
+                        Aikido = SelectedEintrag.Aikido,
+                        Bujinkan = SelectedEintrag.Bujinkan,
+                        Genbukan = SelectedEintrag.Genbukan
+                    };
+
+                //Environment-Pfad mit einbeziehen!
+
+                if (File.Exists(file.Name))
+                {
+
+                }
+                //Datei auf dem Server ermitteln (ist die Datei da?)
+
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Bei der Erstellung der neuen Einträge ist ein Fehler aufgetreten: " + ex.Message;
+        }
+
+    }
 }
