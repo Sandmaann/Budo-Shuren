@@ -127,9 +127,23 @@ namespace BudoShurenWebsite.Controllers
                         }
                         else
                         {
-                            var filename = Path.Combine(env.ContentRootPath,
-                                env.EnvironmentName, "unsafe_uploads",
-                                file.FileName);
+                            string filename;
+                            if (env.IsDevelopment())
+                            {
+                                filename = Path.Combine(env.ContentRootPath, "wwwroot", env.EnvironmentName, "unsafe_uploads",
+                                    file.FileName);
+                            }
+                            else
+                            {
+                                filename = Path.Combine(env.ContentRootPath,
+                                    "unsafe_uploads",                                                
+                                    file.FileName);
+                            }
+                            //filename = Path.Combine(env.ContentRootPath,
+                            //    env.EnvironmentName, "unsafe_uploads",
+                            //    file.FileName);
+
+                            //var test = Path.GetTempPath();
 
                             //var filename = env.ContentRootPath + $@"\{file.FileName}";
                             if (!System.IO.File.Exists(filename))
@@ -159,9 +173,19 @@ namespace BudoShurenWebsite.Controllers
         {
             try
             {
-                var filename = Path.Combine(env.ContentRootPath,
-                    env.EnvironmentName, "unsafe_uploads",
-                    UploadFiles[0].FileName);
+                string filename;
+
+                if (env.IsDevelopment())
+                {
+                    filename = Path.Combine(env.ContentRootPath, "wwwroot", env.EnvironmentName, "unsafe_uploads",
+                        UploadFiles[0].FileName);
+                }
+                else
+                {
+                    filename = Path.Combine(env.ContentRootPath,
+                        "unsafe_uploads",
+                        UploadFiles[0].FileName);
+                }
 
                 //var filename = env.ContentRootPath + $@"\{UploadFiles[0].FileName}";
                 if (System.IO.File.Exists(filename))

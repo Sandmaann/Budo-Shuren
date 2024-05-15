@@ -1,8 +1,11 @@
 ﻿@page "/Account/Member/Galerie"
 @rendermode InteractiveServer
 
-@using BudoShurenWebsite.Data;
 
+@using BudoShurenWebsite.Data;
+@using Microsoft.EntityFrameworkCore;
+
+@inject IHostEnvironment environment
 @inject ApplicationDbContext DbContext;
 
 @* Dialog werde ich auch noch für Fehler-Meldungen brauchen? *@
@@ -33,13 +36,16 @@
 </SfSidebar> *@
 
 
-<div>
-    <SfSidebar Width="24rem" IsOpen="@SidebarIsVisible" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="true">
-        <ChildContent>
-            <EditGalerie Einträge="@SelectedEinträge" OnClose="CloseSidebar" IsOpen="@SidebarIsVisible" />
-        </ChildContent>
-    </SfSidebar>
-</div>
+@if (SidebarOpenedOnce)
+{
+    <div>
+        <SfSidebar Width="24rem" IsOpen="@SidebarIsVisible" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="true">
+            <ChildContent>
+                <EditGalerie Einträge="@SelectedEinträge" OnClose="CloseSidebar" IsOpen="@SidebarIsVisible" />
+            </ChildContent>
+        </SfSidebar>
+    </div>
+}
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
@@ -70,15 +76,27 @@
                 </div>
             </div>
         </div>
-
-
-        <div class="mt-10">
-            <div class="grid-cols-2 grid grid-flow-row-dense">
-                <ImageCard />
-            </div>
-        </div>
     </div>
 </div>
+<div class="mt-10 2xl:-mx-40 3xl:-mx-80 4xl:-mx-112">
+    <div class="grid-cols-2 grid grid-flow-row-dense md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-7">
+        @if (Einträge?.Count() > 0)
+        {
+            @foreach (var item in Einträge)
+            {
+                <ImageCard Eintrag="@item" />
+            }
+        }
+        else
+        {
+            <div class="flex justify-center">
+                <span class="text-gray-400">Keine Einträge gefunden.</span>
+            </div>
+        }
+    </div>
+</div>
+
+
 
 <style>
     .e-sidebar {
@@ -93,6 +111,9 @@
 
     private bool SidebarIsVisible { get; set; } = false;
 
+    //Sidebar ist offen beim Start, auch wenn false. Dieser Wert wird beim ersten setzen auf Visible auf true gesetzt.
+    private bool SidebarOpenedOnce { get; set; } = false;
+
     private IEnumerable<GalerieEintrag> SelectedEinträge { get; set; } = new List<GalerieEintrag>();
 
     private IEnumerable<GalerieEintrag> Einträge { get; set; } = new List<GalerieEintrag>();
@@ -105,6 +126,7 @@
     private async Task BilderErstellen()
     {
         SelectedEinträge = new List<GalerieEintrag>();
+        SidebarOpenedOnce = true;
         SidebarIsVisible = true;
     }
 
@@ -117,5 +139,17 @@
     {
         await base.OnInitializedAsync();
         SidebarIsVisible = false;
+
+        try
+        {
+            var einträge = await DbContext.Galerie.ToListAsync();
+            einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
+            Einträge = einträge;
+            // Other database operations...
+        }
+        catch (Exception ex)
+        {
+            // Handle other exceptions here
+        }
     }
 }

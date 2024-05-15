@@ -1,6 +1,9 @@
 ﻿@inject IHttpClientFactory ClientFactory
 @inject HttpClient Http
 @inject ILogger<EditGalerie> Logger
+@inject IHostEnvironment environment
+@inject ApplicationDbContext DbContext;
+
 @using System.Net.Http.Headers
 @using System.Text.Json
 
@@ -37,11 +40,9 @@
             <SfUploader @ref="uploadObj" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg" MaxFileSize=5242880>
                 <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
                 <UploaderEvents OnFailure="@OnFailureHandler" OnActionComplete="@OnActionCompleteHandler" BeforeUpload="@BeforeUploadHandler"></UploaderEvents>
-
             </SfUploader>
         </div>
         <div class="flex flex-col">
-
             <div class="mt-5">
                 <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Titel*</label>
                 <InputText @bind-Value="SelectedEintrag.Titel" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
@@ -91,24 +92,12 @@
         </div>
     </div>
     <div class="p-4">
-        @if (CanSave)
-        {
-            <button @onclick="onSave" class="h-10 w-full bg-black px-5 text-center text-white hover:bg-primary">
-                <div class="flex flex-row items-center justify-start">
-                    <span class="material-symbols-outlined">save</span>
-                    <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Speichern</span>
-                </div>
-            </button>
-        }
-        else
-        {
-            <button class="h-10 w-full bg-black px-5 text-center text-white disabled:opacity-50" disabled>
-                <div class="flex flex-row items-center justify-start">
-                    <span class="material-symbols-outlined">save</span>
-                    <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Speichern</span>
-                </div>
-            </button>
-        }
+        <button @onclick="onSave" class="h-10 w-full bg-black px-5 text-center text-white hover:bg-primary">
+            <div class="flex flex-row items-center justify-start">
+                <span class="material-symbols-outlined">save</span>
+                <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Speichern</span>
+            </div>
+        </button>
     </div>
 </div>
 
@@ -128,54 +117,85 @@
         if (IsOpen)
         {
             // Clear temporary data
+            errorMessage = string.Empty;
             if (Einträge?.Count() > 0)
             {
-                SelectedEintrag = Einträge.First();
+                SelectedEintrag = new InputModel
+                    {
+                        Aikido = Einträge.First().Aikido,
+                        Beschreibung = Einträge.First().Beschreibung,
+                        Bujinkan = Einträge.First().Bujinkan,
+                        Genbukan = Einträge.First().Genbukan,
+                        Home = Einträge.First().Home,
+                        ImageCreatedBy = Einträge.First().ImageCreatedBy,
+                        ImageDate = Einträge.First().ImageDate,
+                        Titel = Einträge.First().Titel,
+                        Untertitel = Einträge.First().Untertitel
+                    };
             }
             else
             {
-                SelectedEintrag = new GalerieEintrag { ImageDate = DateTime.Today.Date };
-                await uploadObj.ClearAllAsync();
+                SelectedEintrag = new InputModel();
+                if (uploadObj != null)
+                    await uploadObj.ClearAllAsync();
             }
         }
         else
         {
             if (uploadObj != null)
             {
+                //Aufräumen sollte die Sidebar nicht korrekt geschlossen worden sein.
                 var files = await uploadObj.GetFilesDataAsync();
                 if (files.Any())
                 {
-                    await uploadObj.RemoveAsync(files.ToArray());
+                    foreach (var file in files)
+                    {
+                        await uploadObj.RemoveAsync(new FileInfo[] { file });
+                    }
                     await uploadObj.ClearAllAsync();
                 }
             }
         }
     }
 
-    private GalerieEintrag SelectedEintrag { get; set; } = new GalerieEintrag { ImageDate = DateTime.Today.Date };
+    // private GalerieEintrag SelectedEintrag { get; set; } = new GalerieEintrag { ImageDate = DateTime.Today.Date };
+    private InputModel SelectedEintrag { get; set; } = new InputModel();
 
     private bool IsNew => Einträge == null || Einträge?.Count() == 0;
     private bool CanSave { get; set; }
 
-    private void SetCanSave()
+    private async void SetCanSave(bool ausSave = false)
     {
         if (isUploading == true)
         {
             errorMessage = "Bitte warten, bis alle Bilder hochgeladen wurden.";
             CanSave = false;
         }
-        else if (filesUploaded == false)
-        {
-            errorMessage = "Kein gültiges Bilde auswählt!";
-            CanSave = false;
-        }
-        else if (string.IsNullOrWhiteSpace(SelectedEintrag.Titel))
-        {
-            errorMessage = "Bitte wähle einen Titel aus";
-            CanSave = false;
-        }
         else
         {
+            if (ausSave)
+            {
+                if (string.IsNullOrWhiteSpace(SelectedEintrag.Titel))
+                {
+                    errorMessage = "Bitte gib noch einen Titel an!";
+                    CanSave = false;
+                    return;
+                }
+                var files = await uploadObj.GetFilesDataAsync();
+                if(files.Any() == false)
+                {
+                    errorMessage = "Bitte lade mindestens 1 Bild für die Gallerie hoch!";
+                    CanSave = false;
+                    return;
+                }
+                if (files.Any(x => x.StatusCode == "2") == false)
+                {
+                    errorMessage = "Kein einziges gültiges Bild auswählt!";
+                    CanSave = false;
+                    return;
+                }
+            }
+
             errorMessage = string.Empty;
             CanSave = true;
         }
@@ -192,6 +212,22 @@
 
     private async Task CloseSidebar()
     {
+        errorMessage = string.Empty;
+
+        if (uploadObj != null)
+        {
+            //Aufräumen wenn die Sidebar geschlossen wird.
+            var files = await uploadObj.GetFilesDataAsync();
+            if (files.Any())
+            {
+                foreach (var file in files)
+                {
+                    await uploadObj.RemoveAsync(new FileInfo[] { file });
+                }
+                await uploadObj.ClearAllAsync();
+            }
+        }
+
         await OnClose.InvokeAsync(false);
     }
 
@@ -199,6 +235,7 @@
     {
         // You can prevent uploading by setting "args.Cancel" to true.
         isUploading = true;
+        SetCanSave();
     }
 
     private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
@@ -210,22 +247,30 @@
     {
         // Here, you can customize your code.
         isUploading = false;
-
-        if (args.FileData?.Any(x => x.StatusCode == "2") != true)
-        {
-            filesUploaded = false;
-        }
-        else
-        {
-            filesUploaded = true;
-        }
         SetCanSave();
+
+        // if (args.FileData?.Any(x => x.StatusCode == "2") != true)
+        // {
+        //     filesUploaded = false;
+        // }
+        // else
+        // {
+        //     filesUploaded = true;
+        // }
     }
 
     private async Task onSave()
     {
         try
         {
+            SetCanSave(true);
+            if (CanSave == false)
+                return;
+            if (SelectedEintrag.IsValid == false)
+                return;
+
+            List<string> errors = new();
+
             var files = await uploadObj.GetFilesDataAsync();
             foreach (var file in files)
             {
@@ -244,18 +289,175 @@
 
                 //Environment-Pfad mit einbeziehen!
 
-                if (File.Exists(file.Name))
+                string tempFilePath = Path.Combine(environment.ContentRootPath, "wwwroot",
+                    environment.EnvironmentName, "unsafe_uploads",
+                    file.Name);
+
+                if (File.Exists(tempFilePath))
                 {
+                    //Datei in Galerie-Ordner kopieren
+                    string destination = Path.Combine(environment.ContentRootPath, "wwwroot", environment.EnvironmentName, "galery");
+                    string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
+                    string newFilePath = Path.Combine(destination, newFileName);
 
+                    await CopyFileAsync(tempFilePath, newFilePath);
+
+                    if (File.Exists(newFilePath))
+                    {
+                        //Eintarg im FileUploader löschen!
+                        await uploadObj.RemoveAsync(new FileInfo[] { file });
+                        //Temp-Datei löschen wenn sie noch vorhanden ist (sollte redundant sein?!)
+                        if (File.Exists(tempFilePath))
+                            File.Delete(tempFilePath);
+
+                        neuerEintrag.ImagePath = newFilePath;
+
+                        //Eintrag in DB anlegen
+                        await DbContext.Galerie.AddAsync(neuerEintrag);
+                        await DbContext.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        //ErrorHandling
+                    }
                 }
-                //Datei auf dem Server ermitteln (ist die Datei da?)
+                else
+                {
+                    //Fehler...
+                    errors.Add($"Die Datei {file.Name} wurde nicht gefunden! Versuche bitte das Bild zu entfernen und einmal neu hinzuzufügen.");
+                }
+            }
 
+            if (errors.Any())
+            {
+                errorMessage = string.Join(Environment.NewLine, errors);
             }
         }
         catch (Exception ex)
         {
             errorMessage = $"Bei der Erstellung der neuen Einträge ist ein Fehler aufgetreten: " + ex.Message;
         }
+    }
 
+    public async Task CopyFileAsync(string sourceFile, string destinationFile)
+    {
+        using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan))
+        using (var destinationStream = new FileStream(destinationFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan))
+            await sourceStream.CopyToAsync(destinationStream);
+    }
+
+
+    public sealed class InputModel
+    {
+        public bool IsValid { get; set; } = false;
+
+        private string titel = string.Empty;
+        public string Titel
+        {
+            get => titel;
+            set
+            {
+                titel = value;
+                Validate();
+            }
+        }
+
+        private string untertitel = string.Empty;
+        public string Untertitel
+        {
+            get => untertitel;
+            set
+            {
+                untertitel = value;
+                Validate();
+            }
+        }
+
+        private string beschreibung = string.Empty;
+        public string Beschreibung
+        {
+            get => beschreibung;
+            set
+            {
+                beschreibung = value;
+                Validate();
+            }
+        }
+
+        private string imageCreatedBy = string.Empty;
+        public string ImageCreatedBy
+        {
+            get => imageCreatedBy;
+            set
+            {
+                imageCreatedBy = value;
+                Validate();
+            }
+        }
+
+        private DateTime? imageDate = DateTime.Today.Date;
+        public DateTime? ImageDate
+        {
+            get => imageDate;
+            set
+            {
+                imageDate = value;
+                Validate();
+            }
+        }
+
+        private bool home = false;
+        public bool Home
+        {
+            get => home;
+            set
+            {
+                home = value;
+                Validate();
+            }
+        }
+
+        private bool aikido = false;
+        public bool Aikido
+        {
+            get => aikido;
+            set
+            {
+                aikido = value;
+                Validate();
+            }
+        }
+
+        private bool bujinkan = false;
+        public bool Bujinkan
+        {
+            get => bujinkan;
+            set
+            {
+                bujinkan = value;
+                Validate();
+            }
+        }
+
+        private bool genbukan = false;
+        public bool Genbukan
+        {
+            get => genbukan;
+            set
+            {
+                genbukan = value;
+                Validate();
+            }
+        }
+
+        private void Validate()
+        {
+            // Do some validation
+
+            if (string.IsNullOrWhiteSpace(Titel))
+                IsValid = false;
+            else
+                IsValid = true;
+        }
     }
 }

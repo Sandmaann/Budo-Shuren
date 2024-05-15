@@ -1,4 +1,7 @@
-﻿namespace BudoShurenWebsite.Data
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace BudoShurenWebsite.Data
 {
     public class GalerieEintrag
     {
@@ -21,18 +24,31 @@
         public DateTime? EntryCreationDateUTC { get; set; }
         public string? EntryCreatedBy { get; set; }
 
+        public string DisplayPath
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(ImagePath) && File.Exists(ImagePath))
+                {
+                    string path = Path.Combine(EnvironmentPath, "wwwroot");
+                    var result = ImagePath.Replace(path, string.Empty);
+                    return result;
+                }
+                return string.Empty;
+            }
+        }
+
+        [NotMapped]
+        public string EnvironmentPath { get; set; }
 
         public bool IsValid()
         {
-            if(!string.IsNullOrWhiteSpace(ImagePath))
+            if (!string.IsNullOrWhiteSpace(ImagePath))
             {
                 if (File.Exists(ImagePath))
                     return true;
             }
             return false;
         }
-
-        //Erstelle eine Funktion zum Upload von Dokumenten aus ImagePath
-
     }
 }
