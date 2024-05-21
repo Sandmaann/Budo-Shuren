@@ -1,0 +1,140 @@
+﻿@page "/Account/Member/Galerie/Images/{ImageName}/{EntryID}"
+@layout EmptyLayout
+
+@inject IHostEnvironment environment
+@inject ApplicationDbContext DbContext;
+@inject IJSRuntime JSRuntime
+
+@rendermode InteractiveServer
+
+
+<div class="flex h-screen w-screen bg-black">
+    <div class="relative flex flex-grow items-center justify-center">
+        <img src="@ImagePath" class="max-h-full max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
+        <div class="absolute right-5 top-5 flex flex-col">
+            @if (isOpen)
+            {
+                <button class="transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="OpenSidebar" title="Sidebar schließen" aria-label="Einstellungen schließen">
+                    <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
+                </button>
+            }
+            else
+            {
+                <button class="rotate-180 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="OpenSidebar" title="Daten zum Bild bearbeiten" aria-label="Einstellungen öffnen">
+                    <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
+                </button>
+            }
+            @*             <button class="rounded-full text-center hover:bg-gray-700" @onclick="OpenSidebar" title="Daten zum Bild bearbeiten" aria-label="Einstellungen öffnen">
+            <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
+            </button> *@
+            <button class="mt-4 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="deleteImage" title="Eintrag komplett löschen" aria-label="Eintrag löschen">
+                <span class="material-symbols-outlined m-2 text-white">delete_forever</span>
+            </button>
+        </div>
+    </div>
+
+    <button class="absolute left-5 top-5 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="goBack" title="Zurück zur vorherigen Seite" aria-label="Zurück gehen">
+        <span class="material-symbols-outlined m-2 text-white">arrow_back</span>
+    </button>
+
+    @if (Item != null)
+    {
+        <div>
+            <SfSidebar Width="24rem" IsOpen="@isOpen" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="false">
+                <ChildContent>
+                    <EditGalerie Einträge="(new List<GalerieEintrag> {Item})" OnClose="goBack" IsOpen="@isOpen" />
+                </ChildContent>
+            </SfSidebar>
+        </div>
+        @if (isOpen)
+        {
+            <div class="min-w-96"></div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string ImageName { get; set; }
+
+    [Parameter]
+    public string EntryID { get; set; }
+
+    public GalerieEintrag? Item { get; set; }
+
+    private bool isOpen { get; set; } = true;
+    bool deleted = false;
+
+
+    private async Task deleteImage()
+    {
+        if (deleted)
+        {
+            return;
+        }
+        bool confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Möchten Sie dieses Bild wirklich löschen?");
+        if (confirm)
+        {
+            // Code zum Löschen des Bildes
+            var item = await DbContext.Galerie.FindAsync(Item?.ID);
+            if (item != null)
+            {
+                try
+                {
+                    DbContext.Galerie.Remove(item);
+                    await DbContext.SaveChangesAsync();
+
+                    //Datei löschen!
+                    if (!string.IsNullOrWhiteSpace(item.ImagePath) && File.Exists(item.ImagePath))
+                        File.Delete(item.ImagePath);
+
+                    deleted = true;
+
+                    // await JSRuntime.InvokeVoidAsync("alert", "Das Bild wurde gelöscht!");
+                    await JSRuntime.InvokeVoidAsync("history.back");
+                }
+                catch (Exception e)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Das Bild konnte nicht gelöscht werden.");
+                    return;
+                }
+            }
+            else
+                await JSRuntime.InvokeVoidAsync("alert", "Das Bild konnte nicht gelöscht werden.");
+        }
+    }
+    private async Task goBack()
+    {
+        await JSRuntime.InvokeVoidAsync("history.back");
+    }
+
+
+    private void OpenSidebar()
+    {
+        isOpen = !isOpen;
+    }
+    private void CloseSidebar(bool result)
+    {
+        isOpen = false;
+    }
+
+    public string ImagePath
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(ImageName))
+            {
+                string path = Path.Combine(environment.EnvironmentName, "galery", ImageName);
+                return path;
+            }
+            return string.Empty;
+        }
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (int.TryParse(EntryID, out int ID) && ID > 0)
+            Item = await DbContext.Galerie.FindAsync(ID);
+    }
+}

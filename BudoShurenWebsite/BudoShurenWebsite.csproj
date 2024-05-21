@@ -12,23 +12,40 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.11.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.4">
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="25.2.4" />
-    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.2.4" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.2.4" />
-    <PackageReference Include="Syncfusion.Blazor.Schedule" Version="25.2.4" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.2.4" />
+    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.Schedule" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.SplitButtons" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.2.5" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Components\Shared\Inputs\" />
     <Folder Include="Models\Auth\" />
+    <Folder Include="wwwroot\flowbite\dist\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\SfResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SfResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\SfResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>SfResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

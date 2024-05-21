@@ -12,6 +12,9 @@ using Syncfusion.Blazor;
 using Microsoft.Extensions.Hosting;
 using System;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Globalization;
+
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 namespace BudoShurenWebsite
 {
@@ -25,6 +28,9 @@ namespace BudoShurenWebsite
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
             builder.Services.AddSyncfusionBlazor();
+            // Register the locale service to localize the  SyncfusionBlazor components.
+            builder.Services.AddSingleton(typeof(ISyncfusionStringLocalizer), typeof(SyncfusionLocalizer));
+
             builder.Services.AddControllers();
             builder.Services.AddHttpClient();
 
@@ -84,6 +90,9 @@ namespace BudoShurenWebsite
                 .AddDefaultTokenProviders();
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("de-DE");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("de-DE");
 
             var app = builder.Build();
 

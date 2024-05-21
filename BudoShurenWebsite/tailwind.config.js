@@ -1,6 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ["-/../**/*.{razor,html,cshtml}"],
+    content: ['-/../**/*.{razor,html,cshtml}' ],
+
+    variants: {
+        extend: {
+            scale: ['active'],
+        }
+    },
     theme: {
         // Erweitert das Theme um eigene Farben und Schriftarten
         extend: {
@@ -31,6 +37,7 @@ module.exports = {
             },
             width: {
                 '18': '4.5rem',
+                '22' : '5.5rem',
                 '75': '18.75rem',
                 '100': '25rem',
                 '112': '28rem',
@@ -39,12 +46,16 @@ module.exports = {
             },
             spacing: {
                 '18': '4.5rem',
+                '22' : '5.5rem',
                 '75': '18.75rem',
                 '112': '28rem',
                 '128': '32rem',
+            },
+            scale: {
+                '85': '0.85',
             }
         }
     },
-    plugins: [],
+    plugins: []
 }
 

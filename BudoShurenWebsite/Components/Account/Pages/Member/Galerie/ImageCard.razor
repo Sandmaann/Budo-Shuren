@@ -1,26 +1,41 @@
-﻿
+﻿@inject NavigationManager NavigationManager
 
-@* <div class="m-6 border shadow-lg">
-    <div class="max-h-48 w-full">
-        <img class="object-cover" src="@Eintrag.DisplayPath" title="@Eintrag.Titel" alt="@Eintrag.Titel" onerror="this.src='/images/missingimage.jpg'" />
-    </div>
-    <div class="p-6">
-        <h3 class="truncate text-xl">@Eintrag.Titel</h3>
-    </div>
-</div> *@
+<div class="h-min w-full bg-gray-100" @onclick="OnClick">
+    <div class="relative">
 
-
-<div class="m-6 border shadow-lg">
-    <div class="relative h-56 w-full">
-        <img class="z-0 absolute inset-0 h-56 w-full object-cover" src="@Eintrag.DisplayPath" title="@Eintrag.Titel" alt="@Eintrag.Titel" onerror="this.src='/images/missingimage.jpg'" />
-        <div class="opacity-0 z-10 absolute inset-0 flex items-start justify-end duration-300 hover:opacity-100">
-            <div class="m-2 flex items-center rounded-full bg-gray-400">
-                <span class="material-symbols-outlined m-0.5 text-white">done</span>
+        <img class="object-cover transition-all duration-500 ease-in-out @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")" src="@Eintrag.DisplayPath" title="@Eintrag.Titel" alt="@Eintrag.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
+        @if (Eintrag.IsSelected)
+        {
+            <div class="absolute inset-0 flex items-start justify-end">
+                <div class="m-2 flex items-center rounded-full bg-primary">
+                    <span class="material-symbols-outlined m-0.5 text-white">done</span>
+                </div>
             </div>
+        }
+        <div class="opacity-0 z-10 absolute inset-0 flex flex-col justify-between duration-300 hover:opacity-100">
+            <div class="flex items-start justify-end">
+                <button class="" @onclick="OnCheckClicked" aria-label="Auswählen" title="Auswählen">
+                    <div class="m-2 flex items-center rounded-full @(Eintrag.IsSelected ? "bg-primary" : "bg-gray-400")">
+                        <span class="material-symbols-outlined m-0.5 text-white">done</span>
+                    </div>
+                </button>
+            </div>
+            <div class="flex items-end justify-center bg-opacity-70 bg-gradient-to-t from-black">
+                <div class="text-wrap px-4 py-2 pt-10 text-white">
+                    <Zwischenüberschrift Text="@Eintrag.Titel" />
+                </div>
+            </div>
+            @if (Eintrag.IsSelected)
+            {
+                <div class="absolute inset-0 flex items-end justify-end">
+                    <button class="transform transition duration-150 ease-in-out active:scale-90" @onclick="OnDetailClicked" aria-label="Details anzeigen" title="Details anzeigen">
+                        <div class="m-2 flex items-center rounded-full">
+                            <span class="material-symbols-outlined m-0.5 text-white">search</span>
+                        </div>
+                    </button>
+                </div>
+            }
         </div>
-    </div>
-    <div class="p-6">
-        <h3 class="mt-1 truncate text-xl">@Eintrag.Titel</h3>
     </div>
 </div>
 
@@ -30,4 +45,59 @@
         {
             Titel = "Unbekannt"
         };
+
+    [Parameter]
+    public EventCallback OnSelectionChanged { get; set; }
+
+    bool checkClicked = false;
+    bool detailClicked = false;
+
+    private async void OnClick()
+    {
+        if (checkClicked)
+        {
+            checkClicked = false;
+            return;
+        }
+        if (detailClicked)
+        {
+            detailClicked = false;
+            return;
+        }
+        if (Eintrag.SelectionMode)
+        {
+            Eintrag.IsSelected = !Eintrag.IsSelected;
+            await OnSelectionChanged.InvokeAsync();
+        }
+        else
+        {
+            //Navigate to ImageDetail
+            if (Eintrag?.ImagePath != null)
+            {
+                string fileName = Path.GetFileName(Eintrag.ImagePath);
+                if (!string.IsNullOrWhiteSpace(fileName))
+                    NavigationManager.NavigateTo($"/Account/Member/Galerie/Images/{fileName}/{Eintrag.ID}");
+                // NavigationManager.NavigateTo($"/image/{fileName}");
+            }
+        }
+    }
+
+    private async void OnCheckClicked()
+    {
+        checkClicked = true;
+        Eintrag.IsSelected = !Eintrag.IsSelected;
+        await OnSelectionChanged.InvokeAsync();
+    }
+    private async void OnDetailClicked()
+    {
+        //Navigate to ImageDetail
+        if (Eintrag?.ImagePath != null)
+        {
+            detailClicked = true;
+            string fileName = Path.GetFileName(Eintrag.ImagePath);
+            if (!string.IsNullOrWhiteSpace(fileName))
+                NavigationManager.NavigateTo($"/Account/Member/Galerie/Images/{fileName}/{Eintrag.ID}");
+            // NavigationManager.NavigateTo($"/image/{fileName}");
+        }
+    }
 }

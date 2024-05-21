@@ -42,7 +42,7 @@
                     </label>
                 </div>
                 <div class="mt-8 flex flex-wrap justify-between gap-y-2">
-                    <button disabled="@LoginIsBusy" type="submit" class="font-yuji h-10 w-32 bg-black px-5 text-center text-sm font-normal leading-tight tracking-widest text-white hover:bg-primary">
+                    <button disabled="@LoginIsBusy" type="submit" class="font-yuji h-10 w-32 transform bg-black px-5 text-center text-sm font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-primary active:scale-90">
                         @if (LoginIsBusy)
                         {
                             <div class="flex flex-row items-center justify-between">
@@ -58,7 +58,7 @@
                             <span class="flex-1 mx-3 text-center text-white">Login</span>
                         }
                     </button>
-                    <div class="font-yuji flex h-10 items-center border border-black bg-white px-5 text-center text-sm font-normal leading-tight tracking-widest text-black hover:bg-primary hover:text-white">
+                    <div class="font-yuji flex h-10 transform items-center border border-black bg-white px-5 text-center text-sm font-normal leading-tight tracking-widest text-black transition duration-150 ease-in-out hover:bg-primary hover:text-white active:scale-90">
                         <a href="Account/ForgotPassword">Passwort vergessen?</a>
                     </div>
                 </div>

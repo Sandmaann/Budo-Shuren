@@ -17,7 +17,7 @@ namespace BudoShurenWebsite.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "8.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -109,7 +109,7 @@ namespace BudoShurenWebsite.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("BudoShurenWebsite.Data.GalerieEintrag", b =>
+            modelBuilder.Entity("BudoShurenWebsite.Models.GalerieEintrag", b =>
                 {
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
@@ -138,14 +138,26 @@ namespace BudoShurenWebsite.Migrations
                     b.Property<bool>("Home")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("Iaido")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ImageCreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly?>("ImageDate")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("ImageDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Jodo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastChangedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LastChangedUTC")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Titel")
                         .HasColumnType("nvarchar(max)");
