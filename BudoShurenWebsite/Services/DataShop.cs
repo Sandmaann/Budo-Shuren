@@ -16,7 +16,7 @@ namespace BudoShurenWebsite.Services
         /// </summary>
         private IEnumerable<Abteilung> abteilungen = Array.Empty<Abteilung>();
 
-        public DataService()
+        public DataService(IHostEnvironment environment)
         {
             InitializeDemoData();
         }

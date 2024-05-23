@@ -1,0 +1,187 @@
+﻿@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="h-min w-full select-none bg-gray-100" @onclick="OnClick" @onpointerdown="MouseDown" @onpointerup="MouseUp">
+    <div class="relative">
+        <img oncontextmenu="return false;" class="object-cover transition-all duration-500 ease-in-out @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")" src="@Eintrag.DisplayPath" title="@Eintrag.Titel" alt="@Eintrag.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
+        @if (Eintrag.IsSelected)
+        {
+            <div class="absolute inset-0 flex items-start justify-end">
+                <div class="m-2 flex items-center rounded-full bg-primary">
+                    <span class="material-symbols-outlined m-0.5 text-white">done</span>
+                </div>
+            </div>
+        }
+        <div class="opacity-0 z-10 absolute inset-0 hidden flex-col justify-between duration-300 md:flex md:hover:opacity-100">
+            <div class="flex items-start justify-end">
+                <button class="" @onclick="OnCheckClicked" aria-label="Auswählen" title="Auswählen">
+                    <div class="m-2 flex items-center rounded-full @(Eintrag.IsSelected ? "bg-primary" : "bg-gray-400")">
+                        <span class="material-symbols-outlined m-0.5 text-white">done</span>
+                    </div>
+                </button>
+            </div>
+            <div class="hidden items-end justify-center bg-opacity-70 bg-gradient-to-t from-black md:flex">
+                <div class="text-wrap px-4 py-2 pt-10 text-white">
+                    <Zwischenüberschrift Text="@Eintrag.Titel" />
+                </div>
+            </div>
+            @if (Eintrag.IsSelected)
+            {
+                <div class="absolute inset-0 hidden items-end justify-end md:flex">
+                    <button class="transform transition duration-150 ease-in-out active:scale-90" @onclick="OnDetailClicked" aria-label="Details anzeigen" title="Details anzeigen">
+                        <div class="m-2 flex items-center rounded-full">
+                            <span class="material-symbols-outlined m-0.5 text-white">search</span>
+                        </div>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public GalerieEintrag Eintrag { get; set; } = new GalerieEintrag
+        {
+            Titel = "Unbekannt"
+        };
+
+    [Parameter]
+    public EventCallback OnSelectionChanged { get; set; }
+
+    [Parameter]
+    public bool IsScrolling { get; set; }
+
+    bool checkClicked = false;
+    bool detailClicked = false;
+
+    bool longClick = false;
+    bool shortClick = false;
+
+    DateTime mouseDownTime;
+
+    private Timer timer;
+    private bool timerFired = false;
+
+    void TimerTimed()
+    {
+
+    }
+
+    void MouseDown()
+    {
+        timerFired = false;
+        // await Task.Delay(50);
+        timer = new Timer(_ =>
+        {
+            if (IsScrolling)
+                return;
+            timerFired = true;
+            InvokeAsync(async () =>
+            {
+                if (IsScrolling)
+                {
+                    timerFired = true;
+                    return;
+                }
+                // Ihre Methode hier aufrufen
+                Eintrag.IsSelected = !Eintrag.IsSelected;
+                await OnSelectionChanged.InvokeAsync();
+                StateHasChanged();
+            });
+        }, null, 500, Timeout.Infinite);
+
+        mouseDownTime = DateTime.UtcNow;
+    }
+
+    void MouseUp()
+    {
+        if (timer != null)
+        {
+            timer.Dispose();
+            timer = null;
+        }
+
+        if (!timerFired)
+        {
+            // Führen Sie die Aktion aus, wenn der Timer nicht abgelaufen ist
+            long milliseconds = (DateTime.UtcNow.Ticks - mouseDownTime.Ticks) / TimeSpan.TicksPerMillisecond;
+            if (milliseconds > 400)
+            {
+                //long press
+                Console.WriteLine("long press");
+                longClick = true;
+                shortClick = false;
+                OnClick();
+            }
+            else
+            {
+                //short press
+                shortClick = true;
+                longClick = false;
+            }
+        }
+    }
+
+    private async void OnClick()
+    {
+        if (timerFired)
+        {
+            return;
+        }
+        if (checkClicked)
+        {
+            checkClicked = false;
+            return;
+        }
+        if (detailClicked)
+        {
+            detailClicked = false;
+            return;
+        }
+        if (longClick)
+        {
+            //Lange gehalten = immer Auswahlmodus
+            Eintrag.IsSelected = !Eintrag.IsSelected;
+            await OnSelectionChanged.InvokeAsync();
+
+            longClick = false;
+            shortClick = false;
+            return;
+        }
+        if (Eintrag.SelectionMode)
+        {
+            Eintrag.IsSelected = !Eintrag.IsSelected;
+            await OnSelectionChanged.InvokeAsync();
+        }
+        else
+        {
+            //Navigate to ImageDetail
+            if (Eintrag?.ImagePath != null)
+            {
+                string fileName = Path.GetFileName(Eintrag.ImagePath);
+                if (!string.IsNullOrWhiteSpace(fileName))
+                    NavigationManager.NavigateTo($"/Account/Member/Galerie/Images/{fileName}/{Eintrag.ID}");
+                // NavigationManager.NavigateTo($"/image/{fileName}");
+            }
+        }
+    }
+
+    private async void OnCheckClicked()
+    {
+        checkClicked = true;
+        Eintrag.IsSelected = !Eintrag.IsSelected;
+        await OnSelectionChanged.InvokeAsync();
+    }
+    private void OnDetailClicked()
+    {
+        //Navigate to ImageDetail
+        if (Eintrag?.ImagePath != null)
+        {
+            detailClicked = true;
+            string fileName = Path.GetFileName(Eintrag.ImagePath);
+            if (!string.IsNullOrWhiteSpace(fileName))
+                NavigationManager.NavigateTo($"/Account/Member/Galerie/Images/{fileName}/{Eintrag.ID}");
+        }
+    }
+}

@@ -17,7 +17,7 @@ namespace BudoShurenWebsite.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "8.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -107,6 +107,70 @@ namespace BudoShurenWebsite.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.GalerieEintrag", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<bool>("Aikido")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Beschreibung")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Bujinkan")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EntryCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EntryCreationDateUTC")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Genbukan")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Home")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Iaido")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ImageCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ImageDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Jodo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastChangedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LastChangedUTC")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Titel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Untertitel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ID")
+                        .IsUnique();
+
+                    b.ToTable("Galerie", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

@@ -1,0 +1,74 @@
+﻿
+
+<div>
+    <button class="flex flex-row items-center" @onclick="SelectAll" aria-label="Alle auswählen">
+        @* @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")" *@
+        <div class="m-2 ml-0 flex items-center overflow-hidden rounded-full bg-gray-600 transition-all duration-500 @(HasSelectedItems ? "w-auto opacity-100 mr-5" : "w-0 opacity-0")">
+            <span class="material-symbols-outlined m-0.5 text-white">done</span>
+        </div>
+        <div class="mb-1">
+            <Zwischenüberschrift Text="@Gruppe.Titel" />
+        </div>
+    </button>
+
+    <div class="columns-3 gap-4 space-y-4 py-8 lg:columns-4 xl:columns-5 2xl:columns-6 3xl:columns-7 4xl:columns-8 5xl:columns-9">
+        @foreach (var eintrag in Gruppe.Items)
+        {
+            <ImageCard Eintrag="@eintrag" OnSelectionChanged="SelectionChanged" IsScrolling="IsScrolling" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public GalerieGruppe Gruppe { get; set; } = new GalerieGruppe();
+
+    [Parameter]
+    public EventCallback OnSelectionChanged { get; set; }
+
+    [Parameter]
+    public bool IsScrolling { get; set; }
+
+
+    public bool HasSelectedItems { get; set; } = false;
+
+    private bool skipSelection = false;
+
+    private async void SelectionChanged()
+    {
+        if (!skipSelection)
+        {
+            HasSelectedItems = Gruppe.Items.Any(e => e.IsSelected);
+            await OnSelectionChanged.InvokeAsync();
+        }
+    }
+
+    private void SelectAll()
+    {
+        skipSelection = true;
+
+        if (Gruppe.Items.Any(x => x.IsSelected == false) == false)
+        {
+            foreach (var eintrag in Gruppe.Items)
+            {
+                eintrag.IsSelected = false;
+            }
+            HasSelectedItems = false;
+            skipSelection = false;
+            SelectionChanged();
+
+            return;
+        }
+        else
+        {
+            foreach (var eintrag in Gruppe.Items)
+            {
+                eintrag.IsSelected = true;
+            }
+            HasSelectedItems = true;
+        }
+
+        skipSelection = false;
+        SelectionChanged();
+    }
+}

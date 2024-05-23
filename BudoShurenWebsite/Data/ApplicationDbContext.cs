@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using BudoShurenWebsite.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 
@@ -10,7 +11,9 @@ namespace BudoShurenWebsite.Data
         {
             base.OnModelCreating(builder);
 
-            //Kunden Tabelle-Indexe erstellen
+            // Set the primary key for the GalerieEintrag entity
+            builder.Entity<GalerieEintrag>().HasKey(u => u.ID);
+            // Set the table name and unique index for the GalerieEintrag entity
             builder.Entity<GalerieEintrag>().ToTable("Galerie");
             builder.Entity<GalerieEintrag>().HasIndex(u => u.ID).IsUnique();
         }
