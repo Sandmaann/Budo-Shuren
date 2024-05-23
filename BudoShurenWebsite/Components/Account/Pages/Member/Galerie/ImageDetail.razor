@@ -7,53 +7,50 @@
 
 @rendermode InteractiveServer
 
-
 <div class="flex h-screen w-screen bg-black">
-    <div class="relative flex flex-grow items-center justify-center">
-        <img src="@ImagePath" class="max-h-full max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
-        <div class="absolute right-5 top-5 flex flex-col">
-            @if (isOpen)
-            {
-                <button class="transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="OpenSidebar" title="Sidebar schließen" aria-label="Einstellungen schließen">
-                    <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
-                </button>
-            }
-            else
-            {
-                <button class="rotate-180 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="OpenSidebar" title="Daten zum Bild bearbeiten" aria-label="Einstellungen öffnen">
-                    <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
-                </button>
-            }
-            @*             <button class="rounded-full text-center hover:bg-gray-700" @onclick="OpenSidebar" title="Daten zum Bild bearbeiten" aria-label="Einstellungen öffnen">
-            <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
-            </button> *@
-            <button class="mt-4 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="deleteImage" title="Eintrag komplett löschen" aria-label="Eintrag löschen">
-                <span class="material-symbols-outlined m-2 text-white">delete_forever</span>
+    <div class="relative mt-5 flex flex-grow flex-row">
+        <div class="mx-5">
+            <button class="transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="goBack" title="Zurück zur vorherigen Seite" aria-label="Zurück gehen">
+                <span class="material-symbols-outlined m-2 text-white">arrow_back</span>
             </button>
+        </div>
+        <div class="max-h-full max-w-full flex-grow self-center object-cover">
+            <img src="@ImagePath" class="mx-auto max-h-full max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
+        </div>
+        <div>
+            <div class="mx-5 flex flex-col">
+                <button class="rotate-180 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="toggleSlideoverBlazor" title="Daten zum Bild bearbeiten" aria-label="Einstellungen öffnen">
+                    <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
+                </button>
+                <button class="mt-4 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="deleteImage" title="Eintrag komplett löschen" aria-label="Eintrag löschen">
+                    <span class="material-symbols-outlined m-2 text-white">delete_forever</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <button class="absolute left-5 top-5 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="goBack" title="Zurück zur vorherigen Seite" aria-label="Zurück gehen">
-        <span class="material-symbols-outlined m-2 text-white">arrow_back</span>
-    </button>
+    <div id="slideover-container" class="invisible fixed inset-0 h-full w-full">
+        <div @onclick="toggleSlideoverBlazor" id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
 
-    @if (Item != null)
-    {
-        <div>
-            <SfSidebar Width="24rem" IsOpen="@isOpen" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="false">
-                <ChildContent>
-                    <EditGalerie Einträge="(new List<GalerieEintrag> {Item})" OnClose="goBack" IsOpen="@isOpen" />
-                </ChildContent>
-            </SfSidebar>
+        <div onclick="" id="slideover" class="absolute right-0 h-full w-96 translate-x-full overflow-auto bg-white transition-all duration-300 ease-out">
+            <EditGalerie @ref="editGalerie" Einträge="(new List<GalerieEintrag> {Item})" OnClose="onSidebarClosed" />
         </div>
-        @if (isOpen)
-        {
-            <div class="min-w-96"></div>
-        }
-    }
+    </div>
 </div>
 
+
+<script>
+    function toggleSlideover() {
+        document.getElementById('slideover-container').classList.toggle('invisible');
+        document.getElementById('slideover-bg').classList.toggle('opacity-0');
+        document.getElementById('slideover-bg').classList.toggle('opacity-50');
+        document.getElementById('slideover').classList.toggle('translate-x-full');
+    }
+</script>
 @code {
+
+    EditGalerie editGalerie;
+
     [Parameter]
     public string ImageName { get; set; }
 
@@ -62,7 +59,7 @@
 
     public GalerieEintrag? Item { get; set; }
 
-    private bool isOpen { get; set; } = true;
+    private bool isOpen { get; set; } = false;
     bool deleted = false;
 
 
@@ -103,20 +100,39 @@
                 await JSRuntime.InvokeVoidAsync("alert", "Das Bild konnte nicht gelöscht werden.");
         }
     }
+
+    private async Task onSidebarClosed(bool result)
+    {
+        if (result)
+            await JSRuntime.InvokeVoidAsync("history.back");
+        else
+            await JSRuntime.InvokeVoidAsync("toggleSlideover");
+    }
+
+    private async Task toggleSlideoverBlazor()
+    {
+        isOpen = !isOpen;
+        await JSRuntime.InvokeVoidAsync("toggleSlideover");
+        if (isOpen)
+        {
+            editGalerie.SetData(new List<GalerieEintrag> { Item });
+        }
+    }
+
     private async Task goBack()
     {
         await JSRuntime.InvokeVoidAsync("history.back");
     }
 
 
-    private void OpenSidebar()
-    {
-        isOpen = !isOpen;
-    }
-    private void CloseSidebar(bool result)
-    {
-        isOpen = false;
-    }
+    // private void OpenSidebar()
+    // {
+    //     isOpen = !isOpen;
+    // }
+    // private void CloseSidebar(bool result)
+    // {
+    //     isOpen = false;
+    // }
 
     public string ImagePath
     {

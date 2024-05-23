@@ -34,6 +34,11 @@ namespace BudoShurenWebsite
             builder.Services.AddControllers();
             builder.Services.AddHttpClient();
 
+
+            //DEAKTIVEREN !!!
+            builder.Services.AddServerSideBlazor(options => options.DetailedErrors = true);
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();

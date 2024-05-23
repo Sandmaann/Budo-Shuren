@@ -11,14 +11,13 @@
         </div>
     </button>
 
-    <div class="columns-1 gap-4 space-y-4 py-8 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5 3xl:columns-6 4xl:columns-7">
+    <div class="columns-3 gap-4 space-y-4 py-8 lg:columns-4 xl:columns-5 2xl:columns-6 3xl:columns-7 4xl:columns-8 5xl:columns-9">
         @foreach (var eintrag in Gruppe.Items)
         {
-            <ImageCard Eintrag="@eintrag" OnSelectionChanged="SelectionChanged" />
+            <ImageCard Eintrag="@eintrag" OnSelectionChanged="SelectionChanged" IsScrolling="IsScrolling" />
         }
     </div>
 </div>
-
 
 @code {
     [Parameter]
@@ -26,6 +25,10 @@
 
     [Parameter]
     public EventCallback OnSelectionChanged { get; set; }
+
+    [Parameter]
+    public bool IsScrolling { get; set; }
+
 
     public bool HasSelectedItems { get; set; } = false;
 

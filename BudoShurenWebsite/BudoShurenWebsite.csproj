@@ -19,9 +19,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.ProgressBar" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.Schedule" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.SplitButtons" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.2.5" />

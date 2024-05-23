@@ -11,180 +11,243 @@
 @inject IHostEnvironment environment
 @inject ApplicationDbContext DbContext;
 
-@* Dialog werde ich auch noch für Fehler-Meldungen brauchen? *@
 
-@* <SfDialog Width="250px" ShowCloseIcon="true">
-    <DialogTemplates>
-        <Header>This is a Header</Header>
-        <Content>
-            <EditGalerie />
-        </Content>
-    </DialogTemplates>
-</SfDialog> *@
+<div class="">
+    <div class="container mx-auto">
+        <div>
+            <div class="mx-auto max-w-screen-md">
+                <div class="mx-10">
+                    <SectionBanner Titel="Galerie verwalten" />
+                </div>
+            </div>
 
-@*         Problem: wenn Handy-Size will ich keine Sidebar, sondern Full-Screen.
-        Entweder ich mache dann ein anders Control/ Popup z.B.
-        Oder ich nehme hier 2 Sidebars mit MediaQuery und breakpoints die sich dann abwechseln
-        Oder ich mache die MediaQuery mit einer C# Variable... *@
+            <div class="z-40 sticky top-16 bg-white pb-5">
 
-@* <SfSidebar Width="100%" IsOpen="true" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="true" MediaQuery="(min-width: 0px) and (max-width: 600px)">
-    <ChildContent>
-        <div style="text-align: center;" class="text-content"> Sidebar </div>
-    </ChildContent>
-</SfSidebar> *@
-@* <SfSidebar Width="16rem" IsOpen="true" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="true" MediaQuery="(min-width: 600px)">
-    <ChildContent>
-        <EditGalerie />
-    </ChildContent>
-</SfSidebar> *@
+                <div class="mx-auto max-w-screen-md">
+                    <div class="mx-10 flex flex-col">
+                        <div class="flex flex-wrap">
+                            <div class="relative grow">
+                                @if (SelectionMode)
+                                {
+                                    <div class="flex flex-row items-center justify-start">
+                                        <button @onclick="auswahlAufheben" class="mr-2 flex min-h-10 min-w-10 items-center justify-center rounded-full hover:bg-gray-200" aria-label="Auswahl aufheben" title="Auswahl aufheben">
+                                            <span class="material-symbols-outlined">close</span>
+                                        </button>
+                                        <div>
+                                            <Fließtext Text="@(selectedEinträgeCount > 0 ? $"{selectedEinträgeCount} ausgewählt" :"Keine Auswahl")" />
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button @onclick="Suche" aria-label="Suchen" class="absolute inset-y-0 left-0 flex transform items-center pl-3 transition duration-150 ease-in-out active:scale-90">
+                                        <span class="material-symbols-outlined">search</span>
+                                    </button>
+                                    <InputText @bind-Value="Suchtext"
+                                               @oninput="Suche"
+                                               class="!outline-none w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6"
+                                               placeholder="Suchen..." />
+                                }
 
-
-@if (SidebarOpenedOnce)
-{
-    <div>
-        <SfSidebar Width="24rem" IsOpen="@SidebarIsVisible" Position="SidebarPosition.Right" Animate="true" ShowBackdrop="true">
-            <ChildContent>
-                <EditGalerie Einträge="@SelectedEinträge" OnClose="CloseSidebar" IsOpen="@SidebarIsVisible" />
-            </ChildContent>
-        </SfSidebar>
-    </div>
-}
-<div class="container mx-auto">
-    <div class="mx-auto max-w-screen-md">
-        <div class="mx-10">
-            <SectionBanner Titel="Galerie verwalten" />
-        </div>
-    </div>
-
-    <div class="sticky top-16 z-50 bg-white pb-5">
-        <div class="mx-auto max-w-screen-md">
-            <div class="mx-10 flex flex-col">
-                <div class="flex flex-row">
-                    <div class="relative grow">
-                        <button @onclick="Suche" aria-label="Suchen" class="absolute inset-y-0 left-0 flex transform items-center pl-3 transition duration-150 ease-in-out active:scale-90">
-                            <span class="material-symbols-outlined">search</span>
-                        </button>
-
-                        @*                                                 <div class="!outline-none w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6">
-                        <SfAutoComplete Width="auto" TValue="string" TItem="string" @bind-Value="@Suchtext" DataSource="@suchdata" Placeholder="Suche">
-                        <AutoCompleteEvents TItem="string" TValue="string" ValueChange="@Suche"></AutoCompleteEvents>
-                        </SfAutoComplete>
-                        </div> *@
-
-                        <InputText @bind-Value="Suchtext"
-                                   @oninput="Suche"
-                                   class="!outline-none w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6"
-                                   placeholder="Suchen..." />
-                    </div>
-                    <div class="flex items-center justify-end">
-                        <div class="w-28">
-                            <SfMenu @ref="MenuObj" TValue="MenuItem" HamburgerMode="true" Title="@filterTetxt">
-                                <MenuItems>
-                                    <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
-                                    <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
-                                    <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
-                                    <MenuItem Text="Genbukan" IconCss="@genbukanCssImage"></MenuItem>
-                                    <MenuItem Text="Iaido" IconCss="@iaidoCssImage"></MenuItem>
-                                    <MenuItem Text="Jodo" IconCss="@jodoCssImage"></MenuItem>
-                                    <MenuItem Separator="true"></MenuItem>
-                                    <MenuItem Text="Keine" IconCss="e-icons e-filter-clear"></MenuItem>
-                                </MenuItems>
-                                <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
-                            </SfMenu>
-                        </div>
-
-                        @if (SelectionMode)
-                        {
-                            <div>
-                                <SfMenu @ref="MenuObj2" TValue="MenuItem" HamburgerMode="true" Title="Bearbeiten">
-                                    <MenuItems>
-                                        <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
-                                        <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
-                                        <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
-                                    </MenuItems>
-                                    <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
-
-                                    @* <MenuEvents TValue="MenuItem" OnClose="onClose" ItemSelected="itemSelected"></MenuEvents> *@
-                                </SfMenu>
                             </div>
 
-                            @*                             <button @onclick="BilderBearbeiten" aria-label="Ausgewählte Bilder ändern" class="font-yuji flex h-10 flex-row items-center justify-between px-5 text-center text-sm font-normal leading-tight tracking-widest text-black">
-                        <span class="material-symbols-outlined mr-2">settings</span>
-                        <span class="hidden md:inline-block">Ändern</span>
-                        </button>
-                        <button @onclick="BilderLöschen" aria-label="Bilder löschen" class="font-yuji flex h-10 flex-row items-center justify-between px-5 text-center text-sm font-normal leading-tight tracking-widest text-black">
-                        <span class="material-symbols-outlined mr-2">delete_forever</span>
-                        <span class="hidden md:inline-block">Löschen</span>
-                        </button> *@
-                        }
-                        else
-                        {
-                            <button @onclick="BilderErstellen" aria-label="Bilder hochladen" class="font-yuji flex h-10 transform flex-row items-center justify-between px-5 text-center text-sm font-normal leading-tight tracking-widest text-black transition duration-150 ease-in-out active:scale-90">
-                                <span class="material-symbols-outlined mr-2">upload</span>
-                                <span class="hidden md:inline-block">hochladen</span>
-                            </button>
-                        }
+                            <div class="flex items-center justify-end">
+                                @if (SelectionMode)
+                                {
+                                    <div class="hidden flex-row items-center md:flex">
+                                        <SfMenu TValue="MenuItem" HamburgerMode="false" ShowItemOnClick="true">
+                                            <MenuItems>
+                                                <MenuItem Text="@filterText" IconCss="e-icons e-filter">
+                                                    <MenuItems>
+                                                        <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
+                                                        <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
+                                                        <MenuItem Text="Genbukan" IconCss="@genbukanCssImage"></MenuItem>
+                                                        <MenuItem Text="Iaido" IconCss="@iaidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Jodo" IconCss="@jodoCssImage"></MenuItem>
+                                                        <MenuItem Separator="true"></MenuItem>
+                                                        <MenuItem Text="Keine" IconCss="e-icons e-filter-clear"></MenuItem>
+                                                    </MenuItems>
+                                                </MenuItem>
+                                            </MenuItems>
+                                            <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
+                                        </SfMenu>
+                                        <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
+                                            <MenuItems>
+                                                <MenuItem Text="Bearbeiten" IconCss="e-icons e-menu">
+                                                    <MenuItems>
+                                                        <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
+                                                        <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
+                                                        <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
+                                                    </MenuItems>
+                                                </MenuItem>
+                                            </MenuItems>
+                                            <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
+                                        </SfMenu>
+                                    </div>
+
+                                    <div class="flex flex-row items-center md:hidden">
+                                        <SfMenu TValue="MenuItem" HamburgerMode="false" ShowItemOnClick="true">
+                                            <MenuItems>
+                                                <MenuItem Text="" IconCss="e-icons e-filter">
+                                                    <MenuItems>
+                                                        <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
+                                                        <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
+                                                        <MenuItem Text="Genbukan" IconCss="@genbukanCssImage"></MenuItem>
+                                                        <MenuItem Text="Iaido" IconCss="@iaidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Jodo" IconCss="@jodoCssImage"></MenuItem>
+                                                        <MenuItem Separator="true"></MenuItem>
+                                                        <MenuItem Text="Keine" IconCss="e-icons e-filter-clear"></MenuItem>
+                                                    </MenuItems>
+                                                </MenuItem>
+                                            </MenuItems>
+                                            <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
+                                        </SfMenu>
+                                        <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
+                                            <MenuItems>
+                                                <MenuItem Text="" IconCss="e-icons e-menu">
+                                                    <MenuItems>
+                                                        <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
+                                                        <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
+                                                        <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
+                                                    </MenuItems>
+                                                </MenuItem>
+                                            </MenuItems>
+                                            <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
+                                        </SfMenu>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="hidden flex-row items-center md:flex">
+                                        <SfMenu TValue="MenuItem" HamburgerMode="false" ShowItemOnClick="true">
+                                            <MenuItems>
+                                                <MenuItem Text="@filterText" IconCss="e-icons e-filter">
+                                                    <MenuItems>
+                                                        <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
+                                                        <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
+                                                        <MenuItem Text="Genbukan" IconCss="@genbukanCssImage"></MenuItem>
+                                                        <MenuItem Text="Iaido" IconCss="@iaidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Jodo" IconCss="@jodoCssImage"></MenuItem>
+                                                        <MenuItem Separator="true"></MenuItem>
+                                                        <MenuItem Text="Keine" IconCss="e-icons e-filter-clear"></MenuItem>
+                                                    </MenuItems>
+                                                </MenuItem>
+                                            </MenuItems>
+                                            <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
+                                        </SfMenu>
+                                    </div>
+                                    <div class="flex flex-row items-center md:hidden">
+                                        <SfMenu TValue="MenuItem" HamburgerMode="false" ShowItemOnClick="true">
+                                            <MenuItems>
+                                                <MenuItem Text="" IconCss="e-icons e-filter">
+                                                    <MenuItems>
+                                                        <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
+                                                        <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
+                                                        <MenuItem Text="Genbukan" IconCss="@genbukanCssImage"></MenuItem>
+                                                        <MenuItem Text="Iaido" IconCss="@iaidoCssImage"></MenuItem>
+                                                        <MenuItem Text="Jodo" IconCss="@jodoCssImage"></MenuItem>
+                                                        <MenuItem Separator="true"></MenuItem>
+                                                        <MenuItem Text="Keine" IconCss="e-icons e-filter-clear"></MenuItem>
+                                                    </MenuItems>
+                                                </MenuItem>
+                                            </MenuItems>
+                                            <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
+                                        </SfMenu>
+                                    </div>
+                                    <button @onclick="BilderErstellen" aria-label="Bilder hochladen" class="font-yuji flex h-10 transform flex-row items-center justify-between px-4 text-center text-sm font-normal leading-tight tracking-widest text-black transition duration-150 ease-in-out active:scale-90">
+                                        <span class="material-symbols-outlined mr-2">upload</span>
+                                        <span class="hidden md:inline-block">hochladen</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            @* <div class="z-10 mx-5 mt-5 2xl:-mx-40 3xl:-mx-72 4xl:-mx-112"> *@
+            <div class="z-10 mx-10 mt-5">
+                <div>
+                    <Virtualize Items="Gruppen">
+                        <ItemContent>
+                            <ImageGroup @key="context.ID" Gruppe="@context" OnSelectionChanged="SelectionChanged" IsScrolling="isScrolling" />
+                        </ItemContent>
+                        <Placeholder>
+                            <div class="flex justify-center">
+                                <span class="m text-gray-400">Das ist ein Platzhalter.</span>
+                            </div>
+                        </Placeholder>
+                        <EmptyContent>
+                            <div class="flex justify-center">
+                                @if (IsLoading)
+                                {
+                                    <div class="flex flex-row items-center justify-center">
+                                        <div role="status" class="mr-5">
+                                            <svg aria-hidden="true" class="h-8 w-8 animate-spin fill-blue-600 text-gray-200 dark:text-gray-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
+                                                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" />
+                                            </svg>
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                        <span class="">Einen Moment, die Bilder werden geladen ...</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                                    {
+                                        <StatusMessage ShowAsError="true" Message="@errorMessage" />
+                                    }
+                                    else
+                                    {
+                                        <span class="m text-gray-400">Keine Einträge gefunden.</span>
+                                    }
+                                }
+                            </div>
+                        </EmptyContent>
+                    </Virtualize>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="z-10 mx-5 mt-5 2xl:-mx-40 3xl:-mx-72 4xl:-mx-112">
-        <div>
-            <Virtualize Items="Gruppen">
-                <ItemContent>
-                    <ImageGroup @key="context.ID" Gruppe="@context" OnSelectionChanged="SelectionChanged" />
-                </ItemContent>
-                <Placeholder>
-                    <div class="flex justify-center">
-                        <span class="m text-gray-400">Das ist ein Platzhalter.</span>
-                    </div>
-                </Placeholder>
-                <EmptyContent>
-                    <div class="flex justify-center">
-                        @if (IsLoading)
-                        {
-                            <div class="flex flex-row items-center justify-center">
-                                <div role="status" class="mr-5">
-                                    <svg aria-hidden="true" class="h-8 w-8 animate-spin fill-blue-600 text-gray-200 dark:text-gray-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
-                                        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" />
-                                    </svg>
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                                <span class="">Einen Moment, die Bilder werden geladen ...</span>
-                            </div>
-                        }
-                        else
-                        {
-                            @if (!string.IsNullOrWhiteSpace(errorMessage))
-                            {
-                                <StatusMessage ShowAsError="true" Message="@errorMessage" />
-                            }
-                            else
-                            {
-                                <span class="m text-gray-400">Keine Einträge gefunden.</span>
-                            }
-                        }
-                    </div>
-                </EmptyContent>
-            </Virtualize>
+    <div id="slideover-container" class="invisible fixed inset-0 z-50 h-full w-full">
+        <div @onclick="(()=> CloseSidebar(false))" id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
+
+        <div onclick="" id="slideover" class="absolute right-0 h-full w-96 translate-x-full overflow-auto bg-white transition-all duration-300 ease-out">
+            <EditGalerie @ref="editGalerie" Einträge="@SelectedEinträge" OnClose="CloseSidebar" IsOpen="@SidebarIsVisible" />
         </div>
     </div>
 </div>
 
-
 <style>
-    .e-sidebar {
-        background-color: #f8f8f8;
-        color: black;
+    .e-menu-item {
+        font-size: 1rem;
+    }
+
+    .e-menu-container .e-ul .e-menu-item {
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+        font-size: 1rem;
     }
 </style>
 
+
 @code {
-    SfMenu<MenuItem> MenuObj;
-    SfMenu<MenuItem> MenuObj2;
+    // SfMenu<MenuItem> MenuObj_FilterMD;
+    // SfMenu<MenuItem> MenuObj_BearbeitenMD;
+
+    // SfMenu<MenuItem> MenuObj_FilterMD_NoSelection;
+    // SfMenu<MenuItem> MenuObj_FilterSmall_NoSelection;
+
+    // SfMenu<MenuItem> MenuObj_FilterSmall;
+    // SfMenu<MenuItem> MenuObj_BearbeitenSmall;
+
+    EditGalerie editGalerie;
 
     string suchtext = string.Empty;
     private string errorMessage { get; set; } = string.Empty;
@@ -194,9 +257,10 @@
     private bool SidebarIsVisible { get; set; } = false;
 
     //Sidebar ist offen beim Start, auch wenn false. Dieser Wert wird beim ersten setzen auf Visible auf true gesetzt.
-    private bool SidebarOpenedOnce { get; set; } = false;
+    // private bool SidebarOpenedOnce { get; set; } = false;
 
     private bool SelectionMode { get; set; } = false;
+    int selectedEinträgeCount { get; set; }
 
     private IEnumerable<GalerieEintrag> SelectedEinträge { get; set; } = new List<GalerieEintrag>();
 
@@ -204,6 +268,9 @@
     private ICollection<GalerieGruppe> Gruppen { get; set; } = new List<GalerieGruppe>();
 
     string menuItemName = string.Empty;
+
+    private bool isScrolling { get; set; } = false;
+
 
     private bool aikido { get; set; } = false;
     private bool bujinkan { get; set; } = false;
@@ -214,7 +281,7 @@
 
     private bool hasfilter => aikido || bujinkan || genbukan || iaido || jodo || home;
 
-    private string filterTetxt => hasfilter ? "Filter*" : "Filter";
+    private string filterText => hasfilter ? "Filter*" : "Filter";
 
     private string aikidoCssImage => aikido ? "e-icons e-check-large" : "e-icons";
     private string bujinkanCssImage => bujinkan ? "e-icons e-check-large" : "e-icons";
@@ -254,15 +321,12 @@
             {
                 case "Ändern":
                     await BilderBearbeiten();
-                    await MenuObj2.CloseAsync();
                     break;
                 case "Löschen":
                     await BilderLöschen();
-                    await MenuObj2.CloseAsync();
                     break;
                 case "hochladen":
                     await BilderErstellen();
-                    await MenuObj2.CloseAsync();
                     break;
             }
         }
@@ -314,6 +378,7 @@
                     jodo = false;
                     home = false;
                     cancelDropDownClose = false;
+                    Suche();
                     break;
                 default:
                     cancelDropDownClose = false;
@@ -326,8 +391,9 @@
 
     private async void CloseSidebar(bool result)
     {
-        SidebarIsVisible = false;
-
+        // SidebarIsVisible = !SidebarIsVisible;
+        await toggleSlideoverBlazor();
+        // SidebarIsVisible = false;
         if (result)
         {
             //Daten neu laden um die neuen Bilder anzuzeigen
@@ -338,7 +404,8 @@
     private void SelectionChanged()
     {
         var preValue = SelectionMode;
-        SelectionMode = Einträge?.Any(x => x.IsSelected) == true;
+        selectedEinträgeCount = Einträge?.Where(x => x.IsSelected)?.Count() ?? 0;
+        SelectionMode = selectedEinträgeCount > 0;
 
         if (SelectionMode != preValue)
         {
@@ -352,17 +419,22 @@
         if (selectedEinträge?.Any() == true)
         {
             SelectedEinträge = selectedEinträge;
-            SidebarOpenedOnce = true;
-            SidebarIsVisible = true;
+            await toggleSlideoverBlazor();
+            await editGalerie.Clear();
+            editGalerie.SetData(SelectedEinträge);
+
         }
     }
 
     private async Task BilderErstellen()
     {
         SelectedEinträge = new List<GalerieEintrag>();
-        SidebarOpenedOnce = true;
-        SidebarIsVisible = true;
+        await toggleSlideoverBlazor();
+        await editGalerie.Clear();
+        editGalerie.SetData(SelectedEinträge);
     }
+
+
 
     private async Task BilderLöschen()
     {
@@ -373,7 +445,7 @@
             return;
         }
 
-        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Möchten Sie die ausgewählten Bilder wirklich löschen?");
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Möchten Sie alle {selectedItems.Count} ausgewählten Bilder wirklich löschen?");
         bool error = false;
         if (confirm)
         {
@@ -406,6 +478,12 @@
         }
     }
 
+    private void auswahlAufheben()
+    {
+        Einträge?.ForEach(x => x.IsSelected = false);
+        SelectionChanged();
+    }
+
     private void Suche()
     {
         IEnumerable<GalerieEintrag> gefilterteEinträge;
@@ -421,38 +499,38 @@
             // Wenn der Suchtext nicht leer ist, filtern Sie die Einträge
 
             // bool aikido = Suchtext.Contains("aikido", StringComparison.OrdinalIgnoreCase);
-            gefilterteEinträge = new List<GalerieEintrag>();
+            gefilterteEinträge = Einträge;
 
             if (!string.IsNullOrWhiteSpace(suchtext))
             {
-                gefilterteEinträge = Einträge.Where(x =>
+                gefilterteEinträge = gefilterteEinträge.Where(x =>
                 x.Titel?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true ||
                 x.Untertitel?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true ||
                 x.Beschreibung?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true);
             }
             if (aikido)
             {
-                gefilterteEinträge = Einträge.Where(x => x.Aikido);
+                gefilterteEinträge = gefilterteEinträge.Where(x => x.Aikido);
             }
             if (bujinkan)
             {
-                gefilterteEinträge = Einträge.Where(x => x.Bujinkan);
+                gefilterteEinträge = gefilterteEinträge.Where(x => x.Bujinkan);
             }
             if (genbukan)
             {
-                gefilterteEinträge = Einträge.Where(x => x.Genbukan);
+                gefilterteEinträge = gefilterteEinträge.Where(x => x.Genbukan);
             }
             if (iaido)
             {
-                gefilterteEinträge = Einträge.Where(x => x.Iaido);
+                gefilterteEinträge = gefilterteEinträge.Where(x => x.Iaido);
             }
             if (jodo)
             {
-                gefilterteEinträge = Einträge.Where(x => x.Jodo);
+                gefilterteEinträge = gefilterteEinträge.Where(x => x.Jodo);
             }
             if (home)
             {
-                gefilterteEinträge = Einträge.Where(x => x.Home);
+                gefilterteEinträge = gefilterteEinträge.Where(x => x.Home);
             }
         }
 
@@ -516,7 +594,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        SidebarIsVisible = false;
+        // SidebarIsVisible = false;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -527,26 +605,49 @@
         {
             await LoadData();
 
-            var scrollPosition = await SessionStorage.GetAsync<int>("scrollPosition");
-            if (scrollPosition.Success)
+            try
             {
-                await JSRuntime.InvokeVoidAsync("setScrollPosition", scrollPosition.Value);
+                var scrollPosition = await SessionStorage.GetAsync<int>("scrollPosition");
+                if (scrollPosition.Success)
+                {
+                    await JSRuntime.InvokeVoidAsync("setScrollPosition", scrollPosition.Value);
+                }
+
+                await JSRuntime.InvokeVoidAsync("saveScrollPositionOnUnload", DotNetObjectReference.Create(this));
+            }
+            catch (Exception ex)
+            {
+                // ignored
             }
 
-            await JSRuntime.InvokeVoidAsync("saveScrollPositionOnUnload", DotNetObjectReference.Create(this));
-
-            var lDotNetReference = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("GLOBAL.SetDotnetReference", lDotNetReference);
+            await JSRuntime.InvokeVoidAsync("registerScrolling", DotNetObjectReference.Create(this));
         }
-
-        // if (!firstRender)
-        // {
-        //     var scrollPosition = await JSRuntime.InvokeAsync<int>("getScrollPosition");
-        //     await SessionStorage.SetAsync("scrollPosition", scrollPosition);
-        // }
+        if (!firstRender)
+        {
+            try
+            {
+                var scrollPosition = await JSRuntime.InvokeAsync<int>("getScrollPosition");
+                await SessionStorage.SetAsync("scrollPosition", scrollPosition);
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
+        }
     }
 
     public string[] suchdata = { "Aikido", "Bujinkan", "Genbukan", "Iaido", "Jodo", "Home" };
+
+    private async Task toggleSlideoverBlazor()
+    {
+        SidebarIsVisible = !SidebarIsVisible;
+        if(SidebarIsVisible == false && await editGalerie.CanClose())
+        {
+            await editGalerie.Clear();
+            await JSRuntime.InvokeVoidAsync("toggleSlideover");
+        }
+    }
+
 
 
     [JSInvokable]
@@ -555,15 +656,48 @@
         await SessionStorage.SetAsync("scrollPosition", scrollPosition);
     }
 
-    [JSInvokable("HamburgerMenu")]
-    public void documentClick()
+    [JSInvokable]
+    public void OnScrollStart()
     {
-        if (MenuObj != null)
-        {
-            iJustClosedYou_1 = true;
-            MenuObj.CloseAsync();
-            MenuObj2.CloseAsync();
-            StateHasChanged();
-        }
+        // Ihre Logik hier
+        isScrolling = true;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnScrollEnd()
+    {
+        // Ihre Logik hier
+        isScrolling = false;
+        StateHasChanged();
     }
 }
+
+<script>
+    function toggleSlideover() {
+        document.getElementById('slideover-container').classList.toggle('invisible');
+        document.getElementById('slideover-bg').classList.toggle('opacity-0');
+        document.getElementById('slideover-bg').classList.toggle('opacity-50');
+        document.getElementById('slideover').classList.toggle('translate-x-full');
+    }
+
+    let scrollTimeout;
+    let dotNetObject = null;
+
+    window.addEventListener('scroll', function () {
+        clearTimeout(scrollTimeout);
+        if (dotNetObject) {
+            dotNetObject.invokeMethodAsync('OnScrollStart');
+        }
+
+        scrollTimeout = setTimeout(() => {
+            if (dotNetObject) {
+                dotNetObject.invokeMethodAsync('OnScrollEnd');
+            }
+        }, 100);
+    });
+
+    window.registerScrolling = function (obj) {
+        dotNetObject = obj;
+    }
+</script>

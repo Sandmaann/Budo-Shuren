@@ -14,6 +14,11 @@ module.exports = {
                 'xs': '390px',
                 '3xl': '1800px',
                 '4xl': '2600px',
+                '5xl': '3000px',
+                sidebarHeight: {
+                    raw: '(min-height: 953px)'
+                }
+
             },
             colors: {
                 'primary': '#2A6749',
@@ -50,6 +55,9 @@ module.exports = {
                 '75': '18.75rem',
                 '112': '28rem',
                 '128': '32rem',
+            },
+            margin: {
+                calc: 'min(-1em, (100vw - 768pc) / -2)',
             },
             scale: {
                 '85': '0.85',
