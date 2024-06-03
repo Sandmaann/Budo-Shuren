@@ -30,11 +30,23 @@
             <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="text-error" role="alert" />
-                <p class="">Bitte geben Sie die gleiche E-Mail Adresse wie bei Ihrer Anmeldung beim Verein an!</p>
+                <p class="">Bitte gib die gleiche E-Mail Adresse wie bei deiner Anmeldung am Verein an!</p>
                 <label for="email" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">E-Mail</label>
                 <div class="mb-3">
                     <InputText @bind-Value="Input.Email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="username" aria-required="true" placeholder="beispiel@email.de" />
                     <ValidationMessage For="() => Input.Email" class="text-error" />
+                </div>
+
+                <p class="">Bitte gib deinen Namen an, damit wir deinen Zugang bestätigen können.</p>
+                <label for="name" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Vorname</label>
+                <div class="mb-3">
+                    <InputText @bind-Value="Input.Vorname" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="firstname" aria-required="true" placeholder="Dein Vorname" />
+                    <ValidationMessage For="() => Input.Vorname" class="text-error" />
+                </div>
+                <label for="name" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Nachname</label>
+                <div class="mb-3">
+                    <InputText @bind-Value="Input.Nachname" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="lastname" aria-required="true" placeholder="Dein Nachname" />
+                    <ValidationMessage For="() => Input.Nachname" class="text-error" />
                 </div>
 
                 <label for="abteilung" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Abteilung</label>
@@ -162,6 +174,13 @@
 
         Logger.LogInformation("User created a new account with password.");
 
+        //Benutzer zur Gast-Rolle hinzufügen
+        if (user != null)
+        {
+            await UserManager.AddToRoleAsync(user, Global.Roles.Admin);
+        }
+        Logger.LogInformation($"Added User to Role '{Global.Roles.Gast}'");
+
         var userId = await UserManager.GetUserIdAsync(user);
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -186,7 +205,13 @@
     {
         try
         {
-            return Activator.CreateInstance<ApplicationUser>();
+            var user = Activator.CreateInstance<ApplicationUser>();
+
+            user.Abteilung = Input.SelectedAbteilung;
+            user.Vorname = Input.Vorname;
+            user.Name = Input.Nachname;
+
+            return user;
         }
         catch
         {
@@ -206,8 +231,8 @@
 
     private sealed class InputModel
     {
-        [Required(ErrorMessage="Bitte gib deine E-Mail Adresse an!")]
-        [EmailAddress(ErrorMessage =Messages.EmailFormatErrorMessage)]
+        [Required(ErrorMessage = "Bitte gib deine E-Mail Adresse an!")]
+        [EmailAddress(ErrorMessage = Messages.EmailFormatErrorMessage)]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
 
@@ -215,6 +240,14 @@
         [Required(ErrorMessage = "Bitte gib die Abteilung an, bei der du registriert bist!")]
         [Display(Name = "Abteilung")]
         public string SelectedAbteilung { get; set; } = null;
+
+        [Required(ErrorMessage = "Bitte gib deinen Vornamen an")]
+        [Display(Name = "Vorname")]
+        public string Vorname { get; set; } = null;
+
+        [Required(ErrorMessage = "Bitte gib deinen Nachnamen an")]
+        [Display(Name = "Nachname")]
+        public string Nachname { get; set; } = null;
 
         [Required(ErrorMessage = Messages.PasswordRequiredErrorMessage)]
         [StringLength(100, ErrorMessage = "Das {0} muss mindestens {2} und maximal {1} Zeichen lang sein.", MinimumLength = 6)]

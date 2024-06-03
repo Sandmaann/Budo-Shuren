@@ -20,6 +20,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.Grid" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.Navigations" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.ProgressBar" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.Schedule" Version="25.2.5" />
@@ -28,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Account\Pages\Member\Verified\" />
     <Folder Include="Components\Shared\Inputs\" />
     <Folder Include="Models\Auth\" />
     <Folder Include="wwwroot\flowbite\dist\" />

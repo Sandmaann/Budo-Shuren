@@ -1,12 +1,45 @@
 ﻿@page "/Account/AccessDenied"
 
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Security.Claims
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
 <PageTitle>Zugriff verweigert</PageTitle>
 
 <Überschrift Titel="アクセス拒否" Untertitel="Zugriff verweigert" />
 <div class="container mx-auto max-w-screen-md">
     <section class="mx-10">
         <SectionBanner Titel="Sie sind nicht berechtigt für den Zugriff" />
-        <StatusMessage ShowAsError="true" Message="Bitte loggen Sie sich mit einem gültigen Benutzer ein." />
 
+        @if (UserHasNoRoles)
+        {
+            <StatusMessage ShowAsError="true" Message="Bitte logge dich mit einem gültigen Benutzer ein! Wenn du Probleme mit deinem Zugang hast, frag bitte im Dojo nach Hilfe." />
+        }
+        else if (UserHasOnlyGuestRole)
+        {
+            <StatusMessage ShowAsError="false" Message="Dein Zugang ist erstellt, aber er muss erst von einem Abteilungsleiter bestätigt werden. Erst dann hast du Zugriff auf den Mitgliederbereich." />
+        }
+        else
+        {
+            <StatusMessage ShowAsError="true" Message="Bitte logge dich mit einem gültigen Benutzer ein! Wenn du Probleme mit deinem Zugang hast, frag bitte im Dojo nach Hilfe." />
+        }
     </section>
 </div>
+
+@code
+{
+    private bool UserHasNoRoles { get; set; }
+    private bool UserHasOnlyGuestRole { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        UserHasNoRoles = !user.Claims.Any(c => c.Type == ClaimTypes.Role);
+        UserHasOnlyGuestRole = user.IsInRole(Roles.Gast);
+    }
+}
