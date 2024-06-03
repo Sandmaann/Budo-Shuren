@@ -15,6 +15,9 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Globalization;
 
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using BudoShurenWebsite.Global;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace BudoShurenWebsite
 {
@@ -47,6 +50,10 @@ namespace BudoShurenWebsite
             builder.Services.AddSingleton<IDataService, DataService>();
             builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
 
+            //builder.Services.AddSingleton<OrderDataAccessLayer>();
+            builder.Services.AddScoped<CustomAdaptor>();
+            //builder.Services.AddScoped<ServiceClass>();
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -60,13 +67,12 @@ namespace BudoShurenWebsite
             if (builder.Environment.IsDevelopment())
             {
                 connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                //connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             }
             else
             {
                 connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
             }
-            if(string.IsNullOrWhiteSpace(connectionString))
+            if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             }
@@ -75,24 +81,23 @@ namespace BudoShurenWebsite
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            //var connection = String.Empty;
-            //if (builder.Environment.IsDevelopment())
-            //{
-            //    //builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
-            //    connection = builder.Configuration.GetConnectionString("DefaultConnection");
-            //}
-            //else
-            //{
-            //    connection = Environment.GetEnvironmentVariable("DefaultConnection");
-            //}
-            //builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            //    options.UseSqlServer(connection));
-            //builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
             builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
+
+            //builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            //    .AddEntityFrameworkStores<ApplicationDbContext>()
+            //    .AddSignInManager()
+            //    .AddDefaultTokenProviders()
+            //    .AddRoles<IdentityRole>();
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
+                    !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
+            });
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
@@ -115,7 +120,7 @@ namespace BudoShurenWebsite
 
 
             //Nur für Release oder bei Migration wichtig
-            //MigrateDatabase(app);
+            MigrateDatabase(app);
 
             app.UseHttpsRedirection();
 
@@ -128,9 +133,6 @@ namespace BudoShurenWebsite
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();
             app.MapControllers();
-
-
-
 
             app.Run();
         }
@@ -153,6 +155,46 @@ namespace BudoShurenWebsite
             {
                 Console.WriteLine("Fehler beim Ausführen der Datenbankmigration: " + ex.Message);
             }
+
+            try
+            {
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                InitializeRoles(roleManager, userManager).Wait();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Fehler beim Initialisieren der Rollen: " + ex.Message);
+            }
+        }
+
+        private static async Task InitializeRoles(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
+        {
+            foreach (var role in Global.Roles.AllRoles)
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(role));
+                }
+            }
+        }
+    }
+
+    public class AtLeastOneRoleRequirement : IAuthorizationRequirement { }
+    public class AtLeastOneRoleHandler : AuthorizationHandler<AtLeastOneRoleRequirement>
+    {
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AtLeastOneRoleRequirement requirement)
+        {
+            if (context.User.Identity?.IsAuthenticated == true && context.User.Claims.Any(c => c.Type == ClaimTypes.Role))
+            {
+                context.Succeed(requirement);
+            }
+            else
+            {
+                context.Fail();
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

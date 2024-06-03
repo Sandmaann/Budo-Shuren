@@ -5,7 +5,8 @@ module.exports = {
     variants: {
         extend: {
             scale: ['active'],
-        }
+        },
+        display: ['responsive', 'group-hover', 'group-focus'],
     },
     theme: {
         // Erweitert das Theme um eigene Farben und Schriftarten

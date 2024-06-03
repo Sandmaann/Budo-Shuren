@@ -1,13 +1,46 @@
 ﻿@page "/Account/Member/Mitglieder"
+@rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> UserManager
+
+@using BudoShurenWebsite.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore;
+
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
         <SectionBanner Titel="Mitglieder verwalten" />
-        <div></div>
+        <div>
+
+            @*                 <SfGrid DataSource="@Benutzer" @ref="Grid" AllowPaging="true" Height="325px">
+            <GridColumns>
+            <GridColumn Field=@nameof(ApplicationUser.Vorname) HeaderText="Vorname" Width="120"></GridColumn>
+            <GridColumn Field=@nameof(ApplicationUser.Name) HeaderText="Nachname" Width="150"></GridColumn>
+            <GridColumn Field=@nameof(ApplicationUser.UserName) HeaderText="E-Mail Adresse" Width="150"></GridColumn>
+            <GridColumn Field=@nameof(ApplicationUser.Abteilung) HeaderText="Abteilung" Width="150"></GridColumn>
+            </GridColumns>
+            </SfGrid> *@
+
+            <SfGrid TValue="ApplicationUser" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })">
+                <SfDataManager AdaptorInstance="@typeof(CustomAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                <GridPageSettings PageSize="20"></GridPageSettings>
+                <GridEditSettings AllowEditing="true" AllowDeleting="true" Mode="@EditMode.Dialog"></GridEditSettings>
+                <GridColumns>
+                    <GridColumn Field=@nameof(ApplicationUser.Vorname) HeaderText="Vorname" AllowSearching="true" Width="120"></GridColumn>
+                    <GridColumn Field=@nameof(ApplicationUser.Name) HeaderText="Nachname" AllowSearching="true" Width="150"></GridColumn>
+                    <GridColumn Field=@nameof(ApplicationUser.UserName) AllowEditing="false" AllowSearching="true" IsPrimaryKey="true" HeaderText="E-Mail Adresse" Width="150"></GridColumn>
+                    <GridColumn Field=@nameof(ApplicationUser.Abteilung) HeaderText="Abteilung" AllowSearching="true" Width="150"></GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </div>
     </div>
 </div>
 
 
 @code {
-
+    SfGrid<ApplicationUser> Grid;
 }
