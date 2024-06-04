@@ -11,6 +11,10 @@ module.exports = {
     theme: {
         // Erweitert das Theme um eigene Farben und Schriftarten
         extend: {
+            gridTemplateRows: {
+                // Simple 15 row grid
+                '15': 'repeat(15, minmax(0, 1fr))',
+            },
             screens: {
                 'xs': '390px',
                 '3xl': '1800px',
@@ -35,6 +39,7 @@ module.exports = {
             height: {
                 '18': '4.5rem',
                 '75': '18.75rem',
+                '88': '22rem',
                 '100': '25rem',
                 '112': '28rem',
                 '112': '28rem',
@@ -45,6 +50,7 @@ module.exports = {
                 '18': '4.5rem',
                 '22' : '5.5rem',
                 '75': '18.75rem',
+                '88': '22rem',
                 '100': '25rem',
                 '112': '28rem',
                 '120': '30rem',
@@ -54,6 +60,7 @@ module.exports = {
                 '18': '4.5rem',
                 '22' : '5.5rem',
                 '75': '18.75rem',
+                '88': '22rem',
                 '112': '28rem',
                 '128': '32rem',
             },
