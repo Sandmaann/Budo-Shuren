@@ -70,7 +70,10 @@ namespace BudoShurenWebsite
             }
             else
             {
-                connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+                connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+                //TODO das umsetzen!
+                //connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
             }
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -120,7 +123,7 @@ namespace BudoShurenWebsite
 
 
             //Nur für Release oder bei Migration wichtig
-            MigrateDatabase(app);
+            //MigrateDatabase(app);
 
             app.UseHttpsRedirection();
 

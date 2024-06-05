@@ -1,0 +1,134 @@
+﻿@page "/Iaido"
+<PageTitle>Iaido</PageTitle>
+
+<div>
+    <Überschrift Titel="合気道"
+                 Untertitel="Iaido"
+                 Anekdote="" />
+</div>
+
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        <section class="mt-20">
+            <div class="flex flex-col md:flex-row">
+                <div class="flex justify-center md:flex-grow md:order-2 md:ml-16 md:block">
+                    <img src="/images/genbukan/iaidoGroß.png" />
+                </div>
+                <div class="mt-6 md:mt-0 md:flex-grow md:w-112">
+                    <div>
+                        <Fließtext Text="Iaidô ist eine traditionelle japanische Kampfkunst, welche auf eine vierhundert Jahre alte Tradition zurückblickt." />
+                    </div>
+                    <div>
+                        <Fließtext Text="Iaidô ist eine reine Schwert-kampfkunst, wobei die dahinter stehende Idee des „iai“ tiefgehender ist:" />
+                    </div>
+                    <div class="mt-4">
+                        <Fließtext Text="Die Schriftzeichen für „iai“ stehen für „Sein“ , „Existenz“ (Iru) und „in Harmonie-sein-mit“ , „entsprechen“  (Au /Ai)." />
+                    </div>
+                    <div class="mt-6">
+                        <Fließtext Text="TSUNE NI ITTE, KYU NI AWASU" />
+                    </div>
+                    <div class="mt-4">
+                        <Fließtext Text="„Was immer du tust, wo auch immer du dich befindest, sei vorbereitet und bereit, jedweder Situation zu entsprechen.“" />
+                    </div>
+                    <div class="mt-4">
+                        <Fließtext Text="- Haruna Sensei -" />
+                    </div>
+                    <div class="mt-4">
+                        <Fließtext Text="Das ist ein Anspruch, der weit über das hinaus geht, was es bedeutet, „nur“ ein Schwert zu schwingen. Es ist ein Anspruch, der genau das zum Ziel hat, was jede Kampfkunst zum Ziel haben sollte: " />
+                    </div>
+                    <div class="mt-4 font-bold">
+                        <Fließtext Text="Die Vervollkommnung des eigenen Selbst durch Übung." />
+                    </div>
+
+                    <div class="mt-10 font-bold md:mt-20">
+                        <Fließtext Text="Ganz konkret findet ihr im Iaidô folgenden Nutzen für euch:" />
+                    </div>
+
+                    <ul class="leading-7 font-ptsans ml-5 list-outside list-disc text-sm tracking-wider">
+                        <li class="mt-2">Schlichte, elegante Bewegungen</li>
+                        <li>Verbesserung der körperlichen und mentalen Haltung</li>
+                        <li>Entwicklung von Persönlichkeit und Charisma</li>
+                        <li>Mehr Vitalität und Leistungsfähigkeit im Alltag</li>
+                        <li>Stressresistenz</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Das Training" />
+            <div>
+                <div>
+                    <Kalender />
+                </div>
+                <div class="mt-10 md:ml-auto md:w-96">
+                    <div>
+                        <p class="font-ptsans text-sm tracking-wider">
+                            <span>Iaidô kann von allen Menschen ausgeübt werden.</span>
+                            <br class="hidden md:block" />
+                            <span>Es gibt keinerlei Einschränkung im Hinblick auf Alter oder Geschlecht.</span>
+                        </p>
+                    </div>
+                    <div>
+                        <Fließtext Text="Individuelle Beratung bei Menschen mit Handicap. Training für Jugendliche unter 16 Jahren nur nach Probezeit." />
+                    </div>
+                    <div class="mt-4">
+                        <p class="font-ptsans text-sm tracking-wider">Übergeordneter Verband ist der Deutsche Iaidô Bund:</p>
+                        <Weiterleitung Link="https://www.iaido.de/" Text="→ www.diaib.de" />
+                    </div>
+                    <div class="mt-6 font-bold">
+                        <Fließtext Text="NEU: Es gibt nun auch Einzelunterricht!" />
+                    </div>
+                    <div class="mt-4">
+                        <Fließtext Text="Dieses Training ist persönlich auf euch zugeschnitten, findet jederzeit nach euren Wünschen statt und ihr bestimmt die Dauer der Trainingseinheit. Im Einzeltraining habt ihr keine Vertragslaufzeit. Ihr bekommt eine anspruchsvolle, „intelligente“ Kampfkunst noch exklusiver." />
+                    </div>
+                    <div class="mt-4">
+                        <Fließtext Text="Preis: € 59,00 / 60 Minuten" />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Kontakt" />
+            <div class="mt-10 md:flex md:flex-row md:justify-between md:h-auto">
+
+                <div class="mt-auto">
+                    <Weiterleitung Link="http://www.genbukan-augsburg.de/index.html" Text="→ Zu Genbukan Augsburg" />
+                </div>
+                <div>
+                    <InteresseFormular Abteilung="@(Abteilung.Genbukan)" />
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Galerie" />
+            <div>
+                <Galerie />
+            </div>
+        </section>
+
+        <section class="mt-20">
+            <SectionBanner Titel="Inspirierende Videos" />
+
+            <div class="pt-56.25% relative my-10 overflow-hidden md:my-20" >
+                <iframe class="h-80 w-full md:h-112" src="https://www.youtube.com/embed/7eLDNbT5jzo" title="Ishido sensei &amp; Morita sensei BKA Summer Seminar Bunka Koryu Enbusai 英国夏講習会文化交流演武祭" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="pt-56.25% relative my-10 overflow-hidden md:my-20">
+                <iframe class="h-80 w-full md:h-112" src="https://www.youtube.com/embed/VN2Ume-hzb8" title="Hachidan Enbu BKA Summer Seminar Bunka Koryu Enbusai 英国夏講習会文化交流演武祭" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="pt-56.25% relative my-10 overflow-hidden md:my-20">
+                <iframe class="h-80 w-full md:h-112" src="https://www.youtube.com/embed/fAUFLgsWEGc" title="Nanadan Enbu BKA Summer Seminar Bunka Koryu Enbusai 英国夏講習会文化交流演武祭" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="pt-56.25% relative my-10 overflow-hidden md:my-20">
+                <iframe class="h-80 w-full md:h-112" src="https://www.youtube.com/embed/TREBpjIK46k" title="Finalists Enbu BKA Summer Seminar Bunka Koryu Enbusai 英国夏講習会文化交流演武祭" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+
+}

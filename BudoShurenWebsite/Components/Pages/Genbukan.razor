@@ -1,8 +1,10 @@
 ﻿@page "/Genbukan"
 <PageTitle>Genbukan</PageTitle>
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <div>
-    <Überschrift Titel="合気道"
+    <Überschrift Titel="玄武館"
                  Untertitel="Genbukan"
                  Anekdote="" />
 </div>
@@ -10,12 +12,105 @@
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
-        <section class="mt-20 md:flex md:flex-row md:justify-between">
-            <div class="md:max-w-72 md:order-2">
-                <img src="/images/iaido2.jpg" />
+        @* <div class="mx-auto my-20 w-36 md:-mt-10"> *@
+        <div class="mx-auto my-20 w-36 md:-mt-10">
+            <img src="/images/genbukan/logo.png" />
+        </div>
+
+        <section class="md:flex md:flex-row md:justify-between">
+            <div class="mt-5 md:mt-0 md:mr-20">
+                <p class="font-ptsans text-sm tracking-wider">
+                    ... ist zunächst einmal der Name, den unser Lehrer, <b>MASAKAZU OSHITA Sensei</b>, uns erlaubt hat zu nutzen. Oshita Sensei selbst betreibt das KOBE GENBUKAN in Kobe, Japan.
+                    Es gibt zwei Gründe, weswegen Oshita Sensei 1995 diesen Namen für sein Dôjô (Übungsort für japanische Kampfkünste) gewählt hat:
+                </p>
+                <p class="font-ptsans mt-4 text-sm tracking-wider">
+                    1. <b>"Genbuin"</b> ist der posthume Name, den TOMEGAHARA TOMIYOSHI Sensei, einer von Oshita Senseis Lehrern, nach buddhistischem Ritus verliehen bekommen hat.
+                </p>
+                <p class="font-ptsans mt-4 text-sm tracking-wider">
+                    2.  <b>"Genbugan"</b> ist die japanische Bezeichnung für das Gestein Basalt. Basalt findet sich überall auf der Welt. Oshita Senseis Vision ist es, dass sich Ableger seines Dôjô irgendwann auch weltweit finden.
+                </p>
+                <p class="font-ptsans mt-4 text-sm tracking-wider">
+                    Abgesehen von besagten zwei Gründen, gibt es die Legende von <b>Genbu (chin.: Xuanwu)</b>. Diese Legende erzählt von einem schlechten Menschen, welcher sich durch grausame Läuterung dem Guten zuwendet und dadurch Göttlichkeit erlangt. Sein Symboltier ist eine Symbiose aus Schildkröte und Schlange. Die Schildkröte/Schlange steht als eine der "Vier Bestien der Himmelsrichtungen" im Norden. Genbu wird daher auch der "Dunkle Krieger des Nordens" genannt. Die zweitgrößte Ninjutsu-Strömung (neben dem Bujinkan) in Deutschland nennt sich auch "Genbukan". Wertneutral sei hier angemerkt, dass wir nichts mit der sicherlich hochwertigen Kunst des Ninjutsu zu tun haben. 
+                </p>
             </div>
-            <div class="mt-5 md:order-1 md:mt-0 md:mr-20">
-                <Fließtext Text="Genbukan ist eine japanische Kampfkunstschule, die von Shoto Tanemura gegründet wurde und sich auf die Erhaltung und Weitergabe traditioneller Samurai-Kampfkünste konzentriert. Eine der Disziplinen, die im Genbukan gelehrt wird, ist Iaido, eine Kunst, die sich auf das Ziehen des Schwertes und die unmittelbare Reaktion auf einen Angriff konzentriert. Im Gegensatz zu vielen anderen Kampfkünsten legt Iaido weniger Wert auf den Kampf gegen einen physischen Gegner und konzentriert sich stattdessen auf die Perfektion von Bewegungen und die Entwicklung von innerer Ruhe und Klarheit des Geistes. Durch langsame und präzise Bewegungen lernen die Schüler, sich auf den Moment zu konzentrieren und ihren Geist zu beruhigen. Iaido wird oft als eine meditative Praxis angesehen, die sowohl körperliche Geschicklichkeit als auch geistige Disziplin fördert, während sie gleichzeitig die traditionelle Samurai-Ethik und -Philosophie ehrt."/>
+            <div class="mt-10 min-w-52 md:mt-0">
+                <img src="/images/genbukan/genbukanSchwert.png" />
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Die Kampfkünste" />
+            <div class="grid-cols-2 grid md:grid-cols-4">
+                <div class="mx-auto md:order-2">
+                    <div class="w-28 transform border-black text-black transition duration-150 ease-in-out active:scale-90" @onclick="GoToIaido">
+                        <div class="border-2 mx-auto h-36 w-16 border-black text-black md:w-20 md:h-40">
+                            <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-4xl">居<br />合<br />道</div>
+                        </div>
+                        <div class="font-yuji mt-2 text-center text-lg font-normal tracking-widest">Iaidô</div>
+                    </div>
+                </div>
+                <div class="mx-auto md:order-3">
+                    <div class="h-36 w-28 transform border-black text-black transition duration-150 ease-in-out active:scale-90" @onclick="GoToJodo">
+                        <div class="border-2 mx-auto h-36 w-16 border-black text-black md:w-20 md:h-40">
+                            <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-4xl">杖<br />道</div>
+                        </div>
+                        <div class="font-yuji mt-2 text-center text-lg font-normal tracking-widest">Jôdô</div>
+                    </div>
+                </div>
+
+                <div class="col-span-2 my-4 md:order-6">
+                    <div class="md:relative md:h-full">
+                        <div class="md:absolute md:bottom-6">
+                            <Fließtext Text="IAIDÔ und JODÔ werden ausschließlich mit Waffen geübt. Beide Kampfkünste können voneinander unabhängig einzeln trainiert werden oder (empfohlen) beide Disziplinen in Kombination." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="my-4 max-w-32 md:order-1 md:mx-0 md:mt-0 md:h-44 md:max-w-112">
+                    <div class="mr-1">
+                        <img src="/images/genbukan/iaido_klein.png" />
+                    </div>
+                </div>
+                <div class="my-4 ml-auto max-w-32 md:order-4 md:mx-0 md:mt-0 md:h-44 md:max-w-112">
+                    <div class="ml-1">
+                        <img src="/images/genbukan/jodo_klein.png" />
+                    </div>
+                </div>
+                <div class="my-4 md:order-5">
+                    <ul>
+                        <li class="mb-2 font-bold">
+                            <p class="font-ptsans text-sm tracking-wider">Iaidô ist:</p>
+                        </li>
+                        <li class="my-2">
+                            <p class="font-ptsans text-sm tracking-wider">INTELLIGENZ</p>
+                        </li>
+                        <li class="my-2">
+                            <p class="font-ptsans text-sm tracking-wider">ACHTSAMKEIT</p>
+                        </li>
+                        <li class="my-2">
+                            <p class="font-ptsans text-sm tracking-wider">ELEGANZ</p>
+                        </li>
+                        <li class="my-2">
+                            <p class="font-ptsans text-sm tracking-wider">ÄSTHETIK</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="my-4 md:order-7">
+                    <ul class="text-end">
+                        <li class="mb-2 font-bold">
+                            <p class="font-ptsans text-sm tracking-wider">Jôdô ist:</p>
+                        </li>
+                        <li class="my-2">
+                            <p class="font-ptsans text-sm tracking-wider">KOORDINATION</p>
+                        </li>
+                        <li class="my-2">
+                            <p class="font-ptsans text-sm tracking-wider">KONTROLLE</p>
+                        </li>
+                        <li class="my-2">
+                            <p class="font-ptsans text-sm tracking-wider">DYNAMIK</p>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </section>
 
@@ -25,55 +120,321 @@
                 <div>
                     <Kalender />
                 </div>
-                <div class="mt-12 justify-between md:flex md:flex-row">
-                    <div class="md:w-52">
-                        <Zwischenüberschrift Text="Der Unterricht" />
-                    </div>
-                    <div class="flex-1 mt-5 md:ml-18 md:mt-0">
-                        <div>
-                            <Fließtext Text="Das Training im Genbukan ist geprägt von einer ausgewogenen Kombination aus körperlicher Technik, mentaler Entwicklung und spirituellem Wachstum. Unter der Anleitung erfahrener Lehrer werden Schüler in den verschiedenen Disziplinen der traditionellen japanischen Kampfkunst ausgebildet, darunter Taijutsu (unbewaffnete Kampfkunst), Kobudo (Waffenkunst) und Ninpo (Ninja-Kunst). Durch regelmäßige Übung und die Vertiefung der Techniken erlangen die Schüler nicht nur Kampffertigkeiten, sondern auch ein tieferes Verständnis für die philosophischen Prinzipien, die der Kampfkunst zugrunde liegen. Das Training im Genbukan fördert nicht nur körperliche Fitness und Selbstverteidigungsfähigkeiten, sondern auch Charakterstärke, Disziplin und Respekt für die japanische Kultur und Tradition." />
-                        </div>
-                        <div class="mt-5">
-                            <Fließtext Text="Die Atmosphäre im Genbukan-Dojo ist geprägt von Respekt, Hingabe und Gemeinschaftssinn. Schüler unterstützen sich gegenseitig beim Lernen und Wachsen, während sie gemeinsam den Weg des Genbukan beschreiten. Der Alltag im Genbukan ist nicht nur von körperlicher Disziplin geprägt, sondern auch von der Entwicklung mentaler Stärke und spiritueller Ausgeglichenheit. Durch die tägliche Praxis und das Engagement für die Prinzipien des Genbukan werden die Schüler nicht nur zu geschickten Kämpfern, sondern auch zu ausgeglichenen Individuen, die die Werte der Kampfkunst in ihr tägliches Leben integrieren." />
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
 
         <section>
-            <SectionBanner Titel="Der Lehrer" />
-            <div class="md:flex md:flex-row md:justify-between md:h-auto">
-                <div class="md:mr-20">
-                    <div>
-                        <img class="md:h-80" src="/images/iaido3.jpg" />
-                    </div>
-                    <div class="mt-10">
-                        <Zwischenüberschrift Text="Henry Schubert" />
-                    </div>
-                    <div class="mt-10 md:w-100">
-                        <div>
-                            <Fließtext Text="Henry Schubert ist ein hoch angesehener Lehrer und Vertreter des Genbukan in Europa. Mit einer langjährigen Erfahrung und tiefem Wissen in den traditionellen japanischen Kampfkünsten hat er zahlreiche Schüler inspiriert und geführt. Seine leidenschaftliche Hingabe an die Kunst, kombiniert mit einem einfühlsamen und engagierten Lehransatz, ermöglicht es seinen Schülern, nicht nur ihre technischen Fähigkeiten zu verbessern, sondern auch eine tiefere Verbindung zu den philosophischen und spirituellen Aspekten der Kampfkunst zu entwickeln. Henry Schubert verkörpert die Werte des Genbukan und ist ein herausragendes Beispiel für die Bedeutung von Disziplin, Respekt und Kontinuität in der Kampfkunstausbildung." />
-                        </div>
-                    </div>
-                    <div class="mt-5">
-                        <Weiterleitung Link="https://Genbukanbusshindojoblog.wordpress.com/" Text="→ Zum Blog" />
-                    </div>
-                </div>
-
-                <div class="mt-10 md:max-w-72">
-                    <div class="md:h-100"></div>
-                    <div>
-                        <InteresseFormular Abteilung="@(Abteilung.Genbukan)" />
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-        <section>
-            <SectionBanner Titel="Aktuelles" />
+            <SectionBanner Titel="Historie - Iaidô" />
             <div>
+                <Zwischenüberschrift Text="@("Unser \"Stammbaum\"")" />
+            </div>
+
+            @* Die Striche für Desktop-Ansicht, die sind fest/absolut drin *@
+            <div class="relative hidden w-full md:block">
+                <div class="absolute left-52 top-32">
+                    <svg width="90" height="8" viewBox="0 0 90 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0.646454 3.64643C0.451187 3.84169 0.451187 4.15827 0.646454 4.35354L3.82843 7.53552C4.0237 7.73078 4.34027 7.73078 4.53554 7.53552C4.73079 7.34026 4.73079 7.02367 4.53554 6.82841L1.70711 3.99998L4.53554 1.17156C4.73079 0.976294 4.73079 0.659712 4.53554 0.46445C4.34027 0.269188 4.0237 0.269188 3.82843 0.46445L0.646454 3.64643ZM191 3.5L1 3.49998L1 4.49998L191 4.5L191 3.5Z" fill="black" />
+                    </svg>
+                </div>
+                <div class="top-[380px] absolute left-20">
+                    <svg width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
+                    </svg>
+                </div>
+                <div class="top-[220px] absolute left-52">
+                    <svg width="138" height="206" viewBox="0 0 138 206" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M134 1H134.5V0.5H134V1ZM133.646 205.354C133.842 205.549 134.158 205.549 134.354 205.354L137.536 202.172C137.731 201.976 137.731 201.66 137.536 201.464C137.34 201.269 137.024 201.269 136.828 201.464L134 204.293L131.172 201.464C130.976 201.269 130.66 201.269 130.464 201.464C130.269 201.66 130.269 201.976 130.464 202.172L133.646 205.354ZM0 1.5H134V0.5H0V1.5ZM133.5 1V205H134.5V1H133.5Z" fill="black" />
+                    </svg>
+                </div>
+                <div class="top-[620px] left-[188px] absolute">
+                    <svg width="51" height="9" viewBox="0 0 51 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50.3536 4.85355C50.5488 4.65829 50.5488 4.34171 50.3536 4.14645L47.1716 0.964466C46.9763 0.769204 46.6597 0.769204 46.4645 0.964466C46.2692 1.15973 46.2692 1.47631 46.4645 1.67157L49.2929 4.5L46.4645 7.32843C46.2692 7.52369 46.2692 7.84027 46.4645 8.03553C46.6597 8.2308 46.9763 8.2308 47.1716 8.03553L50.3536 4.85355ZM0 5L50 5V4L0 4L0 5Z" fill="black" />
+                    </svg>
+                </div>
+                <div class="top-[620px] left-[446px] absolute">
+                    <svg width="51" height="9" viewBox="0 0 51 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50.3536 4.85355C50.5488 4.65829 50.5488 4.34171 50.3536 4.14645L47.1716 0.964466C46.9763 0.769204 46.6597 0.769204 46.4645 0.964466C46.2692 1.15973 46.2692 1.47631 46.4645 1.67157L49.2929 4.5L46.4645 7.32843C46.2692 7.52369 46.2692 7.84027 46.4645 8.03553C46.6597 8.2308 46.9763 8.2308 47.1716 8.03553L50.3536 4.85355ZM0 5L50 5V4L0 4L0 5Z" fill="black" />
+                    </svg>
+                </div>
+                <div class="top-[800px] left-[346px] absolute">
+                    <svg width="157" height="191" viewBox="0 0 157 191" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0.999977 187L0.499977 187L0.499977 187.5L0.999977 187.5L0.999977 187ZM156.854 187.354C157.049 187.158 157.049 186.842 156.854 186.646L153.672 183.464C153.476 183.269 153.16 183.269 152.964 183.464C152.769 183.66 152.769 183.976 152.964 184.172L155.793 187L152.964 189.828C152.769 190.024 152.769 190.34 152.964 190.536C153.16 190.731 153.476 190.731 153.672 190.536L156.854 187.354ZM0.499985 -6.81898e-06L0.499977 187L1.49998 187L1.49998 -6.77527e-06L0.499985 -6.81898e-06ZM0.999977 187.5L156.5 187.5L156.5 186.5L0.999977 186.5L0.999977 187.5Z" fill="black" />
+                    </svg>
+                </div>
+                <div class="top-[800px] left-[600px] absolute">
+                    <svg width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
+                    </svg>
+                </div>
+            </div>
+
+            @* Die Reihenfolge wird leicht geändert für Mobile, der Text soll zuerst kommen, dann die Bilder. *@
+            @* In der Desktop-Ansicht kommt erst das erste Bild, dann der Text rechts davon. *@
+            @* Die Striche sind nur in Mobile sichtbar! *@
+            <div class="grid-cols-[50px_auto] mt-10 grid md:grid-cols-3">
+                <div class="col-span-2 md:ml-auto md:max-w-88 md:order-2">
+                    <p class="font-ptsans leading-6 text-sm tracking-wider">
+                        <b>Haruna Matsuo Sensei-den </b>
+                        <br />
+                        Muso Jikiden Eishin Ryû
+                        <br />
+                        (direkte Linie von Oe Masamichi zu Haruna Sensei):
+                    </p>
+                    <p class="font-ptsans leading-6 mt-4 text-sm tracking-wider">
+                        <b>Oe Masamichi</b>
+                        <br />
+                        (Großmeister in der 17. Gen., 1852-1927, gilt als Reformator des Iaidô hin zum "neuen" Iai)
+                    </p>
+                </div>
+
+                @* Senkrechter Strich nach unten *@
+                <div class="col-start-2 grid-cols-5 my-4 grid md:hidden">
+                    <svg class="col-start-2 justify-self-center" width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
+                    </svg>
+                </div>
+
+                @* Strich nach Links raus und nach unten *@
+                <div class="grid-rows-[auto_1px_auto] grid md:hidden md:order-12">
+                    <div></div>
+                    <div class="h-[1px] w-1/2 justify-self-end bg-black"></div>
+                    <div class="h-full w-[1px] justify-self-center bg-black"></div>
+                </div>
+
+                @* Bild und Text zu **Yamamoto Harusuke** *@
+                <div class="col-start-2 flex flex-row md:order-1 md:col-start-1 md:flex-col">
+                    <div>
+                        <img src="/images/genbukan/yamamotoHarusuke.png" />
+                    </div>
+                    <div class="mx-2 md:mt-2 md:mx-0">
+                        <p class="font-ptsans leading-6 text-sm tracking-wider">
+                            <b>Yamamoto Harusuke</b>
+                            <br />
+                            <b>Sensei</b>
+                            <br />
+                            Hanshi 9. Dan
+                            <br />
+                            1893 - 1978
+                        </p>
+                    </div>
+                </div>
+
+                @* Senkrechter Strich nach unten, durchgehend, parallel zum Pfeil *@
+                <div class="my-0 flex justify-center md:hidden">
+                    <div class="h-full w-[1px] bg-black"></div>
+                </div>
+                @* Pfeil nach unten, unter dem Bild *@
+                <div class="grid-cols-5 my-4 grid md:hidden">
+                    <svg class="col-start-2 justify-self-center" width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
+                    </svg>
+                </div>
+                @* Senkrechter Strich nach unten, durchgehend, parallel zum Bild *@
+                <div class="my-0 flex justify-center md:hidden">
+                    <div class="h-full w-[1px] bg-black"></div>
+                </div>
+                @* Bild und Text zu **Yamashibu Yoshikazu** *@
+                <div class="col-start-2 flex flex-row md:order-3 md:col-start-1 md:flex-col md:mt-22">
+                    <div>
+                        <img src="/images/genbukan/yamashibuYoshikazu.png" />
+                    </div>
+                    <div class="mx-2 md:mt-2 md:mx-0">
+                        <p class="font-ptsans leading-6 text-sm tracking-wider">
+                            <b>Yamashibu Yoshikazu</b>
+                            <br />
+                            <b>Sensei</b>
+                            <br />
+                            Hanshi 8. Dan
+                            <br />
+                            1922 - ?
+                        </p>
+                    </div>
+                </div>
+
+                @* Senkrechter Strich nach unten, durchgehend, parallel zum Pfeil *@
+                <div class="my-0 flex justify-center md:hidden">
+                    <div class="h-full w-[1px] bg-black"></div>
+                </div>
+                @* Pfeil nach unten, unter dem Bild *@
+                <div class="grid-cols-5 my-4 grid md:hidden">
+                    <svg class="col-start-2 justify-self-center" width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
+                    </svg>
+                </div>
+
+                @* Senkrechter Strich nach unten, parallel zum Bild, geht mit einem Pfeil in das Bild hinein. Danach wieder ein Pfeil heraus und nach unten gehend *@
+                <div class="grid-rows-[auto_1px_auto] grid md:hidden">
+                    @* Senkrechter Strich nach unten, durchgehend, parallel zum Bild *@
+                    <div class="h-full w-[1px] justify-self-center bg-black"></div>
+                    @* Pfeil nach rechts, zum Bild hin *@
+                    <div class="justify-self-end">
+                        <svg class="-mt-[5px]" width="24" height="9" viewBox="0 0 24 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 22.3536 4.8536 C 22.5488 4.6583 22.5488 4.3417 22.3536 4.1464 L 19.1716 0.9645 C 18.9763 0.7692 18.6597 0.7692 18.4645 0.9645 C 18.2692 1.1597 18.2692 1.4763 18.4645 1.6716 L 21.2929 4.5 L 18.4645 7.3284 C 18.2692 7.5237 18.2692 7.8403 18.4645 8.0355 C 18.6597 8.2308 18.9763 8.2308 19.1716 8.0355 L 22.3536 4.8536 Z M -2 5 L 22 5 V 4 L -2 4 L -2 5 Z" fill="black" />
+                        </svg>
+                    </div>
+                    @* Strich nach Links mit einem Strich nach unten, "aus dem Bild hinaus gehend" *@
+                    <div class="grid-rows-[auto_1px_auto] grid md:hidden md:order-12">
+                        <div></div>
+                        <div class="h-[1px] w-1/2 justify-self-end bg-black"></div>
+                        <div class="h-full w-[1px] justify-self-center bg-black"></div>
+                    </div>
+                </div>
+
+                @* Bild und Text zu **Haruna Matsuo** *@
+                <div class="col-start-2 flex flex-row md:order-4 md:flex-col md:mt-22 md:justify-self-center md:mx-auto">
+                    <div>
+                        <img src="/images/genbukan/harunaMatsuo.png" />
+                    </div>
+                    <div class="mx-2 md:mt-2 md:mx-0">
+                        <p class="font-ptsans leading-6 text-sm tracking-wider">
+                            <b>Haruna Matsuo</b>
+                            <br />
+                            <b>Sensei</b>
+                            <br />
+                            Kyoshi 8. Dan
+                            <br />
+                            1926 - 2002
+                        </p>
+                    </div>
+                </div>
+
+                @* Senkrechter Strich nach unten, durchgehend, parallel zum Pfeil *@
+                <div class="my-0 flex justify-center md:hidden">
+                    <div class="h-full w-[1px] bg-black"></div>
+                </div>
+                @* Pfeil nach unten, unter dem Bild *@
+                <div class="grid-cols-5 my-4 grid md:hidden">
+                    <svg class="col-start-2 justify-self-center" width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
+                    </svg>
+                </div>
+
+                @* Senkrechter Strich nach unten, durchgehend, parallel zum Bild *@
+                <div class="my-0 flex justify-center md:hidden">
+                    <div class="h-full w-[1px] bg-black"></div>
+                </div>
+
+                @* Bild und Text zu **Oshita Masakazu** *@
+                <div class="col-start-2 flex flex-row md:justify-self-end md:mt-22 md:order-5 md:col-start-3 md:flex-col md:ml-auto">
+                    <div>
+                        <img src="/images/genbukan/oshitaMasakazu.png" />
+                    </div>
+                    <div class="mx-2 md:mt-2 md:mx-0">
+                        <p class="font-ptsans leading-6 mt-2 text-sm tracking-wider">
+                            <b>Oshita Masakazu</b>
+                            <br />
+                            <b>Sensei</b>
+                            <br />
+                            Kyoshi 8. Dan
+                        </p>
+                    </div>
+                </div>
+
+                @* Senkrechter Strich nach unten, durchgehend, parallel zum Pfeil *@
+                <div class="my-0 flex justify-center md:hidden">
+                    <div class="h-full w-[1px] bg-black"></div>
+                </div>
+                @* Pfeil nach unten, unter dem Bild *@
+                <div class="grid-cols-5 my-4 grid md:hidden">
+                    <svg class="col-start-2 justify-self-center" width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
+                    </svg>
+                </div>
+
+
+                @* Senkrechter Strich nach unten, parallel zum Bild, geht mit einem Pfeil in das Bild hinein *@
+                <div class="grid-rows-[auto_1px_auto] grid md:hidden">
+                    @* Senkrechter Strich nach unten, durchgehend, parallel zum Pfeil *@
+                    <div class="h-full w-[1px] justify-self-center bg-black"></div>
+                    @* Pfeil nach rechts, zum Bild hin *@
+                    <div class="justify-self-end">
+                        <svg class="-mt-[5px]" width="24" height="9" viewBox="0 0 24 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 22.3536 4.8536 C 22.5488 4.6583 22.5488 4.3417 22.3536 4.1464 L 19.1716 0.9645 C 18.9763 0.7692 18.6597 0.7692 18.4645 0.9645 C 18.2692 1.1597 18.2692 1.4763 18.4645 1.6716 L 21.2929 4.5 L 18.4645 7.3284 C 18.2692 7.5237 18.2692 7.8403 18.4645 8.0355 C 18.6597 8.2308 18.9763 8.2308 19.1716 8.0355 L 22.3536 4.8536 Z M -2 5 L 22 5 V 4 L -2 4 L -2 5 Z" fill="black" />
+                        </svg>
+                    </div>
+                </div>
+
+                @* Bild und Text zu **Henry Schubert** *@
+                <div class="col-span-1 col-start-2 flex flex-row md:justify-self-end md:col-span-3 md:mt-22 md:flex-col md:order-6 md:col-start-1 md:ml-auto">
+                    <div>
+                        <img src="/images/genbukan/henrySchubert.png" />
+                    </div>
+                    <div class="mx-2 md:mt-2 md:mx-0">
+                        <p class="font-ptsans leading-6 mt-2 text-sm tracking-wider">
+                            <b>Henry Schubert</b>
+                            <br />
+                            <b>Sensei</b>
+                            <br />
+                            7. Dan Iaidô Renshi
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-10 md:flex md:flex-row">
+                <div class="max-w-64 md:mr-18">
+                    <Zwischenüberschrift Text="Unser japanischer Lehrer" />
+                </div>
+                <div class="mt-5 md:mt-0">
+                    <p class="font-ptsans text-sm tracking-wider">
+                        <b>Oshita Masakazu Sensei</b>, einer von Haruna Senseis langjährigsten Schülern, ist derjenige Lehrer in Japan für uns, dessen Lehren wir heute folgen.
+                        Er betreibt das Kobe Genbukan Iai Dôjô in Kobe City, Hyogo, und ist darüber hinaus Lehrer für den Kobe Gakuin University Iaido Club.
+                        Oshita Sensei begann sein Iai-Studium 1975 am Hyogo Eishinkai und hat 1979 angefangen, bei Haruna Sensei zu üben. 1989 besuchte er zum ersten Mal Großbritannien,
+                        um Haruna Sensei auf einem Seminar zu unterstützen. 1990 habe ich auch Oshita Sensei das erste Mal getroffen.
+                        Seit dieser Zeit sehen wir uns zwei- drei Mal im Jahr auf internationalen Lehrgängen, die mittlerweile auch auf dem europäischen Festland,
+                        2010 unter anderem in Augsburg, stattfinden.
+                    </p>
+                    <div class="my-4">
+                        <Fließtext Text="1996, nachdem sein Haus während der großen Hanshin-Erdbeben-Katastrophe zerstört wurde, hat Oshita Sensei nicht nur sein Haus wieder aufgebaut, sondern auf dem Haus seiner Eltern, direkt nebenan, ein eigenes Dôjô errichtet. Im Mai 1996 haben mein Senpai („älterer Schüler“, eine Art Mentor, der den „Jüngeren“ führt oder eben höheren Lehrern vorstellt) Trevor Jones und ich als einzige Nicht-Japaner im Rahmen der offiziellen Eröffnungsfeier zu Senseis Dôjô vor den geladenen höchstrangigen Sensei aus ganz Japan eine Enbû (Vorführung) gemacht." />
+                    </div>
+                    <Fließtext Text="Oshita Sensei ist derzeit als 8. Dan Kyoshi graduiert, besucht nach wie vor regelmäßig Großbritannien und Europa, um zu unterrichten. Zusätzlich zu Iai hält er Graduierungen in weiteren Kampfkünste, wie Kendô, Jôdô und Daitô-Ryû Aikijujutsu." />
+                </div>
+            </div>
+            <div class="mt-20 md:flex md:flex-row">
+                <div class="max-w-48 md:ml-18 md:order-2">
+                    <Zwischenüberschrift Text="In Memoriam" />
+                </div>
+                <div class="mt-5 md:mt-0 md:order-1">
+                    <p class="font-ptsans text-sm tracking-wider">
+                        <b>Haruna Matsuo Sensei</b> (1926-2002), mein direkter Lehrer, stammt aus der Präfektur Okayama und begann sein Iaidô- Training 1972, im Alter von 46 Jahren. Davor hat er seit seinem 16. Lebensjahr Kendô trainiert. Haruna Sensei hat im Musashi Dôjô in Ohara geübt. Beruflich hat er als Lehrer an einer Junior High School Wissenschaften unterrichtet. Sein Iaido-Lehrer war YAMASHIBU YOSHIKAZU Sensei. Darüber hinaus wurde er direkt von YAMAMOTO HARUSUKE und TOMEGAHARA TOMIYOSHI Sensei unterwiesen.
+                    </p>
+                    <div class="my-4">
+                        <Fließtext Text="Haruna Sensei stand zwei Jahre in Folge (1988 und 1989) im Finale in der 7. Dan-Kategorie der All-Japanischen Meisterschaften. 1988 wurde er Zweiter und hat 1989 in seiner Kategorie mit einem unschlagbaren 3:0- Ergebnis in jeder Runde gewonnen. Haruna Sensei war in vielen Wettkämpfen in ganz Japan erfolgreich. Ein unglaublicher Erfolg in einem Land, in dem weitaus mehr Menschen Iaidô üben als man hierzulande vermuten mag." />
+                    </div>
+                    <div class="mb-4">
+                        <Fließtext Text="Haruna Sensei hat über viele Jahre im Ausland unterrichtet, mit dem Ziel, dadurch zur Verbreitung des Iaidô auf der gesamten Welt beizutragen. Sein erster Besuch in Europa war 1982 in Großbritannien, gefolgt von regelmäßigen Besuchen von 1984 bis 2001. Ich bin Haruna Sensei 1990 das erste Mal in Dartford, England, begegnet. 1993 war ich das erste Mal in meinem Leben in Japan und habe zwei Monate bei Haruna Sensei, bzw. im Haus der Familie seiner Tochter gelebt und jeden Tag mit diesem großartigen Lehrer authentischer japanischer Kampfkunst geübt. Ich verdanke ihm die umfassenden Grundlagen meines sicherlich unzureichenden Wissens und somit eigentlich alles." />
+                    </div>
+                    <div class="mb-4">
+                        <Fließtext Text="Haruna Sensei war zum Zeitpunkt seines Todes, am 14. September 2002, als 8. Dan Kyoshi graduiert, hielt außer in Iaidô eine Gradierung in Kendô und hat Niten-Ichi Ryû, die von Miyamoto Musashi begründete “eine Schule der zwei Schwerter” geübt." />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Historie - Jôdô" />
+            <div>
+                <p class="font-ptsans text-sm tracking-wider">
+                    <b>Aoki Tadao Sensei</b> (*1926) war/ist mein (erster) Jôdô-Lehrer, als ich 1998 in Japan mit dieser Kampfkunst begonnen habe. Leider hat sich Aoki Sensei mit nun über 90 Jahren aus dem Seminarbetrieb zurückgezogen und unterrichtet nicht mehr. Aoki Sensei lebt in Yokohama, Kanagawa. Er ist 7. Dan Jôdô Kyoshi und 7. Dan Iaidô Kyoshi.
+                </p>
+                <div class="my-4">
+                    <Fließtext Text="Wir nehmen soviele Gelegenheiten als möglich war, um uns auf Seminaren mit Ishido Shizufumi Sensei und/oder hochrangigen europäischen Lehrern fortzubilden." />
+                </div>
+                <div class="mb-4">
+                    <Fließtext Text="Erstellt von Henry Schubert, 6. Dan Jôdô" />
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <SectionBanner Titel="Kontakt" />
+            <div class="mt-10 md:flex md:flex-row md:justify-between md:h-auto">
+
+                <div class="mt-auto">
+                    <Weiterleitung Link="http://www.genbukan-augsburg.de/index.html" Text="→ Zu Genbukan Augsburg" />
+                </div>
+                <div>
+                    <InteresseFormular Abteilung="@(Abteilung.Genbukan)" />
+                </div>
             </div>
         </section>
 
@@ -87,5 +448,12 @@
 </div>
 
 @code {
-
+    private void GoToIaido()
+    {
+        NavigationManager.NavigateTo("/Iaido");
+    }
+    private void GoToJodo()
+    {
+        NavigationManager.NavigateTo("/Jodo");
+    }
 }
