@@ -17,25 +17,24 @@
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
         <SectionBanner Titel="Mitglieder verwalten" />
-        <div>
-            <SfGrid TValue="UserWithRoles" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })">
+        @* <div style="position:relative;width:300px;min-height: 400px;border:solid 1px red"> *@
+        <div class="-mx-8 md:mx-0">
+            <SfGrid TValue="UserWithRoles" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })" Height="100%" Width="100%">
                 <SfDataManager AdaptorInstance="@typeof(CustomAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
                 <GridPageSettings PageSize="20"></GridPageSettings>
-                <GridEditSettings AllowEditing="@AllowEditing" AllowDeleting="@AllowDeletion" Mode="@EditMode.Dialog"></GridEditSettings>
+                <GridEditSettings AllowEditing="@AllowEditing" AllowDeleting="@AllowDeletion" Mode="@EditMode.Dialog" ShowDeleteConfirmDialog="true"/>
 
                 <GridColumns>
-                    @* <GridColumn Field="@nameof(UserWithRoles.Verified)" HeaderText="Aktiv" Width="75" AllowEditing="false" /> *@
                     <GridColumn Field=@nameof(UserWithRoles.Verified) HeaderText="Aktiv" AllowSearching="true" Width="75" EditType="EditType.DropDownEdit">
                         <EditTemplate>
                             <SfDropDownList ID="Verified" TValue="string" TItem="string"
-                                            Placeholder="Aktiv"
+                                            Placeholder="Aktiver Zugang"
                                             FloatLabelType="FloatLabelType.Always"
                                             DataSource="@AktiviertAuswahl" @bind-Value="@((context as UserWithRoles).Verified)">
                                 <DropDownListFieldSettings Value="Verified"></DropDownListFieldSettings>
                             </SfDropDownList>
                         </EditTemplate>
                     </GridColumn>
-
 
                     <GridColumn Field=@nameof(UserWithRoles.Vorname) HeaderText="Vorname" AllowSearching="true" Width="120"></GridColumn>
                     <GridColumn Field=@nameof(UserWithRoles.Name) HeaderText="Nachname" AllowSearching="true" Width="150"></GridColumn>
@@ -68,6 +67,14 @@
         </div>
     </div>
 </div>
+
+@* Für die Icons im SFGrid - damit der Text weg ist *@
+<style>
+    .e-grid .e-toolbar .e-tbar-btn-text,
+    .e-grid .e-toolbar .e-toolbar-items .e-toolbar-item .e-tbar-btn-text {
+        display: none;
+    }
+</style>
 
 
 @code {

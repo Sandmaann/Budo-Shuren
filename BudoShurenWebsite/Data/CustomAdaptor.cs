@@ -153,28 +153,24 @@ namespace BudoShurenWebsite.Data
                 }
             }
             return value;
-
-
-            //var data = Orders.Where(or => or.OrderID == (value as Order).OrderID).FirstOrDefault();
-            //if (user != null && value is ApplicationUser valueUser)
-            //{
-            //    user.Vorname = valueUser.Vorname;
-            //    user.Name = valueUser.Name;
-            //    user.Abteilung = valueUser.Abteilung;
-
-            //    await UserManager.UpdateAsync(user);
-            //}
-            //return value;
         }
 
         // Performs Remove operation
         public override async Task<object> RemoveAsync(DataManager dm, object value, string keyField, string key)
         {
-            var user = await UserManager.FindByNameAsync((value as ApplicationUser)?.UserName);
-            if (user != null)
+            if (value is string email)
             {
-                await UserManager.RemoveLoginAsync(user, user.Id, user.Email);
+                var user = await UserManager.FindByNameAsync(email);
+                if (user != null)
+                {
+                    var result = await UserManager.RemoveLoginAsync(user, user.Id, user.Email);
+                    if(result?.Succeeded == true)
+                    {
+                        result = await UserManager.DeleteAsync(user);
+                    }
+                }
             }
+
             return value;
         }
     }
