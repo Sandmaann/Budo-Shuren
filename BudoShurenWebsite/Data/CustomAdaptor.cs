@@ -28,12 +28,26 @@ namespace BudoShurenWebsite.Data
             var users = await UserManager.Users.ToListAsync();
             var usersWithRoles = new List<UserWithRoles>();
 
+            var currentUser = await GetCurrentUser();
+
             foreach (var user in users)
             {
-                var roles = await UserManager.GetRolesAsync(user);
-                usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                //User nach Rolle filtern. Admins und Abteilungsleiter dürfen alle sehen, alle anderen nur eigene Daten
+                if (Global.Roles.IsAdmin(currentUser?.Roles) || Global.Roles.IsAbteilungsleiter(currentUser?.Roles))
+                {
+                    var roles = await UserManager.GetRolesAsync(user);
+                    usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                }
+                else if (user.UserName == currentUser.UserName)
+                {
+                    var roles = await UserManager.GetRolesAsync(user);
+                    usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                }
+                else
+                {
+                    continue;
+                }
             }
-
             return usersWithRoles;
         }
 
