@@ -46,6 +46,7 @@ namespace BudoShurenWebsite
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+            builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
 
             builder.Services.AddSingleton<IDataService, DataService>();
