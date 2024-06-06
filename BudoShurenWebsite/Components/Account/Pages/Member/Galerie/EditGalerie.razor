@@ -5,6 +5,7 @@
 @inject ApplicationDbContext DbContext;
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
+@inject UserService UserService
 
 @rendermode InteractiveServer
 
@@ -42,7 +43,7 @@
             }
         </div>
 
-        @if (IsNew)
+        @if (IsNew && CanEdit)
         {
             <div class="sidebarHeight:overflow-auto">
                 <SfUploader @ref="uploadObj" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg" MaxFileSize=5242880>
@@ -84,25 +85,25 @@
                         </div>
                         <div class="my-2">
                             <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
-                                <InputCheckbox @bind-Value="SelectedEintrag.Aikido" class="h-6 w-6" title="In Aikido anzeigen" disabled="@isSaving"/>
+                                <InputCheckbox @bind-Value="SelectedEintrag.Aikido" class="h-6 w-6" title="In Aikido anzeigen" disabled="@isSaving" />
                                 <span class="ml-2 mt-0.5">Aikido</span>
                             </label>
                         </div>
                         <div class="my-2">
                             <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
-                                <InputCheckbox @bind-Value="SelectedEintrag.Bujinkan" class="h-6 w-6" title="In Bujinkan anzeigen" disabled="@isSaving"/>
+                                <InputCheckbox @bind-Value="SelectedEintrag.Bujinkan" class="h-6 w-6" title="In Bujinkan anzeigen" disabled="@isSaving" />
                                 <span class="ml-2 mt-0.5">Bujinkan</span>
                             </label>
                         </div>
                         <div class="my-2">
                             <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
-                                <InputCheckbox @bind-Value="SelectedEintrag.Genbukan" class="h-6 w-6" title="In Genbukan anzeigen" disabled="@isSaving"/>
+                                <InputCheckbox @bind-Value="SelectedEintrag.Genbukan" class="h-6 w-6" title="In Genbukan anzeigen" disabled="@isSaving" />
                                 <span class="ml-2 mt-0.5">Genbukan</span>
                             </label>
                         </div>
                         <div class="my-2">
                             <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
-                                <InputCheckbox @bind-Value="SelectedEintrag.Iaido" class="h-6 w-6" title="In Iaido anzeigen" disabled="@isSaving"/>
+                                <InputCheckbox @bind-Value="SelectedEintrag.Iaido" class="h-6 w-6" title="In Iaido anzeigen" disabled="@isSaving" />
                                 <span class="ml-2 mt-0.5">Iaido</span>
                             </label>
                         </div>
@@ -126,43 +127,36 @@
                 </div>
             </div>
 
-            <div class="p-4">
-                @if (savedSuccessfully && !SelectedEintrag.Changed)
-                {
-                    <button @onclick="CloseSidebar" class="h-10 w-full transform bg-black px-5 text-center text-white transition duration-150 ease-in-out hover:bg-primary active:scale-90" aria-label="Zurück zur vorherigen Seite">
-                        <div class="flex flex-row items-center justify-start">
-                            <span class="material-symbols-outlined m-0.5 text-white">done</span>
-                            <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Jetzt zurück gehen</span>
+            @if (CanEdit)
+            {
+                <div class="p-4">
+                    @if (savedSuccessfully && !SelectedEintrag.Changed)
+                    {
+                        <button @onclick="CloseSidebar" class="h-10 w-full transform bg-black px-5 text-center text-white transition duration-150 ease-in-out hover:bg-primary active:scale-90" aria-label="Zurück zur vorherigen Seite">
+                            <div class="flex flex-row items-center justify-start">
+                                <span class="material-symbols-outlined m-0.5 text-white">done</span>
+                                <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Jetzt zurück gehen</span>
+                            </div>
+                        </button>
+                        <div class="mt-5 text-primary">
+                            <Fließtext Text="Erfolgreich gespeichert" />
                         </div>
-                    </button>
-                    <div class="mt-5 text-primary">
-                        <Fließtext Text="Erfolgreich gespeichert" />
-                    </div>
-                }
-                else
-                {
-                    <button @onclick="onSave" class="h-10 w-full transform bg-black px-5 text-center text-white opacity-100 transition duration-150 ease-in-out hover:bg-primary active:scale-90" aria-label="Eintrag speichern">
-                        <div class="flex flex-row items-center justify-start">
-                            <span class="material-symbols-outlined">save</span>
-                            <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Speichern</span>
-                        </div>
-                    </button>
-                }
-            </div>
+                    }
+                    else
+                    {
+                        <button @onclick="onSave" class="h-10 w-full transform bg-black px-5 text-center text-white opacity-100 transition duration-150 ease-in-out hover:bg-primary active:scale-90" aria-label="Eintrag speichern">
+                            <div class="flex flex-row items-center justify-start">
+                                <span class="material-symbols-outlined">save</span>
+                                <span class="font-yuji px-5 text-sm font-normal leading-tight tracking-widest">Speichern</span>
+                            </div>
+                        </button>
+                    }
+                </div>
+            }
         </div>
     </div>
 
     <div class="z-10 sticky inset-y-20 flex-col items-center justify-center @(isSaving ? "flex"  : "hidden")">
-        @* <div class="z-10 sticky inset-y-20 flex flex-col items-center justify-center"> *@
-        @*         <div role="status">
-        <svg aria-hidden="true" class="inline h-10 w-10 animate-spin fill-blue-600 text-gray-200 dark:text-gray-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
-        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" />
-        </svg>
-        <span class="sr-only">Saving...</span>
-        </div> *@
-
-        @* <SfProgressBar Type="ProgressType.Circular" Value="@currentSave" Minimum="0" Maximum="@maxSave" TrackThickness="10" ProgressThickness="10" ProgressColor="#2A6749"> *@
         <SfProgressBar Type="ProgressType.Circular" Value="@currentSave" EnableRtl="false"
                        TrackColor="#2A6749" Radius="100%" InnerRadius="350%" ProgressColor="white" TrackThickness="80"
                        ProgressThickness="8" CornerRadius="CornerType.Round" Minimum="0" Maximum="@maxSave">
@@ -199,9 +193,12 @@
     [Parameter]
     public bool IsOpen { get; set; }
 
+    public bool CanEdit { get; set; } = false;
+
+
     public async Task<bool> CanClose()
     {
-        if(isSaving)
+        if (isSaving)
         {
             bool confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Die Bilder werden gerade gespeichert! Willst du nicht warten, bis die Bilder fertig gespeichert sind?");
             return confirm;
@@ -339,9 +336,32 @@
 
     List<string> uploadedFiles = new();
 
+
+    private async Task SetPermissions()
+    {
+        try
+        {
+            await UserService.InitializeAsync();
+            var user = UserService.CurrentUser;
+            if (Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles))
+            {
+                CanEdit = true;
+            }
+            else
+            {
+                CanEdit = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            CanEdit = false;
+        }
+    }
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        await SetPermissions();
     }
 
     private async Task CloseSidebar()
@@ -410,6 +430,8 @@
 
     private async Task onSave()
     {
+        if (CanEdit == false)
+            return;
         if (isSaving)
             return;
         try
@@ -442,6 +464,7 @@
             {
                 SelectedEintrag.Changed = false;
                 savedSuccessfully = true;
+                isSaving = false;
                 if (IsNew)
                     await CloseSidebar();
             }

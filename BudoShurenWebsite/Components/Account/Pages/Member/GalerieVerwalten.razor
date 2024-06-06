@@ -6,11 +6,15 @@
 @using BudoShurenWebsite.Models;
 @using Microsoft.EntityFrameworkCore;
 
+@using BudoShurenWebsite.Data
+@using Microsoft.AspNetCore.Identity
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserService UserService
 @inject ProtectedSessionStorage SessionStorage
 @inject IJSRuntime JSRuntime
 @inject IHostEnvironment environment
-@inject ApplicationDbContext DbContext;
-
+@inject ApplicationDbContext DbContext
 
 <div class="">
     <div class="container mx-auto">
@@ -72,18 +76,21 @@
                                             </MenuItems>
                                             <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
                                         </SfMenu>
-                                        <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
-                                            <MenuItems>
-                                                <MenuItem Text="Bearbeiten" IconCss="e-icons e-menu">
-                                                    <MenuItems>
-                                                        <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
-                                                        <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
-                                                        <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
-                                                    </MenuItems>
-                                                </MenuItem>
-                                            </MenuItems>
-                                            <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
-                                        </SfMenu>
+                                        @if (CanEdit)
+                                        {
+                                            <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
+                                                <MenuItems>
+                                                    <MenuItem Text="Bearbeiten" IconCss="e-icons e-menu">
+                                                        <MenuItems>
+                                                            <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
+                                                            <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
+                                                            <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
+                                                        </MenuItems>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                                <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
+                                            </SfMenu>
+                                        }
                                     </div>
 
                                     <div class="flex flex-row items-center md:hidden">
@@ -104,18 +111,21 @@
                                             </MenuItems>
                                             <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
                                         </SfMenu>
-                                        <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
-                                            <MenuItems>
-                                                <MenuItem Text="" IconCss="e-icons e-menu">
-                                                    <MenuItems>
-                                                        <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
-                                                        <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
-                                                        <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
-                                                    </MenuItems>
-                                                </MenuItem>
-                                            </MenuItems>
-                                            <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
-                                        </SfMenu>
+                                        @if (CanEdit)
+                                        {
+                                            <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
+                                                <MenuItems>
+                                                    <MenuItem Text="" IconCss="e-icons e-menu">
+                                                        <MenuItems>
+                                                            <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
+                                                            <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
+                                                            <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
+                                                        </MenuItems>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                                <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
+                                            </SfMenu>
+                                        }
                                     </div>
                                 }
                                 else
@@ -158,10 +168,15 @@
                                             <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
                                         </SfMenu>
                                     </div>
-                                    <button @onclick="BilderErstellen" aria-label="Bilder hochladen" class="font-yuji flex h-10 transform flex-row items-center justify-between px-4 text-center text-sm font-normal leading-tight tracking-widest text-black transition duration-150 ease-in-out active:scale-90">
-                                        <span class="material-symbols-outlined mr-2">upload</span>
-                                        <span class="hidden md:inline-block">hochladen</span>
-                                    </button>
+                                    @if (CanEdit)
+                                    {
+                                        <button @onclick="BilderErstellen"
+                                                aria-label="Bilder hochladen"
+                                                class="font-yuji flex h-10 transform flex-row items-center justify-between px-4 text-center text-sm font-normal leading-tight tracking-widest text-black transition duration-150 ease-in-out active:scale-90">
+                                            <span class="material-symbols-outlined mr-2">upload</span>
+                                            <span class="hidden md:inline-block">hochladen</span>
+                                        </button>
+                                    }
                                 }
                             </div>
                         </div>
@@ -216,7 +231,8 @@
     </div>
 
     <div id="slideover-container" class="invisible fixed inset-0 z-50 h-full w-full">
-        <div @onclick="(()=> CloseSidebar(false))" id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
+        <div id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
+        @* <div @onclick="(()=> CloseSidebar(false))" id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div> *@
 
         <div onclick="" id="slideover" class="absolute right-0 h-full w-96 translate-x-full overflow-auto bg-white transition-all duration-300 ease-out">
             <EditGalerie @ref="editGalerie" Einträge="@SelectedEinträge" OnClose="CloseSidebar" IsOpen="@SidebarIsVisible" />
@@ -238,15 +254,6 @@
 
 
 @code {
-    // SfMenu<MenuItem> MenuObj_FilterMD;
-    // SfMenu<MenuItem> MenuObj_BearbeitenMD;
-
-    // SfMenu<MenuItem> MenuObj_FilterMD_NoSelection;
-    // SfMenu<MenuItem> MenuObj_FilterSmall_NoSelection;
-
-    // SfMenu<MenuItem> MenuObj_FilterSmall;
-    // SfMenu<MenuItem> MenuObj_BearbeitenSmall;
-
     EditGalerie editGalerie;
 
     string suchtext = string.Empty;
@@ -290,9 +297,33 @@
     private string jodoCssImage => jodo ? "e-icons e-check-large" : "e-icons";
     private string homeCssImage => home ? "e-icons e-check-large" : "e-icons";
 
+    private bool CanEdit { get; set; } = false;
+
     bool cancelDropDownClose = false;
 
     bool iJustClosedYou_1 = false;
+
+    private async Task SetPermissions()
+    {
+        try
+        {
+            await UserService.InitializeAsync();
+            var user = UserService.CurrentUser;
+            if (Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles))
+            {
+                CanEdit = true;
+            }
+            else
+            {
+                CanEdit = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            CanEdit = false;
+        }
+    }
 
     private void onOpen(BeforeOpenCloseMenuEventArgs<MenuItem> args)
     {
@@ -313,6 +344,8 @@
 
     private async void functionItemSelected(MenuEventArgs<MenuItem> args)
     {
+        if (CanEdit == false)
+            return;
         var selectedItem = args.Item.Text;
 
         if (selectedItem != "Filter")
@@ -428,6 +461,9 @@
 
     private async Task BilderErstellen()
     {
+        if (CanEdit == false)
+            return;
+
         SelectedEinträge = new List<GalerieEintrag>();
         await toggleSlideoverBlazor();
         await editGalerie.Clear();
@@ -594,7 +630,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        // SidebarIsVisible = false;
+        await SetPermissions();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -641,7 +677,8 @@
     private async Task toggleSlideoverBlazor()
     {
         SidebarIsVisible = !SidebarIsVisible;
-        if(SidebarIsVisible == false && await editGalerie.CanClose())
+        // if (SidebarIsVisible == false && await editGalerie.CanClose())
+        if (SidebarIsVisible == true || await editGalerie.CanClose())
         {
             await editGalerie.Clear();
             await JSRuntime.InvokeVoidAsync("toggleSlideover");

@@ -4,6 +4,7 @@
 @inject IHostEnvironment environment
 @inject ApplicationDbContext DbContext;
 @inject IJSRuntime JSRuntime
+@inject UserService UserService
 
 @rendermode InteractiveServer
 
@@ -17,25 +18,31 @@
         <div class="max-h-full max-w-full flex-grow self-center object-cover">
             <img src="@ImagePath" class="mx-auto max-h-full max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
         </div>
-        <div>
-            <div class="mx-5 flex flex-col">
-                <button class="rotate-180 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="toggleSlideoverBlazor" title="Daten zum Bild bearbeiten" aria-label="Einstellungen öffnen">
-                    <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
-                </button>
-                <button class="mt-4 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="deleteImage" title="Eintrag komplett löschen" aria-label="Eintrag löschen">
-                    <span class="material-symbols-outlined m-2 text-white">delete_forever</span>
-                </button>
+        @if (CanEdit)
+        {
+            <div>
+                <div class="mx-5 flex flex-col">
+                    <button class="rotate-180 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="toggleSlideoverBlazor" title="Daten zum Bild bearbeiten" aria-label="Einstellungen öffnen">
+                        <span class="material-symbols-outlined m-2 text-white">expand_circle_right</span>
+                    </button>
+                    <button class="mt-4 transform rounded-full text-center transition duration-150 ease-in-out hover:bg-gray-700 active:scale-90" @onclick="deleteImage" title="Eintrag komplett löschen" aria-label="Eintrag löschen">
+                        <span class="material-symbols-outlined m-2 text-white">delete_forever</span>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (CanEdit)
+    {
+        <div id="slideover-container" class="invisible fixed inset-0 h-full w-full">
+            <div @onclick="toggleSlideoverBlazor" id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
+
+            <div onclick="" id="slideover" class="absolute right-0 h-full w-96 translate-x-full overflow-auto bg-white transition-all duration-300 ease-out">
+                <EditGalerie @ref="editGalerie" Einträge="(new List<GalerieEintrag> {Item})" OnClose="onSidebarClosed" />
             </div>
         </div>
-    </div>
-
-    <div id="slideover-container" class="invisible fixed inset-0 h-full w-full">
-        <div @onclick="toggleSlideoverBlazor" id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
-
-        <div onclick="" id="slideover" class="absolute right-0 h-full w-96 translate-x-full overflow-auto bg-white transition-all duration-300 ease-out">
-            <EditGalerie @ref="editGalerie" Einträge="(new List<GalerieEintrag> {Item})" OnClose="onSidebarClosed" />
-        </div>
-    </div>
+    }
 </div>
 
 
@@ -62,9 +69,13 @@
     private bool isOpen { get; set; } = false;
     bool deleted = false;
 
+    public bool CanEdit { get; set; } = false;
+
 
     private async Task deleteImage()
     {
+        if (CanEdit == false)
+            return;
         if (deleted)
         {
             return;
@@ -111,6 +122,9 @@
 
     private async Task toggleSlideoverBlazor()
     {
+        if (CanEdit == false)
+            return;
+
         isOpen = !isOpen;
         await JSRuntime.InvokeVoidAsync("toggleSlideover");
         if (isOpen)
@@ -123,16 +137,6 @@
     {
         await JSRuntime.InvokeVoidAsync("history.back");
     }
-
-
-    // private void OpenSidebar()
-    // {
-    //     isOpen = !isOpen;
-    // }
-    // private void CloseSidebar(bool result)
-    // {
-    //     isOpen = false;
-    // }
 
     public string ImagePath
     {
@@ -152,5 +156,32 @@
     {
         if (int.TryParse(EntryID, out int ID) && ID > 0)
             Item = await DbContext.Galerie.FindAsync(ID);
+    }
+
+    private async Task SetPermissions()
+    {
+        try
+        {
+            await UserService.InitializeAsync();
+            var user = UserService.CurrentUser;
+            if (Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles))
+            {
+                CanEdit = true;
+            }
+            else
+            {
+                CanEdit = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            CanEdit = false;
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await SetPermissions();
     }
 }

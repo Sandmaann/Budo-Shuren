@@ -51,7 +51,7 @@
 
                 <label for="abteilung" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Abteilung</label>
                 <div class="mb-3">
-                    <SfDropDownList TValue="string"
+                    <SfDropDownList TValue="Abteilung"
                                     TItem="Abteilung"
                                     Placeholder="Wähle eine Abteilung aus"
                                     @bind-Value="@Input.SelectedAbteilung"
@@ -159,46 +159,54 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var user = CreateUser();
-
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        var emailStore = GetEmailStore();
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
-
-        if (!result.Succeeded)
+        try
         {
-            identityErrors = result.Errors;
-            return;
+            var user = CreateUser();
+
+            await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+            var emailStore = GetEmailStore();
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+            var result = await UserManager.CreateAsync(user, Input.Password);
+
+            if (!result.Succeeded)
+            {
+                identityErrors = result.Errors;
+                return;
+            }
+
+            Logger.LogInformation("User created a new account with password.");
+
+            //Benutzer zur Gast-Rolle hinzufügen
+            if (user != null)
+            {
+                await UserManager.AddToRoleAsync(user, Global.Roles.Gast);
+            }
+            Logger.LogInformation($"Added User to Role '{Global.Roles.Gast}'");
+
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+            if (UserManager.Options.SignIn.RequireConfirmedAccount)
+            {
+                RedirectManager.RedirectTo(
+                    "Account/RegisterConfirmation",
+                    new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+            }
+
+            await SignInManager.SignInAsync(user, isPersistent: false);
+            RedirectManager.RedirectTo(ReturnUrl);
         }
-
-        Logger.LogInformation("User created a new account with password.");
-
-        //Benutzer zur Gast-Rolle hinzufügen
-        if (user != null)
+        catch (Exception ex)
         {
-            await UserManager.AddToRoleAsync(user, Global.Roles.Admin);
+            Logger.LogError(ex, "Error creating user.");
+            identityErrors = new IdentityError[] { new IdentityError { Code = "Error", Description = "Fehler bei der Benutzererstellung" } };
         }
-        Logger.LogInformation($"Added User to Role '{Global.Roles.Gast}'");
-
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
-
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        if (UserManager.Options.SignIn.RequireConfirmedAccount)
-        {
-            RedirectManager.RedirectTo(
-                "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
-        }
-
-        await SignInManager.SignInAsync(user, isPersistent: false);
-        RedirectManager.RedirectTo(ReturnUrl);
     }
 
     private ApplicationUser CreateUser()
@@ -206,8 +214,11 @@
         try
         {
             var user = Activator.CreateInstance<ApplicationUser>();
-
-            user.Abteilung = Input.SelectedAbteilung;
+            if (Input.SelectedAbteilung == null)
+            {
+                throw new InvalidOperationException("Die ausgewählte Abteuilung ist leer!");
+            }
+            user.Abteilung = Input.SelectedAbteilung.Name;
             user.Vorname = Input.Vorname;
             user.Name = Input.Nachname;
 
@@ -239,7 +250,8 @@
 
         [Required(ErrorMessage = "Bitte gib die Abteilung an, bei der du registriert bist!")]
         [Display(Name = "Abteilung")]
-        public string SelectedAbteilung { get; set; } = null;
+        // public string SelectedAbteilung { get; set; } = null;
+        public Abteilung? SelectedAbteilung { get; set; } = null;
 
         [Required(ErrorMessage = "Bitte gib deinen Vornamen an")]
         [Display(Name = "Vorname")]
