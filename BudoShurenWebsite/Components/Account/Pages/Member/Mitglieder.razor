@@ -1,7 +1,10 @@
 ﻿@page "/Account/Member/Mitglieder"
 @rendermode InteractiveServer
 
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+@inject IdentityUserAccessor UserAccessor
+@inject IDataService DataService
 
 @using BudoShurenWebsite.Data
 @using Microsoft.AspNetCore.Identity
@@ -15,25 +18,51 @@
     <div class="mx-10">
         <SectionBanner Titel="Mitglieder verwalten" />
         <div>
-
-            @*                 <SfGrid DataSource="@Benutzer" @ref="Grid" AllowPaging="true" Height="325px">
-            <GridColumns>
-            <GridColumn Field=@nameof(ApplicationUser.Vorname) HeaderText="Vorname" Width="120"></GridColumn>
-            <GridColumn Field=@nameof(ApplicationUser.Name) HeaderText="Nachname" Width="150"></GridColumn>
-            <GridColumn Field=@nameof(ApplicationUser.UserName) HeaderText="E-Mail Adresse" Width="150"></GridColumn>
-            <GridColumn Field=@nameof(ApplicationUser.Abteilung) HeaderText="Abteilung" Width="150"></GridColumn>
-            </GridColumns>
-            </SfGrid> *@
-
-            <SfGrid TValue="ApplicationUser" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })">
+            <SfGrid TValue="UserWithRoles" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })">
                 <SfDataManager AdaptorInstance="@typeof(CustomAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
                 <GridPageSettings PageSize="20"></GridPageSettings>
-                <GridEditSettings AllowEditing="true" AllowDeleting="true" Mode="@EditMode.Dialog"></GridEditSettings>
+                <GridEditSettings AllowEditing="@AllowEditing" AllowDeleting="@AllowDeletion" Mode="@EditMode.Dialog"></GridEditSettings>
+
                 <GridColumns>
-                    <GridColumn Field=@nameof(ApplicationUser.Vorname) HeaderText="Vorname" AllowSearching="true" Width="120"></GridColumn>
-                    <GridColumn Field=@nameof(ApplicationUser.Name) HeaderText="Nachname" AllowSearching="true" Width="150"></GridColumn>
-                    <GridColumn Field=@nameof(ApplicationUser.UserName) AllowEditing="false" AllowSearching="true" IsPrimaryKey="true" HeaderText="E-Mail Adresse" Width="150"></GridColumn>
-                    <GridColumn Field=@nameof(ApplicationUser.Abteilung) HeaderText="Abteilung" AllowSearching="true" Width="150"></GridColumn>
+                    @* <GridColumn Field="@nameof(UserWithRoles.Verified)" HeaderText="Aktiv" Width="75" AllowEditing="false" /> *@
+                    <GridColumn Field=@nameof(UserWithRoles.Verified) HeaderText="Aktiv" AllowSearching="true" Width="75" EditType="EditType.DropDownEdit">
+                        <EditTemplate>
+                            <SfDropDownList ID="Verified" TValue="string" TItem="string"
+                                            Placeholder="Aktiv"
+                                            FloatLabelType="FloatLabelType.Always"
+                                            DataSource="@AktiviertAuswahl" @bind-Value="@((context as UserWithRoles).Verified)">
+                                <DropDownListFieldSettings Value="Verified"></DropDownListFieldSettings>
+                            </SfDropDownList>
+                        </EditTemplate>
+                    </GridColumn>
+
+
+                    <GridColumn Field=@nameof(UserWithRoles.Vorname) HeaderText="Vorname" AllowSearching="true" Width="120"></GridColumn>
+                    <GridColumn Field=@nameof(UserWithRoles.Name) HeaderText="Nachname" AllowSearching="true" Width="150"></GridColumn>
+                    <GridColumn Field=@nameof(UserWithRoles.UserName) AllowEditing="false" AllowSearching="true" IsPrimaryKey="true" HeaderText="E-Mail Adresse" Width="150"></GridColumn>
+                    <GridColumn Field="@nameof(UserWithRoles.EmailConfirmed)" HeaderText="Bestätigt" Width="90" AllowEditing="false" />
+
+                    <GridColumn Field=@nameof(UserWithRoles.Abteilung) HeaderText="Abteilung" AllowSearching="true" Width="100" EditType="EditType.DropDownEdit">
+                        <EditTemplate>
+                            <SfDropDownList ID="Abteilung" TValue="string" TItem="string"
+                                            Placeholder="Abteilung"
+                                            FloatLabelType="FloatLabelType.Always"
+                                            DataSource="@AbteilungenText" @bind-Value="@((context as UserWithRoles).Abteilung)">
+                                <DropDownListFieldSettings Value="Abteilung"></DropDownListFieldSettings>
+                            </SfDropDownList>
+                        </EditTemplate>
+                    </GridColumn>
+
+                    <GridColumn Field=@nameof(UserWithRoles.Rolle) HeaderText="Rolle" AllowSearching="true" Width="120">
+                        <EditTemplate>
+                            <SfDropDownList ID="Rolle" TValue="string" TItem="string" Enabled="@AllowRoles"
+                                            Placeholder="Rolle"
+                                            FloatLabelType="FloatLabelType.Always"
+                                            DataSource="@Rollen" @bind-Value="@((context as UserWithRoles).Rolle)">
+                                <DropDownListFieldSettings Value="Rolle"></DropDownListFieldSettings>
+                            </SfDropDownList>
+                        </EditTemplate>
+                    </GridColumn>
                 </GridColumns>
             </SfGrid>
         </div>
@@ -42,5 +71,42 @@
 
 
 @code {
-    SfGrid<ApplicationUser> Grid;
+    private ApplicationUser? user = default!;
+
+    private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
+    private IEnumerable<string> AbteilungenText => Abteilungen?.Select(x => x.Name ?? string.Empty) ?? Array.Empty<string>();
+    private IEnumerable<string> Rollen => Global.Roles.AllRoles;
+    private IEnumerable<string> AktiviertAuswahl => new List<string> { "Ja", "Nein" };
+
+    private bool AllowEditing { get; set; } = false;
+    private bool AllowDeletion { get; set; } = false;
+    private bool AllowRoles { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        Abteilungen = await DataService.GetAbteilungenAsync();
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userPrincipal = authState.User;
+        if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
+        {
+            user = await UserManager.GetUserAsync(userPrincipal);
+            var roles = await UserManager.GetRolesAsync(user);
+
+            if (Roles.IsAdmin(roles))
+            {
+                AllowEditing = true;
+                AllowDeletion = true;
+                AllowRoles = true;
+            }
+            else if (Roles.IsAbteilungsleiter(roles))
+            {
+                AllowEditing = true;
+                AllowDeletion = false;
+                AllowRoles = false;
+            }
+        }
+    }
 }

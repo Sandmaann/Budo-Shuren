@@ -46,9 +46,11 @@ namespace BudoShurenWebsite
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+            builder.Services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
 
             builder.Services.AddSingleton<IDataService, DataService>();
             builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
+
 
             //builder.Services.AddSingleton<OrderDataAccessLayer>();
             builder.Services.AddScoped<CustomAdaptor>();
@@ -98,6 +100,9 @@ namespace BudoShurenWebsite
 
             builder.Services.AddAuthorization(options =>
             {
+                //options.AddPolicy("Aktiviert", policy => policy.RequireAssertion(context =>
+                //    !context.User.IsInRole(Roles.Gast)));
+                options.AddPolicy("Aktiviert", policy => policy.Requirements.Add(new VerifiedUserRequirement()));
                 options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
                     !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
             });
@@ -183,21 +188,26 @@ namespace BudoShurenWebsite
         }
     }
 
-    public class AtLeastOneRoleRequirement : IAuthorizationRequirement { }
-    public class AtLeastOneRoleHandler : AuthorizationHandler<AtLeastOneRoleRequirement>
+    public class VerifiedUserRequirement : IAuthorizationRequirement { }
+    public class VerifiedUserHandler : AuthorizationHandler<VerifiedUserRequirement>
     {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AtLeastOneRoleRequirement requirement)
-        {
-            if (context.User.Identity?.IsAuthenticated == true && context.User.Claims.Any(c => c.Type == ClaimTypes.Role))
-            {
-                context.Succeed(requirement);
-            }
-            else
-            {
-                context.Fail();
-            }
+        private readonly UserManager<ApplicationUser> _userManager;
 
-            return Task.CompletedTask;
+        public VerifiedUserHandler(UserManager<ApplicationUser> userManager)
+        {
+            _userManager = userManager;
+        }
+
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, VerifiedUserRequirement requirement)
+        {
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(context.User);
+                if (user != null && user.Verified)
+                {
+                    context.Succeed(requirement);
+                }
+            }
         }
     }
 }

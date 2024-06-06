@@ -22,6 +22,10 @@
         {
             <StatusMessage ShowAsError="false" Message="Dein Zugang ist erstellt, aber er muss erst von einem Abteilungsleiter bestätigt werden. Erst dann hast du Zugriff auf den Mitgliederbereich." />
         }
+        else if (NichtAktiviert)
+        {
+            <StatusMessage ShowAsError="false" Message="Dein Zugang ist noch nicht aktiviert. Bitte wende dich an deinen Abteilungsleiter, um deinen Zugang zu aktivieren." />
+        }
         else
         {
             <StatusMessage ShowAsError="true" Message="Bitte logge dich mit einem gültigen Benutzer ein! Wenn du Probleme mit deinem Zugang hast, frag bitte im Dojo nach Hilfe." />
@@ -33,13 +37,22 @@
 {
     private bool UserHasNoRoles { get; set; }
     private bool UserHasOnlyGuestRole { get; set; }
+    private bool NichtAktiviert { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var claimsPrincipal = authState.User;
 
-        UserHasNoRoles = !user.Claims.Any(c => c.Type == ClaimTypes.Role);
-        UserHasOnlyGuestRole = user.IsInRole(Roles.Gast);
+        if (claimsPrincipal != null)
+        {
+            var user = await UserManager.GetUserAsync(claimsPrincipal);
+            if (user != null)
+            {
+                UserHasNoRoles = !claimsPrincipal.Claims.Any(c => c.Type == ClaimTypes.Role);
+                UserHasOnlyGuestRole = claimsPrincipal.IsInRole(Roles.Gast);
+                NichtAktiviert = user.Verified == false;
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using BudoShurenWebsite.Global;
+using Microsoft.AspNetCore.Identity;
 
 namespace BudoShurenWebsite.Data
 {
@@ -18,5 +19,6 @@ namespace BudoShurenWebsite.Data
 
         [PersonalDataAttribute]
         public string Vorname { get; set; } = string.Empty;
+
     }
 }

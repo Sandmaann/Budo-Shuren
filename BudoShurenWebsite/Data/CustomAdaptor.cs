@@ -2,6 +2,8 @@
 using Syncfusion.Blazor.Data;
 using Syncfusion.Blazor;
 using Microsoft.EntityFrameworkCore;
+using BudoShurenWebsite.Models;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BudoShurenWebsite.Data
 {
@@ -12,9 +14,45 @@ namespace BudoShurenWebsite.Data
     public class CustomAdaptor : DataAdaptor
     {
         public UserManager<ApplicationUser> UserManager { get; set; }
-        public CustomAdaptor(UserManager<ApplicationUser> userManager)
+        public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+
+        public CustomAdaptor(UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider)
         {
             UserManager = userManager;
+            AuthenticationStateProvider = authenticationStateProvider;
+        }
+
+
+        private async Task<List<UserWithRoles>> GetUsersWithRoles()
+        {
+            var users = await UserManager.Users.ToListAsync();
+            var usersWithRoles = new List<UserWithRoles>();
+
+            foreach (var user in users)
+            {
+                var roles = await UserManager.GetRolesAsync(user);
+                usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+            }
+
+            return usersWithRoles;
+        }
+
+        private async Task<UserWithRoles?> GetCurrentUser()
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var userPrincipal = authState.User;
+            if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
+            {
+                var user = await UserManager.GetUserAsync(userPrincipal);
+                var roles = await UserManager.GetRolesAsync(user);
+
+                return new UserWithRoles
+                {
+                    User = user,
+                    Roles = roles
+                };
+            }
+            return null;
         }
 
         /// <summary>
@@ -25,7 +63,8 @@ namespace BudoShurenWebsite.Data
         /// <returns>The data collection's type is determined by how this method has been implemented.</returns>
         public override async Task<object> ReadAsync(DataManagerRequest dm, string Key = null)
         {
-            IEnumerable<ApplicationUser> DataSource = await UserManager.Users.ToListAsync();
+            IEnumerable<UserWithRoles> DataSource = await GetUsersWithRoles();
+
             int TotalRecordsCount = DataSource.Count();
 
             // Handling Searching in CustomAdaptor.
@@ -61,17 +100,57 @@ namespace BudoShurenWebsite.Data
         // Performs Update operation
         public override async Task<object> UpdateAsync(DataManager dm, object value, string keyField, string key)
         {
-            var user = await UserManager.FindByNameAsync((value as ApplicationUser)?.UserName);
-            //var data = Orders.Where(or => or.OrderID == (value as Order).OrderID).FirstOrDefault();
-            if (user != null && value is ApplicationUser valueUser)
+            if (value is UserWithRoles obj)
             {
-                user.Vorname = valueUser.Vorname;
-                user.Name = valueUser.Name;
-                user.Abteilung = valueUser.Abteilung;
+                var user = await UserManager.FindByNameAsync(obj.UserName);
+                if (user != null)
+                {
+                    user.Vorname = obj.Vorname;
+                    user.Name = obj.Name;
+                    user.Abteilung = obj.Abteilung;
 
-                await UserManager.UpdateAsync(user);
+                    if (obj.User.Verified && !user.Verified)
+                    {
+                        var currentUser = await GetCurrentUser();
+                        if (currentUser != null)
+                        {
+                            if (Global.Roles.IsAdmin(currentUser.Roles) || Global.Roles.IsAbteilungsleiter(currentUser.Roles))
+                            {
+                                user.Verified = obj.User.Verified;
+                                user.VerifiedAt = DateTime.Now;
+                                user.VerifiedBy = currentUser?.User?.UserName ?? "unbekannt";
+                            }
+                            else
+                                throw new Exception(currentUser?.User?.UserName + " hat nicht die Berechtigung Benutzer zu aktivieren!");
+                        }
+                    }
+
+
+                    await UserManager.UpdateAsync(user);
+
+                    //Rolle aktualisieren wenn geändert
+
+                    var roles = await UserManager.GetRolesAsync(user);
+                    if (roles != obj.Roles)
+                    {
+                        await UserManager.RemoveFromRolesAsync(user, roles);
+                        await UserManager.AddToRolesAsync(user, obj.Roles);
+                    }
+                }
             }
             return value;
+
+
+            //var data = Orders.Where(or => or.OrderID == (value as Order).OrderID).FirstOrDefault();
+            //if (user != null && value is ApplicationUser valueUser)
+            //{
+            //    user.Vorname = valueUser.Vorname;
+            //    user.Name = valueUser.Name;
+            //    user.Abteilung = valueUser.Abteilung;
+
+            //    await UserManager.UpdateAsync(user);
+            //}
+            //return value;
         }
 
         // Performs Remove operation

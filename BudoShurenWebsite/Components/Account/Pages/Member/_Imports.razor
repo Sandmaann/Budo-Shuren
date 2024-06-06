@@ -1,5 +1,6 @@
 ﻿@layout ManageLayout
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Aktiviert")]
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "NotGuest")]
 
 @* -- fügt dieses Attribut zu allen Pages in dem Ordner "Member" hinzu! *@
