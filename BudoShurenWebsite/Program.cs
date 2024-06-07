@@ -42,20 +42,24 @@ namespace BudoShurenWebsite
             builder.Services.AddServerSideBlazor(options => options.DetailedErrors = true);
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+            //Authentifizierung
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-            builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
+
+            //Meine Dienste
+            builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<FileService>();
 
             builder.Services.AddSingleton<IDataService, DataService>();
             builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
 
+            //Adapter für SfGrid
+            builder.Services.AddScoped<MitgliederAdaptor>();
+            builder.Services.AddScoped<NeuigkeitenAdaptor>();
 
-            //builder.Services.AddSingleton<OrderDataAccessLayer>();
-            builder.Services.AddScoped<CustomAdaptor>();
-            //builder.Services.AddScoped<ServiceClass>();
 
             builder.Services.AddAuthentication(options =>
             {
@@ -129,7 +133,7 @@ namespace BudoShurenWebsite
 
 
             //Nur für Release oder bei Migration wichtig
-            //MigrateDatabase(app);
+            MigrateDatabase(app);
 
             app.UseHttpsRedirection();
 
