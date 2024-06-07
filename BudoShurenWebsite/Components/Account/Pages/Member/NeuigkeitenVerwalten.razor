@@ -1,12 +1,252 @@
 ﻿@page "/Account/Member/Neuigkeiten"
+@rendermode InteractiveServer
+
+@inject UserService UserService
+@inject IdentityUserAccessor UserAccessor
+@inject IDataService DataService
+@inject FileService FileService
+
+@using BudoShurenWebsite.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore;
+
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Calendars
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
         <SectionBanner Titel="Neuigkeiten verwalten" />
-        <div></div>
+        <div class="-mx-8 md:mx-0">
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <StatusMessage ShowAsError="true" Message="@errorMessage" />
+            }
+
+            <SfGrid TValue="Neuigkeit" AllowSorting="true" AllowPaging="false" Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Search" })" Height="100%" Width="100%">
+                <SfDataManager AdaptorInstance="@typeof(NeuigkeitenAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                <GridEvents TValue="Neuigkeit" OnActionBegin="OnActionBeginHandler" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"></GridEvents>
+                <GridTemplates>
+                    <EmptyRecordTemplate>
+                        @if (IsLoading)
+                        {
+                            <Fließtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
+                        }
+                        else
+                        {
+                            <Fließtext Text="Anscheinend gibt es gerade keine Neuigkeiten!" />
+                        }
+                    </EmptyRecordTemplate>
+                </GridTemplates>
+                <GridEditSettings AllowAdding="@AllowEditing"
+                                  AllowEditing="@AllowEditing"
+                                  AllowDeleting="@AllowDeletion"
+                                  Mode="@EditMode.Dialog"
+                                  ShowDeleteConfirmDialog="true">
+                    <Template>
+                        @{
+                            var neuigkeit = context as Neuigkeit;
+                        }
+                        <div>
+                            <SfTextBox Placeholder="Titel"
+                                       FloatLabelType="FloatLabelType.Always"
+                                       @bind-Value="@neuigkeit.Titel"></SfTextBox>
+                            <ValidationMessage For="@(() => neuigkeit.Titel)" />
+
+                            <div class="">
+                                <SfTextBox Placeholder="Beschreibung"
+                                           FloatLabelType="FloatLabelType.Always"
+                                           Multiline=true
+                                           @bind-Value="@neuigkeit.Beschreibung"></SfTextBox>
+                                <ValidationMessage For="@(() => neuigkeit.Beschreibung)" />
+                            </div>
+                            <div>
+                                <SfTextBox Placeholder="Ort"
+                                           FloatLabelType="FloatLabelType.Always"
+                                           @bind-Value="@neuigkeit.Ort"></SfTextBox>
+                            </div>
+                            <div>
+                                <SfDateTimePicker Placeholder="Datum"
+                                                  FloatLabelType="FloatLabelType.Always"
+                                                  @bind-Value="@neuigkeit.Datum"></SfDateTimePicker>
+                            </div>
+                            <div>
+                                <SfNumericTextBox Placeholder="Sortierung"
+                                                  FloatLabelType="FloatLabelType.Always"
+                                                  TValue="int"
+                                                  @bind-Value="@neuigkeit.Sortierung"></SfNumericTextBox>
+                            </div>
+                            @if (IsAddNew)
+                            {
+                                <div class="mt-10">
+                                    <SfUploader @ref="sfUploader" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg" MaxFileSize=5242880 AllowMultiple=false>
+                                        <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
+                                        <UploaderEvents FileSelected="SelectHandler" Success="SuccessHandler" OnFailure="@OnFailureHandler" OnActionComplete="@OnActionCompleteHandler" BeforeUpload="@BeforeUploadHandler"></UploaderEvents>
+                                    </SfUploader>
+                                </div>
+                            }
+                        </div>
+                    </Template>
+                </GridEditSettings>
+
+                <GridColumns>
+                    <GridColumn Field=@nameof(Neuigkeit.ID) HeaderText="ID" IsPrimaryKey="true" AllowSearching="false" Width="25" Visible="false"></GridColumn>
+
+                    <GridColumn HeaderText="Vorschau" TextAlign="TextAlign.Center" Width="120" AllowEditing=false>
+                        <Template>
+                            @{
+                                var neuigkeit = context as Neuigkeit;
+
+                                <div class="image">
+                                    <img src="@(neuigkeit.DisplayPath)" alt="@neuigkeit.Titel" />
+                                </div>
+                            }
+                        </Template>
+                    </GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Titel) HeaderText="Titel" AllowSearching="true" Width="120" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules{ Required= true })"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules{ Required= true })"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Ort) HeaderText="Ort" AllowSearching="true" Width="100"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Datum) HeaderText="Datum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="true" Width="85"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Sortierung) HeaderText="Sort" AllowSearching="true" Width="55"></GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </div>
     </div>
 </div>
 
 @code {
+    private SfUploader sfUploader { get; set; }
 
+    private UserWithRoles? user = default!;
+
+    private bool AllowEditing { get; set; } = false;
+    private bool AllowDeletion { get; set; } = false;
+    private FileInfo? UploadedImage { get; set; }
+    private string errorMessage { get; set; } = string.Empty;
+    private bool IsLoading { get; set; } = false;
+
+    private Neuigkeit? SelectedEditNeuigkeit;
+
+    public bool IsAddNew { get; set; } = false;
+
+    private bool isUploading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
+
+        await base.OnInitializedAsync();
+
+        await UserService.InitializeAsync();
+        user = UserService.CurrentUser;
+
+        if (user != null)
+        {
+            if (Roles.IsAdmin(user.Roles))
+            {
+                AllowEditing = true;
+                AllowDeletion = true;
+            }
+            else if (Roles.IsAbteilungsleiter(user.Roles))
+            {
+                AllowEditing = true;
+                AllowDeletion = true;
+            }
+            else
+            {
+                AllowEditing = false;
+                AllowDeletion = false;
+            }
+        }
+    }
+
+    private async void OnActionBeginHandler(Syncfusion.Blazor.Grids.ActionEventArgs<Neuigkeit> args)
+    {
+        //Das muss passieren, bevor IsAddNew gesetz wird, damit ich weiß ob es vorher ein Add war. Erst danach IsAddNew aktualisieren.
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+        {
+            if (IsAddNew)
+            {
+                //wenn eine Datei hochgeladen wurde, diese löschen.
+                var files = await sfUploader.GetFilesDataAsync();
+                await sfUploader.RemoveAsync(files.ToArray());
+            }
+        }
+
+        IsAddNew = args.RequestType == Syncfusion.Blazor.Grids.Action.Add;
+        if (IsAddNew)
+        {
+            if (sfUploader != null)
+            {
+                await sfUploader.ClearAllAsync();
+            }
+            SelectedEditNeuigkeit = args.Data;
+        }
+    }
+    public void DataBoundHandler()
+    {
+        IsLoading = false;
+    }
+    public void OnLoadHandler()
+    {
+        IsLoading = true;
+    }
+
+    #region FileUploader
+
+    public void SelectHandler(SelectedEventArgs args)
+    {
+        string selectedfile = args.FilesData[0].Name;
+
+        foreach (var file in args.FilesData)
+        {
+            if (file == UploadedImage)
+            {
+                this.errorMessage = "Dieses Bild wurde bereits hochgeladen!";
+                return;
+            }
+        }
+        this.errorMessage = string.Empty;
+    }
+    public void SuccessHandler(SuccessEventArgs args)
+    {
+        UploadedImage = args.File;
+    }
+    private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
+    {
+        UploadedImage = null;
+    }
+    private async void OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
+    {
+        // Here, you can customize your code.
+        isUploading = false;
+        if (SelectedEditNeuigkeit != null)
+        {
+            var files = await sfUploader.GetFilesDataAsync();
+            var file = files.FirstOrDefault();
+            if (file != null)
+            {
+                var tempPath = FileService.GetTempFilePath(file);
+                SelectedEditNeuigkeit.TempFilePath = tempPath;
+            }
+        }
+
+        StateHasChanged();
+    }
+    private void BeforeUploadHandler(BeforeUploadEventArgs args)
+    {
+        // You can prevent uploading by setting "args.Cancel" to true.
+        isUploading = true;
+    }
+    #endregion
 }
+
+@* Für die Icons im SfGrid - damit der Text weg ist *@
+<style>
+    .e-grid .e-toolbar .e-tbar-btn-text,
+    .e-grid .e-toolbar .e-toolbar-items .e-toolbar-item .e-tbar-btn-text {
+        display: none;
+    }
+</style>

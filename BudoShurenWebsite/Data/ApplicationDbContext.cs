@@ -16,9 +16,16 @@ namespace BudoShurenWebsite.Data
             // Set the table name and unique index for the GalerieEintrag entity
             builder.Entity<GalerieEintrag>().ToTable("Galerie");
             builder.Entity<GalerieEintrag>().HasIndex(u => u.ID).IsUnique();
+
+            // Set the primary key for the GalerieEintrag entity
+            builder.Entity<Neuigkeit>().HasKey(u => u.ID);
+            // Set the table name and unique index for the GalerieEintrag entity
+            builder.Entity<Neuigkeit>().ToTable("Neuigkeiten");
+            builder.Entity<Neuigkeit>().HasIndex(u => u.ID).IsUnique();
         }
 
         public DbSet<GalerieEintrag> Galerie { get; set; }
+        public DbSet<Neuigkeit> Neuigkeiten { get; set; }
 
     }
 }

@@ -17,12 +17,24 @@
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
         <SectionBanner Titel="Mitglieder verwalten" />
-        @* <div style="position:relative;width:300px;min-height: 400px;border:solid 1px red"> *@
         <div class="-mx-8 md:mx-0">
             <SfGrid TValue="UserWithRoles" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })" Height="100%" Width="100%">
-                <SfDataManager AdaptorInstance="@typeof(CustomAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                <SfDataManager AdaptorInstance="@typeof(MitgliederAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
                 <GridPageSettings PageSize="20"></GridPageSettings>
                 <GridEditSettings AllowEditing="@AllowEditing" AllowDeleting="@AllowDeletion" Mode="@EditMode.Dialog" ShowDeleteConfirmDialog="true"/>
+                <GridEvents TValue="UserWithRoles" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"></GridEvents>
+                <GridTemplates>
+                    <EmptyRecordTemplate>
+                        @if (IsLoading)
+                        {
+                            <Fließtext Text="Es wird nach Mitgliedern gesucht..." />
+                        }
+                        else
+                        {
+                            <Fließtext Text="Hopla, wo sind denn alle hin?" />
+                        }
+                    </EmptyRecordTemplate>
+                </GridTemplates>
 
                 <GridColumns>
                     <GridColumn Field=@nameof(UserWithRoles.Verified) HeaderText="Aktiv" AllowSearching="true" Width="75" EditType="EditType.DropDownEdit">
@@ -35,12 +47,10 @@
                             </SfDropDownList>
                         </EditTemplate>
                     </GridColumn>
-
                     <GridColumn Field=@nameof(UserWithRoles.Vorname) HeaderText="Vorname" AllowSearching="true" Width="120"></GridColumn>
                     <GridColumn Field=@nameof(UserWithRoles.Name) HeaderText="Nachname" AllowSearching="true" Width="150"></GridColumn>
                     <GridColumn Field=@nameof(UserWithRoles.UserName) AllowEditing="false" AllowSearching="true" IsPrimaryKey="true" HeaderText="E-Mail Adresse" Width="150"></GridColumn>
                     <GridColumn Field="@nameof(UserWithRoles.EmailConfirmed)" HeaderText="Bestätigt" Width="90" AllowEditing="false" />
-
                     <GridColumn Field=@nameof(UserWithRoles.Abteilung) HeaderText="Abteilung" AllowSearching="true" Width="100" EditType="EditType.DropDownEdit">
                         <EditTemplate>
                             <SfDropDownList ID="Abteilung" TValue="string" TItem="string"
@@ -51,7 +61,6 @@
                             </SfDropDownList>
                         </EditTemplate>
                     </GridColumn>
-
                     <GridColumn Field=@nameof(UserWithRoles.Rolle) HeaderText="Rolle" AllowSearching="true" Width="120">
                         <EditTemplate>
                             <SfDropDownList ID="Rolle" TValue="string" TItem="string" Enabled="@AllowRoles"
@@ -68,13 +77,6 @@
     </div>
 </div>
 
-@* Für die Icons im SFGrid - damit der Text weg ist *@
-<style>
-    .e-grid .e-toolbar .e-tbar-btn-text,
-    .e-grid .e-toolbar .e-toolbar-items .e-toolbar-item .e-tbar-btn-text {
-        display: none;
-    }
-</style>
 
 
 @code {
@@ -88,6 +90,8 @@
     private bool AllowEditing { get; set; } = false;
     private bool AllowDeletion { get; set; } = false;
     private bool AllowRoles { get; set; } = false;
+
+    private bool IsLoading { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -116,4 +120,22 @@
             }
         }
     }
+
+    public void DataBoundHandler()
+    {
+        IsLoading = false;
+    }
+    public void OnLoadHandler()
+    {
+        IsLoading = true;
+    }
 }
+
+
+@* Für die Icons im SFGrid - damit der Text weg ist *@
+<style>
+    .e-grid .e-toolbar .e-tbar-btn-text,
+    .e-grid .e-toolbar .e-toolbar-items .e-toolbar-item .e-tbar-btn-text {
+        display: none;
+    }
+</style>

@@ -11,12 +11,12 @@ namespace BudoShurenWebsite.Data
     /// Implementing CustomAdaptor by extending the <see cref=“DataAdaptor”/> class.
     /// The Blazor DataGrid component support for custom data binding, which enables the binding and manipulation of data in a personalized way, using user-defined methods.
     /// </summary>
-    public class CustomAdaptor : DataAdaptor
+    public class MitgliederAdaptor : DataAdaptor
     {
         public UserManager<ApplicationUser> UserManager { get; set; }
         public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
 
-        public CustomAdaptor(UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider)
+        public MitgliederAdaptor(UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider)
         {
             UserManager = userManager;
             AuthenticationStateProvider = authenticationStateProvider;

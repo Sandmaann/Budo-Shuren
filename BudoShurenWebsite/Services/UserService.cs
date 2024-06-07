@@ -50,5 +50,11 @@ namespace BudoShurenWebsite.Services
 
             _currentUser = new UserWithRoles { User = currentUser, Roles = roles };
         }
+
+        public bool IsAdmin => Global.Roles.IsAdmin(CurrentUser.Roles);
+        public bool IsAbteilungsleiter => Global.Roles.IsAbteilungsleiter(CurrentUser.Roles);
+        public bool IsEditor => Global.Roles.IsEditor(CurrentUser.Roles);
+        public bool IsMitglied => Global.Roles.IsMitglied(CurrentUser.Roles);
+        public bool IsGast => Global.Roles.IsGast(CurrentUser.Roles);
     }
 }

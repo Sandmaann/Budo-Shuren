@@ -1,8 +1,10 @@
 ﻿@page "/"
-@rendermode InteractiveServer
+@* @rendermode InteractiveServer *@
 
 @using BudoShurenWebsite.Components.Shared
 @using BudoShurenWebsite.Components.Pages
+
+
 
 <PageTitle>Budo Shuren Dojo</PageTitle>
 
@@ -22,31 +24,10 @@
             </div>
         </section>
 
-        <div>
-            @if (IsLoading)
-            {
-                <div class="" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            }
-            else
-            {
-                <button @onclick="LoginAsync">Login</button>
-            }
-        </div>
-
         <section>
             <SectionBanner Titel="Wer sind wir" />
             <div class="font-ptsans text-sm font-normal tracking-wider text-black md:ml-52">
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
-                    Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe.
-                </p>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
-                    Das Dojo legt großen Wert auf die traditionellen Werte des Budo, wie Respekt, Disziplin und Selbstbeherrschung. Die Schüler werden ermutigt, nicht nur ihre körperlichen Fähigkeiten zu verbessern, sondern auch ihre geistige Stärke und emotionale Ausgeglichenheit zu entwickeln.Das Shuren Budo Dojo in Augsburg ist ein Ort, an dem Kampfkunst, Selbstverteidigung und persönliche Entwicklung im Mittelpunkt stehen. Geführt von erfahrenen Lehrern, bietet das Dojo eine Vielzahl von Trainingsmöglichkeiten für Menschen jeden Alters und jeder Erfahrungsstufe.
-                </p>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
-                    Das Dojo legt großen Wert auf die traditionellen Werte des Budo, wie Respekt.
-                </p>
+                <Fließtext Text="Das Budo Shuren Dojo ist ein einzigartiger Verein, der drei verschiedene Kampfkünste unter einem Dach vereint. Diese Kampfkünste sind Aikido, vertreten durch das Aiki Shuren Dojo, Genbukan, repräsentiert durch Genbukan Augsburg, und Bujinkan, vertreten durch das Bujinkan Busshin Dojo. Jede dieser Abteilungen trainiert ihre jeweilige Kunst individuell, aber alle profitieren von der starken Gemeinschaft innerhalb des Dojos." />
             </div>
         </section>
 
@@ -77,20 +58,4 @@
 
 
 @code {
-    bool Left { get; set; } = true;
-    private bool IsLoading { get; set; } = false;
-
-    private async Task LoginAsync()
-    {
-        // Show the busy indicator
-        IsLoading = true;
-
-        // Simulate a login process
-        await Task.Delay(2000); // Simulating some async login operation
-
-        // Hide the busy indicator after login process completes
-        IsLoading = false;
-
-        // Redirect or perform any other action after successful login
-    }
 }
