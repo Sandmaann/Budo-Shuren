@@ -21,7 +21,7 @@
             <SfGrid TValue="UserWithRoles" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })" Height="100%" Width="100%">
                 <SfDataManager AdaptorInstance="@typeof(MitgliederAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
                 <GridPageSettings PageSize="20"></GridPageSettings>
-                <GridEditSettings AllowEditing="@AllowEditing" AllowDeleting="@AllowDeletion" Mode="@EditMode.Dialog" ShowDeleteConfirmDialog="true"/>
+                <GridEditSettings AllowEditOnDblClick="@AllowEditing" AllowEditing="@AllowEditing" AllowDeleting="@AllowDeletion" Mode="@EditMode.Dialog" ShowDeleteConfirmDialog="true" />
                 <GridEvents TValue="UserWithRoles" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"></GridEvents>
                 <GridTemplates>
                     <EmptyRecordTemplate>

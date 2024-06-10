@@ -86,6 +86,8 @@ namespace BudoShurenWebsite.Data
                             neuigkeit.Beschreibung = obj.Beschreibung;
                             neuigkeit.Sortierung = obj.Sortierung;
                             neuigkeit.Ort = obj.Ort;
+                            neuigkeit.Link = obj.Link;
+                            neuigkeit.Linktext = obj.Linktext;
                             neuigkeit.Datum = obj.Datum;
                             neuigkeit.LastChange = DateTime.Now;
                             neuigkeit.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
@@ -122,7 +124,8 @@ namespace BudoShurenWebsite.Data
 
                             //Galerie-Eintrag erstellen
 
-                            var galeryItem = new GalerieEintrag{
+                            var galeryItem = new GalerieEintrag
+                            {
                                 Titel = obj.Titel,
                                 Beschreibung = obj.Beschreibung,
                                 ImagePath = obj.ImagePath,
@@ -170,6 +173,8 @@ namespace BudoShurenWebsite.Data
                         neuigkeit.Beschreibung = obj.Beschreibung;
                         neuigkeit.Sortierung = obj.Sortierung;
                         neuigkeit.Ort = obj.Ort;
+                        neuigkeit.Link = obj.Link;
+                        neuigkeit.Linktext = obj.Linktext;
                         neuigkeit.Datum = obj.Datum;
                         neuigkeit.LastChange = DateTime.Now;
                         neuigkeit.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
