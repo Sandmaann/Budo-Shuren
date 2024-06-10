@@ -43,6 +43,7 @@
                 <GridEditSettings AllowAdding="@AllowEditing"
                                   AllowEditing="@AllowEditing"
                                   AllowDeleting="@AllowDeletion"
+                                  AllowEditOnDblClick="@AllowEditing"
                                   Mode="@EditMode.Dialog"
                                   ShowDeleteConfirmDialog="true">
                     <Template>
@@ -66,6 +67,16 @@
                                 <SfTextBox Placeholder="Ort"
                                            FloatLabelType="FloatLabelType.Always"
                                            @bind-Value="@neuigkeit.Ort"></SfTextBox>
+                            </div>
+                            <div>
+                                <SfTextBox Placeholder="Link"
+                                           FloatLabelType="FloatLabelType.Always"
+                                           @bind-Value="@neuigkeit.Link"></SfTextBox>
+                            </div>
+                            <div>
+                                <SfTextBox Placeholder="Linktext (Anzeigetext)"
+                                           FloatLabelType="FloatLabelType.Always"
+                                           @bind-Value="@neuigkeit.Linktext"></SfTextBox>
                             </div>
                             <div>
                                 <SfDateTimePicker Placeholder="Datum"
