@@ -1,9 +1,7 @@
 ﻿@page "/"
-@* @rendermode InteractiveServer *@
 
 @using BudoShurenWebsite.Components.Shared
 @using BudoShurenWebsite.Components.Pages
-
 
 
 <PageTitle>Budo Shuren Dojo</PageTitle>
@@ -41,14 +39,14 @@
         <section>
             <SectionBanner Titel="Termine" />
             <div>
-                <Kalender />
+                <Kalender IsEditable="false" IsWochenansicht="false" Abteilung="Alle" />
             </div>
         </section>
 
         <section>
             <SectionBanner Titel="Bilder" />
             <div>
-                <Galerie />
+                <GalerieCarousel Typ="@GalerieTyp.Home" />
             </div>
         </section>
     </div>

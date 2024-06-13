@@ -26,3 +26,15 @@ window.saveScrollPositionOnUnload = function (dotnetHelper) {
         dotnetHelper.invokeMethodAsync("SaveScrollPosition", scrollPosition);
     });
 }
+
+window.addCapsLockEventListener = function () {
+    document.addEventListener('keydown', function (e) {
+        var isCapsLockEnabled = e.getModifierState ? e.getModifierState('CapsLock') : e.keyCode === 20;
+        var warningElement = document.getElementById('capsLockWarning');
+        if (isCapsLockEnabled) {
+            warningElement.style.display = 'block';
+        } else {
+            warningElement.style.display = 'none';
+        }
+    });
+};

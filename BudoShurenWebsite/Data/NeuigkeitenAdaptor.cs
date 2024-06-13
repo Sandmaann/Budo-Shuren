@@ -37,7 +37,7 @@ namespace BudoShurenWebsite.Data
 
 
             int TotalRecordsCount = DataSource.Count();
-
+            
             // Handling Searching in CustomAdaptor.
             if (dm.Search != null && dm.Search.Count > 0)
             {

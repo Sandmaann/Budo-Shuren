@@ -1,0 +1,202 @@
+﻿@rendermode InteractiveServer
+
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Buttons
+
+
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject IHostEnvironment Environment
+
+<div class="-mx-10 md:-mx-20">
+    @if (IsLoading)
+    {
+        <Spinner Text="Augenblick, wir bereiten die besten Bilder für dich vor!" />
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
+        }
+        else
+        {
+            if (GalerieEinträge.Any())
+            {
+                <SfCarousel ShowIndicators="true" AutoPlay="false">
+                    <ChildContent>
+                        @foreach (var eintrag in GalerieEinträge)
+                        {
+                            <CarouselItem>
+                                <figure class="mx-10 mb-10 md:mx-20 md:flex md:flex-row md:justify-between">
+                                    <div class="md:max-w-[440px]">
+                                        <img class="mx-auto max-h-96 md:max-h-112" src="@eintrag.DisplayPath" />
+                                    </div>
+                                    <div class="mt-5 md:w-[213px] md:relative md:mt-0">
+                                        <figcaption class="font-yuji text-3xl font-normal tracking-widest text-black">@eintrag.Titel</figcaption>
+
+                                        <div class="font-yuji mb-5 text-xl font-normal tracking-widest text-black">
+                                            @eintrag.Untertitel
+                                        </div>
+                                        <div class="md:absolute md:bottom-0">
+                                            <Fließtext Text="@eintrag.Beschreibung" />
+                                        </div>
+                                    </div>
+                                </figure>
+                            </CarouselItem>
+                        }
+                    </ChildContent>
+                    <IndicatorsTemplate>
+                        @{
+                            <div class="indicator">
+                                <div class="fs-6"></div>
+                            </div>
+                        }
+                    </IndicatorsTemplate>
+                    <PreviousButtonTemplate>
+                        <SfButton CssClass="e-flat e-outline nav-btn" title="Previous">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                                <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                            </svg>
+                        </SfButton>
+                    </PreviousButtonTemplate>
+                    <NextButtonTemplate>
+                        <SfButton CssClass="e-flat e-outline nav-btn" title="Next">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                                <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                            </svg>
+                        </SfButton>
+                    </NextButtonTemplate>
+                </SfCarousel>
+            }
+            else
+            {
+                <figure class="mx-10 mb-10 md:mx-20 md:flex md:flex-row md:justify-between">
+                    <div class="md:max-w-[440px]">
+                        <img class="mx-auto md:max-h-[650px]" src="/images/dojo1.jpg" />
+                    </div>
+                    <div class="md:w-[213px] md:relative">
+                        <figcaption class="font-yuji text-justify text-3xl font-normal tracking-widest text-black">Galerie</figcaption>
+
+                        <div class="font-yuji mb-5 text-justify text-xl font-normal tracking-widest text-black">
+                            Unser Dojo
+                        </div>
+                        <div class="font-ptsans text-sm font-normal tracking-wider text-black md:absolute md:bottom-0">
+                            Bildbeschreibungen, die den Betrachter erklären was er da genau sieht, beispielsweise eine Aufführung, oder anderweitige Events.
+                        </div>
+                    </div>
+                </figure>
+            }
+        }
+    }
+</div>
+
+<style>
+    .e-carousel .e-carousel-navigators .e-btn:active,
+    .e-carousel .e-carousel-navigators .e-btn:hover {
+        background-color: transparent !important;
+    }
+
+    .e-carousel .e-carousel-navigators .e-btn svg {
+        fill: none;
+        stroke: #2A6749;
+        stroke-linecap: square;
+        stroke-width: 2px;
+        height: 2rem;
+        vertical-align: middle;
+        width: 2rem;
+    }
+
+    .e-carousel .e-carousel-navigators .e-previous .e-btn svg {
+        transform: rotate(180deg);
+    }
+
+    .e-carousel .slide-content {
+        align-items: center;
+        display: flex;
+        font-size: 1.25rem;
+        height: 100%;
+        justify-content: center;
+    }
+
+    .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar .indicator {
+        background-color: #ECECEC;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        display: flex;
+        height: 6px;
+        justify-content: center;
+        margin: 0.5rem;
+        width: 24px;
+    }
+
+        .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar .indicator .fs-6 {
+            margin: auto;
+        }
+
+    .e-carousel .e-carousel-indicators .e-indicator-bars .e-indicator-bar.e-active .indicator {
+        background-color: #2A6749;
+        color: #fff;
+    }
+</style>
+
+
+@code {
+    [Parameter]
+    public GalerieTyp Typ { get; set; } = GalerieTyp.None;
+
+    private bool IsLoading { get; set; } = false;
+    private string ErrorMessage { get; set; } = string.Empty;
+    private IEnumerable<GalerieEintrag> GalerieEinträge { get; set; } = new List<GalerieEintrag>();
+    private bool firstRender = true;
+
+    private Guid ID = Guid.NewGuid();
+
+    private bool paramsSet = false;
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender && paramsSet)
+        {
+            await LoadData();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        paramsSet = true;
+        await base.OnParametersSetAsync();
+    }
+
+    private async Task LoadData()
+    {
+        if (IsLoading || paramsSet == false)
+            return;
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            using var context = DbContextFactory.CreateDbContext();
+
+            var data = await context.Galerie.Where(x => x.Öffentlich).ToListAsync();
+            data = data.Where(x => x.Typ.HasFlag(Typ)).ToList();
+
+
+            foreach (var item in data)
+                item.EnvironmentPath = Environment.ContentRootPath;
+            GalerieEinträge = data;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            IsLoading = false;
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+}

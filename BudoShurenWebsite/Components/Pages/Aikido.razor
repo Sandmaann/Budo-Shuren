@@ -5,9 +5,28 @@
     <Überschrift Titel="居合道"
                  Untertitel="Aikido"
                  Anekdote="" />
+</div>
 
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        <section>
+            <SectionBanner Titel="Das Training" />
+            <div>
+                <div>
+                    <Kalender Abteilung="Aikido" IsWochenansicht="true" />
+                </div>
+            </div>
+        </section>
+        <section>
+            <SectionBanner Titel="Galerie" />
+            <div>
+                <GalerieCarousel Typ="@GalerieTyp.Aikido" />
+            </div>
+        </section>
+
+    </div>
 </div>
 
 @code {
 
-}
+    }

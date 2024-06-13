@@ -10,7 +10,6 @@
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
-
         <div class="mx-auto my-20 w-36 md:-mt-10">
             <img src="/images/bujinkan/bujinkan_logo.jpg" />
         </div>
@@ -33,7 +32,7 @@
             <SectionBanner Titel="Das Training" />
             <div>
                 <div>
-                    <Kalender />
+                    <Kalender Abteilung="Bujinkan" IsWochenansicht="true" />
                 </div>
                 <div class="mt-12 justify-between md:flex md:flex-row">
                     <div class="md:w-52">
@@ -120,7 +119,7 @@
         <section>
             <SectionBanner Titel="Galerie" />
             <div>
-                <Galerie />
+                <GalerieCarousel Typ="@GalerieTyp.Bujinkan" />
             </div>
         </section>
     </div>

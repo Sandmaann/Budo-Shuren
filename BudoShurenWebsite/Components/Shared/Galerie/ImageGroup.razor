@@ -2,7 +2,6 @@
 
 <div>
     <button class="flex flex-row items-center" @onclick="SelectAll" aria-label="Alle auswählen">
-        @* @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")" *@
         <div class="m-2 ml-0 flex items-center overflow-hidden rounded-full bg-gray-600 transition-all duration-500 @(HasSelectedItems ? "w-auto opacity-100 mr-5" : "w-0 opacity-0")">
             <span class="material-symbols-outlined m-0.5 text-white">done</span>
         </div>

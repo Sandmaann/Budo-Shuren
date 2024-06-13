@@ -3,7 +3,7 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime jsRuntime
 
-<div class="z-20 font-yuji fixed start-0 top-0 w-full bg-white">
+<div class="font-yuji fixed start-0 top-0 z-50 w-full bg-white">
     <div class="mx-auto max-w-screen-xl md:flex md:justify-between md:items-center">
         <div class="flex flex-wrap items-center justify-between p-3 md:order-2">
             <div class="ml-6 flex flex-row md:hidden">
@@ -55,7 +55,7 @@
             //Geteilte Werte
             var basis = "transition-height ease-in-out duration-500 overflow-hidden";
             //Expanded-Werte, Höhe muss angegeben werden ansonsten greift die Transition nicht
-            var expanded = "h-[272px] " + basis;
+            var expanded = "h-[300px] " + basis;
             //Collapsed-Werte mit MediaQuery für Desktop
             var collapsed = "h-0 md:h-auto " + basis;
             //Sichtbarkeit der Nav-Bar je nach Button-Klick
@@ -109,6 +109,11 @@
                     <li class="nav-item px-3 py-1">
                         <NavLink href="/Kontakt" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                             Kontakt
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/Galerie" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Galerie
                         </NavLink>
                     </li>
                     <AuthorizeView>
@@ -195,7 +200,9 @@
             case "Verein":
                 Title = "Verein"; break;
             case "Kontakt":
-                Title = "Kontakt"; break;
+                Title = "Kontakt"; break;    
+                case "Galerie":
+                Title = "Galerie"; break;
             case "Account/Member":
                 Title = "Mitgliederbereich"; break;
             case "Account/Login":

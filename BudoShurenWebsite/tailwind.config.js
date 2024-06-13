@@ -11,6 +11,14 @@ module.exports = {
     theme: {
         // Erweitert das Theme um eigene Farben und Schriftarten
         extend: {
+            fontSize: {
+                '2xs': ['0.6rem', {
+                    lineHeight: '0.75rem',
+                    letterSpacing: '-0.01em',
+                    fontWeight: '400',
+                }],
+            },
+
             gridTemplateRows: {
                 // Simple 15 row grid
                 '15': 'repeat(15, minmax(0, 1fr))',

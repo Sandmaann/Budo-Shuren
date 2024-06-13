@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using BudoShurenWebsite.Global;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
 
 namespace BudoShurenWebsite
 {
@@ -56,9 +57,10 @@ namespace BudoShurenWebsite
             builder.Services.AddSingleton<IDataService, DataService>();
             builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
 
-            //Adapter für SfGrid
+            //Adapter für SfGrid & SfScheduler
             builder.Services.AddScoped<MitgliederAdaptor>();
             builder.Services.AddScoped<NeuigkeitenAdaptor>();
+            builder.Services.AddScoped<AppointmentAdaptor>();
 
 
             builder.Services.AddAuthentication(options =>
@@ -87,15 +89,22 @@ namespace BudoShurenWebsite
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             }
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString), optionsLifetime: ServiceLifetime.Singleton);
+
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
 
             builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddSignInManager()
-                .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders();
+
+            //services.AddDbContext<MyDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
 
             //builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
             //    .AddEntityFrameworkStores<ApplicationDbContext>()

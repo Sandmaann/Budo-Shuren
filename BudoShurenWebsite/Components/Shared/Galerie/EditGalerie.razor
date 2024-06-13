@@ -79,6 +79,12 @@
                         <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Abteilung*</label>
                         <div class="my-2">
                             <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                                <InputCheckbox @bind-Value="SelectedEintrag.Öffentlich" class="h-6 w-6" title="Öffentlich anzeigen" disabled="@isSaving" />
+                                <span class="ml-2 mt-0.5">Öffentlich</span>
+                            </label>
+                        </div>
+                        <div class="my-2">
+                            <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
                                 <InputCheckbox @bind-Value="SelectedEintrag.Home" class="h-6 w-6" title="In Home anzeigen" disabled="@isSaving" />
                                 <span class="ml-2 mt-0.5">Home</span>
                             </label>
@@ -218,14 +224,18 @@
         errorMessage = string.Empty;
         SelectedEintrag = new InputModel();
 
-        var files = await uploadObj.GetFilesDataAsync();
-        if (files.Any())
+        if (uploadObj != null)
         {
-            foreach (var file in files)
+
+            var files = await uploadObj.GetFilesDataAsync();
+            if (files.Any())
             {
-                await uploadObj.RemoveAsync(new FileInfo[] { file });
+                foreach (var file in files)
+                {
+                    await uploadObj.RemoveAsync(new FileInfo[] { file });
+                }
+                await uploadObj.ClearAllAsync();
             }
-            await uploadObj.ClearAllAsync();
         }
         uploadedFiles = new();
         fileCount = 0;
@@ -245,6 +255,7 @@
                         Beschreibung = dummy.Beschreibung,
                         Bujinkan = dummy.Bujinkan,
                         Genbukan = dummy.Genbukan,
+                        Öffentlich = dummy.Öffentlich,
                         Home = dummy.Home,
                         ImageCreatedBy = dummy.ImageCreatedBy,
                         ImageDate = dummy.ImageDate,
@@ -253,6 +264,7 @@
                         Iaido = dummy.Iaido,
                         Jodo = dummy.Jodo
                     };
+                StateHasChanged();
             }
         }
         else
@@ -507,6 +519,7 @@
                     item.Beschreibung = SelectedEintrag.Beschreibung;
                     item.ImageDate = SelectedEintrag.ImageDate;
                     item.ImageCreatedBy = SelectedEintrag.ImageCreatedBy;
+                    item.Öffentlich = SelectedEintrag.Öffentlich;
                     item.Home = SelectedEintrag.Home;
                     item.Aikido = SelectedEintrag.Aikido;
                     item.Bujinkan = SelectedEintrag.Bujinkan;
@@ -556,6 +569,7 @@
                     Beschreibung = SelectedEintrag.Beschreibung,
                     ImageDate = SelectedEintrag.ImageDate,
                     ImageCreatedBy = SelectedEintrag.ImageCreatedBy,
+                    Öffentlich = SelectedEintrag.Öffentlich,
                     Home = SelectedEintrag.Home,
                     Aikido = SelectedEintrag.Aikido,
                     Bujinkan = SelectedEintrag.Bujinkan,
@@ -673,6 +687,18 @@
             set
             {
                 imageDate = value;
+                Validate();
+            }
+        }
+
+
+        private bool öffentlich = false;
+        public bool Öffentlich
+        {
+            get => öffentlich;
+            set
+            {
+                öffentlich = value;
                 Validate();
             }
         }
