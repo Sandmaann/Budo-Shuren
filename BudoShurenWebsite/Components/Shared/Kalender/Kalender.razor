@@ -190,13 +190,13 @@
                 </div>
             </EditorTemplate>
             <DateHeaderTemplate>
-                <div class="font-yuji hidden text-center text-base font-normal">@(getDateHeaderTextDay((context as TemplateContext).Date))</div>
+                <div class="font-yuji hidden text-center text-base font-normal md:block">@(getDateHeaderTextDay((context as TemplateContext).Date))</div>
                 <div class="font-yuji text-center text-base font-normal md:hidden">@(getShortDateHeaderTextDay((context as TemplateContext).Date))</div>
-                <div class="font-yuji hidden text-center text-sm font-normal">@(getDateHeaderTextNumber((context as TemplateContext).Date))</div>
+                <div class="font-yuji hidden text-center text-sm font-normal md:block">@(getDateHeaderTextNumber((context as TemplateContext).Date))</div>
                 <div class="font-yuji text-center text-sm font-normal md:hidden">@(getShortDateHeaderTextNumber((context as TemplateContext).Date))</div>
             </DateHeaderTemplate>
             <MonthHeaderTemplate>
-                <div class="font-yuji hidden text-center text-base font-normal">@(getDateHeaderTextDay((context as TemplateContext).Date))</div>
+                <div class="font-yuji hidden text-center text-base font-normal md:block">@(getDateHeaderTextDay((context as TemplateContext).Date))</div>
                 <div class="font-yuji text-center text-base font-normal md:hidden">@(getShortDateHeaderTextDay((context as TemplateContext).Date))</div>
             </MonthHeaderTemplate>
         </ScheduleTemplates>

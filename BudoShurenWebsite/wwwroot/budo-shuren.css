@@ -1582,6 +1582,11 @@ video {
      object-fit: cover;
 }
 
+.object-fill {
+  -o-object-fit: fill;
+     object-fit: fill;
+}
+
 .\!p-0 {
   padding: 0px !important;
 }
@@ -2274,6 +2279,14 @@ video {
     margin-top: 10rem;
   }
 
+  .md\:mt-6 {
+    margin-top: 1.5rem;
+  }
+
+  .md\:mt-4 {
+    margin-top: 1rem;
+  }
+
   .md\:block {
     display: block;
   }
@@ -2372,6 +2385,10 @@ video {
 
   .md\:w-\[213px\] {
     width: 213px;
+  }
+
+  .md\:w-22 {
+    width: 5.5rem;
   }
 
   .md\:min-w-64 {

@@ -71,6 +71,7 @@ namespace BudoShurenWebsite
                 .AddIdentityCookies();
 
             Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
 
             var connectionString = string.Empty;
             if (builder.Environment.IsDevelopment())

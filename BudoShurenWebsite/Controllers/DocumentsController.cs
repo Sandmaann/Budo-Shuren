@@ -30,6 +30,9 @@ namespace BudoShurenWebsite.Controllers
                     break;
                 case "satzung":
                     filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents", "Satzung.pdf");
+                    break;    
+                case "prüfungsprogramm":
+                    filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents", "Prüfungsprogramm.pdf");
                     break;
                 default:
                     return NotFound("Das angeforderte Dokument wurde nicht gefunden.");
@@ -43,16 +46,5 @@ namespace BudoShurenWebsite.Controllers
             var fileName = Path.GetFileName(filePath);
             return PhysicalFile(filePath, contentType, fileName);
         }
-
-        //[HttpGet]
-        //public IActionResult GetDocument(string name)
-        //{
-        //    // do logic to create csv in memoryStream
-
-        //    return new FileStreamResult(memoryStream, "text/csv;charset=utf-8")
-        //    {
-        //        FileDownloadName = "products.csv",
-        //    };
-        //}
     }
 }
