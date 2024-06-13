@@ -2,7 +2,8 @@
 using BudoShurenWebsite.Models;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using static BudoShurenWebsite.Components.Account.Pages.Member.Galerie.EditGalerie;
+//using static BudoShurenWebsite.Components.Account.Pages.Member.Galerie.EditGalerie;
+using static BudoShurenWebsite.Components.Shared.Galerie.EditGalerie;
 
 namespace BudoShurenWebsite.Controllers
 {

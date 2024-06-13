@@ -3,15 +3,19 @@
 @using Syncfusion.Blazor.Navigations
 @using Syncfusion.Blazor.Buttons
 
-@inject ApplicationDbContext DbContext
+@* @inject ApplicationDbContext DbContext *@
 @inject IHostEnvironment Environment
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+
+
+
 
 <div class="-mx-10 md:-mx-20">
 
 
     @if (IsLoading)
     {
-        <Spinner Text="Einen Moment bitte!" />
+        <Spinner Text="Einen Moment, wir suche die neuesten Informationen zusammen." />
     }
     else
     {
@@ -137,7 +141,7 @@
     private IEnumerable<Neuigkeit> NeuigkeitenData { get; set; } = new List<Neuigkeit>();
     private bool firstRender = true;
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async void OnAfterRender(bool firstRender)
     {
         base.OnAfterRender(firstRender);
         if (firstRender)
@@ -148,6 +152,8 @@
 
     private async Task LoadNeuigkeiten()
     {
+        using var context = DbContextFactory.CreateDbContext();
+
         if (IsLoading)
             return;
         try
@@ -155,7 +161,7 @@
             IsLoading = true;
             StateHasChanged();
 
-            var data = await DbContext.Neuigkeiten.ToListAsync();
+            var data = await context.Neuigkeiten.ToListAsync();
             foreach (var item in data)
                 item.EnvironmentPath = Environment.ContentRootPath;
             NeuigkeitenData = data;
@@ -170,6 +176,5 @@
             IsLoading = false;
             StateHasChanged();
         }
-
     }
 }

@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Account\Pages\Member\Galerie\" />
     <Folder Include="Components\Account\Pages\Member\Verified\" />
     <Folder Include="Components\Shared\Inputs\" />
     <Folder Include="Models\Auth\" />

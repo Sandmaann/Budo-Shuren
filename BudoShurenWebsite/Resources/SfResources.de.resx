@@ -1510,7 +1510,7 @@
     <value>Warnen</value>
   </data>
   <data name="Schedule_AllDay" xml:space="preserve">
-    <value>Den ganzen Tag</value>
+    <value>den ganzen Tag</value>
   </data>
   <data name="Schedule_BeginFrom" xml:space="preserve">
     <value>Beginnen Sie von</value>
@@ -1600,7 +1600,7 @@
     <value>Zeitzone beenden</value>
   </data>
   <data name="Schedule_InvalidDateError" xml:space="preserve">
-    <value>Der eingegebene Datumswert ist ungültig.</value>
+    <value>Das eingegebene Datum ist ungültig.</value>
   </data>
   <data name="Schedule_Location" xml:space="preserve">
     <value>Ort</value>
@@ -1705,7 +1705,7 @@
     <value>Ende</value>
   </data>
   <data name="RecurrenceEditor_Every" xml:space="preserve">
-    <value>jeden</value>
+    <value>jede</value>
   </data>
   <data name="RecurrenceEditor_First" xml:space="preserve">
     <value>Zuerst</value>
@@ -1735,7 +1735,7 @@
     <value>Monat Woche</value>
   </data>
   <data name="RecurrenceEditor_Never" xml:space="preserve">
-    <value>noch nie</value>
+    <value>nie</value>
   </data>
   <data name="RecurrenceEditor_None" xml:space="preserve">
     <value>Keiner</value>
@@ -1765,7 +1765,7 @@
     <value>Monat (e)</value>
   </data>
   <data name="RecurrenceEditor_SummaryOn" xml:space="preserve">
-    <value>auf</value>
+    <value>an</value>
   </data>
   <data name="RecurrenceEditor_SummaryRepeat" xml:space="preserve">
     <value>Wiederholt</value>
@@ -1777,7 +1777,7 @@
     <value>bis um</value>
   </data>
   <data name="RecurrenceEditor_SummaryWeek" xml:space="preserve">
-    <value>Wochen)</value>
+    <value>Woche</value>
   </data>
   <data name="RecurrenceEditor_SummaryYear" xml:space="preserve">
     <value>Jahre)</value>
@@ -1792,7 +1792,7 @@
     <value>Wöchentlich</value>
   </data>
   <data name="RecurrenceEditor_Weeks" xml:space="preserve">
-    <value>Wochen)</value>
+    <value>Woche</value>
   </data>
   <data name="RecurrenceEditor_YearExpander" xml:space="preserve">
     <value>Year Expander</value>
@@ -1816,7 +1816,7 @@
     <value>Serie</value>
   </data>
   <data name="Schedule_SeriesChangeAlert" xml:space="preserve">
-    <value>Möchten Sie die an bestimmten Instanzen dieser Serie vorgenommenen Änderungen verwerfen und erneut mit der gesamten Serie abgleichen?</value>
+    <value>Soll der Serientermin alle Änderungen an einzelnen Terminen der Serie zurücksetzen und wieder mit der gesamten Serie abgleichen?</value>
   </data>
   <data name="Schedule_Start" xml:space="preserve">
     <value>Start</value>

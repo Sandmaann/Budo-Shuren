@@ -4,6 +4,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BudoShurenWebsite.Models
 {
+    [Flags]
+    public enum GalerieTyp
+    {
+        None = 0,
+        Home = 1,
+        Aikido = 2,
+        Bujinkan = 4,
+        Genbukan = 8,
+        Iaido = 16,
+        Jodo = 32
+    }
+
     public class GalerieEintrag
     {
         [Key]
@@ -12,6 +24,7 @@ namespace BudoShurenWebsite.Models
         public string? Untertitel { get; set; }
         public string? Beschreibung { get; set; }
 
+        public bool Öffentlich { get; set; }
         public bool Home { get; set; }
         public bool Aikido { get; set; }
         public bool Bujinkan { get; set; }
@@ -54,10 +67,32 @@ namespace BudoShurenWebsite.Models
 
         [NotMapped]
         public bool IsSelected { get; set; }
-        
+
         [NotMapped]
         public bool SelectionMode { get; set; }
 
+        [NotMapped]
+        public GalerieTyp Typ
+        {
+            get
+            {
+                GalerieTyp typ = GalerieTyp.None;
+
+                if(Home)
+                    typ |= GalerieTyp.Home;
+                if(Aikido)
+                    typ |= GalerieTyp.Aikido;
+                if (Bujinkan)
+                    typ |= GalerieTyp.Bujinkan;
+                if (Genbukan)
+                    typ |= GalerieTyp.Genbukan;
+                if (Iaido)
+                    typ |= GalerieTyp.Iaido;
+                if (Jodo)
+                    typ |= GalerieTyp.Jodo;
+                return typ;
+            }
+        }
         public bool IsValid()
         {
             if (!string.IsNullOrWhiteSpace(ImagePath))

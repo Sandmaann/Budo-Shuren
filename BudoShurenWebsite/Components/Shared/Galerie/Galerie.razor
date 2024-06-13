@@ -1,6 +1,5 @@
-﻿@page "/Account/Member/Galerie"
+﻿@page "/Galerie"
 @rendermode InteractiveServer
-
 
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using BudoShurenWebsite.Models;
@@ -21,7 +20,7 @@
         <div>
             <div class="mx-auto max-w-screen-md">
                 <div class="mx-10">
-                    <SectionBanner Titel="Galerie verwalten" />
+                    <SectionBanner Titel="Öffentliche Galerie" />
                 </div>
             </div>
 
@@ -63,7 +62,6 @@
                                             <MenuItems>
                                                 <MenuItem Text="@filterText" IconCss="e-icons e-filter">
                                                     <MenuItems>
-                                                        <MenuItem Text="Öffentlich" IconCss="@öffentlichCssImage"></MenuItem>
                                                         <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
                                                         <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
                                                         <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
@@ -77,21 +75,6 @@
                                             </MenuItems>
                                             <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
                                         </SfMenu>
-                                        @if (CanEdit)
-                                        {
-                                            <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
-                                                <MenuItems>
-                                                    <MenuItem Text="Bearbeiten" IconCss="e-icons e-menu">
-                                                        <MenuItems>
-                                                            <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
-                                                            <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
-                                                            <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
-                                                        </MenuItems>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                                <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
-                                            </SfMenu>
-                                        }
                                     </div>
 
                                     <div class="flex flex-row items-center md:hidden">
@@ -99,7 +82,6 @@
                                             <MenuItems>
                                                 <MenuItem Text="" IconCss="e-icons e-filter">
                                                     <MenuItems>
-                                                        <MenuItem Text="Öffentlich" IconCss="@öffentlichCssImage"></MenuItem>
                                                         <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
                                                         <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
                                                         <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
@@ -113,21 +95,6 @@
                                             </MenuItems>
                                             <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
                                         </SfMenu>
-                                        @if (CanEdit)
-                                        {
-                                            <SfMenu TValue="MenuItem" HamburgerMode="false" Title="" ShowItemOnClick="true">
-                                                <MenuItems>
-                                                    <MenuItem Text="" IconCss="e-icons e-menu">
-                                                        <MenuItems>
-                                                            <MenuItem Text="Ändern" IconCss="e-icons e-settings"></MenuItem>
-                                                            <MenuItem Text="Löschen" IconCss="e-icons e-cut"></MenuItem>
-                                                            <MenuItem Text="hochladen" IconCss="e-icons e-upload-1"></MenuItem>
-                                                        </MenuItems>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                                <MenuEvents TValue="MenuItem" OnOpen="onOpen" ItemSelected="functionItemSelected"></MenuEvents>
-                                            </SfMenu>
-                                        }
                                     </div>
                                 }
                                 else
@@ -137,7 +104,6 @@
                                             <MenuItems>
                                                 <MenuItem Text="@filterText" IconCss="e-icons e-filter">
                                                     <MenuItems>
-                                                        <MenuItem Text="Öffentlich" IconCss="@öffentlichCssImage"></MenuItem>
                                                         <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
                                                         <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
                                                         <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
@@ -157,7 +123,6 @@
                                             <MenuItems>
                                                 <MenuItem Text="" IconCss="e-icons e-filter">
                                                     <MenuItems>
-                                                        <MenuItem Text="Öffentlich" IconCss="@öffentlichCssImage"></MenuItem>
                                                         <MenuItem Text="Home" IconCss="@homeCssImage"></MenuItem>
                                                         <MenuItem Text="Aikido" IconCss="@aikidoCssImage"></MenuItem>
                                                         <MenuItem Text="Bujinkan" IconCss="@bujinkanCssImage"></MenuItem>
@@ -172,15 +137,6 @@
                                             <MenuEvents TValue="MenuItem" OnClose="onClose" OnOpen="onOpen" ItemSelected="itemSelected"></MenuEvents>
                                         </SfMenu>
                                     </div>
-                                    @if (CanEdit)
-                                    {
-                                        <button @onclick="BilderErstellen"
-                                                aria-label="Bilder hochladen"
-                                                class="font-yuji flex h-10 transform flex-row items-center justify-between px-4 text-center text-sm font-normal leading-tight tracking-widest text-black transition duration-150 ease-in-out active:scale-90">
-                                            <span class="material-symbols-outlined mr-2">upload</span>
-                                            <span class="hidden md:inline-block">hochladen</span>
-                                        </button>
-                                    }
                                 }
                             </div>
                         </div>
@@ -223,13 +179,6 @@
             </div>
         </div>
     </div>
-
-    <div id="slideover-container" class="invisible fixed inset-0 z-50 h-full w-full">
-        <div id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
-        <div onclick="" id="slideover" class="absolute right-0 h-full w-96 translate-x-full overflow-auto bg-white transition-all duration-300 ease-out">
-            <EditGalerie @ref="editGalerie" Einträge="@SelectedEinträge" OnClose="CloseSidebar" IsOpen="@SidebarIsVisible" />
-        </div>
-    </div>
 </div>
 
 <style>
@@ -246,8 +195,6 @@
 
 
 @code {
-    EditGalerie editGalerie;
-
     string suchtext = string.Empty;
     private string errorMessage { get; set; } = string.Empty;
     private string Suchtext { get => suchtext; set { if (value != suchtext) { suchtext = value; Suche(); } } }
@@ -274,9 +221,8 @@
     private bool iaido { get; set; } = false;
     private bool jodo { get; set; } = false;
     private bool home { get; set; } = false;
-    private bool öffentlich { get; set; } = false;
 
-    private bool hasfilter => aikido || bujinkan || genbukan || iaido || jodo || home || öffentlich;
+    private bool hasfilter => aikido || bujinkan || genbukan || iaido || jodo || home;
 
     private string filterText => hasfilter ? "Filter*" : "Filter";
 
@@ -286,35 +232,11 @@
     private string iaidoCssImage => iaido ? "e-icons e-check-large" : "e-icons";
     private string jodoCssImage => jodo ? "e-icons e-check-large" : "e-icons";
     private string homeCssImage => home ? "e-icons e-check-large" : "e-icons";
-    private string öffentlichCssImage => öffentlich ? "e-icons e-check-large" : "e-icons";
-
-    private bool CanEdit { get; set; } = false;
 
     bool cancelDropDownClose = false;
 
     bool iJustClosedYou_1 = false;
 
-    private async Task SetPermissions()
-    {
-        try
-        {
-            await UserService.InitializeAsync();
-            var user = UserService.CurrentUser;
-            if (Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles))
-            {
-                CanEdit = true;
-            }
-            else
-            {
-                CanEdit = false;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            CanEdit = false;
-        }
-    }
 
     private void onOpen(BeforeOpenCloseMenuEventArgs<MenuItem> args)
     {
@@ -333,28 +255,6 @@
         }
     }
 
-    private async void functionItemSelected(MenuEventArgs<MenuItem> args)
-    {
-        if (CanEdit == false)
-            return;
-        var selectedItem = args.Item.Text;
-
-        if (selectedItem != "Filter")
-        {
-            switch (selectedItem)
-            {
-                case "Ändern":
-                    await BilderBearbeiten();
-                    break;
-                case "Löschen":
-                    await BilderLöschen();
-                    break;
-                case "hochladen":
-                    await BilderErstellen();
-                    break;
-            }
-        }
-    }
     private void itemSelected(MenuEventArgs<MenuItem> args)
     {
         //Selected menu item
@@ -394,11 +294,6 @@
                     home = !home;
                     Suche();
                     break;
-                case "Öffentlich":
-                    cancelDropDownClose = true;
-                    öffentlich = !öffentlich;
-                    Suche();
-                    break;
                 case "Keine":
                     aikido = false;
                     bujinkan = false;
@@ -406,7 +301,6 @@
                     iaido = false;
                     jodo = false;
                     home = false;
-                    öffentlich = false;
                     cancelDropDownClose = false;
                     Suche();
                     break;
@@ -417,18 +311,6 @@
         }
         else
             cancelDropDownClose = false;
-    }
-
-    private async void CloseSidebar(bool result)
-    {
-        // SidebarIsVisible = !SidebarIsVisible;
-        await toggleSlideoverBlazor();
-        // SidebarIsVisible = false;
-        if (result)
-        {
-            //Daten neu laden um die neuen Bilder anzuzeigen
-            await LoadData();
-        }
     }
 
     private void SelectionChanged()
@@ -443,74 +325,6 @@
         }
     }
 
-    private async Task BilderBearbeiten()
-    {
-        var selectedEinträge = Einträge.Where(x => x.IsSelected)?.ToList();
-        if (selectedEinträge?.Any() == true)
-        {
-            SelectedEinträge = selectedEinträge;
-            await toggleSlideoverBlazor();
-            await editGalerie.Clear();
-            editGalerie.SetData(SelectedEinträge);
-
-        }
-    }
-
-    private async Task BilderErstellen()
-    {
-        if (CanEdit == false)
-            return;
-
-        SelectedEinträge = new List<GalerieEintrag>();
-        await toggleSlideoverBlazor();
-        await editGalerie.Clear();
-        editGalerie.SetData(SelectedEinträge);
-    }
-
-
-
-    private async Task BilderLöschen()
-    {
-        var selectedItems = Einträge.Where(x => x.IsSelected).ToList();
-        if (selectedItems.Count == 0)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Keine Bilder ausgewählt.");
-            return;
-        }
-
-        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Möchten Sie alle {selectedItems.Count} ausgewählten Bilder wirklich löschen?");
-        bool error = false;
-        if (confirm)
-        {
-            foreach (var item in selectedItems)
-            {
-                var dbItem = await DbContext.Galerie.FindAsync(item.ID);
-                if (dbItem != null)
-                {
-                    try
-                    {
-                        DbContext.Galerie.Remove(dbItem);
-                        await DbContext.SaveChangesAsync();
-
-                        //Datei löschen!
-                        if (!string.IsNullOrWhiteSpace(dbItem.ImagePath) && File.Exists(dbItem.ImagePath))
-                            File.Delete(dbItem.ImagePath);
-                    }
-                    catch (Exception e)
-                    {
-                        //TODO Logging
-                        error = true;
-                    }
-                }
-            }
-            await LoadData();
-            if (error)
-            {
-                await JSRuntime.InvokeVoidAsync("alert", "Einige Bilder konnten nicht gelöscht werden.");
-            }
-        }
-    }
-
     private void auswahlAufheben()
     {
         Einträge?.ForEach(x => x.IsSelected = false);
@@ -521,9 +335,9 @@
     {
         IEnumerable<GalerieEintrag> gefilterteEinträge;
         if (string.IsNullOrWhiteSpace(Suchtext) &&
-        !aikido && bujinkan && !genbukan && !iaido && !jodo && !home && !öffentlich)
+        !aikido && bujinkan && !genbukan && !iaido && !jodo && !home)
         {
-            gefilterteEinträge = Einträge;
+            gefilterteEinträge = Einträge.Where(x => x.Öffentlich);
             // // Wenn der Suchtext leer ist, zeigen Sie alle Einträge an
             // Gruppen = Einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
         }
@@ -532,7 +346,7 @@
             // Wenn der Suchtext nicht leer ist, filtern Sie die Einträge
 
             // bool aikido = Suchtext.Contains("aikido", StringComparison.OrdinalIgnoreCase);
-            gefilterteEinträge = Einträge;
+            gefilterteEinträge = Einträge.Where(x => x.Öffentlich);
 
             if (!string.IsNullOrWhiteSpace(suchtext))
             {
@@ -564,10 +378,6 @@
             if (home)
             {
                 gefilterteEinträge = gefilterteEinträge.Where(x => x.Home);
-            }   
-            if (öffentlich)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Öffentlich);
             }
         }
 
@@ -596,7 +406,7 @@
 
             await Task.Delay(10);
 
-            var einträge = await DbContext.Galerie.ToListAsync();
+            var einträge = await DbContext.Galerie.Where(x => x.Öffentlich).ToListAsync();
             einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
 
             var groups = einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
@@ -631,7 +441,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        await SetPermissions();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -673,18 +482,7 @@
         }
     }
 
-    public string[] suchdata = { "Aikido", "Bujinkan", "Genbukan", "Iaido", "Jodo", "Home", "Öffentlich" };
-
-    private async Task toggleSlideoverBlazor()
-    {
-        SidebarIsVisible = !SidebarIsVisible;
-        // if (SidebarIsVisible == false && await editGalerie.CanClose())
-        if (SidebarIsVisible == true || await editGalerie.CanClose())
-        {
-            await editGalerie.Clear();
-            await JSRuntime.InvokeVoidAsync("toggleSlideover");
-        }
-    }
+    public string[] suchdata = { "Aikido", "Bujinkan", "Genbukan", "Iaido", "Jodo", "Home" };
 
 
 

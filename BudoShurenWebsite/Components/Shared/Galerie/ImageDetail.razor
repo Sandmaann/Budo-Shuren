@@ -15,8 +15,8 @@
                 <span class="material-symbols-outlined m-2 text-white">arrow_back</span>
             </button>
         </div>
-        <div class="max-h-full max-w-full flex-grow self-center object-cover">
-            <img src="@ImagePath" class="mx-auto max-h-full max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
+        <div class="max-h-[95vh] max-w-full flex-grow self-center object-cover">
+            <img src="@ImagePath" class="max-h-[95vh] mx-auto max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
         </div>
         @if (CanEdit)
         {
@@ -164,7 +164,7 @@
         {
             await UserService.InitializeAsync();
             var user = UserService.CurrentUser;
-            if (Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles))
+            if (user != null && ( Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles)))
             {
                 CanEdit = true;
             }

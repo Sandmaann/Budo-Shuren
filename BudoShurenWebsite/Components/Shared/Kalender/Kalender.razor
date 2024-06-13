@@ -1,0 +1,515 @@
+﻿@rendermode InteractiveServer
+
+@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Buttons
+@using System.Globalization
+@inject IDataService DataService
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject UserService UserService
+
+<div class="font-ptsans -mx-10 lg:-mx-32 md:mx-0">
+    <SfSchedule @ref="scheduleObj"
+                CssClass="schedule-cell-dimension"
+                TValue="AppointmentData"
+                Height="694px"
+                Readonly="@(AllowEditing == false)"
+                @bind-SelectedDate="@CurrentDate"
+                ShowQuickInfo="@(!IsEditable)"
+                AllowMultiCellSelection="false"
+                AllowResizing="false"
+                AllowDragAndDrop="false"
+                CurrentViewChanged="@OnCurrentViewChanged"
+                ShowTimeIndicator="false">
+        <ScheduleQuickInfoTemplates TemplateType="TemplateType.Event">
+            <HeaderTemplate>
+                @{
+                    var appointment = context as AppointmentData;
+                }
+                <div>
+                    <div class="flex flex-row justify-between rounded p-2" style="background:@(appointment.Color)">
+                        <p class="font-yuji text-xl font-normal tracking-widest text-white md:text-2xl">
+                            @appointment.Subject
+                        </p>
+                        <button class="bg-transparent text-white" @onclick="CloseQuickInfo">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                </div>
+            </HeaderTemplate>
+            <FooterTemplate>
+                @if (Permission && IsEditable)
+                {
+                    <div class="flex flex-row justify-end gap-2">
+                        <SfButton Content="Bearbeiten" IsPrimary="true" OnClick="@(e => OnBearbeitenClick(e, context as AppointmentData))"></SfButton>
+                        <SfButton Content="Löschen" OnClick="@(e => OnDeleteClick(e, context as AppointmentData))"></SfButton>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <div class="">Abteilung: @((context as AppointmentData).Abteilung)</div>
+                    </div>
+                }
+            </FooterTemplate>
+        </ScheduleQuickInfoTemplates>
+        <ScheduleViews>
+            @if (IsWochenansicht == true || IsEditable)
+            {
+                <ScheduleView Option="View.Week"
+                              StartHour="14:00"
+                              EndHour="22:00"
+                              FirstDayOfWeek="1">
+                    <EventTemplate>
+                        @{
+                            var appointment = context as AppointmentData;
+                        }
+                        <div class="template-wrap" style="background:@(appointment.Color)">
+                            @if (appointment.IsAllDay)
+                            {
+                                <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm lg:text-base md:px-2">@appointment.Subject</div>
+                            }
+                            else
+                            {
+                                if (MoreThanHalfAnHour(appointment.StartTime, appointment.EndTime))
+                                {
+                                    <div class="font-ptsans text-2xs hidden text-balance px-0 pb-0.5 pt-1 text-center font-bold tracking-wider text-white md:px-1 md:text-2xs lg:text-xs md:pt-1.5 md:block">@GetTimeString(appointment.StartTime) - @GetTimeString(appointment.EndTime)</div>
+                                    <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm lg:text-base md:px-2">@appointment.Subject</div>
+                                    <div class="font-ptsans text-2xs text-balance px-1 font-bold tracking-wide text-white md:px-2 md:py-1 md:text-xs">@appointment.Description</div>
+                                }
+                                else
+                                {
+                                    <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm lg:text-base md:px-2">@appointment.Subject</div>
+                                }
+                            }
+                        </div>
+                    </EventTemplate>
+                </ScheduleView>
+            }
+            @if (IsWochenansicht == false || IsEditable)
+            {
+                <ScheduleView Option="View.Month"
+                              FirstDayOfWeek="1"
+                              MaxEventsPerRow="3">
+                    <EventTemplate>
+                        @{
+                            var appointment = context as AppointmentData;
+                        }
+                        <div class="template-wrap" style="background:@(appointment.Color)">
+                            @if (appointment.IsAllDay)
+                            {
+                                <div class="my-auto">
+                                    <span class="font-ptsans px-1 text-xs font-bold tracking-wide text-white">@appointment.Subject</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="my-auto">
+                                    <span class="font-ptsans hidden px-1 text-xs font-normal tracking-wide text-white md:inline">@GetTimeString(appointment.StartTime)</span>
+                                    <span class="font-ptsans text-2xs break-all px-1 font-bold tracking-wide text-white md:text-xs">@appointment.Subject</span>
+                                </div>
+                            }
+                        </div>
+                    </EventTemplate>
+                </ScheduleView>
+            }
+        </ScheduleViews>
+        <ScheduleEventSettings TValue="AppointmentData" AllowAdding="@AllowEditing" AllowDeleting="@AllowEditing" AllowEditing="@AllowEditing" AllowEditFollowingEvents="false">
+            <SfDataManager Adaptor="Adaptors.CustomAdaptor">
+                <AppointmentAdaptorComponent Abteilung="@Abteilung" IsWeek="@IsWochenansicht"></AppointmentAdaptorComponent>
+            </SfDataManager>
+        </ScheduleEventSettings>
+
+        <ScheduleTemplates>
+            <EditorTemplate>
+                @{
+                    var appointment = context as AppointmentData;
+                }
+                <div>
+                    <SfTextBox Placeholder="Termin"
+                               FloatLabelType="FloatLabelType.Always"
+                               @bind-Value="@(appointment.Subject)"></SfTextBox>
+                    <ValidationMessage For="@(() => appointment.Subject)" />
+                    <div>
+                        <SfDropDownList ID="Abteilung"
+                                        DataSource="@Abteilungen"
+                                        Placeholder="Abteilung"
+                                        @bind-Value="@(appointment.Abteilung)"
+                                        FloatLabelType="FloatLabelType.Always">
+                            <DropDownListFieldSettings Value="Name"></DropDownListFieldSettings>
+                        </SfDropDownList>
+                        <ValidationMessage For="@(() => appointment.Abteilung)" />
+                    </div>
+                    <div>
+                        <SfDateTimePicker Placeholder="Start"
+                                          FloatLabelType="FloatLabelType.Always"
+                                          @bind-Value="@(appointment.StartTime)"></SfDateTimePicker>
+                        <ValidationMessage For="@(() => appointment.StartTime)" />
+                    </div>
+                    <div>
+                        <SfDateTimePicker Placeholder="Ende"
+                                          FloatLabelType="FloatLabelType.Always"
+                                          @bind-Value="@(appointment.EndTime)"></SfDateTimePicker>
+                        <ValidationMessage For="@(() => appointment.EndTime)" />
+                    </div>
+                    <div class="my-5 flex flex-col gap-4 md:flex-row">
+                        <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                            <InputCheckbox @bind-Value="@appointment.IsAllDay" class="h-6 w-6" />
+                            <span class="ml-2 mt-0.5">Ganzer Tag</span>
+                        </label>
+                    </div>
+                    <div class="my-5 flex flex-col gap-4 md:flex-row">
+                        <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                            <InputCheckbox @bind-Value="@appointment.AlternativeColor" class="h-6 w-6" />
+                            <span class="ml-2 mt-0.5">Alternative Farbe verwenden</span>
+                        </label>
+                    </div>
+                    <div class="my-5 flex flex-col gap-4 md:flex-row">
+                        <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                            <InputCheckbox @bind-Value="@appointment.ShowInWeek" class="h-6 w-6" />
+                            <span class="ml-2 mt-0.5">Wochenkalender</span>
+                        </label>
+                        <label class="font-ptsans tracking-[0.375rem] flexrow flex items-center text-sm font-normal leading-tight text-black">
+                            <InputCheckbox @bind-Value="@appointment.ShowInMonth" class="h-6 w-6" />
+                            <span class="ml-2 mt-0.5">Monatskalender</span>
+                        </label>
+                    </div>
+                    @if (!string.IsNullOrEmpty(appointment.CustomErrorMessage))
+                    {
+                        <div class="text-error" role="alert">@appointment.CustomErrorMessage</div>
+                    }
+                    <div>
+                        <SfTextBox Placeholder="Beschreibung"
+                                   FloatLabelType="FloatLabelType.Always"
+                                   Multiline="true"
+                                   @bind-Value="@(appointment.Description)"></SfTextBox>
+                        <ValidationMessage For="@(() => appointment.Description)" />
+                    </div>
+                    <div>
+                        <SfRecurrenceEditor @bind-Value="@(appointment.RecurrenceRule)"></SfRecurrenceEditor>
+                    </div>
+                </div>
+            </EditorTemplate>
+            <DateHeaderTemplate>
+                <div class="font-yuji hidden text-center text-base font-normal">@(getDateHeaderTextDay((context as TemplateContext).Date))</div>
+                <div class="font-yuji text-center text-base font-normal md:hidden">@(getShortDateHeaderTextDay((context as TemplateContext).Date))</div>
+                <div class="font-yuji hidden text-center text-sm font-normal">@(getDateHeaderTextNumber((context as TemplateContext).Date))</div>
+                <div class="font-yuji text-center text-sm font-normal md:hidden">@(getShortDateHeaderTextNumber((context as TemplateContext).Date))</div>
+            </DateHeaderTemplate>
+            <MonthHeaderTemplate>
+                <div class="font-yuji hidden text-center text-base font-normal">@(getDateHeaderTextDay((context as TemplateContext).Date))</div>
+                <div class="font-yuji text-center text-base font-normal md:hidden">@(getShortDateHeaderTextDay((context as TemplateContext).Date))</div>
+            </MonthHeaderTemplate>
+        </ScheduleTemplates>
+    </SfSchedule>
+</div>
+
+<style>
+
+    .e-schedule .e-vertical-view .e-left-indent {
+        width: 45px;
+    }
+
+    .e-schedule .e-vertical-view .e-time-cells-wrap table td {
+        background: transparent;
+        font-family: Yuji Syuku;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: #2A6749;
+        /* color: #2A6749; */
+    }
+
+    .e-schedule .e-vertical-view .e-header-cells.e-current-day {
+        color: #2A6749;
+        text-underline-offset: 0.2rem;
+        text-decoration: underline;
+    }
+
+
+    .e-schedule .e-month-view .e-date-header-wrap table td.e-current-day, .e-schedule .e-month-agenda-view .e-date-header-wrap table td.e-current-day {
+        color: #2A6749;
+        text-underline-offset: 0.2rem;
+        text-decoration: underline;
+    }
+
+    .e-schedule .e-month-view .e-date-header {
+        font-family: PT Sans;
+    }
+
+    .e-schedule .e-month-view .e-current-date .e-date-header, .e-schedule .e-month-agenda-view .e-current-date .e-date-header {
+        background: #2A6749;
+        color: white;
+    }
+
+    .e-schedule .e-schedule-toolbar .e-tbar-btn .e-tbar-btn-text {
+        font-family: PT Sans;
+    }
+
+    .e-toolbar .e-toolbar-pop .e-toolbar-item .e-tbar-btn.e-btn .e-tbar-btn-text {
+        font-family: PT Sans;
+    }
+
+    .e-schedule.e-device .e-schedule-toolbar .e-tbar-btn .e-tbar-btn-text {
+        font-family: PT Sans;
+    }
+
+    .e-schedule .e-schedule-toolbar .e-toolbar-items .e-toolbar-item.e-date-range .e-tbar-btn .e-tbar-btn-text {
+        font-family: PT Sans;
+    }
+
+    .schedule-cell-dimension.e-schedule .e-vertical-view .e-time-cells-wrap table td,
+    .schedule-cell-dimension.e-schedule .e-vertical-view .e-work-cells {
+        height: 35px;
+    }
+
+    .schedule-cell-dimension.e-schedule .e-month-view .e-work-cells {
+        height: 35px;
+    }
+
+    .e-schedule .e-vertical-view .e-all-day-appointment-wrapper .e-appointment {
+        padding: 0;
+        background: transparent;
+        border: 0;
+    }
+
+    .e-schedule .e-vertical-view .e-day-wrapper .e-appointment {
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        background: transparent;
+        border: 0;
+    }
+
+    .e-bigger .e-more-popup-wrapper .e-appointment, .e-more-popup-wrapper .e-appointment {
+        background: transparent;
+    }
+
+        .e-bigger .e-more-popup-wrapper .e-appointment .e-recurrence-icon, .e-bigger .e-more-popup-wrapper .e-appointment .e-recurrence-edit-icon, .e-more-popup-wrapper .e-appointment .e-recurrence-icon, .e-more-popup-wrapper .e-appointment .e-recurrence-edit-icon {
+            width: 0;
+            padding: 0;
+        }
+
+    .e-schedule .e-month-view .e-appointment {
+        background: transparent;
+    }
+
+        .e-schedule .e-month-view .e-appointment .e-appointment-details .e-recurrence-icon {
+            width: 0;
+            padding: 0;
+        }
+
+    .e-appointment {
+        border: 0;
+        padding: 0;
+        margin: 0;
+    }
+
+    .e-all-day-appointment-wrapper .e-appointment {
+        height: 100%;
+        width: 100%;
+    }
+
+    .e-appointment-details {
+        height: 100%;
+        width: 100%;
+        padding: 0;
+    }
+
+    .e-schedule .e-vertical-view .e-all-day-appointment-wrapper .e-appointment .e-appointment-details {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+
+    .e-schedule .e-vertical-view -e-content-wrap .e-appointment .e-appointment-details {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+
+    .e-schedule .e-appointment .template-wrap {
+        height: 100%;
+        width: 100%;
+        white-space: normal;
+    }
+</style>
+
+@code {
+    private SfSchedule<AppointmentData> scheduleObj;
+
+    DateTime CurrentDate = DateTime.Today;
+    private bool IsLoading { get; set; } = false;
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private List<Abteilung> Abteilungen = new List<Abteilung>()
+    {
+        new Abteilung() { ID= "Verein", Name= "Verein", Abteilungsleiter = "" },
+        new Abteilung() { ID= "Aikido", Name= "Aikido", Abteilungsleiter = "Björn Rosenstiel﻿﻿" },
+        new Abteilung() { ID= "Bujinkan", Name= "Bujinkan", Abteilungsleiter = "Johannes Schiebl" },
+        new Abteilung() { ID= "Genbukan", Name= "Genbukan", Abteilungsleiter = "Henry Schubert" },
+    };
+
+    [Parameter]
+    public string? Abteilung { get; set; }
+    [Parameter]
+    public bool IsEditable { get; set; } = false;
+
+    [Parameter]
+    public bool? IsWochenansicht { get; set; }
+
+    private bool? WochenansichtEinstellung
+    {
+        get
+        {
+            if (CurrentView == View.Week)
+                return true;
+            else if (CurrentView == View.Month)
+                return false;
+            return null;
+        }
+    }
+
+    private void OnCurrentViewChanged(View view)
+    {
+        if (view == View.Week)
+            IsWochenansicht = true;
+        else if (view == View.Month)
+            IsWochenansicht = false;
+        else
+            IsWochenansicht = null;
+        // CurrentView = args.CurrentView;
+    }
+
+
+    private bool Permission { get; set; } = false;
+
+    private bool AllowEditing => IsEditable && Permission;
+
+    private View CurrentView { get; set; }
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        return base.SetParametersAsync(parameters);
+
+        if (IsWochenansicht == true)
+            CurrentView = View.Week;
+        else if (IsWochenansicht == false)
+            CurrentView = View.Month;
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            await SetPermissions();
+            if (scheduleObj != null)
+            {
+                // await scheduleObj.RefreshAsync();
+            }
+        }
+    }
+
+    private async Task SetPermissions()
+    {
+        await UserService.InitializeAsync();
+        if (UserService.IsAbteilungsleiter || UserService.IsEditor || UserService.IsAdmin)
+        {
+            Permission = true;
+        }
+        else
+        {
+            Permission = false;
+        }
+        StateHasChanged();
+
+        var e = AllowEditing;
+    }
+
+    private async void CloseQuickInfo()
+    {
+        if(this.scheduleObj != null)
+        {
+            await scheduleObj.CloseQuickInfoPopupAsync();
+        }
+    }
+
+    public static bool MoreThanHalfAnHour(DateTime start, DateTime ende)
+    {
+        if (ende.Subtract(start).TotalMinutes > 30)
+        {
+            return true;
+            // return "absolute";
+        }
+        else
+        {
+            return false;
+            // return "hidden";
+        }
+    }
+    private async void OnDeleteClick(MouseEventArgs args, AppointmentData data)
+    {
+        await scheduleObj.CloseQuickInfoPopupAsync();
+
+        if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+        {
+            await UserService.InitializeAsync();
+            await scheduleObj.DeleteEventAsync(data);
+        }
+    }
+    private async void OnBearbeitenClick(MouseEventArgs args, AppointmentData data)
+    {
+        await scheduleObj.CloseQuickInfoPopupAsync();
+
+        await UserService.InitializeAsync();
+        if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+        {
+            string abteilung;
+            if (Abteilung == "Alle")
+                abteilung = string.Empty;
+            else
+                abteilung = Abteilung;
+
+            AppointmentData eventData = new AppointmentData
+                {
+                    Id = data.Id,
+                    Subject = data.Subject,
+                    Location = data.Location,
+                    Description = data.Description,
+                    StartTime = data.StartTime,
+                    EndTime = data.EndTime,
+                    IsAllDay = data.IsAllDay,
+                    Abteilung = abteilung,
+                    RecurrenceException = data.RecurrenceException,
+                    RecurrenceID = data.RecurrenceID,
+                    RecurrenceRule = data.RecurrenceRule
+                };
+            await scheduleObj.OpenEditorAsync(eventData, CurrentAction.Save);
+        }
+    }
+
+    public static string GetTimeString(DateTime date)
+    {
+        return date.ToString("HH:mm", CultureInfo.InvariantCulture);
+    }
+    public static string getDateHeaderTextDay(DateTime date)
+    {
+        return date.ToString("dddd", CultureInfo.CurrentCulture);
+    }
+    public static string getShortDateHeaderTextDay(DateTime date)
+    {
+        return date.ToString("ddd", CultureInfo.CurrentCulture);
+    }
+    public static string getDateHeaderTextNumber(DateTime date)
+    {
+        return date.ToString("dd. MM.", CultureInfo.CurrentCulture);
+    }
+    public static string getShortDateHeaderTextNumber(DateTime date)
+    {
+        return date.ToString("dd", CultureInfo.CurrentCulture);
+    }
+    public static bool IsHalfHour(DateTime start, DateTime end)
+    {
+        return end.Subtract(start).TotalMinutes <= 30;
+    }
+}

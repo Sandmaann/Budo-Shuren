@@ -43,12 +43,20 @@ namespace BudoShurenWebsite.Services
             if (_current != null)
                 return;
             var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-            _current = authState.User;
+            if (authState.User.Identity.IsAuthenticated)
+            {
 
-            var currentUser = await _userManager.GetUserAsync(_current);
-            var roles = await _userManager.GetRolesAsync(currentUser);
+                _current = authState.User;
 
-            _currentUser = new UserWithRoles { User = currentUser, Roles = roles };
+                var currentUser = await _userManager.GetUserAsync(_current);
+                var roles = await _userManager.GetRolesAsync(currentUser);
+
+                _currentUser = new UserWithRoles { User = currentUser, Roles = roles };
+            }
+            else
+            {
+                _currentUser = new UserWithRoles();
+            }
         }
 
         public bool IsAdmin => Global.Roles.IsAdmin(CurrentUser.Roles);
