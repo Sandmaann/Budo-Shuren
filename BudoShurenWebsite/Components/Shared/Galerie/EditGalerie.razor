@@ -241,7 +241,7 @@
         fileCount = 0;
     }
 
-    public void SetData(IEnumerable<GalerieEintrag> einträge)
+    public async void SetData(IEnumerable<GalerieEintrag> einträge)
     {
         Einträge = einträge;
         if (Einträge?.Count() > 0)
@@ -264,15 +264,19 @@
                         Iaido = dummy.Iaido,
                         Jodo = dummy.Jodo
                     };
-                StateHasChanged();
             }
         }
         else
         {
             SelectedEintrag = new InputModel();
-
             uploadedFiles = new();
+
+            var i = IsNew;
+            var c = CanEdit;
         }
+        await SetPermissions();
+        StateHasChanged();
+
     }
 
     private InputModel SelectedEintrag { get; set; } = new InputModel();
@@ -417,15 +421,9 @@
                 this.errorMessage = "Die Auswahl enthält Bilder, die bereits hochgeladen wurden!";
                 args.Cancel = true;
                 return;
-                // uploadedFiles.Remove(file.Name);
             }
         }
         this.errorMessage = string.Empty;
-
-        // if (uploadedFiles != null && uploadedFiles.Contains(selectedfile))
-        // {
-        //     args.Cancel = true;
-        // }
     }
 
     private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
