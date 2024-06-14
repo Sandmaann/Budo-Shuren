@@ -53,8 +53,9 @@ namespace BudoShurenWebsite
             //Meine Dienste
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<FileService>();
+            builder.Services.AddScoped<EmailSender>();
 
-            builder.Services.AddSingleton<IDataService, DataService>();
+            //builder.Services.AddSingleton<IDataService, DataService>();
             builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
 
             //Adapter für SfGrid & SfScheduler
@@ -122,7 +123,8 @@ namespace BudoShurenWebsite
                     !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
             });
 
-            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+            //builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
 
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("de-DE");
             CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("de-DE");

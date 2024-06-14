@@ -4,7 +4,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityUserAccessor UserAccessor
-@inject IDataService DataService
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
 @using BudoShurenWebsite.Data
 @using Microsoft.AspNetCore.Identity
@@ -97,7 +97,8 @@
     {
         await base.OnInitializedAsync();
 
-        Abteilungen = await DataService.GetAbteilungenAsync();
+        using var context = DbContextFactory.CreateDbContext();
+        Abteilungen = await context.Abteilungen.ToListAsync();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var userPrincipal = authState.User;

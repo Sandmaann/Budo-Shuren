@@ -21,8 +21,6 @@ else
     <Überschrift Titel="有難うございます" Untertitel="Bestätigt" />
 }
 
-
-
 <div class="container mx-auto max-w-screen-md">
     <section class="mx-10">
         @if (hasError == true)
@@ -37,23 +35,9 @@ else
         <StatusMessage Message="@statusMessage" />
         @if (hasError == false)
         {
-            @if (emailConfirmationLink is not null)
-            {
-                <p class="font-ptsans text-sm tracking-wider">Wir haben dir eine <b>E-Mail</b> mit einem <b>Bestätigungslink</b> geschickt. </p>
-                <p class="font-ptsans text-sm tracking-wider">Bitte überprüfe dein E-Mail Postfach und klicke auf diesen Link, um deine E-Mail Adresse zu verifizieren.</p>
-                <p class="font-ptsans text-sm tracking-wider">Erst dann kann dein Zugang aktiviert werden!</p>
-
-                <p class="font-ptsans text-sm tracking-wider">
-                    This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-                    Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
-                </p>
-            }
-            else
-            {
-                <p class="font-ptsans text-sm tracking-wider">Wir haben dir eine <b>E-Mail</b> mit einem <b>Bestätigungslink</b> geschickt. </p>
-                <p class="font-ptsans text-sm tracking-wider">Bitte überprüfe dein E-Mail Postfach und klicke auf diesen Link, um deine E-Mail Adresse zu verifizieren.</p>
-                <p class="font-ptsans text-sm tracking-wider">Erst dann kann dein Zugang aktiviert werden!</p>
-            }
+            <p class="font-ptsans text-sm tracking-wider">Wir haben dir eine <b>E-Mail</b> mit einem <b>Bestätigungslink</b> geschickt. </p>
+            <p class="font-ptsans text-sm tracking-wider">Bitte überprüfe dein E-Mail Postfach und klicke auf diesen Link, um deine E-Mail Adresse zu verifizieren.</p>
+            <p class="font-ptsans text-sm tracking-wider">Erst dann kann dein Zugang aktiviert werden!</p>
         }
     </section>
 </div>
@@ -76,7 +60,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        return;
+        // Ermitteln ob der User erstellt wurde. Wenn nicht Fehler anzeigen. Ansonsten einfache Info dass eine E-Mail versendet wurde.
         if (Email is null)
         {
             RedirectManager.RedirectTo("");
@@ -86,22 +70,25 @@ else
         if (user is null)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-            // statusMessage = "Error finding user for unspecified email";
             hasError = true;
-            statusMessage = "Error: Der Benutzer für diese E-Mail Adresse konnte nicht gefunden werden";
+            statusMessage = "Bei der Registrierung ist ein Fehler aufgetreten. Bitte versuche es erneut, oder wende dich direkt an deinen Abteilungsleiter.";
         }
-        else if (EmailSender is IdentityNoOpEmailSender)
-        {
-            hasError = false;
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
-            var userId = await UserManager.GetUserIdAsync(user);
-            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            emailConfirmationLink = NavigationManager.GetUriWithQueryParameters(
-                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+        // else
+        // {
+        //     isVerified = user.EmailConfirmed;
+        // }
+        // else if (EmailSender is IdentityNoOpEmailSender)
+        //     {
+        //         hasError = false;
+        //         // Once you add a real email sender, you should remove this code that lets you confirm the account
+        //         var userId = await UserManager.GetUserIdAsync(user);
+        //         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        //         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        //         emailConfirmationLink = NavigationManager.GetUriWithQueryParameters(
+        //             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+        //             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
-            isVerified = user.EmailConfirmed;
-        }
+        //         isVerified = user.EmailConfirmed;
+        //     }
     }
 }

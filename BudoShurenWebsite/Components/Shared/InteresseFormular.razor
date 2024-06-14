@@ -1,13 +1,12 @@
-﻿@inject IDataService DataService
+﻿@* @inject IDataService DataService *@
 @inject ILogger<InteresseFormular> Logger
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject EmailSender EmailSender
 @* @rendermode InteractiveServer *@
 
 @using System.ComponentModel.DataAnnotations
 @using Syncfusion.Blazor.DropDowns;
 
-@* .text-danger {
-    color: rgba(220, 53, 69, 1) !important;
-} *@
 
 <div class="h-full">
     @if (ShowText)
@@ -38,7 +37,7 @@
                                     TItem="Abteilung"
                                     Placeholder="Wähle eine Abteilung aus"
                                     @bind-Value="@Input.SelectedAbteilung"
-                                    DataSource="@LocalData">
+                                    DataSource="@Abteilungen">
                         <DropDownListTemplates TItem="Abteilung">
                             <ItemTemplate Context="itemContext">
                                 <div class="my-auto py-4 text-center">
@@ -53,7 +52,7 @@
                                 </div>
                             </ValueTemplate>
                         </DropDownListTemplates>
-                        <DropDownListFieldSettings Text="Name" Value="Abteilungsleiter"></DropDownListFieldSettings>
+                        <DropDownListFieldSettings Text="Name" Value="Name"></DropDownListFieldSettings>
                     </SfDropDownList>
                 </div>
                 <ValidationMessage For="() => Input.SelectedAbteilung" class="text-error" />
@@ -141,14 +140,15 @@
 
 
     public string DropVal = string.Empty;
-    private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
+    private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        LocalData = await DataService.GetAbteilungenAsync();
 
-        if (LocalData.FirstOrDefault(x => x.ID == Abteilung) is Abteilung auswahl)
+        using var context = DbContextFactory.CreateDbContext();
+        Abteilungen = await context.Abteilungen.ToListAsync();
+        if (Abteilungen.FirstOrDefault(x => x.ID == Abteilung) is Abteilung auswahl)
         {
             Input.SelectedAbteilung = auswahl.ID;
         }
@@ -160,7 +160,43 @@
 
     public async Task SubmitNachricht()
     {
+        try
+        {
 
+            if (!string.IsNullOrWhiteSpace(Input.SelectedAbteilung) && Abteilungen.FirstOrDefault(x => x.ID == Input.SelectedAbteilung) is Abteilung abteilung)
+            {
+                string nachricht = Input.Text;
+                string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
+
+                string infoAnAbteilungsleiter = $"Hallo {name}, du hast von unserer Webseite eine Anfrage bekommen." +
+                Environment.NewLine +
+                $"Zur Anfrage wurde folgende E-Mail für den Kontakt angegeben: {Input.Email}" +
+                Environment.NewLine +
+                "Hier ist die Nachricht:" +
+                Environment.NewLine +
+                Environment.NewLine +
+                nachricht;
+                //E-Mail an Abteilungsleiter senden
+                await EmailSender.SendPlainTextEmailAsync(abteilung.Email, "Neue Anfrage von der Budo-Shuren-Dojo Webseite", infoAnAbteilungsleiter);
+
+                string infoAnAbsender = $"Vielen Dank für dein Interesse!" +
+                Environment.NewLine +
+                "Wir haben deine Nachricht an den Abteilungsleiter weitergeleitet. Du solltest in Kürze eine Antwort erhalten." +
+                Environment.NewLine +
+                Environment.NewLine +
+                "Mit freundlichen Grüßen" +
+                Environment.NewLine +
+                "Dein Budo-Shuren-Dojo";
+
+                //Bestätigungsemail an den Absender schicken
+                await EmailSender.SendPlainTextEmailAsync(Input.Email, "Bestätigung Kontaktformular Budo-Shuren-Dojo", infoAnAbsender);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Senden der Nachricht");
+            errorMessage = "Die Nachricht konnte leider nicht versendet werden! Du kannst auch direkt an info@budo-shuren-dojo.de schreiben. In unserem Impressum findest du auch die einzelnen Kontaktdaten der Abteilungsleiter.";
+        }
     }
 
     private sealed class InputModel

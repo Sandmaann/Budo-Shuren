@@ -7,6 +7,9 @@
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@inject EmailSender EmailSender
+@inject NavigationManager NavigationManager
 
 <PageTitle>E-Mail best&auml;tigen</PageTitle>
 
@@ -37,44 +40,6 @@
 
     </section>
 </div>
-@* 
-
-<div class="default-container">
-
-    <Überschrift Titel="有難うございます" Untertitel="E-Mail bestätigen" />
-    <SectionBanner Titel="E-Mail Adresse bestätigen" />
-
-    <section>
-        <div class="default-grid">
-            <div id="local-container">
-                @if (isSuccess)
-                {
-                    <p>Ihre E-Mail Adresse wurde erfolgreich bestätigt!</p>
-                    <br />
-                    @if (isVerified)
-                    {
-                        <p>Sie können sich jetzt einloggen.</p>
-                    }
-                    else
-                    {
-                        <p>Ihr Zugang muss jetzt noch von einem Abteilungsleiter bestätigt werden!</p>
-                    }
-                }
-                else
-                {
-                    <StatusMessage Message="Ihr E-Mail Adresse konnte leider nicht bestätigt werden!" />
-                }
-            </div>
-        </div>
-    </section>
-</div>
-
-<style>
-    #local-container {
-        grid-column-start: 3;
-        grid-column-end: 11;
-    }
-</style> *@
 
 @code {
     private string? statusMessage;
@@ -105,11 +70,36 @@
         }
         else
         {
+            var previouslyConfirmed = await UserManager.IsEmailConfirmedAsync(user);
+
             var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
             var result = await UserManager.ConfirmEmailAsync(user, code);
             isSuccess = result.Succeeded;
             isVerified = user.Verified;
-            // statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Ihre E-Mail Adresse konnte leider nicht bestätigt werden.";
+
+            if (isSuccess && previouslyConfirmed)
+            {
+                //Info an den Abteilungsleiter schicken dass er einen Zugang aktivieren sollte
+                using var context = ContextFactory.CreateDbContext();
+                var abteilung = await context.Abteilungen.FirstOrDefaultAsync(x => x.ID == user.Abteilung);
+                if (abteilung != null)
+                {
+                    string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
+
+                    string infoAnAbteilungsleiter = $"Hallo {name}," +
+                    Environment.NewLine +
+                    "für deine Abteilung hat sich ein neuer Benutzer an der Budo-Shuren-Dojo Webseite registriert." +
+                    Environment.NewLine +
+                    $"Bitte prüfe doch, ob der zu deinen Leuten gehört und aktiviere seinen Zugang im Mitgliederbereich der Webseite." +
+                    Environment.NewLine +
+                    "Hier gehts zur Website: " + NavigationManager.BaseUri +
+                    Environment.NewLine +
+                    Environment.NewLine +
+                    "よろしくお願いします";
+                    //E-Mail an Abteilungsleiter senden
+                    await EmailSender.SendPlainTextEmailAsync(abteilung.Email, "Neuer Benutzer in deiner Abteilung!", infoAnAbteilungsleiter);
+                }
+            }
         }
     }
 }

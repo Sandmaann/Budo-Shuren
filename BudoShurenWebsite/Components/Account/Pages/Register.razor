@@ -15,7 +15,7 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-@inject IDataService DataService
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
 <PageTitle>Neuen Zugang erstellen</PageTitle>
 
@@ -55,7 +55,7 @@
                                     TItem="Abteilung"
                                     Placeholder="Wähle eine Abteilung aus"
                                     @bind-Value="@Input.SelectedAbteilung"
-                                    DataSource="@LocalData">
+                                    DataSource="@Abteilungen">
                         <DropDownListTemplates TItem="Abteilung">
                             <ItemTemplate Context="itemContext">
                                 <div class="my-auto py-4 text-center">
@@ -144,7 +144,7 @@
 
 @code {
 
-    private IEnumerable<Abteilung> LocalData = Array.Empty<Abteilung>();
+    private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
 
     private IEnumerable<IdentityError>? identityErrors;
 
@@ -159,7 +159,8 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        LocalData = await DataService.GetAbteilungenAsync();
+        using var context = DbContextFactory.CreateDbContext();
+        Abteilungen = await context.Abteilungen.ToListAsync();
     }
 
     public async Task RegisterUser(EditContext editContext)
