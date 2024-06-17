@@ -53,4 +53,12 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Components\Pages\Impressum.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Components\Pages\Impressum.razor" />
+  </ItemGroup>
+
 </Project>

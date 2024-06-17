@@ -133,6 +133,9 @@
     [Parameter]
     public bool ShowMarginAuswahlfelder { get; set; } = false;
 
+    [Parameter]
+    public EventCallback<bool> OnSend { get; set; }
+
     // public string? SelectedAbteilung = string.Empty;
 
     [SupplyParameterFromForm]
@@ -168,34 +171,25 @@
                 string nachricht = Input.Text;
                 string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
 
-                string infoAnAbteilungsleiter = $"Hallo {name}, du hast von unserer Webseite eine Anfrage bekommen." +
-                Environment.NewLine +
-                $"Zur Anfrage wurde folgende E-Mail für den Kontakt angegeben: {Input.Email}" +
-                Environment.NewLine +
-                "Hier ist die Nachricht:" +
-                Environment.NewLine +
-                Environment.NewLine +
-                nachricht;
                 //E-Mail an Abteilungsleiter senden
-                await EmailSender.SendPlainTextEmailAsync(abteilung.Email, "Neue Anfrage von der Budo-Shuren-Dojo Webseite", infoAnAbteilungsleiter);
+                string text = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", name).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
+                await EmailSender.SendEmailAsync(abteilung.Email, "Neue Anfrage von der Budo-Shuren-Dojo Webseite", text);
 
-                string infoAnAbsender = $"Vielen Dank für dein Interesse!" +
-                Environment.NewLine +
-                "Wir haben deine Nachricht an den Abteilungsleiter weitergeleitet. Du solltest in Kürze eine Antwort erhalten." +
-                Environment.NewLine +
-                Environment.NewLine +
-                "Mit freundlichen Grüßen" +
-                Environment.NewLine +
-                "Dein Budo-Shuren-Dojo";
-
+                string infoAnAbsender = EmailSender.HtmlLayout_InteresseBestätigung.Replace("[NACHRICHT]", nachricht);
                 //Bestätigungsemail an den Absender schicken
-                await EmailSender.SendPlainTextEmailAsync(Input.Email, "Bestätigung Kontaktformular Budo-Shuren-Dojo", infoAnAbsender);
+                await EmailSender.SendEmailAsync(Input.Email, "Bestätigung Kontaktformular Budo-Shuren-Dojo", infoAnAbsender);
+
+                await OnSend.InvokeAsync(true);
+
+                Input.Text = string.Empty;
+                Input.Email = string.Empty;
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Fehler beim Senden der Nachricht");
             errorMessage = "Die Nachricht konnte leider nicht versendet werden! Du kannst auch direkt an info@budo-shuren-dojo.de schreiben. In unserem Impressum findest du auch die einzelnen Kontaktdaten der Abteilungsleiter.";
+            await OnSend.InvokeAsync(false);
         }
     }
 

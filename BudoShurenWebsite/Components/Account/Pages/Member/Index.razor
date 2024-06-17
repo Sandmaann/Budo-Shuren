@@ -32,7 +32,7 @@
 
 
                     <div class="mb-5 mt-10">
-                        <Zwischenüberschrift Text="Benutzer" />
+                        <Subheadline Text="Benutzer" />
                     </div>
                     <label for="username" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Benutzername</label>
                     <div class="mb-3">
@@ -50,7 +50,7 @@
                     </div>
 
                     <div class="my-5">
-                        <Zwischenüberschrift Text="E-Mail Adresse" />
+                        <Subheadline Text="E-Mail Adresse" />
                     </div>
                     @if (isEmailConfirmed)
                     {
@@ -79,7 +79,7 @@
                     </div>
 
                     <div class="my-5">
-                        <Zwischenüberschrift Text="Passwort" />
+                        <Subheadline Text="Passwort" />
                     </div>
                     <label for="old-password" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Bisheriges Passwort</label>
                     <div class="mb-3">
@@ -104,7 +104,7 @@
         <SectionBanner Titel="Personenbezogene Daten" />
         <section>
             <div>
-                <Fließtext Text="Ihr Konto enthält persönliche Daten, die Sie uns zur Verfügung gestellt haben. Diese Seite ermöglicht es Ihnen, diese Daten herunterzuladen oder zu löschen." />
+                <Standardtext Text="Ihr Konto enthält persönliche Daten, die Sie uns zur Verfügung gestellt haben. Diese Seite ermöglicht es Ihnen, diese Daten herunterzuladen oder zu löschen." />
                 <p class="font-ptsans text-sm tracking-wider"><b>Das Löschen dieser Daten wird Ihr Konto dauerhaft entfernen, und dies kann nicht wiederhergestellt werden.</b></p>
                 <form class="mt-4"  action="Account/Member/DownloadPersonalData" method="post">
                     <AntiforgeryToken />

@@ -1,6 +1,11 @@
 ﻿@page "/Galerie"
 @rendermode InteractiveServer
 
+<PageTitle>Galerie</PageTitle>
+<HeadContent>
+    <meta name="description" content="Entdecke unsere Galerie mit Fotos von Trainings, Seminaren und Veranstaltungen. Tauche ein in die Welt der Kampfkunst und erlebe die Gemeinschaft.">
+</HeadContent>
+
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using BudoShurenWebsite.Models;
 @using Microsoft.EntityFrameworkCore;
@@ -37,7 +42,7 @@
                                             <span class="material-symbols-outlined">close</span>
                                         </button>
                                         <div>
-                                            <Fließtext Text="@(selectedEinträgeCount > 0 ? $"{selectedEinträgeCount} ausgewählt" :"Keine Auswahl")" />
+                                            <Standardtext Text="@(selectedEinträgeCount > 0 ? $"{selectedEinträgeCount} ausgewählt" :"Keine Auswahl")" />
                                         </div>
                                     </div>
                                 }

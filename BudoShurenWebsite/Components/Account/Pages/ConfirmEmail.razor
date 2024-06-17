@@ -13,7 +13,7 @@
 
 <PageTitle>E-Mail best&auml;tigen</PageTitle>
 
-<Überschrift Titel="メール確認" Untertitel="Bestätigen" />
+<Headline Titel="メール確認" Untertitel="Bestätigen" />
 <div class="container mx-auto max-w-screen-md">
     <section class="mx-10">
         <SectionBanner Titel="E-Mail Adresse bestätigen" />
@@ -25,11 +25,11 @@
 
                 @if (isVerified)
                 {
-                    <Fließtext Text="Sie können sich jetzt einloggen." />
+                    <Standardtext Text="Sie können sich jetzt einloggen." />
                 }
                 else
                 {
-                    <Fließtext Text="Ihr Zugang muss jetzt noch von einem Abteilungsleiter bestätigt werden!" />
+                    <Standardtext Text="Ihr Zugang muss jetzt noch von einem Abteilungsleiter bestätigt werden!" />
                 }
             }
             else
@@ -86,18 +86,21 @@
                 {
                     string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
 
-                    string infoAnAbteilungsleiter = $"Hallo {name}," +
-                    Environment.NewLine +
-                    "für deine Abteilung hat sich ein neuer Benutzer an der Budo-Shuren-Dojo Webseite registriert." +
-                    Environment.NewLine +
-                    $"Bitte prüfe doch, ob der zu deinen Leuten gehört und aktiviere seinen Zugang im Mitgliederbereich der Webseite." +
-                    Environment.NewLine +
-                    "Hier gehts zur Website: " + NavigationManager.BaseUri +
-                    Environment.NewLine +
-                    Environment.NewLine +
-                    "よろしくお願いします";
+                    // string infoAnAbteilungsleiter = $"Hallo {name}," +
+                    // Environment.NewLine +
+                    // "für deine Abteilung hat sich ein neuer Benutzer an der Budo-Shuren-Dojo Webseite registriert." +
+                    // Environment.NewLine +
+                    // $"Bitte prüfe doch, ob der zu deinen Leuten gehört und aktiviere seinen Zugang im Mitgliederbereich der Webseite." +
+                    // Environment.NewLine +
+                    // "Hier gehts zur Website: " + NavigationManager.BaseUri +
+                    // Environment.NewLine +
+                    // Environment.NewLine +
+                    // "よろしくお願いします";
+
                     //E-Mail an Abteilungsleiter senden
-                    await EmailSender.SendPlainTextEmailAsync(abteilung.Email, "Neuer Benutzer in deiner Abteilung!", infoAnAbteilungsleiter);
+                    string text = EmailSender.HtmlLayout_NewUser.Replace("[NAME]", name);
+
+                    await EmailSender.SendEmailAsync(abteilung.Email, "Neuer Benutzer in deiner Abteilung!", text);
                 }
             }
         }

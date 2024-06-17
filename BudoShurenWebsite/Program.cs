@@ -145,7 +145,7 @@ namespace BudoShurenWebsite
 
 
             //Nur für Release oder bei Migration wichtig
-            MigrateDatabase(app);
+            //MigrateDatabase(app);
 
             app.UseHttpsRedirection();
 

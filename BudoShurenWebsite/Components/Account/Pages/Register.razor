@@ -18,8 +18,12 @@
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
 <PageTitle>Neuen Zugang erstellen</PageTitle>
+<HeadContent>
+    <meta name="description" content="Erstelle dein Konto und werde Teil unserer Gemeinschaft. Registriere dich jetzt, um Zugang zu exklusiven Inhalten und Funktionen zu erhalten.">
+</HeadContent>
 
-<Überschrift Titel="登録" Untertitel="Registrierung" />
+
+<Headline Titel="登録" Untertitel="Registrierung" />
 
 
 <div class="container mx-auto max-w-screen-md">
@@ -78,7 +82,7 @@
                 <div class="mb-3">
                     <div id="capsLockWarning" style="display: none;">
                         <div class="text-error">
-                            <Fließtext Text="Feststelltaste ist aktiv!" />
+                            <Standardtext Text="Feststelltaste ist aktiv!" />
                         </div>
                     </div>
                     <InputText type="password" @bind-Value="Input.Password" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="new-password" aria-required="true" placeholder="Passwort" />

@@ -1,33 +1,44 @@
 ﻿@page "/Neu-im-Dojo"
-<PageTitle>Neu im Dôjô</PageTitle>
 @rendermode InteractiveServer
 @inject IJSRuntime JSRuntime
 
+<PageTitle>Start im Dojo - Infos für Anfänger | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="description" content="Starte deine Kampfkunst-Reise bei uns! Erfahre, wie du anfängst, was du mitbringen musst und warum jeder willkommen ist. Dein Weg zum Meister beginnt hier.">
+</HeadContent>
+
+<head>
+    <link rel="canonical" href="https://www.deineseite.de/dein-artikel" />
+</head>
+
 <div>
-    <Überschrift Titel="武道家"
+    <Headline Titel="武道家"
                  Untertitel="Budoka"
                  Anekdote="" />
 </div>
 
-
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
+        @if (ShowNachrichtGesendet)
+        {
+            <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
+        }
         <section class="mt-20 flex flex-col justify-center md:flex-row">
             <div>
                 <div class="flex justify-center md:float-right md:flex-grow">
                     <img class="mb-4 max-w-full md:max-w-96 md:ml-16" src="/images/beginner.jpg">
                 </div>
                 <div class="">
-                    <Fließtext Text="Für wen ist das Training geeignet?" />
+                    <Standardtext Text="Für wen ist das Training geeignet?" />
                 </div>
                 <div class="mt-0">
-                    <Fließtext Text="Egal ob Aikido, Bujinkan oder Genbukan – unser Training ist für alle Personen ab 16 Jahren geeignet, unabhängig von Alter oder Geschlecht. Wenn du unter 16 Jahre alt bist, schau dir bitte unsere speziellen Angebote für Kinder und Jugendliche an." />
+                    <Standardtext Text="Egal ob Aikido, Bujinkan oder Genbukan – unser Training ist für alle Personen ab 16 Jahren geeignet, unabhängig von Alter oder Geschlecht. Wenn du unter 16 Jahre alt bist, schau dir bitte unsere speziellen Angebote für Kinder und Jugendliche an." />
                 </div>
                 <div class="mt-4">
-                    <Fließtext Text="Für Menschen mit Handicap bieten wir individuelle Beratung an. Komm einfach zu einem kostenlosen Probetraining vorbei, und wir besprechen gemeinsam, wie wir das Training optimal für dich gestalten können." />
+                    <Standardtext Text="Für Menschen mit Handicap bieten wir individuelle Beratung an. Komm einfach zu einem kostenlosen Probetraining vorbei, und wir besprechen gemeinsam, wie wir das Training optimal für dich gestalten können." />
                 </div>
                 <div class="mt-4">
-                    <Fließtext Text="Der Einstieg ins laufende Training ist jederzeit möglich, und Anfänger sowie Interessenten sind immer herzlich willkommen." />
+                    <Standardtext Text="Der Einstieg ins laufende Training ist jederzeit möglich, und Anfänger sowie Interessenten sind immer herzlich willkommen." />
                 </div>
             </div>
         </section>
@@ -37,18 +48,18 @@
             <div class="md:flex md:flex-row md:justify-between">
                 <div class="md:max-w-72">
                     <div>
-                        <Fließtext Text="Ein Probetraining bietet dir eine großartige Gelegenheit, einen Einblick in die faszinierende Welt des Budo zu bekommen. Du kannst die Atmosphäre des Dojos erleben, die Trainer kennenlernen und erste Eindrücke von der Kampfkunst gewinnen. Während des Probetrainings nimmst du aktiv am Training teil, lernst grundlegende Bewegungen und hast die Möglichkeit, Fragen zu stellen. Darüber hinaus kannst du die Dynamik und den Teamgeist der Trainingsgruppe spüren und herausfinden, ob die Kampfkunst zu deinen persönlichen Zielen und Interessen passt." />
+                        <Standardtext Text="Ein Probetraining bietet dir eine großartige Gelegenheit, einen Einblick in die faszinierende Welt des Budo zu bekommen. Du kannst die Atmosphäre des Dojos erleben, die Trainer kennenlernen und erste Eindrücke von der Kampfkunst gewinnen. Während des Probetrainings nimmst du aktiv am Training teil, lernst grundlegende Bewegungen und hast die Möglichkeit, Fragen zu stellen. Darüber hinaus kannst du die Dynamik und den Teamgeist der Trainingsgruppe spüren und herausfinden, ob die Kampfkunst zu deinen persönlichen Zielen und Interessen passt." />
                     </div>
                     <div class="mt-4">
-                        <Fließtext Text="Das Probetraining ist vollkommen kostenlos und unverbindlich. Bitte erscheine etwa 15 Minuten vor Beginn, damit wir dich in Ruhe begrüßen und dir eine kurze Einführung geben können. Trage bequeme Sportkleidung, in der du dich gut bewegen kannst, und bringe etwas zu trinken mit. Du hast bis zu drei Probetrainings, bevor du dich entscheiden musst, ob du dem Verein beitrittst." />
+                        <Standardtext Text="Das Probetraining ist vollkommen kostenlos und unverbindlich. Bitte erscheine etwa 15 Minuten vor Beginn, damit wir dich in Ruhe begrüßen und dir eine kurze Einführung geben können. Trage bequeme Sportkleidung, in der du dich gut bewegen kannst, und bringe etwas zu trinken mit. Du hast bis zu drei Probetrainings, bevor du dich entscheiden musst, ob du dem Verein beitrittst." />
                     </div>
                     <div class="mt-4">
-                        <Fließtext Text="Weiter unten findest du unsere Trainingszeiten." />
+                        <Standardtext Text="Weiter unten findest du unsere Trainingszeiten." />
                     </div>
                 </div>
                 <div class="mt-28 md:max-w-72">
                     <div>
-                        <InteresseFormular ShowAbteilung="true" />
+                        <InteresseFormular ShowAbteilung="true" OnSend="SetMessage" />
                     </div>
                 </div>
             </div>
@@ -58,30 +69,30 @@
             <SectionBanner Titel="Das Wichtigste auf einen Blick" />
             <div>
                 <div class="md:my-10">
-                    <Zwischenüberschrift Text="Was solltest du mitbringen?" />
+                    <Subheadline Text="Was solltest du mitbringen?" />
                 </div>
                 <div class="mx-10 mt-5 md:ml-32">
                     <ul class="list-disc">
                         <li>
-                            <Fließtext Text="Sportkleidung, in der du dich gut bewegen kannst. Für Aikido und Bujinkan kann es von Vorteil sein, ein Oberteil mit Ärmeln zu tragen, da diese einfacher zu greifen sind. Wer bereits einen Gi besitzt, kann diesen gerne mitbringen!" />
+                            <Standardtext Text="Sportkleidung, in der du dich gut bewegen kannst. Für Aikido und Bujinkan kann es von Vorteil sein, ein Oberteil mit Ärmeln zu tragen, da diese einfacher zu greifen sind. Wer bereits einen Gi besitzt, kann diesen gerne mitbringen!" />
                         </li>
                         <li class="mt-2">
-                            <Fließtext Text="Eigene Hausschuhe sind optional, aber wir haben auch Besucherhausschuhe vor Ort." />
+                            <Standardtext Text="Eigene Hausschuhe sind optional, aber wir haben auch Besucherhausschuhe vor Ort." />
                         </li>
                         <li class="mt-2">
-                            <Fließtext Text="Spaß an Bewegung und die Bereitschaft, etwas Neues zu lernen!" />
+                            <Standardtext Text="Spaß an Bewegung und die Bereitschaft, etwas Neues zu lernen!" />
                         </li>
                         <li class="mt-2">
-                            <Fließtext Text="Keine Vorkenntnisse erforderlich - einfach vorbeikommen!" />
+                            <Standardtext Text="Keine Vorkenntnisse erforderlich - einfach vorbeikommen!" />
                         </li>
                     </ul>
                 </div>
                 <div class="mt-10 md:my-10">
-                    <Zwischenüberschrift Text="Reiho: Die Verhaltensregeln im Dojo" />
+                    <Subheadline Text="Reiho: Die Verhaltensregeln im Dojo" />
                 </div>
                 <div>
                     <div class="mt-5">
-                        <Fließtext Text="Nach japanischem Vorbild gibt es auch im Budo Shuren Dojo einige Regeln (Reiho), die im Dojos zu beachten sind. Hier sind die wichtigsten aufgeführt, aber keine Sorge, wir zeigen sie dir vor Ort noch einmal, sodass du sie hier nicht auswendig lernen musst :)" />
+                        <Standardtext Text="Nach japanischem Vorbild gibt es auch im Budo Shuren Dojo einige Regeln (Reiho), die im Dojos zu beachten sind. Hier sind die wichtigsten aufgeführt, aber keine Sorge, wir zeigen sie dir vor Ort noch einmal, sodass du sie hier nicht auswendig lernen musst :)" />
                     </div>
                     <div>
                         <div class="">
@@ -90,7 +101,7 @@
                                 <img class="md:col-start-1 md:row-span-2" src="/images/dojo4.jpg" />
                                 <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
                                     <li>
-                                        <Fließtext Text="Wenn ihr über die Türschwelle kommt, seht ihr links von euch einige große Schuhschränke. Hier könnt ihr eure Straßenschuhe ablegen und euch welche von unseren Besucherhausschuhen ganz oben, neben der Tür nehmen" />
+                                        <Standardtext Text="Wenn ihr über die Türschwelle kommt, seht ihr links von euch einige große Schuhschränke. Hier könnt ihr eure Straßenschuhe ablegen und euch welche von unseren Besucherhausschuhen ganz oben, neben der Tür nehmen" />
                                     </li>
                                 </ul>
                             </div>
@@ -99,7 +110,7 @@
                                 <img class="md:col-start-1 md:row-span-2" src="/images/dojo7.jpg" />
                                 <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
                                     <li>
-                                        <Fließtext Text="Die Umkleiden findet ihr geradeaus gegenüber der Eingangstür. Die erste Umkleide ist für Frauen und die zweite für Männer." />
+                                        <Standardtext Text="Die Umkleiden findet ihr geradeaus gegenüber der Eingangstür. Die erste Umkleide ist für Frauen und die zweite für Männer." />
                                     </li>
                                 </ul>
                             </div>
@@ -108,10 +119,10 @@
                                 <img class="md:col-start-1 md:row-span-2" src="/images/dojo5.jpg" />
                                 <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
                                     <li>
-                                        <Fließtext Text="Wenn ihr umgezogen seid, könnt ihr auf die Trainingsfläche gehen. Hierbei lasst ihr, bevor ihr den Parkettboden betretet eure Hausschue davor stehen. Der Holzboden ist die Trainingsfläch für Genbukan. Wenn ihr durch die Tür am Ende des parkettes geht kommt ihr in einen Raum, der mit Tatami-Matten ausgelegt ist. Dieser wird für Aikido und Bujinkan verwendet." />
+                                        <Standardtext Text="Wenn ihr umgezogen seid, könnt ihr auf die Trainingsfläche gehen. Hierbei lasst ihr, bevor ihr den Parkettboden betretet eure Hausschue davor stehen. Der Holzboden ist die Trainingsfläch für Genbukan. Wenn ihr durch die Tür am Ende des parkettes geht kommt ihr in einen Raum, der mit Tatami-Matten ausgelegt ist. Dieser wird für Aikido und Bujinkan verwendet." />
                                     </li>
                                     <li class="mt-2">
-                                        <Fließtext Text="Wenn ihr bemerkt, dass hier Trainingseinheiten stattfinden und ihr den hinteren Raum erreichen möchtet, nutzt bitte den direkten Weg, sofern dieser frei ist, oder haltet euch am rechten Rand, um die Trainierenden nicht zu stören." />
+                                        <Standardtext Text="Wenn ihr bemerkt, dass hier Trainingseinheiten stattfinden und ihr den hinteren Raum erreichen möchtet, nutzt bitte den direkten Weg, sofern dieser frei ist, oder haltet euch am rechten Rand, um die Trainierenden nicht zu stören." />
                                     </li>
                                 </ul>
                             </div>
@@ -120,10 +131,10 @@
                                 <img class="md:col-start-1 md:row-span-2" src="/images/dojo6.jpg" />
                                 <ul class="mx-10 mt-2 list-disc md:col-start-2 md:row-start-2 md:ml-24 md:mr-0">
                                     <li>
-                                        <Fließtext Text="Ebenso gilt bei uns eine gewisse Etikette. Diese Beinhaltet, dass man sich beim ersten Betreten der Holzfläche in Richtung der Schriftzüge auf der gegenüberliegenden linken Wand verbeugt, welche den Shomen (Schrein) des Genbukan darstellt. Gleichermaßen wird sich am Ende des Trainings, wenn man die Trainingsfläche verlässt, vor dem Shomen verbeugt. Ebenso gibt es einen Schrein im hinteren Raum, vor dem sich ebenfalls, beim ersten eintreten und letzten austreten, verbeugt wird." />
+                                        <Standardtext Text="Ebenso gilt bei uns eine gewisse Etikette. Diese Beinhaltet, dass man sich beim ersten Betreten der Holzfläche in Richtung der Schriftzüge auf der gegenüberliegenden linken Wand verbeugt, welche den Shomen (Schrein) des Genbukan darstellt. Gleichermaßen wird sich am Ende des Trainings, wenn man die Trainingsfläche verlässt, vor dem Shomen verbeugt. Ebenso gibt es einen Schrein im hinteren Raum, vor dem sich ebenfalls, beim ersten eintreten und letzten austreten, verbeugt wird." />
                                     </li>
                                     <li class="mt-2">
-                                        <Fließtext Text="Im Training ist es üblich vor dem Training anzugrüßen. Hierbei stellen sich zunächst alle Schüler in einer Reihe vor den Lehrer. Hierbei stehen die Ranghöchsten Schüler auf der rechten Seite und somit Neulinge auf der linken Seite. Der genaue Ablauf des Angrüßens unterscheidet sich je nach Kampfkunst und wird euch gezeigt." />
+                                        <Standardtext Text="Im Training ist es üblich vor dem Training anzugrüßen. Hierbei stellen sich zunächst alle Schüler in einer Reihe vor den Lehrer. Hierbei stehen die Ranghöchsten Schüler auf der rechten Seite und somit Neulinge auf der linken Seite. Der genaue Ablauf des Angrüßens unterscheidet sich je nach Kampfkunst und wird euch gezeigt." />
                                     </li>
                                 </ul>
                             </div>
@@ -137,76 +148,76 @@
             <div>
                 <div class="mt-10 md:flex md:flex-row">
                     <div class="max-w-64 md:mr-18">
-                        <Zwischenüberschrift Text="Aikido" />
+                        <Subheadline Text="Aikido" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div>
                             <div>
-                                <Fließtext Text="Unser Aikido-Angebot hat einen klaren Schwerpunkt und ein Hauptziel: Kinder und Jugendliche in ihrer Ich-Wahrnehmung und Selbstbehauptung zu fördern und zu unterstützen.﻿" />
+                                <Standardtext Text="Unser Aikido-Angebot hat einen klaren Schwerpunkt und ein Hauptziel: Kinder und Jugendliche in ihrer Ich-Wahrnehmung und Selbstbehauptung zu fördern und zu unterstützen.﻿" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Aikido bietet einen wertvollen Beitrag zu dieser Entwicklung: Es erfüllt das Bewegungsbedürfnis von Kindern und Jugendlichen und ermöglicht gleichzeitig eine Formung mit Halt und Struktur. Durch das Training erfahren sie nicht nur körperliche Schulung, sondern eine ganzheitliche Persönlichkeitsentwicklung." />
+                                <Standardtext Text="Aikido bietet einen wertvollen Beitrag zu dieser Entwicklung: Es erfüllt das Bewegungsbedürfnis von Kindern und Jugendlichen und ermöglicht gleichzeitig eine Formung mit Halt und Struktur. Durch das Training erfahren sie nicht nur körperliche Schulung, sondern eine ganzheitliche Persönlichkeitsentwicklung." />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Im Aikido lernen die Kinder, sich mit ihren Ängsten auseinanderzusetzen und sie zu überwinden, sei es die Angst vor dem Fallen oder vor größeren Personen. Dadurch entwickeln sie ein gesundes Selbstvertrauen, das ohne übermäßige Selbstinszenierung auskommt. Zudem werden ihre sozialen Fähigkeiten gefördert, da Aikido nur in Zusammenarbeit mit anderen praktiziert werden kann. Es erfordert gegenseitiges Einlassen und Vertrauen, während gleichzeitig das Setzen und Respektieren von Grenzen gelernt wird." />
+                                <Standardtext Text="Im Aikido lernen die Kinder, sich mit ihren Ängsten auseinanderzusetzen und sie zu überwinden, sei es die Angst vor dem Fallen oder vor größeren Personen. Dadurch entwickeln sie ein gesundes Selbstvertrauen, das ohne übermäßige Selbstinszenierung auskommt. Zudem werden ihre sozialen Fähigkeiten gefördert, da Aikido nur in Zusammenarbeit mit anderen praktiziert werden kann. Es erfordert gegenseitiges Einlassen und Vertrauen, während gleichzeitig das Setzen und Respektieren von Grenzen gelernt wird." />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Natürlich steht der Spaß dabei im Vordergrund und soll nicht zu kurz kommen." />
+                                <Standardtext Text="Natürlich steht der Spaß dabei im Vordergrund und soll nicht zu kurz kommen." />
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="AikiMinis (4-6 Jahre)" />
+                        <Standardtext Text="AikiMinis (4-6 Jahre)" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido/aikiMinis.png">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="In einem spielerischen Rahmen lernen die Kinder die Grundlagen des Aikido: Dazu gehören Vorwärts- und rückwärts rollen, Fallschule, sicheren Stand und erste Aikidotechniken. Durch diese Übungen wird ihr Körpergefühl und ihre Koordination geschult." />
+                            <Standardtext Text="In einem spielerischen Rahmen lernen die Kinder die Grundlagen des Aikido: Dazu gehören Vorwärts- und rückwärts rollen, Fallschule, sicheren Stand und erste Aikidotechniken. Durch diese Übungen wird ihr Körpergefühl und ihre Koordination geschult." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die Kinder können ihre Lust am Kräftemessen ausleben und dabei Fairness und Selbstbehauptung trainieren." />
+                            <Standardtext Text="Die Kinder können ihre Lust am Kräftemessen ausleben und dabei Fairness und Selbstbehauptung trainieren." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Für welche Kinder ist Aikido besonders geeignet?" />
+                            <Standardtext Text="Für welche Kinder ist Aikido besonders geeignet?" />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Grundsätzlich hat Aikido auf alle eine positive Wirkung. Raufbolde lernen, ihre Kräfte gezielt und kontrolliert einzusetzen. Schüchterne Kinder werden in ihrem Selbstwertgefühl gestärkt und lernen, sich dabei durchzusetzen." />
+                            <Standardtext Text="Grundsätzlich hat Aikido auf alle eine positive Wirkung. Raufbolde lernen, ihre Kräfte gezielt und kontrolliert einzusetzen. Schüchterne Kinder werden in ihrem Selbstwertgefühl gestärkt und lernen, sich dabei durchzusetzen." />
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="AikiKids (7-10 Jahre)" />
+                        <Standardtext Text="AikiKids (7-10 Jahre)" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16 md:max-h-72" src="/images/aikido2.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16 md:max-h-72" src="/images/aikido/aikiKids.png">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die technische Seite des Aikido rückt mehr in den Vordergrund." />
+                            <Standardtext Text="Die technische Seite des Aikido rückt mehr in den Vordergrund." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die Kinder lernen Wurf- und Hebeltechniken, begleitet von lauten Kampfschreien und Fallschulübungen, die an Stuntmänner erinnern. Spiel und Spaß sind ebenfalls fester Bestandteil des Trainings. Durch diese Aktivitäten werden Konzentration und Aufmerksamkeit entwickelt, und die Kinder haben die Möglichkeit, erste Gürtelprüfungen abzulegen. Basierend auf den Prinzipien von Fairness und Respekt lernen sowohl zurückhaltende Kinder, ihre Kräfte kennen und einzusetzen, als auch energiegeladene Draufgänger, ihre Kräfte zu kontrollieren." />
+                            <Standardtext Text="Die Kinder lernen Wurf- und Hebeltechniken, begleitet von lauten Kampfschreien und Fallschulübungen, die an Stuntmänner erinnern. Spiel und Spaß sind ebenfalls fester Bestandteil des Trainings. Durch diese Aktivitäten werden Konzentration und Aufmerksamkeit entwickelt, und die Kinder haben die Möglichkeit, erste Gürtelprüfungen abzulegen. Basierend auf den Prinzipien von Fairness und Respekt lernen sowohl zurückhaltende Kinder, ihre Kräfte kennen und einzusetzen, als auch energiegeladene Draufgänger, ihre Kräfte zu kontrollieren." />
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="AikiTeens (10-15 Jahre)" />
+                        <Standardtext Text="AikiTeens (10-15 Jahre)" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/beginner.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido/aikiTeens.jpg">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die Aikidotechniken werden anspruchsvoller, und Selbstverteidigung wird thematisiert: Es geht darum, strategisches Denken zu entwickeln und das Gelernte verhältnismäßig einzusetzen, sowie belastende Situationen, wie Angriffe von mehreren oder stärkeren Gegnern, zu bewältigen. Durch dieses Training werden nicht nur Selbstbewusstsein und Verantwortungsgefühl geschult, sondern auch die Fähigkeit, schwierige Situationen zu meistern." />
+                            <Standardtext Text="Die Aikidotechniken werden anspruchsvoller, und Selbstverteidigung wird thematisiert: Es geht darum, strategisches Denken zu entwickeln und das Gelernte verhältnismäßig einzusetzen, sowie belastende Situationen, wie Angriffe von mehreren oder stärkeren Gegnern, zu bewältigen. Durch dieses Training werden nicht nur Selbstbewusstsein und Verantwortungsgefühl geschult, sondern auch die Fähigkeit, schwierige Situationen zu meistern." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Dennoch stehen Freude an der Bewegung und eine positive Atmosphäre beim Training genauso im Fokus." />
+                            <Standardtext Text="Dennoch stehen Freude an der Bewegung und eine positive Atmosphäre beim Training genauso im Fokus." />
                         </div>
                     </div>
                 </div>
@@ -214,12 +225,12 @@
 
                 <div class="mt-32 md:flex md:flex-row">
                     <div class="md:max-w-64 md:w-64 md:ml-32 md:order-2">
-                        <Zwischenüberschrift Text="Bujinkan" />
+                        <Subheadline Text="Bujinkan" />
                     </div>
                     <div class="mt-5 md:mt-0 md:order-1">
                         <div>
                             <div>
-                                <Fließtext Text="Im Bujinkan-Training für Kinder und Jugendliche im Alter von 6 bis 16 Jahren geht es weit über das Erlernen von Kampftechniken hinaus. Unser Training ist darauf ausgerichtet, den Kindern nicht nur körperliche Fertigkeiten zu vermitteln, sondern auch ihre geistige und emotionale Entwicklung zu fördern. Durch spielerische Übungen und interaktive Lektionen werden sie ermutigt, ihre Fähigkeiten zu entdecken und ihr Selbstvertrauen aufzubauen. Dabei stehen Respekt, Disziplin und gegenseitige Unterstützung im Mittelpunkt, sodass die Kinder nicht nur körperlich, sondern auch sozial wachsen können." />
+                                <Standardtext Text="Im Bujinkan-Training für Kinder und Jugendliche im Alter von 6 bis 16 Jahren geht es weit über das Erlernen von Kampftechniken hinaus. Unser Training ist darauf ausgerichtet, den Kindern nicht nur körperliche Fertigkeiten zu vermitteln, sondern auch ihre geistige und emotionale Entwicklung zu fördern. Durch spielerische Übungen und interaktive Lektionen werden sie ermutigt, ihre Fähigkeiten zu entdecken und ihr Selbstvertrauen aufzubauen. Dabei stehen Respekt, Disziplin und gegenseitige Unterstützung im Mittelpunkt, sodass die Kinder nicht nur körperlich, sondern auch sozial wachsen können." />
                             </div>
                         </div>
                     </div>
@@ -229,21 +240,21 @@
                         <img class="mb-4 max-w-64 md:ml-16" src="/images/budo.jpg">
                     </div>
                     <div class="mt-4">
-                        <Fließtext Text="Ein besonderer Schwerpunkt liegt auf der Fallschule und dem Rollentraining. Diese Fertigkeiten dienen nicht nur dem Selbstschutz, sondern lehren die Kinder auch, wie sie sich in unerwarteten Situationen schützen können. Durch das Beherrschen dieser Techniken gewinnen sie nicht nur an Sicherheit, sondern auch an Selbstbewusstsein im Umgang mit Herausforderungen des Alltags." />
+                        <Standardtext Text="Ein besonderer Schwerpunkt liegt auf der Fallschule und dem Rollentraining. Diese Fertigkeiten dienen nicht nur dem Selbstschutz, sondern lehren die Kinder auch, wie sie sich in unerwarteten Situationen schützen können. Durch das Beherrschen dieser Techniken gewinnen sie nicht nur an Sicherheit, sondern auch an Selbstbewusstsein im Umgang mit Herausforderungen des Alltags." />
                     </div>
                     <div class="mt-4">
-                        <Fließtext Text="Darüber hinaus bietet das Bujinkan-Training den Kindern eine faszinierende Einführung in die japanische Kampfkunst und Kultur. Sie lernen nicht nur verschiedene Techniken kennen, sondern erfahren auch etwas über die Geschichte und die Werte, die damit verbunden sind. Dies schafft nicht nur ein tieferes Verständnis für die Kunst, sondern fördert auch ihre Neugier und ihren Respekt für andere Kulturen." />
+                        <Standardtext Text="Darüber hinaus bietet das Bujinkan-Training den Kindern eine faszinierende Einführung in die japanische Kampfkunst und Kultur. Sie lernen nicht nur verschiedene Techniken kennen, sondern erfahren auch etwas über die Geschichte und die Werte, die damit verbunden sind. Dies schafft nicht nur ein tieferes Verständnis für die Kunst, sondern fördert auch ihre Neugier und ihren Respekt für andere Kulturen." />
                     </div>
                 </div>
 
                 <div class="mt-32 md:flex md:flex-row">
                     <div class="max-w-64 md:mr-18">
-                        <Zwischenüberschrift Text="Genbukan" />
+                        <Subheadline Text="Genbukan" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div>
                             <div>
-                                <Fließtext Text="Im Genbukan bieten wir kein spezielles Kindertraining an. Stattdessen haben Jugendliche unter 16 Jahren die Möglichkeit, nach einer erfolgreichen Probezeit am regulären Training teilzunehmen." />
+                                <Standardtext Text="Im Genbukan bieten wir kein spezielles Kindertraining an. Stattdessen haben Jugendliche unter 16 Jahren die Möglichkeit, nach einer erfolgreichen Probezeit am regulären Training teilzunehmen." />
                             </div>
                         </div>
                     </div>
@@ -269,5 +280,14 @@
 
 
 @code {
+    private bool ShowNachrichtGesendet { get; set; } = false;
 
+    private void SetMessage(bool result)
+    {
+        if (result)
+        {
+            ShowNachrichtGesendet = true;
+            StateHasChanged();
+        }
+    }
 }

@@ -1,12 +1,16 @@
 ﻿@page "/Genbukan"
-<PageTitle>Genbukan</PageTitle>
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
+<PageTitle>Genbukan - authentische japanische Kampfkunst</PageTitle>
+<HeadContent>
+    <meta name="description" content="Erlebe Genbukan Iaido und Jodo in Augsburg. Traditionelle Kampfkunst und Selbstverteidigung für alle Niveaus. Steigere deine Fähigkeiten in einer engagierten Gemeinschaft." />
+</HeadContent>
+
 <div>
-    <Überschrift Titel="玄武館"
-                 Untertitel="Genbukan"
-                 Anekdote="" />
+    <Headline Titel="玄武館"
+              Untertitel="Genbukan"
+              Anekdote="" />
 </div>
 
 
@@ -16,7 +20,10 @@
         <div class="mx-auto my-20 w-36 md:-mt-10">
             <img src="/images/genbukan/logo.png" />
         </div>
-
+        @if (ShowNachrichtGesendet)
+        {
+            <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
+        }
         <section class="md:flex md:flex-row md:justify-between">
             <div class="mt-5 md:mt-0 md:mr-20">
                 <p class="font-ptsans text-sm tracking-wider">
@@ -61,7 +68,7 @@
                 <div class="col-span-2 my-4 md:order-6">
                     <div class="md:relative md:h-full">
                         <div class="md:absolute md:bottom-6">
-                            <Fließtext Text="IAIDÔ und JODÔ werden ausschließlich mit Waffen geübt. Beide Kampfkünste können voneinander unabhängig einzeln trainiert werden oder (empfohlen) beide Disziplinen in Kombination." />
+                            <Standardtext Text="IAIDÔ und JODÔ werden ausschließlich mit Waffen geübt. Beide Kampfkünste können voneinander unabhängig einzeln trainiert werden oder (empfohlen) beide Disziplinen in Kombination." />
                         </div>
                     </div>
                 </div>
@@ -126,7 +133,7 @@
         <section>
             <SectionBanner Titel="Historie - Iaidô" />
             <div>
-                <Zwischenüberschrift Text="@("Unser \"Stammbaum\"")" />
+                <Subheadline Text="@("Unser \"Stammbaum\"")" />
             </div>
 
             @* Die Striche für Desktop-Ansicht, die sind fest/absolut drin *@
@@ -372,7 +379,7 @@
             </div>
             <div class="mt-10 md:flex md:flex-row">
                 <div class="max-w-64 md:mr-18">
-                    <Zwischenüberschrift Text="Unser japanischer Lehrer" />
+                    <Subheadline Text="Unser japanischer Lehrer" />
                 </div>
                 <div class="mt-5 md:mt-0">
                     <p class="font-ptsans text-sm tracking-wider">
@@ -384,27 +391,27 @@
                         2010 unter anderem in Augsburg, stattfinden.
                     </p>
                     <div class="my-4">
-                        <Fließtext Text="1996, nachdem sein Haus während der großen Hanshin-Erdbeben-Katastrophe zerstört wurde, hat Oshita Sensei nicht nur sein Haus wieder aufgebaut, sondern auf dem Haus seiner Eltern, direkt nebenan, ein eigenes Dôjô errichtet. Im Mai 1996 haben mein Senpai („älterer Schüler“, eine Art Mentor, der den „Jüngeren“ führt oder eben höheren Lehrern vorstellt) Trevor Jones und ich als einzige Nicht-Japaner im Rahmen der offiziellen Eröffnungsfeier zu Senseis Dôjô vor den geladenen höchstrangigen Sensei aus ganz Japan eine Enbû (Vorführung) gemacht." />
+                        <Standardtext Text="1996, nachdem sein Haus während der großen Hanshin-Erdbeben-Katastrophe zerstört wurde, hat Oshita Sensei nicht nur sein Haus wieder aufgebaut, sondern auf dem Haus seiner Eltern, direkt nebenan, ein eigenes Dôjô errichtet. Im Mai 1996 haben mein Senpai („älterer Schüler“, eine Art Mentor, der den „Jüngeren“ führt oder eben höheren Lehrern vorstellt) Trevor Jones und ich als einzige Nicht-Japaner im Rahmen der offiziellen Eröffnungsfeier zu Senseis Dôjô vor den geladenen höchstrangigen Sensei aus ganz Japan eine Enbû (Vorführung) gemacht." />
                     </div>
-                    <Fließtext Text="Oshita Sensei ist derzeit als 8. Dan Kyoshi graduiert, besucht nach wie vor regelmäßig Großbritannien und Europa, um zu unterrichten. Zusätzlich zu Iai hält er Graduierungen in weiteren Kampfkünste, wie Kendô, Jôdô und Daitô-Ryû Aikijujutsu." />
+                    <Standardtext Text="Oshita Sensei ist derzeit als 8. Dan Kyoshi graduiert, besucht nach wie vor regelmäßig Großbritannien und Europa, um zu unterrichten. Zusätzlich zu Iai hält er Graduierungen in weiteren Kampfkünste, wie Kendô, Jôdô und Daitô-Ryû Aikijujutsu." />
                 </div>
             </div>
             <div class="mt-20 md:flex md:flex-row">
                 <div class="max-w-48 md:ml-18 md:order-2">
-                    <Zwischenüberschrift Text="In Memoriam" />
+                    <Subheadline Text="In Memoriam" />
                 </div>
                 <div class="mt-5 md:mt-0 md:order-1">
                     <p class="font-ptsans text-sm tracking-wider">
                         <b>Haruna Matsuo Sensei</b> (1926-2002), mein direkter Lehrer, stammt aus der Präfektur Okayama und begann sein Iaidô- Training 1972, im Alter von 46 Jahren. Davor hat er seit seinem 16. Lebensjahr Kendô trainiert. Haruna Sensei hat im Musashi Dôjô in Ohara geübt. Beruflich hat er als Lehrer an einer Junior High School Wissenschaften unterrichtet. Sein Iaido-Lehrer war YAMASHIBU YOSHIKAZU Sensei. Darüber hinaus wurde er direkt von YAMAMOTO HARUSUKE und TOMEGAHARA TOMIYOSHI Sensei unterwiesen.
                     </p>
                     <div class="my-4">
-                        <Fließtext Text="Haruna Sensei stand zwei Jahre in Folge (1988 und 1989) im Finale in der 7. Dan-Kategorie der All-Japanischen Meisterschaften. 1988 wurde er Zweiter und hat 1989 in seiner Kategorie mit einem unschlagbaren 3:0- Ergebnis in jeder Runde gewonnen. Haruna Sensei war in vielen Wettkämpfen in ganz Japan erfolgreich. Ein unglaublicher Erfolg in einem Land, in dem weitaus mehr Menschen Iaidô üben als man hierzulande vermuten mag." />
+                        <Standardtext Text="Haruna Sensei stand zwei Jahre in Folge (1988 und 1989) im Finale in der 7. Dan-Kategorie der All-Japanischen Meisterschaften. 1988 wurde er Zweiter und hat 1989 in seiner Kategorie mit einem unschlagbaren 3:0- Ergebnis in jeder Runde gewonnen. Haruna Sensei war in vielen Wettkämpfen in ganz Japan erfolgreich. Ein unglaublicher Erfolg in einem Land, in dem weitaus mehr Menschen Iaidô üben als man hierzulande vermuten mag." />
                     </div>
                     <div class="mb-4">
-                        <Fließtext Text="Haruna Sensei hat über viele Jahre im Ausland unterrichtet, mit dem Ziel, dadurch zur Verbreitung des Iaidô auf der gesamten Welt beizutragen. Sein erster Besuch in Europa war 1982 in Großbritannien, gefolgt von regelmäßigen Besuchen von 1984 bis 2001. Ich bin Haruna Sensei 1990 das erste Mal in Dartford, England, begegnet. 1993 war ich das erste Mal in meinem Leben in Japan und habe zwei Monate bei Haruna Sensei, bzw. im Haus der Familie seiner Tochter gelebt und jeden Tag mit diesem großartigen Lehrer authentischer japanischer Kampfkunst geübt. Ich verdanke ihm die umfassenden Grundlagen meines sicherlich unzureichenden Wissens und somit eigentlich alles." />
+                        <Standardtext Text="Haruna Sensei hat über viele Jahre im Ausland unterrichtet, mit dem Ziel, dadurch zur Verbreitung des Iaidô auf der gesamten Welt beizutragen. Sein erster Besuch in Europa war 1982 in Großbritannien, gefolgt von regelmäßigen Besuchen von 1984 bis 2001. Ich bin Haruna Sensei 1990 das erste Mal in Dartford, England, begegnet. 1993 war ich das erste Mal in meinem Leben in Japan und habe zwei Monate bei Haruna Sensei, bzw. im Haus der Familie seiner Tochter gelebt und jeden Tag mit diesem großartigen Lehrer authentischer japanischer Kampfkunst geübt. Ich verdanke ihm die umfassenden Grundlagen meines sicherlich unzureichenden Wissens und somit eigentlich alles." />
                     </div>
                     <div class="mb-4">
-                        <Fließtext Text="Haruna Sensei war zum Zeitpunkt seines Todes, am 14. September 2002, als 8. Dan Kyoshi graduiert, hielt außer in Iaidô eine Gradierung in Kendô und hat Niten-Ichi Ryû, die von Miyamoto Musashi begründete “eine Schule der zwei Schwerter” geübt." />
+                        <Standardtext Text="Haruna Sensei war zum Zeitpunkt seines Todes, am 14. September 2002, als 8. Dan Kyoshi graduiert, hielt außer in Iaidô eine Gradierung in Kendô und hat Niten-Ichi Ryû, die von Miyamoto Musashi begründete “eine Schule der zwei Schwerter” geübt." />
                     </div>
                 </div>
             </div>
@@ -417,10 +424,10 @@
                     <b>Aoki Tadao Sensei</b> (*1926) war/ist mein (erster) Jôdô-Lehrer, als ich 1998 in Japan mit dieser Kampfkunst begonnen habe. Leider hat sich Aoki Sensei mit nun über 90 Jahren aus dem Seminarbetrieb zurückgezogen und unterrichtet nicht mehr. Aoki Sensei lebt in Yokohama, Kanagawa. Er ist 7. Dan Jôdô Kyoshi und 7. Dan Iaidô Kyoshi.
                 </p>
                 <div class="my-4">
-                    <Fließtext Text="Wir nehmen soviele Gelegenheiten als möglich war, um uns auf Seminaren mit Ishido Shizufumi Sensei und/oder hochrangigen europäischen Lehrern fortzubilden." />
+                    <Standardtext Text="Wir nehmen soviele Gelegenheiten als möglich war, um uns auf Seminaren mit Ishido Shizufumi Sensei und/oder hochrangigen europäischen Lehrern fortzubilden." />
                 </div>
                 <div class="mb-4">
-                    <Fließtext Text="Erstellt von Henry Schubert, 6. Dan Jôdô" />
+                    <Standardtext Text="Erstellt von Henry Schubert, 6. Dan Jôdô" />
                 </div>
             </div>
         </section>
@@ -433,7 +440,7 @@
                     <Weiterleitung Link="http://www.genbukan-augsburg.de/index.html" Text="→ Zu Genbukan Augsburg" />
                 </div>
                 <div>
-                    <InteresseFormular Abteilung="@(Abteilung.Genbukan)" />
+                    <InteresseFormular Abteilung="@(Abteilung.Genbukan)" OnSend="SetMessage" />
                 </div>
             </div>
         </section>
@@ -455,5 +462,16 @@
     private void GoToJodo()
     {
         NavigationManager.NavigateTo("/Jodo");
+    }
+
+    private bool ShowNachrichtGesendet { get; set; } = false;
+
+    private void SetMessage(bool result)
+    {
+        if (result)
+        {
+            ShowNachrichtGesendet = true;
+            StateHasChanged();
+        }
     }
 }

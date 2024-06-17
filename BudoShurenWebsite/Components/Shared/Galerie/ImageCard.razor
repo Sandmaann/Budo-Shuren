@@ -22,7 +22,7 @@
             </div>
             <div class="hidden items-end justify-center bg-opacity-70 bg-gradient-to-t from-black md:flex">
                 <div class="text-wrap px-4 py-2 pt-10 text-white">
-                    <Zwischenüberschrift Text="@Eintrag.Titel" />
+                    <Subheadline Text="@Eintrag.Titel" />
                 </div>
             </div>
             @if (Eintrag.IsSelected)
@@ -60,7 +60,7 @@
 
     DateTime mouseDownTime;
 
-    private Timer timer;
+    private Timer? timer;
     private bool timerFired = false;
 
     void TimerTimed()

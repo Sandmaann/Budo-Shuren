@@ -27,7 +27,7 @@
                     {
                         <div class="flex flex-col items-center justify-center">
                             <h3 class="text-2xl">@(Einträge.Count() > 1 ? "Einträge" : "Eintrag") bearbeiten</h3>
-                            <Fließtext Text="@(Einträge.Count() > 1 ? $"{Einträge.Count()} Biler ausgewählt" : "1 Bild ausgewählt")" />
+                            <Standardtext Text="@(Einträge.Count() > 1 ? $"{Einträge.Count()} Biler ausgewählt" : "1 Bild ausgewählt")" />
                         </div>
                     }
                 </div>
@@ -145,7 +145,7 @@
                             </div>
                         </button>
                         <div class="mt-5 text-primary">
-                            <Fließtext Text="Erfolgreich gespeichert" />
+                            <Standardtext Text="Erfolgreich gespeichert" />
                         </div>
                     }
                     else
@@ -179,7 +179,7 @@
             </ProgressBarAnnotations>
         </SfProgressBar>
         <div class="mt-2">
-            <Fließtext Text="@savingText" />
+            <Standardtext Text="@savingText" />
         </div>
     </div>
 </div>
@@ -193,8 +193,6 @@
     [Parameter]
     public EventCallback<bool> OnClose { get; set; }
 
-    [Parameter]
-    public EventCallback OnSidebarOpened { get; set; }
 
     [Parameter]
     public bool IsOpen { get; set; }

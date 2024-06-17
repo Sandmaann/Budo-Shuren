@@ -1,8 +1,11 @@
 ﻿@page "/Aikido"
-<PageTitle>Aikido</PageTitle>
+<PageTitle>Iwama Ryu Aikido</PageTitle>
+<HeadContent>
+    <meta name="description" content="Aikido Trainieren wie in Iwama, Japan. Trainiere traditionelles japanisches Aikido in Augsburg, Training für Kinder und Erwachsene." />
+</HeadContent>
 
 <div class="container">
-    <Überschrift Titel="合氣道"
+    <Headline Titel="合氣道"
                  Untertitel="Aikido"
                  Anekdote="" />
 </div>
@@ -13,16 +16,21 @@
             <img class="h-36 w-36 object-fill" src="/images/aikido/mon.jpg" />
         </div>
 
+        @if (ShowNachrichtGesendet)
+        {
+            <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
+        }
+
         <section class="mt-20 md:flex md:flex-row md:justify-between">
             <div class="mt-5 md:mt-0 md:mr-20">
                 <div class="mt-4">
-                    <Fließtext Text="Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet." />
+                    <Standardtext Text="Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet." />
                 </div>
                 <div class="mt-4">
-                    <Fließtext Text="Der Begründer des Aikido, Ueshiba Morihei, hat unter den unterschiedlichsten Einflüssen diese Kampftraditionen intensiv studiert. Sein Ziel war es, aus dem Alten etwas Neues zu kreieren, das den Menschen in Verbindung mit seiner göttlichen Quelle und damit zur selbsterzieherischen Einsicht in die Sinnlosigkeit tödlicher Gewalt bringt." />
+                    <Standardtext Text="Der Begründer des Aikido, Ueshiba Morihei, hat unter den unterschiedlichsten Einflüssen diese Kampftraditionen intensiv studiert. Sein Ziel war es, aus dem Alten etwas Neues zu kreieren, das den Menschen in Verbindung mit seiner göttlichen Quelle und damit zur selbsterzieherischen Einsicht in die Sinnlosigkeit tödlicher Gewalt bringt." />
                 </div>
                 <div class="mt-4">
-                    <Fließtext Text="Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung." />
+                    <Standardtext Text="Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung." />
                 </div>
             </div>
             <div class="mt-10 min-w-52 md:mt-0 md:max-w-72">
@@ -40,16 +48,16 @@
                 <div class="mt-12 justify-between md:flex md:flex-row">
                     <div class="md:w-52">
                         <div class="md:w-22">
-                            <Zwischenüberschrift Text="Im Dojo" />
+                            <Subheadline Text="Im Dojo" />
                         </div>
                     </div>
                     <div class="flex-1 mt-5 md:ml-18 md:mt-0">
                         <div>
                             <div>
-                                <Fließtext Text="Wir trainieren in einem traditionellen Dojo﻿ (Do = Weg, Jo = Ort) auf einer Mattenfläche von ca. 120 m². Jedes Training besteht aus Bukiwaza (Waffentechniken) und Taijutsu (Körpertechniken).﻿" />
+                                <Standardtext Text="Wir trainieren in einem traditionellen Dojo﻿ (Do = Weg, Jo = Ort) auf einer Mattenfläche von ca. 120 m². Jedes Training besteht aus Bukiwaza (Waffentechniken) und Taijutsu (Körpertechniken).﻿" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Der Einstieg ins laufende Training ist jederzeit möglich. Anfänger und Interessenten sind immer herzlich willkommen. Das Probetraining ist kostenlos. Bitte ca. 15 Minuten vor dem Training erscheinen.﻿" />
+                                <Standardtext Text="Der Einstieg ins laufende Training ist jederzeit möglich. Anfänger und Interessenten sind immer herzlich willkommen. Das Probetraining ist kostenlos. Bitte ca. 15 Minuten vor dem Training erscheinen.﻿" />
                             </div>
                         </div>
                     </div>
@@ -57,49 +65,49 @@
 
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="Anfängertraining" />
+                        <Standardtext Text="Anfängertraining" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
                             <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Alle Aikidoka erinnern sich nur zu gut an die Zeit, in der sie selbst noch Anfänger gewesen sind. Darum sind sie gerne bereit, den Neulingen dabei zu helfen, die Grundlagen zu erwerben. Da das im auch regulären Training geschehen kann, ist ein Einstieg jederzeit möglich﻿.﻿﻿" />
+                            <Standardtext Text="Alle Aikidoka erinnern sich nur zu gut an die Zeit, in der sie selbst noch Anfänger gewesen sind. Darum sind sie gerne bereit, den Neulingen dabei zu helfen, die Grundlagen zu erwerben. Da das im auch regulären Training geschehen kann, ist ein Einstieg jederzeit möglich﻿.﻿﻿" />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Hier steht das Kihon waza (Grundlagentraining) im Vordergrund. Mit dem Bokken (Holzschwert) und dem Jo (Holzstab) werden vor allem Subiri (wiederholende Bewegungs- bzw. Schnittübungen﻿) und erste Awase-Formen (Partnerformen zur Übung des Timings und der Harmonisierung der Bewegung mit dem Partner)﻿ geübt.﻿﻿ Im Taijutsu (Körpertechniken) werden Bewegungsabläufe zunächst statisch mit dem Ziel größtmöglicher Präzision in der Ausübung studiert. Hierbei sollen Technik erlernt werden, die unter Einsatz geringer Kraft zu einer Kontrolle des Angreifers führen." />
+                            <Standardtext Text="Hier steht das Kihon waza (Grundlagentraining) im Vordergrund. Mit dem Bokken (Holzschwert) und dem Jo (Holzstab) werden vor allem Subiri (wiederholende Bewegungs- bzw. Schnittübungen﻿) und erste Awase-Formen (Partnerformen zur Übung des Timings und der Harmonisierung der Bewegung mit dem Partner)﻿ geübt.﻿﻿ Im Taijutsu (Körpertechniken) werden Bewegungsabläufe zunächst statisch mit dem Ziel größtmöglicher Präzision in der Ausübung studiert. Hierbei sollen Technik erlernt werden, die unter Einsatz geringer Kraft zu einer Kontrolle des Angreifers führen." />
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="Fortgeschrittene" />
+                        <Standardtext Text="Fortgeschrittene" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
                             <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die Grundlage werden weiter vertieft. Nun soll auch zunächst gegen leichten später stärkeren Widerstand die Technik ausgeführt werden. Hierdurch kann an der korrekten Form gefeilt werden und das Bewusstsein, dass weniger Kraft als Technik zur Kontrolle des Angreifes führt. In den Waffentechniken werden zunehmend Partnerformen (Kumi-Tachi und Kumi-Jo) trainiert." />
+                            <Standardtext Text="Die Grundlage werden weiter vertieft. Nun soll auch zunächst gegen leichten später stärkeren Widerstand die Technik ausgeführt werden. Hierdurch kann an der korrekten Form gefeilt werden und das Bewusstsein, dass weniger Kraft als Technik zur Kontrolle des Angreifes führt. In den Waffentechniken werden zunehmend Partnerformen (Kumi-Tachi und Kumi-Jo) trainiert." />
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="Iwama Keiko" />
+                        <Standardtext Text="Iwama Keiko" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
                             <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Dieses Training orientiert sich an dem Training in Iwama, Japan.﻿﻿" />
+                            <Standardtext Text="Dieses Training orientiert sich an dem Training in Iwama, Japan.﻿﻿" />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="In diesem hochkonzentrierten und intensivem Training werden Techniken auf hohem Niveau und in rascher Abfolgen sowie ohne ausschweifenden Erklärungen geübt.﻿﻿" />
+                            <Standardtext Text="In diesem hochkonzentrierten und intensivem Training werden Techniken auf hohem Niveau und in rascher Abfolgen sowie ohne ausschweifenden Erklärungen geübt.﻿﻿" />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Vorraussetzung für die Teilnahme sind Beherrschung der Fallschule sowie Kenntnis der Suburis. An diesem Training kann nur nach Rücksprachen mit dem Dojo-Cho teilgenommen werden.﻿﻿" />
+                            <Standardtext Text="Vorraussetzung für die Teilnahme sind Beherrschung der Fallschule sowie Kenntnis der Suburis. An diesem Training kann nur nach Rücksprachen mit dem Dojo-Cho teilgenommen werden.﻿﻿" />
                         </div>
                     </div>
                 </div>
@@ -110,76 +118,76 @@
             <div>
                 <div class="mt-12 justify-between md:flex md:flex-row">
                     <div class="md:w-52">
-                        <Zwischenüberschrift Text="Kinder Training" />
+                        <Subheadline Text="Kinder Training" />
                     </div>
                     <div class="flex-1 mt-5 md:ml-18 md:mt-0">
                         <div>
                             <div>
-                                <Fließtext Text="Ein expliziter Schwerpunkt und Hauptziel unseres Aikido-Angebots ist, Kinder und Jugendliche durch das Training in ihrer Ich-Wahrnehmung und Selbstbehauptung zu fördern und zu unterstützen.﻿﻿" />
+                                <Standardtext Text="Ein expliziter Schwerpunkt und Hauptziel unseres Aikido-Angebots ist, Kinder und Jugendliche durch das Training in ihrer Ich-Wahrnehmung und Selbstbehauptung zu fördern und zu unterstützen.﻿﻿" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Aikido kann hierzu einen wertvollen Beitrag leisten: Das Bewegungsbedürfnis von Kindern und Jugendlichen kommt im Aikido voll auf seine Kosten. Gleichzeitig wird es geformt, bekommt Halt und Struktur. Aus der rein körperlichen Schulung wird eine Schulung der gesamten Persönlichkeit." />
+                                <Standardtext Text="Aikido kann hierzu einen wertvollen Beitrag leisten: Das Bewegungsbedürfnis von Kindern und Jugendlichen kommt im Aikido voll auf seine Kosten. Gleichzeitig wird es geformt, bekommt Halt und Struktur. Aus der rein körperlichen Schulung wird eine Schulung der gesamten Persönlichkeit." />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Die Kinder lernen, sich mit ihren Ängsten (zum Beispiel vor dem Fallen, vor Großen) auseinander zu setzen und sie aufzulösen. So entwickeln sie ein gesundes Selbstvertrauen, das ohne großspuriges Gehabe auskommt. Auch die sozialen Fähigkeiten werden gefördert: Man kann Aikido nur gemeinsam mit anderen üben, man muss sich aufeinander einlassen und Vertrauen entwickeln. Dabei lernen die Kinder, Grenzen zu setzen und die Grenzen anderer zu respektieren." />
+                                <Standardtext Text="Die Kinder lernen, sich mit ihren Ängsten (zum Beispiel vor dem Fallen, vor Großen) auseinander zu setzen und sie aufzulösen. So entwickeln sie ein gesundes Selbstvertrauen, das ohne großspuriges Gehabe auskommt. Auch die sozialen Fähigkeiten werden gefördert: Man kann Aikido nur gemeinsam mit anderen üben, man muss sich aufeinander einlassen und Vertrauen entwickeln. Dabei lernen die Kinder, Grenzen zu setzen und die Grenzen anderer zu respektieren." />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Bei all dem soll der Spaß natürlich nicht zu kurz kommen.﻿" />
+                                <Standardtext Text="Bei all dem soll der Spaß natürlich nicht zu kurz kommen.﻿" />
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="AikiMinis (4-6 Jahre)" />
+                        <Standardtext Text="AikiMinis (4-6 Jahre)" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido/aikiMinis.png">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="In einem spielerischen Rahmen lernen die Kinder die Grundlagen des Aikido: Dazu gehören Vorwärts- und rückwärts rollen, Fallschule, sicheren Stand und erste Aikidotechniken. Durch diese Übungen wird ihr Körpergefühl und ihre Koordination geschult." />
+                            <Standardtext Text="In einem spielerischen Rahmen lernen die Kinder die Grundlagen des Aikido: Dazu gehören Vorwärts- und rückwärts rollen, Fallschule, sicheren Stand und erste Aikidotechniken. Durch diese Übungen wird ihr Körpergefühl und ihre Koordination geschult." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die Kinder können ihre Lust am Kräftemessen ausleben und dabei Fairness und Selbstbehauptung trainieren." />
+                            <Standardtext Text="Die Kinder können ihre Lust am Kräftemessen ausleben und dabei Fairness und Selbstbehauptung trainieren." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Für welche Kinder ist Aikido besonders geeignet?" />
+                            <Standardtext Text="Für welche Kinder ist Aikido besonders geeignet?" />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Grundsätzlich hat Aikido auf alle eine positive Wirkung. Raufbolde lernen, ihre Kräfte gezielt und kontrolliert einzusetzen. Schüchterne Kinder werden in ihrem Selbstwertgefühl gestärkt und lernen, sich dabei durchzusetzen." />
+                            <Standardtext Text="Grundsätzlich hat Aikido auf alle eine positive Wirkung. Raufbolde lernen, ihre Kräfte gezielt und kontrolliert einzusetzen. Schüchterne Kinder werden in ihrem Selbstwertgefühl gestärkt und lernen, sich dabei durchzusetzen." />
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="AikiKids (7-10 Jahre)" />
+                        <Standardtext Text="AikiKids (7-10 Jahre)" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16 md:max-h-72" src="/images/aikido2.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16 md:max-h-72" src="/images/aikido/aikiKids.png">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die technische Seite des Aikido rückt mehr in den Vordergrund." />
+                            <Standardtext Text="Die technische Seite des Aikido rückt mehr in den Vordergrund." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die Kinder lernen Wurf- und Hebeltechniken, begleitet von lauten Kampfschreien und Fallschulübungen, die an Stuntmänner erinnern. Spiel und Spaß sind ebenfalls fester Bestandteil des Trainings. Durch diese Aktivitäten werden Konzentration und Aufmerksamkeit entwickelt, und die Kinder haben die Möglichkeit, erste Gürtelprüfungen abzulegen. Basierend auf den Prinzipien von Fairness und Respekt lernen sowohl zurückhaltende Kinder, ihre Kräfte kennen und einzusetzen, als auch energiegeladene Draufgänger, ihre Kräfte zu kontrollieren." />
+                            <Standardtext Text="Die Kinder lernen Wurf- und Hebeltechniken, begleitet von lauten Kampfschreien und Fallschulübungen, die an Stuntmänner erinnern. Spiel und Spaß sind ebenfalls fester Bestandteil des Trainings. Durch diese Aktivitäten werden Konzentration und Aufmerksamkeit entwickelt, und die Kinder haben die Möglichkeit, erste Gürtelprüfungen abzulegen. Basierend auf den Prinzipien von Fairness und Respekt lernen sowohl zurückhaltende Kinder, ihre Kräfte kennen und einzusetzen, als auch energiegeladene Draufgänger, ihre Kräfte zu kontrollieren." />
                         </div>
                     </div>
                 </div>
                 <div class="mt-10">
                     <div class="font-bold">
-                        <Fließtext Text="AikiTeens (10-15 Jahre)" />
+                        <Standardtext Text="AikiTeens (10-15 Jahre)" />
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/beginner.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido/aikiTeens.jpg">
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Die Aikidotechniken werden anspruchsvoller, und Selbstverteidigung wird thematisiert: Es geht darum, strategisches Denken zu entwickeln und das Gelernte verhältnismäßig einzusetzen, sowie belastende Situationen, wie Angriffe von mehreren oder stärkeren Gegnern, zu bewältigen. Durch dieses Training werden nicht nur Selbstbewusstsein und Verantwortungsgefühl geschult, sondern auch die Fähigkeit, schwierige Situationen zu meistern." />
+                            <Standardtext Text="Die Aikidotechniken werden anspruchsvoller, und Selbstverteidigung wird thematisiert: Es geht darum, strategisches Denken zu entwickeln und das Gelernte verhältnismäßig einzusetzen, sowie belastende Situationen, wie Angriffe von mehreren oder stärkeren Gegnern, zu bewältigen. Durch dieses Training werden nicht nur Selbstbewusstsein und Verantwortungsgefühl geschult, sondern auch die Fähigkeit, schwierige Situationen zu meistern." />
                         </div>
                         <div class="mt-4">
-                            <Fließtext Text="Dennoch stehen Freude an der Bewegung und eine positive Atmosphäre beim Training genauso im Fokus." />
+                            <Standardtext Text="Dennoch stehen Freude an der Bewegung und eine positive Atmosphäre beim Training genauso im Fokus." />
                         </div>
                     </div>
                 </div>
@@ -195,17 +203,17 @@
                             <img class="md:max-h-80" src="/images/aikido/carsten.jpeg" />
                         </div>
                         <div class="mt-4 md:mt-6">
-                            <Zwischenüberschrift Text="Dr. Carsten Oetzel﻿" />
+                            <Subheadline Text="Dr. Carsten Oetzel﻿" />
                         </div>
                         <div class="mt-6 md:mt-10 md:w-100">
                             <div>
-                                <Fließtext Text="Trainer Erwachsenen (Montag/Freitag)" />
+                                <Standardtext Text="Trainer Erwachsenen (Montag/Freitag)" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Shihan, 6. Dan Aikido, Aiki-Ken, Aiki-Jo, Dento Iwama Ryu﻿ (verliehen von Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai)﻿" />
+                                <Standardtext Text="Shihan, 6. Dan Aikido, Aiki-Ken, Aiki-Jo, Dento Iwama Ryu﻿ (verliehen von Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai)﻿" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Japanaufenthalte als Uchi-Deshi („innerer“ bzw. „Haus“ Schüler) bei Morihiro Saito Sensei und Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai﻿." />
+                                <Standardtext Text="Japanaufenthalte als Uchi-Deshi („innerer“ bzw. „Haus“ Schüler) bei Morihiro Saito Sensei und Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai﻿." />
                             </div>
                         </div>
                     </div>
@@ -214,20 +222,20 @@
                             <img class="md:max-h-80" src="/images/aikido/karin.jpeg" />
                         </div>
                         <div class="mt-4 md:mt-6">
-                            <Zwischenüberschrift Text="Karin Oetzel﻿" />
+                            <Subheadline Text="Karin Oetzel﻿" />
                         </div>
                         <div class="mt-6 md:mt-10 md:w-100">
                             <div>
-                                <Fließtext Text="Stell. Vorsitzende, Kinder und Jugendbeauftragte " />
+                                <Standardtext Text="Stell. Vorsitzende, Kinder und Jugendbeauftragte " />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Trainerin Erwachsene, AikiMinis, AikiKids und AikiTeens)﻿" />
+                                <Standardtext Text="Trainerin Erwachsene, AikiMinis, AikiKids und AikiTeens)﻿" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="4. Dan Aikido, Aiki-Ken, Aiki-Jo, Dento Iwama Ryu (verliehen von Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai)﻿" />
+                                <Standardtext Text="4. Dan Aikido, Aiki-Ken, Aiki-Jo, Dento Iwama Ryu (verliehen von Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai)﻿" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Japanaufenthalte als Uchi-Deshi („innerer“ bzw. „Haus“ Schüler) bei Morihiro Saito Sensei und Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai﻿.﻿" />
+                                <Standardtext Text="Japanaufenthalte als Uchi-Deshi („innerer“ bzw. „Haus“ Schüler) bei Morihiro Saito Sensei und Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai﻿.﻿" />
                             </div>
                         </div>
                     </div>
@@ -236,17 +244,17 @@
                             <img class="md:max-h-80" src="/images/aikido/florian.jpeg" />
                         </div>
                         <div class="mt-4 md:mt-6">
-                            <Zwischenüberschrift Text="Florian Lehmann" />
+                            <Subheadline Text="Florian Lehmann" />
                         </div>
                         <div class="mt-6 md:mt-10 md:w-100">
                             <div>
-                                <Fließtext Text="Trainer Erwachsene (Montag), AikiTeens, Hochschulsport" />
+                                <Standardtext Text="Trainer Erwachsene (Montag), AikiTeens, Hochschulsport" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="3. Dan Aikido, Aiki-Ken, Aiki-Jo, (verliehen von Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai)﻿﻿" />
+                                <Standardtext Text="3. Dan Aikido, Aiki-Ken, Aiki-Jo, (verliehen von Hitohira Saito Sensei, Kaicho Iwama Shin Shin Aiki Shurenkai)﻿﻿" />
                             </div>
                             <div class="mt-4">
-                                <Fließtext Text="Ausgebildeter Fachübungsleiter des Fachverbandes für Aikido" />
+                                <Standardtext Text="Ausgebildeter Fachübungsleiter des Fachverbandes für Aikido" />
                             </div>
                         </div>
                     </div>
@@ -254,7 +262,7 @@
 
                 <div class="mt-10 md:mt-0 md:max-w-72 md:min-w-64">
                     <div>
-                        <InteresseFormular Abteilung="@(Abteilung.Aikido)" />
+                        <InteresseFormular Abteilung="@(Abteilung.Aikido)" OnSend="SetMessage" />
                     </div>
                 </div>
             </div>
@@ -263,7 +271,7 @@
         <section>
             <SectionBanner Titel="Prüfungsprogramm" />
             <div>
-                <Fließtext Text="Hitohira Saito Sensei überlässt es den Dojo-Cho ein Kyu-Prüfungsprogramm zu erstellen und hat nur Richtlinien herausgegeben. Daher gibt es Unterschiede im Kyu-Prüfungsprogramm von Dojo zu Dojo. Bei den Zeiten bzw. Trainingseinheiten zwischen den Prüfungen handelt es sich um grobe Richtzahlen, die je nach Situation sowohl unter- als auch überschritten werden." />
+                <Standardtext Text="Hitohira Saito Sensei überlässt es den Dojo-Cho ein Kyu-Prüfungsprogramm zu erstellen und hat nur Richtlinien herausgegeben. Daher gibt es Unterschiede im Kyu-Prüfungsprogramm von Dojo zu Dojo. Bei den Zeiten bzw. Trainingseinheiten zwischen den Prüfungen handelt es sich um grobe Richtzahlen, die je nach Situation sowohl unter- als auch überschritten werden." />
                 <div class="mt-10">
                     <p class="font-yuji text-sm font-bold tracking-wider">Rokkyu</p>
                     <div class="font-ptsans text-xs tracking-wider">
@@ -433,14 +441,14 @@
 
                 <div class="mt-10 md:flex md:flex-row md:items-center">
                     <div class="md:w-52">
-                        <Fließtext Text="Zum Download:" />
+                        <Standardtext Text="Zum Download:" />
                     </div>
                     <a href="/api/Documents/Download/prüfungsprogramm" downloads="Prüfungsprogramm.pdf" class="my-2 flex h-8 flex-row items-center">
                         <span class="material-symbols-outlined text-2xl">
                             picture_as_pdf
                         </span>
                         <div class="ml-2">
-                            <Fließtext Text="Prüfungsprogramm.pdf" />
+                            <Standardtext Text="Prüfungsprogramm.pdf" />
                         </div>
                     </a>
                 </div>
@@ -458,5 +466,14 @@
 </div>
 
 @code {
+    private bool ShowNachrichtGesendet { get; set; } = false;
 
+    private void SetMessage(bool result)
+    {
+        if (result)
+        {
+            ShowNachrichtGesendet = true;
+            StateHasChanged();
+        }
     }
+}

@@ -3,12 +3,14 @@
 @using BudoShurenWebsite.Components.Shared
 @using BudoShurenWebsite.Components.Pages
 
-
 <PageTitle>Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="description" content="Im Budo Shuren Dojo Augsburg werden die traditionellen japanischen Kampfkünste Aikido, Genbukan und Bujinkan unterrichtet. Trainiere Budo wie in Japan." />
+</HeadContent>
 
 <div>
-    <Überschrift Titel="武道修練道場"
-                 Untertitel="Budoshuren Dojo"
+    <Headline Titel="武道修練道場"
+                 Untertitel="Budo Shuren Dojo"
                  Anekdote="Augsburg" />
 
 </div>
@@ -16,7 +18,6 @@
     <div class="mx-10">
         <section>
             <SectionBanner Titel="Neuigkeiten" />
-
             <div>
                 <Neuigkeiten />
             </div>
@@ -25,14 +26,14 @@
         <section>
             <SectionBanner Titel="Wer sind wir" />
             <div class="font-ptsans text-sm font-normal tracking-wider text-black md:ml-52">
-                <Fließtext Text="Das Budo Shuren Dojo ist ein einzigartiger Verein, der drei verschiedene Kampfkünste unter einem Dach vereint. Diese Kampfkünste sind Aikido, vertreten durch das Aiki Shuren Dojo, Genbukan, repräsentiert durch Genbukan Augsburg, und Bujinkan, vertreten durch das Bujinkan Busshin Dojo. Jede dieser Abteilungen trainiert ihre jeweilige Kunst individuell, aber alle profitieren von der starken Gemeinschaft innerhalb des Dojos." />
+                <Standardtext Text="Das Budo Shuren Dojo ist ein einzigartiger Verein, der drei verschiedene Kampfkünste unter einem Dach vereint. Diese Kampfkünste sind Aikido, vertreten durch das Aiki Shuren Dojo, Genbukan, repräsentiert durch Genbukan Augsburg, und Bujinkan, vertreten durch das Bujinkan Busshin Dojo. Jede dieser Abteilungen trainiert ihre jeweilige Kunst individuell, aber alle profitieren von der starken Gemeinschaft innerhalb des Dojos." />
             </div>
         </section>
 
         <section>
             <SectionBanner Titel="Unsere Kampfkünste" />
             <div>
-                <Kampfkünste />
+                <Kampfkunst />
             </div>
         </section>
 
@@ -51,7 +52,6 @@
         </section>
     </div>
 </div>
-
 
 @code {
 }

@@ -1,0 +1,12 @@
+﻿
+<p class="font-ptsans text-sm tracking-wider @(IsBold ? "font-bold" : "")">
+    @Text
+</p>
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public bool IsBold { get; set; } = false;
+}
