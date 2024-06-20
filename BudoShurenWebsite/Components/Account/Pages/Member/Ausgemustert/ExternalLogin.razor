@@ -1,4 +1,4 @@
-﻿@page "/Account/ExternalLogin"
+﻿@* @page "/Account/ExternalLogin" *@
 
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -39,7 +39,7 @@
                 <label for="email" class="form-label">Email</label>
                 <ValidationMessage For="() => Input.Email" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            <button type="submit" class="btn btn-lg btn-primary w-100">Register</button>
         </EditForm>
     </div>
 </div>

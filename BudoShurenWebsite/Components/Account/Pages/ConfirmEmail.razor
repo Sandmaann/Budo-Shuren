@@ -1,4 +1,5 @@
 ﻿@page "/Account/ConfirmEmail"
+@page "/budoshuren/Account/ConfirmEmail"
 
 @using System.Text
 @using Microsoft.AspNetCore.Identity
@@ -10,6 +11,7 @@
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @inject EmailSender EmailSender
 @inject NavigationManager NavigationManager
+@inject ILogger<ConfirmEmail> Logger
 
 <PageTitle>E-Mail best&auml;tigen</PageTitle>
 
@@ -70,38 +72,34 @@
         }
         else
         {
-            var previouslyConfirmed = await UserManager.IsEmailConfirmedAsync(user);
-
-            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
-            var result = await UserManager.ConfirmEmailAsync(user, code);
-            isSuccess = result.Succeeded;
-            isVerified = user.Verified;
-
-            if (isSuccess && previouslyConfirmed)
+            try
             {
-                //Info an den Abteilungsleiter schicken dass er einen Zugang aktivieren sollte
-                using var context = ContextFactory.CreateDbContext();
-                var abteilung = await context.Abteilungen.FirstOrDefaultAsync(x => x.ID == user.Abteilung);
-                if (abteilung != null)
+                var previouslyConfirmed = await UserManager.IsEmailConfirmedAsync(user);
+
+                var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+                var result = await UserManager.ConfirmEmailAsync(user, code);
+                isSuccess = result.Succeeded;
+                isVerified = user.Verified;
+
+                if (isSuccess && previouslyConfirmed)
                 {
-                    string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
+                    //Info an den Abteilungsleiter schicken dass er einen Zugang aktivieren sollte
+                    using var context = ContextFactory.CreateDbContext();
+                    var abteilung = await context.Abteilungen.FirstOrDefaultAsync(x => x.ID == user.Abteilung);
+                    if (abteilung != null)
+                    {
+                        string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
 
-                    // string infoAnAbteilungsleiter = $"Hallo {name}," +
-                    // Environment.NewLine +
-                    // "für deine Abteilung hat sich ein neuer Benutzer an der Budo-Shuren-Dojo Webseite registriert." +
-                    // Environment.NewLine +
-                    // $"Bitte prüfe doch, ob der zu deinen Leuten gehört und aktiviere seinen Zugang im Mitgliederbereich der Webseite." +
-                    // Environment.NewLine +
-                    // "Hier gehts zur Website: " + NavigationManager.BaseUri +
-                    // Environment.NewLine +
-                    // Environment.NewLine +
-                    // "よろしくお願いします";
+                        //E-Mail an Abteilungsleiter senden
+                        string text = EmailSender.HtmlLayout_NewUser.Replace("[NAME]", name);
 
-                    //E-Mail an Abteilungsleiter senden
-                    string text = EmailSender.HtmlLayout_NewUser.Replace("[NAME]", name);
-
-                    await EmailSender.SendEmailAsync(abteilung.Email, "Neuer Benutzer in deiner Abteilung!", text);
+                        await EmailSender.SendEmailAsync(abteilung.Email, "Neuer Benutzer in deiner Abteilung!", text);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error confirming email");
             }
         }
     }

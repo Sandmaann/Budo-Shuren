@@ -1,4 +1,5 @@
 ﻿@page "/Account/Login"
+@page "/budoshuren/Account/Login"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
@@ -120,7 +121,7 @@
 
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-            var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
             LoginIsBusy = false;
 
             if (result.Succeeded)
@@ -135,8 +136,19 @@
             }
             else
             {
+                Logger.LogInformation("Invalid login attempt.");
                 errorMessage = "Wir konnten dich leider nicht anmelden. Sind deine Zugangsdaten korrekt?";
             }
+        }
+        catch (NavigationException navi)
+        {
+            //Die NavigationException muss geworfen werden, damit der Redirect funktioniert
+            throw navi;
+        }
+        catch(Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Anmelden");
+            errorMessage = "Ein Fehler ist aufgetreten. Bitte versuche es später erneut.";
         }
         finally
         {

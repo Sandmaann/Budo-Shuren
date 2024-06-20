@@ -6,7 +6,7 @@
 
 @inject UserService UserService
 @inject IDbContextFactory<ApplicationDbContext> contextFactory
-
+@inject ILogger<AppointmentAdaptorComponent> Logger
 
 <CascadingValue Value="@this">
     @ChildContent
@@ -32,213 +32,252 @@
     /// <returns>The data collection's type is determined by how this method has been implemented.</returns>
     public override async Task<object> ReadAsync(DataManagerRequest dm, string Key = null)
     {
-
-        IEnumerable<AppointmentData> DataSource;
-        if (Abteilung != null && IsWeek != null)
+        try
         {
-            using var context = contextFactory.CreateDbContext();
-            if (Abteilung == "Alle")
+
+
+            IEnumerable<AppointmentData> DataSource;
+            if (Abteilung != null && IsWeek != null)
             {
-                DataSource = await context.Appointments.Where(x => (IsWeek == true && x.ShowInWeek) || IsWeek == false && x.ShowInMonth).ToListAsync();
-            }
-            else
-            {
-                DataSource = await context.Appointments.Where(x =>
-                    (x.Abteilung == Abteilung || x.Abteilung == "Verein") &&
-                    ((IsWeek == true && x.ShowInWeek) || IsWeek == false && x.ShowInMonth)
-                ).ToListAsync();
-            }
-        }
-        else
-            return new List<AppointmentData>();
-
-        int TotalRecordsCount = DataSource.Count();
-
-        // Handling Searching in CustomAdaptor.
-        if (dm.Search != null && dm.Search.Count > 0)
-        {
-            // Searching
-            DataSource = DataOperations.PerformSearching(DataSource, dm.Search);
-            //Add custom logic here if needed and remove above method
-        }
-        if (dm.Sorted != null && dm.Sorted.Count > 0)
-        {
-            // Sorting
-            DataSource = DataOperations.PerformSorting(DataSource, dm.Sorted);
-        }
-        if (dm.Where != null && dm.Where.Count > 0)
-        {
-            DataSource = DataOperations.PerformFiltering(DataSource, dm.Where, dm.Where[0].Operator);
-        }
-        int count = DataSource.Count();
-        if (dm.Skip != 0)
-        {
-            //Paging
-            DataSource = DataOperations.PerformSkip(DataSource, dm.Skip);
-        }
-        if (dm.Take != 0)
-        {
-            DataSource = DataOperations.PerformTake(DataSource, dm.Take);
-        }
-
-        return dm.RequiresCounts ? new DataResult() { Result = DataSource, Count = count } : (object)DataSource;
-    }
-    public override async Task<object> InsertAsync(DataManager dataManager, object record, string additionalParam)
-    {
-        //await Task.Delay(2500);
-
-        if (record is AppointmentData obj)
-        {
-            using var context = contextFactory.CreateDbContext();
-
-            await UserService.InitializeAsync();
-            if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
-            {
-                if (obj.Id > 0)
+                using var context = contextFactory.CreateDbContext();
+                if (Abteilung == "Alle")
                 {
-                    //Recurrence wurde geändert - die ID ist zwar da, aber ich muss einen neuen Eintrag anlegen
-                    //(der originale mit Recurrence wurde geändert sodass der Termin ausgenommen wird,
-                    //und ein neuer Eintrag für den geänderten Termin angelegt wird)
-                    var appointment = new AppointmentData();
-                    appointment.CopyPropertiesFrom(obj);
-                    appointment.Id = 0;
-                    appointment.Created = DateTime.Now;
-                    appointment.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
-                    appointment.LastChange = DateTime.Now;
-                    appointment.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
-                    await context.Appointments.AddAsync(appointment);
+                    DataSource = await context.Appointments.Where(x => (IsWeek == true && x.ShowInWeek) || IsWeek == false && x.ShowInMonth).ToListAsync();
                 }
                 else
                 {
-                    obj.Created = DateTime.Now;
-                    obj.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
-                    obj.LastChange = DateTime.Now;
-                    obj.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
-
-                    await context.Appointments.AddAsync(obj);
+                    DataSource = await context.Appointments.Where(x =>
+                        (x.Abteilung == Abteilung || x.Abteilung == "Verein") &&
+                        ((IsWeek == true && x.ShowInWeek) || IsWeek == false && x.ShowInMonth)
+                    ).ToListAsync();
                 }
             }
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Fehler beim Speichern des Kalendereintrags: " + ex.Message);
-            }
-        }
-        else
-            throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
+            else
+                return new List<AppointmentData>();
 
-        return record;
+            int TotalRecordsCount = DataSource.Count();
+
+            // Handling Searching in CustomAdaptor.
+            if (dm.Search != null && dm.Search.Count > 0)
+            {
+                // Searching
+                DataSource = DataOperations.PerformSearching(DataSource, dm.Search);
+                //Add custom logic here if needed and remove above method
+            }
+            if (dm.Sorted != null && dm.Sorted.Count > 0)
+            {
+                // Sorting
+                DataSource = DataOperations.PerformSorting(DataSource, dm.Sorted);
+            }
+            if (dm.Where != null && dm.Where.Count > 0)
+            {
+                DataSource = DataOperations.PerformFiltering(DataSource, dm.Where, dm.Where[0].Operator);
+            }
+            int count = DataSource.Count();
+            if (dm.Skip != 0)
+            {
+                //Paging
+                DataSource = DataOperations.PerformSkip(DataSource, dm.Skip);
+            }
+            if (dm.Take != 0)
+            {
+                DataSource = DataOperations.PerformTake(DataSource, dm.Take);
+            }
+
+            return dm.RequiresCounts ? new DataResult() { Result = DataSource, Count = count } : (object)DataSource;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Lesen der Kalendereinträge");
+            return new List<AppointmentData>();
+        }
+    }
+    public override async Task<object> InsertAsync(DataManager dataManager, object record, string additionalParam)
+    {
+        try
+        {
+            if (record is AppointmentData obj)
+            {
+                using var context = contextFactory.CreateDbContext();
+
+                await UserService.InitializeAsync();
+                if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+                {
+                    if (obj.Id > 0)
+                    {
+                        //Recurrence wurde geändert - die ID ist zwar da, aber ich muss einen neuen Eintrag anlegen
+                        //(der originale mit Recurrence wurde geändert sodass der Termin ausgenommen wird,
+                        //und ein neuer Eintrag für den geänderten Termin angelegt wird)
+                        var appointment = new AppointmentData();
+                        appointment.CopyPropertiesFrom(obj);
+                        appointment.Id = 0;
+                        appointment.Created = DateTime.Now;
+                        appointment.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
+                        appointment.LastChange = DateTime.Now;
+                        appointment.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
+                        await context.Appointments.AddAsync(appointment);
+                    }
+                    else
+                    {
+                        obj.Created = DateTime.Now;
+                        obj.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
+                        obj.LastChange = DateTime.Now;
+                        obj.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
+
+                        await context.Appointments.AddAsync(obj);
+                    }
+                }
+                await context.SaveChangesAsync();
+
+            }
+            else
+                throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
+
+            return record;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Speichern des Kalendereintrags");
+            throw new Exception("Fehler beim Speichern des Kalendereintrags: " + ex.Message);
+        }
     }
 
     public override async Task<object> UpdateAsync(DataManager dm, object value, string keyField, string key)
     {
-        if (value is AppointmentData obj)
+        try
         {
-            using var context = contextFactory.CreateDbContext();
-
-            await UserService.InitializeAsync();
-            if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+            if (value is AppointmentData obj)
             {
-                var appointment = await context.Appointments.FindAsync(obj.Id);
-                if (appointment != null)
+                using var context = contextFactory.CreateDbContext();
+
+                await UserService.InitializeAsync();
+                if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
                 {
-                    appointment.CopyPropertiesFrom(obj);
+                    var appointment = await context.Appointments.FindAsync(obj.Id);
+                    if (appointment != null)
+                    {
+                        appointment.CopyPropertiesFrom(obj);
 
-                    appointment.LastChange = DateTime.Now;
-                    appointment.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
+                        appointment.LastChange = DateTime.Now;
+                        appointment.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
 
-                    await context.SaveChangesAsync();
+                        await context.SaveChangesAsync();
+                    }
                 }
+                else
+                    throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
             }
-            else
-                throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
+            return value;
         }
-        return value;
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Aktualisieren des Kalendereintrags");
+            throw new Exception("Fehler beim Aktualisieren des Kalendereintrags: " + ex.Message);
+        }
     }
 
     // Performs Remove operation
     public override async Task<object> RemoveAsync(DataManager dm, object value, string keyField, string key)
     {
-        if (value is AppointmentData obj)
+        try
         {
-            using var context = contextFactory.CreateDbContext();
-
-            await UserService.InitializeAsync();
-            if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+            if (value is AppointmentData obj)
             {
-                var appointment = await context.Appointments.FindAsync(obj.Id);
-                if (appointment != null)
+                using var context = contextFactory.CreateDbContext();
+
+                await UserService.InitializeAsync();
+                if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
                 {
-                    context.Appointments.Remove(appointment);
-                    await context.SaveChangesAsync();
+                    var appointment = await context.Appointments.FindAsync(obj.Id);
+                    if (appointment != null)
+                    {
+                        context.Appointments.Remove(appointment);
+                        await context.SaveChangesAsync();
+                    }
                 }
+                else
+                    throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
             }
-            else
-                throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
+            else if (value is int objID)
+            {
+                using var context = contextFactory.CreateDbContext();
+
+                await UserService.InitializeAsync();
+                if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+                {
+                    var appointment = await context.Appointments.FindAsync(objID);
+                    if (appointment != null)
+                    {
+                        context.Appointments.Remove(appointment);
+                        await context.SaveChangesAsync();
+                    }
+                }
+                else
+                    throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
+            }
+            return value;
         }
-        else if (value is int objID)
+        catch (Exception ex)
         {
-            using var context = contextFactory.CreateDbContext();
-
-            await UserService.InitializeAsync();
-            if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
-            {
-                var appointment = await context.Appointments.FindAsync(objID);
-                if (appointment != null)
-                {
-                    context.Appointments.Remove(appointment);
-                    await context.SaveChangesAsync();
-                }
-            }
-            else
-                throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Kalendereinträge zu bearbeiten!");
+            Logger.LogError(ex, "Fehler beim Löschen des Kalendereintrags");
+            throw new Exception("Fehler beim Löschen des Kalendereintrags: " + ex.Message);
         }
-        return value;
     }
     public override async Task<object> BatchUpdateAsync(DataManager dataManager, object changedRecords, object addedRecords, object deletedRecords, string primaryColumnName, string key, int? dropIndex)
     {
-        if (changedRecords != null && changedRecords is IEnumerable<object> changedList)
+        try
         {
-            foreach (var changed in changedList)
-            {
-                if (changed is AppointmentData changedData)
-                {
-                    try
-                    {
-                        await UpdateAsync(dataManager, changedData, primaryColumnName, key);
 
-                    }
-                    catch (Exception ex)
+            if (changedRecords != null && changedRecords is IEnumerable
+                <object>
+                    changedList)
+            {
+                foreach (var changed in changedList)
+                {
+                    if (changed is AppointmentData changedData)
                     {
-                        Console.WriteLine(ex.Message);
+                        try
+                        {
+                            await UpdateAsync(dataManager, changedData, primaryColumnName, key);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
                     }
                 }
             }
-        }
-        if (addedRecords != null && addedRecords is IEnumerable<object> addedList)
-        {
-            foreach (var added in addedList)
+            if (addedRecords != null && addedRecords is IEnumerable
+            <object>
+                addedList)
             {
-                if (added is AppointmentData addedData)
+                foreach (var added in addedList)
                 {
-                    await InsertAsync(dataManager, addedData, null);
+                    if (added is AppointmentData addedData)
+                    {
+                        await InsertAsync(dataManager, addedData, null);
+                    }
                 }
             }
-        }
-        if (deletedRecords != null && deletedRecords is IEnumerable<object> deletedList)
-        {
-            foreach (var deleted in deletedList)
+            if (deletedRecords != null && deletedRecords is IEnumerable
+            <object>
+                deletedList)
             {
-                if (deleted is AppointmentData deletedData)
+                foreach (var deleted in deletedList)
                 {
-                    await RemoveAsync(dataManager, deletedData, primaryColumnName, key);
+                    if (deleted is AppointmentData deletedData)
+                    {
+                        await RemoveAsync(dataManager, deletedData, primaryColumnName, key);
+                    }
                 }
             }
+            return base.BatchUpdateAsync(dataManager, changedRecords, addedRecords, deletedRecords, primaryColumnName, key, dropIndex);
         }
-        return base.BatchUpdateAsync(dataManager, changedRecords, addedRecords, deletedRecords, primaryColumnName, key, dropIndex);
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim BatchUpdate des Kalendereintrags");
+            throw new Exception("Fehler beim BatchUpdate des Kalendereintrags: " + ex.Message);
+        }
     }
-
 }

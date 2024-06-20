@@ -19,6 +19,10 @@ using BudoShurenWebsite.Global;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
+using NLog.Web;
+using NLog;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace BudoShurenWebsite
 {
@@ -26,140 +30,181 @@ namespace BudoShurenWebsite
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents();
-            builder.Services.AddSyncfusionBlazor();
-            // Register the locale service to localize the  SyncfusionBlazor components.
-            builder.Services.AddSingleton(typeof(ISyncfusionStringLocalizer), typeof(SyncfusionLocalizer));
-
-            builder.Services.AddControllers();
-            builder.Services.AddHttpClient();
-
-
-            //DEAKTIVEREN !!!
-            builder.Services.AddServerSideBlazor(options => options.DetailedErrors = true);
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-            //Authentifizierung
-            builder.Services.AddCascadingAuthenticationState();
-            builder.Services.AddScoped<IdentityUserAccessor>();
-            builder.Services.AddScoped<IdentityRedirectManager>();
-            builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-            builder.Services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
-
-            //Meine Dienste
-            builder.Services.AddScoped<UserService>();
-            builder.Services.AddScoped<FileService>();
-            builder.Services.AddScoped<EmailSender>();
-
-            //builder.Services.AddSingleton<IDataService, DataService>();
-            builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
-
-            //Adapter für SfGrid & SfScheduler
-            builder.Services.AddScoped<MitgliederAdaptor>();
-            builder.Services.AddScoped<NeuigkeitenAdaptor>();
-            builder.Services.AddScoped<AppointmentAdaptor>();
-
-
-            builder.Services.AddAuthentication(options =>
+            var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+            try
             {
-                options.DefaultScheme = IdentityConstants.ApplicationScheme;
-                options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-            })
-                .AddIdentityCookies();
 
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
+                // Registrieren des Ereignishandlers für unbeobachtete Task-Ausnahmen
+                TaskScheduler.UnobservedTaskException += (sender, e) =>
+                {
+                    logger.Log(NLog.LogLevel.Error, e.Exception, "Ein unbehandelter Fehler in einem Task wurde festgestellt.");
+                    e.SetObserved(); // Verhindert den Prozessabbruch
+                };
 
-            var connectionString = string.Empty;
-            if (builder.Environment.IsDevelopment())
-            {
-                connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                var builder = WebApplication.CreateBuilder(args);
+
+                // Add services to the container.
+                builder.Services.AddRazorComponents()
+                    .AddInteractiveServerComponents();
+                builder.Services.AddSyncfusionBlazor();
+                // Register the locale service to localize the  SyncfusionBlazor components.
+                builder.Services.AddSingleton(typeof(ISyncfusionStringLocalizer), typeof(SyncfusionLocalizer));
+
+                builder.Services.AddControllers();
+                builder.Services.AddHttpClient();
+
+
+                //DEAKTIVEREN !!!
+                builder.Services.AddServerSideBlazor(options => options.DetailedErrors = true);
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                //Authentifizierung
+                builder.Services.AddCascadingAuthenticationState();
+                builder.Services.AddScoped<IdentityUserAccessor>();
+                builder.Services.AddScoped<IdentityRedirectManager>();
+                builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+                builder.Services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
+
+                //Meine Dienste
+                builder.Services.AddScoped<UserService>();
+                builder.Services.AddScoped<FileService>();
+                builder.Services.AddScoped<EmailSender>();
+
+                //builder.Services.AddSingleton<IDataService, DataService>();
+                builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
+
+                //Adapter für SfGrid & SfScheduler
+                builder.Services.AddScoped<MitgliederAdaptor>();
+                builder.Services.AddScoped<NeuigkeitenAdaptor>();
+                builder.Services.AddScoped<AppointmentAdaptor>();
+
+                builder.Services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+                    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+                })
+                    .AddIdentityCookies();
+
+                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
+                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
+
+                var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                //if (builder.Environment.IsDevelopment())
+                //{
+                //    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                //}
+                //else
+                //{
+                //    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                //}
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+                }
+
+                builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
+                    options.UseSqlServer(connectionString));
+                builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                    options.UseSqlServer(connectionString), optionsLifetime: ServiceLifetime.Singleton);
+
+                builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+
+                builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                    .AddRoles<IdentityRole>()
+                    .AddEntityFrameworkStores<ApplicationDbContext>()
+                    .AddSignInManager()
+                .AddDefaultTokenProviders();
+
+                builder.Services.AddAuthorization(options =>
+                {
+                    //options.AddPolicy("Aktiviert", policy => policy.RequireAssertion(context =>
+                    //    !context.User.IsInRole(Roles.Gast)));
+                    options.AddPolicy("Aktiviert", policy => policy.Requirements.Add(new VerifiedUserRequirement()));
+                    options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
+                        !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
+                });
+
+                //builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+                builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
+
+                CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("de-DE");
+                CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("de-DE");
+
+
+                // Fügen Sie NLog als Logging-Provider hinzu
+                builder.Logging.ClearProviders();
+                builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+                builder.Host.UseNLog();
+
+                builder.Logging.AddConsole();
+                builder.Logging.AddDebug();
+                builder.Logging.AddEventLog();
+
+                var app = builder.Build();
+
+                // Configure the HTTP request pipeline.
+                if (app.Environment.IsDevelopment())
+                {
+                    //app.UseExceptionHandler("/Error");
+                    app.UseDeveloperExceptionPage();
+                    app.UseMigrationsEndPoint();
+                }
+                else
+                {
+                    //Fehlerseite anzeigen
+                    app.UseExceptionHandler(errorApp =>
+                    {
+                        errorApp.Run(async context =>
+                        {
+                            context.Response.StatusCode = 500; // Interner Serverfehler
+                            context.Response.ContentType = "text/html";
+
+                            var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                            if (exceptionHandlerPathFeature?.Error != null)
+                            {
+                                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                                logger.LogError(exceptionHandlerPathFeature.Error, "Unbehandelter Fehler");
+                            }
+
+                            // Umleitung zur Fehlerseite
+                            context.Response.Redirect("/Error");
+                        });
+                    });
+
+                    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                    app.UseHsts();
+                }
+
+
+                //Nur für Release oder bei Migration wichtig
+                //MigrateDatabase(app);
+
+                app.UseHttpsRedirection();
+
+                app.UseStaticFiles();
+                app.UseAntiforgery();
+
+                app.MapRazorComponents<App>()
+                    .AddInteractiveServerRenderMode();
+
+                // Add additional endpoints required by the Identity /Account Razor components.
+                app.MapAdditionalIdentityEndpoints();
+                app.MapControllers();
+
+                app.Run();
             }
-            else
+            catch (Exception exception)
             {
-                connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-                //TODO das umsetzen!
-                //connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+                // NLog: catch setup errors
+                logger.Error(exception, "An error occurred during application startup");
+                throw;
             }
-            if (string.IsNullOrWhiteSpace(connectionString))
+            finally
             {
-                throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+                // Ensure to flush and stop internal timers/threads before application-exit (to avoid segmentation faults on Linux)
+                NLog.LogManager.Shutdown();
             }
-
-            builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString), optionsLifetime: ServiceLifetime.Singleton);
-
-            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-
-            builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddSignInManager()
-            .AddDefaultTokenProviders();
-
-            //services.AddDbContext<MyDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
-
-            //builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-            //    .AddEntityFrameworkStores<ApplicationDbContext>()
-            //    .AddSignInManager()
-            //    .AddDefaultTokenProviders()
-            //    .AddRoles<IdentityRole>();
-
-            builder.Services.AddAuthorization(options =>
-            {
-                //options.AddPolicy("Aktiviert", policy => policy.RequireAssertion(context =>
-                //    !context.User.IsInRole(Roles.Gast)));
-                options.AddPolicy("Aktiviert", policy => policy.Requirements.Add(new VerifiedUserRequirement()));
-                options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
-                    !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
-            });
-
-            //builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
-
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("de-DE");
-            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("de-DE");
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseMigrationsEndPoint();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-
-            //Nur für Release oder bei Migration wichtig
-            //MigrateDatabase(app);
-
-            app.UseHttpsRedirection();
-
-            app.UseStaticFiles();
-            app.UseAntiforgery();
-
-            app.MapRazorComponents<App>()
-                .AddInteractiveServerRenderMode();
-
-            // Add additional endpoints required by the Identity /Account Razor components.
-            app.MapAdditionalIdentityEndpoints();
-            app.MapControllers();
-
-            app.Run();
         }
 
         private static void MigrateDatabase(WebApplication host)

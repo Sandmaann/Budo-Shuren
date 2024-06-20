@@ -1,9 +1,11 @@
 ﻿@page "/Account/Member/Neuigkeiten"
+@page "/budoshuren/Account/Member/Neuigkeiten"
 @rendermode InteractiveServer
 
 @inject UserService UserService
 @inject IdentityUserAccessor UserAccessor
 @inject FileService FileService
+@inject ILogger<Neuigkeit> Logger
 
 @using BudoShurenWebsite.Data
 @using Microsoft.AspNetCore.Identity
@@ -148,27 +150,33 @@
         // if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
 
         await base.OnInitializedAsync();
-
-        await UserService.InitializeAsync();
-        user = UserService.CurrentUser;
-
-        if (user != null)
+        try
         {
-            if (Roles.IsAdmin(user.Roles))
+            await UserService.InitializeAsync();
+            user = UserService.CurrentUser;
+
+            if (user != null)
             {
-                AllowEditing = true;
-                AllowDeletion = true;
+                if (Roles.IsAdmin(user.Roles))
+                {
+                    AllowEditing = true;
+                    AllowDeletion = true;
+                }
+                else if (Roles.IsAbteilungsleiter(user.Roles))
+                {
+                    AllowEditing = true;
+                    AllowDeletion = true;
+                }
+                else
+                {
+                    AllowEditing = false;
+                    AllowDeletion = false;
+                }
             }
-            else if (Roles.IsAbteilungsleiter(user.Roles))
-            {
-                AllowEditing = true;
-                AllowDeletion = true;
-            }
-            else
-            {
-                AllowEditing = false;
-                AllowDeletion = false;
-            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Laden der Benutzerdaten");
         }
     }
 

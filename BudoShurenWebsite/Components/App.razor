@@ -1,11 +1,16 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
+
+<!DOCTYPE html>
+<html lang="de">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="keywords" content="Aikido, Genbukan, Bujinkan, Kampfkünste, Augsburg, traditionell, japanisch, Budo, Iaido, Jodo, Ninjutsu, Taijutsu, Kenjutsu" />
     <meta name="author" content="Budo Shuren Dojo" />
+
+    @* <base href="/" /> *@
+@*     <base href="@((Environment.IsDevelopment()) ? "/" : "/budoshuren/")" /> *@
 
     <base href="/" />
     <link rel="stylesheet" href="app.css" />

@@ -1,8 +1,6 @@
-﻿@* @inject IDataService DataService *@
-@inject ILogger<InteresseFormular> Logger
+﻿@inject ILogger<InteresseFormular> Logger
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject EmailSender EmailSender
-@* @rendermode InteractiveServer *@
 
 @using System.ComponentModel.DataAnnotations
 @using Syncfusion.Blazor.DropDowns;
@@ -22,7 +20,7 @@
             <label for="email" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Deine E-Mail</label>
         </div>
         <div class="@(ShowMarginAuswahlfelder ? "ml-20" : "")">
-            <InputText @bind-Value="Input.Email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="email" aria-required="true" placeholder="beispiel@email.de" />
+            <InputText id="email" @bind-Value="Input.Email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="email" aria-required="true" placeholder="beispiel@email.de" />
             <ValidationMessage For="() => Input.Email" class="text-error" />
         </div>
 
@@ -32,12 +30,13 @@
                 <label for="abteilung" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Empfänger</label>
             </div>
             <div class="@(ShowMarginAuswahlfelder ? "ml-20" : "")">
-                <div>
-                    <SfDropDownList TValue="string"
-                                    TItem="Abteilung"
-                                    Placeholder="Wähle eine Abteilung aus"
-                                    @bind-Value="@Input.SelectedAbteilung"
-                                    DataSource="@Abteilungen">
+                <div id="abteilung">
+                    <SfDropDownList 
+                        TValue="string"
+                        TItem="Abteilung"
+                        Placeholder="Wähle eine Abteilung aus"
+                        @bind-Value="@Input.SelectedAbteilung"
+                        DataSource="@Abteilungen">
                         <DropDownListTemplates TItem="Abteilung">
                             <ItemTemplate Context="itemContext">
                                 <div class="my-auto py-4 text-center">
@@ -63,7 +62,7 @@
             <label for="nachricht" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Deine Nachricht</label>
         </div>
         <div class="grow">
-            <InputTextArea @bind-Value="Input.Text" class="font-ptsans h-full min-h-80 w-full max-w-full resize-none border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="nachricht" aria-required="true" placeholder="Was möchtest du schreiben?" />
+            <InputTextArea id="nachricht" @bind-Value="Input.Text" class="font-ptsans h-full min-h-80 w-full max-w-full resize-none border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="off" aria-required="true" placeholder="Was möchtest du schreiben?" />
             <ValidationMessage For="() => Input.Text" class="text-error" />
         </div>
 
@@ -165,7 +164,6 @@
     {
         try
         {
-
             if (!string.IsNullOrWhiteSpace(Input.SelectedAbteilung) && Abteilungen.FirstOrDefault(x => x.ID == Input.SelectedAbteilung) is Abteilung abteilung)
             {
                 string nachricht = Input.Text;

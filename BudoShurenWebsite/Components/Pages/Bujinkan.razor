@@ -1,4 +1,5 @@
 ﻿@page "/Bujinkan"
+@page "/budoshuren/Bujinkan"
 <PageTitle>Bujinkan - traditionelle Samurai und Ninja Schulen</PageTitle>
 <HeadContent>
     <meta name="description" content="Entdecke die Kunst des Bujinkan Budo Ninjutsu Taijutsu in Augsburg. Hier trainierst du traditionelle Techniken der Ninja und Samurai für alle Altersgruppen." />
@@ -15,7 +16,7 @@
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
         <div class="mx-auto my-20 w-36 md:-mt-10">
-            <img src="/images/bujinkan/bujinkan_logo.jpg" />
+            <img src="/budoshuren/images/bujinkan/bujinkan_logo.jpg" alt="Das Mon des Bujinkan Busshin Dojos Augsburg"/>
         </div>
 
         @if (ShowNachrichtGesendet)
@@ -33,7 +34,7 @@
                 </div>
             </div>
             <div class="mt-10 min-w-52 md:mt-0 md:max-w-72">
-                <img src="/images/ninja1.jpg" />
+                <img src="/budoshuren/images/ninja1.jpg" alt="Zwei Ninjas die aufeinander zufliegen."/>
             </div>
         </section>
 
@@ -83,7 +84,7 @@
             <div class="md:flex md:flex-row md:justify-between md:h-auto">
                 <div class="md:mr-20">
                     <div>
-                        <img class="md:max-h-80" src="/images/bujinkan/johannes.jpg" />
+                        <img class="md:max-h-80" src="/budoshuren/images/bujinkan/johannes.jpg" alt="Porträtfoto von Johannes Schiebel, Shihan und Leiter des Bujinkan Busshin Dojos Augsburg" />
                     </div>
                     <div class="mt-10">
                         <Subheadline Text="Johannes Schiebel" />
@@ -139,7 +140,7 @@
 
     private void SetMessage(bool result)
     {
-        if(result)
+        if (result)
         {
             ShowNachrichtGesendet = true;
             StateHasChanged();

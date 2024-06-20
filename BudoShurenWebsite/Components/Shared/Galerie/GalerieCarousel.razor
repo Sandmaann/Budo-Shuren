@@ -6,6 +6,7 @@
 
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject IHostEnvironment Environment
+@inject ILogger<GalerieCarousel> Logger
 
 <div class="-mx-10 md:-mx-20">
     @if (IsLoading)
@@ -192,6 +193,7 @@
         {
             ErrorMessage = ex.Message;
             IsLoading = false;
+            Logger.LogError(ex, "Fehler beim Laden des Karousells");
         }
         finally
         {
