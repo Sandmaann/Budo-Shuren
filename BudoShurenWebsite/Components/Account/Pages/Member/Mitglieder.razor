@@ -1,10 +1,12 @@
 ﻿@page "/Account/Member/Mitglieder"
+@page "/budoshuren/Account/Member/Mitglieder"
 @rendermode InteractiveServer
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityUserAccessor UserAccessor
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject ILogger<Mitglieder> Logger
 
 @using BudoShurenWebsite.Data
 @using Microsoft.AspNetCore.Identity
@@ -97,28 +99,35 @@
     {
         await base.OnInitializedAsync();
 
-        using var context = DbContextFactory.CreateDbContext();
-        Abteilungen = await context.Abteilungen.ToListAsync();
-
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var userPrincipal = authState.User;
-        if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
+        try
         {
-            user = await UserManager.GetUserAsync(userPrincipal);
-            var roles = await UserManager.GetRolesAsync(user);
+            using var context = DbContextFactory.CreateDbContext();
+            Abteilungen = await context.Abteilungen.ToListAsync();
 
-            if (Roles.IsAdmin(roles))
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var userPrincipal = authState.User;
+            if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
             {
-                AllowEditing = true;
-                AllowDeletion = true;
-                AllowRoles = true;
+                user = await UserManager.GetUserAsync(userPrincipal);
+                var roles = await UserManager.GetRolesAsync(user);
+
+                if (Roles.IsAdmin(roles))
+                {
+                    AllowEditing = true;
+                    AllowDeletion = true;
+                    AllowRoles = true;
+                }
+                else if (Roles.IsAbteilungsleiter(roles))
+                {
+                    AllowEditing = true;
+                    AllowDeletion = false;
+                    AllowRoles = false;
+                }
             }
-            else if (Roles.IsAbteilungsleiter(roles))
-            {
-                AllowEditing = true;
-                AllowDeletion = false;
-                AllowRoles = false;
-            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Laden der Abteilungen");
         }
     }
 

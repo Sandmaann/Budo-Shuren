@@ -1,4 +1,5 @@
 ﻿@page "/Account/ConfirmEmailChange"
+@page "/budoshuren/Account/ConfirmEmailChange"
 
 @using System.Text
 @using Microsoft.AspNetCore.Identity
@@ -8,7 +9,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
-
+@inject ILogger<ConfirmEmailChange> Logger
 
 <PageTitle>E-Mail bestätigen</PageTitle>
 
@@ -48,42 +49,55 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (UserId is null || Email is null || Code is null)
+        try
         {
-            RedirectManager.RedirectToWithStatus(
-                "Account/Login", "Entschuldigung, aber der Link zur Bestätigung der E-Mail Änderung ist ungültig.", HttpContext);
-        }
+            if (UserId is null || Email is null || Code is null)
+            {
+                RedirectManager.RedirectToWithStatus(
+                    "Account/Login", "Entschuldigung, aber der Link zur Bestätigung der E-Mail Änderung ist ungültig.", HttpContext);
+            }
 
-        var user = await UserManager.FindByIdAsync(UserId);
-        if (user is null)
-        {
-            HasError = true;
-            message = "Dein Benutzer konnte leider nicht gefunden werden!";
-            return;
-        }
+            var user = await UserManager.FindByIdAsync(UserId);
+            if (user is null)
+            {
+                HasError = true;
+                message = "Dein Benutzer konnte leider nicht gefunden werden!";
+                return;
+            }
 
-        var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
-        var result = await UserManager.ChangeEmailAsync(user, Email, code);
-        if (!result.Succeeded)
+            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+            var result = await UserManager.ChangeEmailAsync(user, Email, code);
+            if (!result.Succeeded)
+            {
+                HasError = true;
+                message = "Es tut uns leid, aber bei der Änderung deiner E-Mail Adresse ist ein Problem aufgetreten.";
+                return;
+            }
+
+            // In our UI email and user name are one and the same, so when we update the email
+            // we need to update the user name.
+            var setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
+            if (!setUserNameResult.Succeeded)
+            {
+                HasError = true;
+                message = "Es tut uns leid, aber bei der Änderung deines Benutzernamens ist ein Problem aufgetreten.";
+                return;
+            }
+
+            await SignInManager.RefreshSignInAsync(user);
+            HasError = false;
+            message = "Vielen Dank dafür, dass du deine E-Mail Änderung bestätigt hast.";
+        }
+        catch (NavigationException navi)
         {
+            //Die NavigationException muss geworfen werden, damit der Redirect funktioniert
+            throw navi;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Bestätigen der E-Mail Änderung");
             HasError = true;
             message = "Es tut uns leid, aber bei der Änderung deiner E-Mail Adresse ist ein Problem aufgetreten.";
-            return;
         }
-
-        // In our UI email and user name are one and the same, so when we update the email
-        // we need to update the user name.
-        var setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
-        if (!setUserNameResult.Succeeded)
-        {
-            HasError = true;
-            message = "Es tut uns leid, aber bei der Änderung deines Benutzernamens ist ein Problem aufgetreten.";
-            return;
-        }
-
-        await SignInManager.RefreshSignInAsync(user);
-        HasError = false;
-        message = "Vielen Dank dafür, dass du deine E-Mail Änderung bestätigt hast.";
-        // message = "Thank you for confirming your email change.";
     }
 }

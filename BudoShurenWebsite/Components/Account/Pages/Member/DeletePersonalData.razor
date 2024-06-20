@@ -1,4 +1,5 @@
 ﻿@page "/Account/Member/DeletePersonalData"
+@page "/budoshuren/Account/Member/DeletePersonalData"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -54,24 +55,37 @@
 
     private async Task OnValidSubmitAsync()
     {
-        if (requirePassword && !await UserManager.CheckPasswordAsync(user, Input.Password))
+        try
         {
-            message = "Error: Das Passwort ist nicht korrekt.";
-            return;
-        }
+            if (requirePassword && !await UserManager.CheckPasswordAsync(user, Input.Password))
+            {
+                message = "Error: Das Passwort ist nicht korrekt.";
+                return;
+            }
 
-        var result = await UserManager.DeleteAsync(user);
-        if (!result.Succeeded)
+            var result = await UserManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException("Es ist ein unerwarteter Fehler aufgetreten.");
+            }
+
+            await SignInManager.SignOutAsync();
+
+            var userId = await UserManager.GetUserIdAsync(user);
+            Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
+
+            RedirectManager.RedirectToCurrentPage();
+        }
+        catch (NavigationException navi)
         {
-            throw new InvalidOperationException("Es ist ein unerwarteter Fehler aufgetreten.");
+            //Die NavigationException muss geworfen werden, damit der Redirect funktioniert
+            throw navi;
         }
-
-        await SignInManager.SignOutAsync();
-
-        var userId = await UserManager.GetUserIdAsync(user);
-        Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
-
-        RedirectManager.RedirectToCurrentPage();
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Löschen des Benutzers.");
+            message = "Fehler beim Löschen des Benutzers.";
+        }
     }
 
     private sealed class InputModel

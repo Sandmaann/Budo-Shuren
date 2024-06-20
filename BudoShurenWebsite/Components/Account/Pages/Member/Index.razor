@@ -1,4 +1,5 @@
 ﻿@page "/Account/Member"
+@page "/budoshuren/Account/Member"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -106,7 +107,7 @@
             <div>
                 <Standardtext Text="Ihr Konto enthält persönliche Daten, die Sie uns zur Verfügung gestellt haben. Diese Seite ermöglicht es Ihnen, diese Daten herunterzuladen oder zu löschen." />
                 <p class="font-ptsans text-sm tracking-wider"><b>Das Löschen dieser Daten wird Ihr Konto dauerhaft entfernen, und dies kann nicht wiederhergestellt werden.</b></p>
-                <form class="mt-4"  action="Account/Member/DownloadPersonalData" method="post">
+                <form class="mt-4" action="Account/Member/DownloadPersonalData" method="post">
                     <AntiforgeryToken />
                     <button class="default-button local-button2 transform transition duration-150 ease-in-out active:scale-90" type="submit">Download</button>
                 </form>
@@ -137,91 +138,129 @@
 
     protected override async Task OnInitializedAsync()
     {
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        username = await UserManager.GetUserNameAsync(user);
-        email = await UserManager.GetEmailAsync(user);
-        isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
-        hasPassword = await UserManager.HasPasswordAsync(user);
-        if (!hasPassword)
+        try
         {
-            RedirectManager.RedirectTo("Account/Member/SetPassword");
-        }
-        vorname = user?.Vorname;
-        name = user?.Name;
 
-        Input.Name ??= name;
-        Input.Vorname ??= vorname;
+            user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+            username = await UserManager.GetUserNameAsync(user);
+            email = await UserManager.GetEmailAsync(user);
+            isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
+            hasPassword = await UserManager.HasPasswordAsync(user);
+            if (!hasPassword)
+            {
+                RedirectManager.RedirectTo("Account/Member/SetPassword");
+            }
+            vorname = user?.Vorname;
+            name = user?.Name;
+
+            Input.Name ??= name;
+            Input.Vorname ??= vorname;
+        }
+        catch (NavigationException navi)
+        {
+            //Die NavigationException muss geworfen werden, damit der Redirect funktioniert
+            throw navi;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error: {Message}", ex.Message);
+            RedirectManager.RedirectToCurrentPageWithStatus("Error: Daten konnten nicht geladen werden.", HttpContext);
+        }
     }
 
     private async Task OnSendEmailVerificationAsync()
     {
-        if (email is null)
+        try
         {
-            return;
+
+            if (email is null)
+            {
+                return;
+            }
+
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+
+            await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
+
+            message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
         }
-
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
-
-        await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim erneuten Senden der Bestätigungs-E-Mail.");
+            message = "Fehler beim erneuten Senden der Bestätigungs-E-Mail.";
+        }
 
     }
 
     private async Task OnValidSubmitAsync()
     {
-        bool any = false;
+        try
+        {
 
-        string localMessage = "Ihr Profil wurde aktualisiert.";
-        if (Input.Name != name)
-        {
-            any = true;
-            user.Name = Input.Name ?? string.Empty;
-        }
-        if (Input.Vorname != vorname)
-        {
-            any = true;
-            user.Vorname = Input.Vorname ?? string.Empty;
-        }
-        if (any)
-        {
-            var result = await UserManager.UpdateAsync(user);
-            if (!result.Succeeded)
+
+            bool any = false;
+
+            string localMessage = "Ihr Profil wurde aktualisiert.";
+            if (Input.Name != name)
             {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Daten konnten nicht aktualisiert werden.", HttpContext);
+                any = true;
+                user.Name = Input.Name ?? string.Empty;
             }
-        }
-
-        if (Input.NewEmail != null && Input.NewEmail != email)
-        {
-            var userId = await UserManager.GetUserIdAsync(user);
-            var code = await UserManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
-                new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
-
-            await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
-            message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
-            localMessage = message;
-        }
-
-        if (!string.IsNullOrWhiteSpace(Input.NewPassword) && !string.IsNullOrWhiteSpace(Input.ConfirmPassword))
-        {
-            var changePasswordResult = await UserManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
-            if (!changePasswordResult.Succeeded)
+            if (Input.Vorname != vorname)
             {
-                localMessage = $"Error: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
+                any = true;
+                user.Vorname = Input.Vorname ?? string.Empty;
             }
-        }
+            if (any)
+            {
+                var result = await UserManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                {
+                    RedirectManager.RedirectToCurrentPageWithStatus("Error: Daten konnten nicht aktualisiert werden.", HttpContext);
+                }
+            }
 
-        await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus(localMessage, HttpContext);
+            if (Input.NewEmail != null && Input.NewEmail != email)
+            {
+                var userId = await UserManager.GetUserIdAsync(user);
+                var code = await UserManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                    NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
+                    new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
+
+                await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
+                message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
+                localMessage = message;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Input.NewPassword) && !string.IsNullOrWhiteSpace(Input.ConfirmPassword))
+            {
+                var changePasswordResult = await UserManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+                if (!changePasswordResult.Succeeded)
+                {
+                    localMessage = $"Error: {string.Join(",", changePasswordResult.Errors.Select(error => error.Description))}";
+                }
+            }
+
+            await SignInManager.RefreshSignInAsync(user);
+            RedirectManager.RedirectToCurrentPageWithStatus(localMessage, HttpContext);
+        }
+        catch (NavigationException navi)
+        {
+            //Die NavigationException muss geworfen werden, damit der Redirect funktioniert
+            throw navi;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error: {Message}", ex.Message);
+            RedirectManager.RedirectToCurrentPageWithStatus("Error: Daten konnten nicht aktualisiert werden.", HttpContext);
+        }
     }
 
     private sealed class InputModel

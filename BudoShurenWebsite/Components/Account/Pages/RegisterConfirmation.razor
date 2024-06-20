@@ -1,4 +1,5 @@
 ﻿@page "/Account/RegisterConfirmation"
+@page "/budoshuren/Account/RegisterConfirmation"
 
 @using System.Text
 @using Microsoft.AspNetCore.Identity
@@ -9,6 +10,7 @@
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ILogger<RegisterConfirmation> Logger
 
 @if (hasError == true)
 {
@@ -60,35 +62,27 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Ermitteln ob der User erstellt wurde. Wenn nicht Fehler anzeigen. Ansonsten einfache Info dass eine E-Mail versendet wurde.
-        if (Email is null)
+        try
         {
-            RedirectManager.RedirectTo("");
-        }
+            // Ermitteln ob der User erstellt wurde. Wenn nicht Fehler anzeigen. Ansonsten einfache Info dass eine E-Mail versendet wurde.
+            if (Email is null)
+            {
+                RedirectManager.RedirectTo("");
+            }
 
-        var user = await UserManager.FindByEmailAsync(Email);
-        if (user is null)
+            var user = await UserManager.FindByEmailAsync(Email);
+            if (user is null)
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+                hasError = true;
+                statusMessage = "Bei der Registrierung ist ein Fehler aufgetreten. Bitte versuche es erneut, oder wende dich direkt an deinen Abteilungsleiter.";
+            }
+        }
+        catch (Exception ex)
         {
-            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            Logger.LogError(ex, "Fehler beim Initialisieren der Registrierungsbestätigung.");
             hasError = true;
             statusMessage = "Bei der Registrierung ist ein Fehler aufgetreten. Bitte versuche es erneut, oder wende dich direkt an deinen Abteilungsleiter.";
         }
-        // else
-        // {
-        //     isVerified = user.EmailConfirmed;
-        // }
-        // else if (EmailSender is IdentityNoOpEmailSender)
-        //     {
-        //         hasError = false;
-        //         // Once you add a real email sender, you should remove this code that lets you confirm the account
-        //         var userId = await UserManager.GetUserIdAsync(user);
-        //         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        //         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        //         emailConfirmationLink = NavigationManager.GetUriWithQueryParameters(
-        //             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-        //             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
-
-        //         isVerified = user.EmailConfirmed;
-        //     }
     }
 }

@@ -1,5 +1,6 @@
 ﻿@inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject ILogger<ImageCard> Logger
 
 <div class="h-min w-full select-none bg-gray-100" @onclick="OnClick" @onpointerdown="MouseDown" @onpointerup="MouseUp">
     <div class="relative">

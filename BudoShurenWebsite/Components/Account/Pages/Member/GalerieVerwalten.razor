@@ -1,4 +1,5 @@
 ﻿@page "/Account/Member/Galerie"
+@page "/budoshuren/Account/Member/Galerie"
 @rendermode InteractiveServer
 
 
@@ -15,6 +16,7 @@
 @inject IJSRuntime JSRuntime
 @inject IHostEnvironment environment
 @inject ApplicationDbContext DbContext
+@inject ILogger<GalerieVerwalten> Logger
 
 <div class="">
     <div class="container mx-auto">
@@ -311,7 +313,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Logger.LogError(ex, "Fehler beim setzen der Berechtigungen");
             CanEdit = false;
         }
     }
@@ -421,13 +423,21 @@
 
     private async void CloseSidebar(bool result)
     {
-        // SidebarIsVisible = !SidebarIsVisible;
-        await toggleSlideoverBlazor();
-        // SidebarIsVisible = false;
-        if (result)
+        try
         {
-            //Daten neu laden um die neuen Bilder anzuzeigen
-            await LoadData();
+
+            // SidebarIsVisible = !SidebarIsVisible;
+            await toggleSlideoverBlazor();
+            // SidebarIsVisible = false;
+            if (result)
+            {
+                //Daten neu laden um die neuen Bilder anzuzeigen
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Schließen des Slideover");
         }
     }
 
@@ -445,69 +455,92 @@
 
     private async Task BilderBearbeiten()
     {
-        var selectedEinträge = Einträge.Where(x => x.IsSelected)?.ToList();
-        if (selectedEinträge?.Any() == true)
+        try
         {
-            SelectedEinträge = selectedEinträge;
-            await toggleSlideoverBlazor();
-            await editGalerie.Clear();
-            editGalerie.SetData(SelectedEinträge);
 
+            var selectedEinträge = Einträge.Where(x => x.IsSelected)?.ToList();
+            if (selectedEinträge?.Any() == true)
+            {
+                SelectedEinträge = selectedEinträge;
+                await toggleSlideoverBlazor();
+                await editGalerie.Clear();
+                editGalerie.SetData(SelectedEinträge);
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Bearbeiten der Bilder");
         }
     }
 
     private async Task BilderErstellen()
     {
-        if (CanEdit == false)
-            return;
+        try
+        {
+            if (CanEdit == false)
+                return;
 
-        SelectedEinträge = new List<GalerieEintrag>();
-        await toggleSlideoverBlazor();
-        await editGalerie.Clear();
-        editGalerie.SetData(SelectedEinträge);
+            SelectedEinträge = new List<GalerieEintrag>();
+            await toggleSlideoverBlazor();
+            await editGalerie.Clear();
+            editGalerie.SetData(SelectedEinträge);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Erstellen der Bilder");
+        }
     }
 
 
 
     private async Task BilderLöschen()
     {
-        var selectedItems = Einträge.Where(x => x.IsSelected).ToList();
-        if (selectedItems.Count == 0)
+        try
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Keine Bilder ausgewählt.");
-            return;
-        }
 
-        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Möchten Sie alle {selectedItems.Count} ausgewählten Bilder wirklich löschen?");
-        bool error = false;
-        if (confirm)
-        {
-            foreach (var item in selectedItems)
+            var selectedItems = Einträge.Where(x => x.IsSelected).ToList();
+            if (selectedItems.Count == 0)
             {
-                var dbItem = await DbContext.Galerie.FindAsync(item.ID);
-                if (dbItem != null)
-                {
-                    try
-                    {
-                        DbContext.Galerie.Remove(dbItem);
-                        await DbContext.SaveChangesAsync();
+                await JSRuntime.InvokeVoidAsync("alert", "Keine Bilder ausgewählt.");
+                return;
+            }
 
-                        //Datei löschen!
-                        if (!string.IsNullOrWhiteSpace(dbItem.ImagePath) && File.Exists(dbItem.ImagePath))
-                            File.Delete(dbItem.ImagePath);
-                    }
-                    catch (Exception e)
+            var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Möchten Sie alle {selectedItems.Count} ausgewählten Bilder wirklich löschen?");
+            bool error = false;
+            if (confirm)
+            {
+                foreach (var item in selectedItems)
+                {
+                    var dbItem = await DbContext.Galerie.FindAsync(item.ID);
+                    if (dbItem != null)
                     {
-                        //TODO Logging
-                        error = true;
+                        try
+                        {
+                            DbContext.Galerie.Remove(dbItem);
+                            await DbContext.SaveChangesAsync();
+
+                            //Datei löschen!
+                            if (!string.IsNullOrWhiteSpace(dbItem.ImagePath) && File.Exists(dbItem.ImagePath))
+                                File.Delete(dbItem.ImagePath);
+                        }
+                        catch (Exception e)
+                        {
+                            //TODO Logging
+                            error = true;
+                        }
                     }
                 }
+                await LoadData();
+                if (error)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Einige Bilder konnten nicht gelöscht werden.");
+                }
             }
-            await LoadData();
-            if (error)
-            {
-                await JSRuntime.InvokeVoidAsync("alert", "Einige Bilder konnten nicht gelöscht werden.");
-            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Löschen der Bilder");
         }
     }
 
@@ -519,70 +552,84 @@
 
     private void Suche()
     {
-        IEnumerable<GalerieEintrag> gefilterteEinträge;
-        if (string.IsNullOrWhiteSpace(Suchtext) &&
-        !aikido && bujinkan && !genbukan && !iaido && !jodo && !home && !öffentlich)
+        try
         {
-            gefilterteEinträge = Einträge;
-            // // Wenn der Suchtext leer ist, zeigen Sie alle Einträge an
-            // Gruppen = Einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
-        }
-        else
-        {
-            // Wenn der Suchtext nicht leer ist, filtern Sie die Einträge
 
-            // bool aikido = Suchtext.Contains("aikido", StringComparison.OrdinalIgnoreCase);
-            gefilterteEinträge = Einträge;
+            IEnumerable<GalerieEintrag> gefilterteEinträge;
+            if (string.IsNullOrWhiteSpace(Suchtext) &&
+            !aikido && bujinkan && !genbukan && !iaido && !jodo && !home && !öffentlich)
+            {
+                gefilterteEinträge = Einträge;
+                // // Wenn der Suchtext leer ist, zeigen Sie alle Einträge an
+                // Gruppen = Einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
+            }
+            else
+            {
+                // Wenn der Suchtext nicht leer ist, filtern Sie die Einträge
 
-            if (!string.IsNullOrWhiteSpace(suchtext))
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x =>
-                x.Titel?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true ||
-                x.Untertitel?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true ||
-                x.Beschreibung?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true);
-            }
-            if (aikido)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Aikido);
-            }
-            if (bujinkan)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Bujinkan);
-            }
-            if (genbukan)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Genbukan);
-            }
-            if (iaido)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Iaido);
-            }
-            if (jodo)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Jodo);
-            }
-            if (home)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Home);
-            }   
-            if (öffentlich)
-            {
-                gefilterteEinträge = gefilterteEinträge.Where(x => x.Öffentlich);
-            }
-        }
+                // bool aikido = Suchtext.Contains("aikido", StringComparison.OrdinalIgnoreCase);
+                gefilterteEinträge = Einträge;
 
-        var groups = gefilterteEinträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
-        var gruppen = new List<GalerieGruppe>();
-        foreach (var group in groups.OrderByDescending(x => x.Key))
-        {
-            var neueGruppe = new GalerieGruppe
+                if (!string.IsNullOrWhiteSpace(suchtext))
                 {
-                    Datum = group.Key,
-                    Items = group.ToList()
-                };
-            gruppen.Add(neueGruppe);
+                    gefilterteEinträge = gefilterteEinträge.Where(x =>
+                    x.Titel?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true ||
+                    x.Untertitel?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true ||
+                    x.Beschreibung?.Contains(Suchtext, StringComparison.OrdinalIgnoreCase) == true);
+                }
+                if (aikido)
+                {
+                    gefilterteEinträge = gefilterteEinträge.Where(x => x.Aikido);
+                }
+                if (bujinkan)
+                {
+                    gefilterteEinträge = gefilterteEinträge.Where(x => x.Bujinkan);
+                }
+                if (genbukan)
+                {
+                    gefilterteEinträge = gefilterteEinträge.Where(x => x.Genbukan);
+                }
+                if (iaido)
+                {
+                    gefilterteEinträge = gefilterteEinträge.Where(x => x.Iaido);
+                }
+                if (jodo)
+                {
+                    gefilterteEinträge = gefilterteEinträge.Where(x => x.Jodo);
+                }
+                if (home)
+                {
+                    gefilterteEinträge = gefilterteEinträge.Where(x => x.Home);
+                }
+                if (öffentlich)
+                {
+                    gefilterteEinträge = gefilterteEinträge.Where(x => x.Öffentlich);
+                }
+            }
+
+            var groups = gefilterteEinträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
+            var gruppen = new List<GalerieGruppe>();
+            foreach (var group in groups.OrderByDescending(x => x.Key))
+            {
+                var neueGruppe = new GalerieGruppe
+                    {
+                        Datum = group.Key,
+                        Items = group.ToList()
+                    };
+                gruppen.Add(neueGruppe);
+            }
+            Gruppen = gruppen;
         }
-        Gruppen = gruppen;
+        catch (Exception ex)
+        {
+            errorMessage = $"Fehler beim Laden der Daten: {ex.Message}";
+            // Handle other exceptions here
+        }
+        finally
+        {
+            SelectionChanged();
+            StateHasChanged();
+        }
     }
 
     private async Task LoadData()
@@ -617,8 +664,8 @@
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Fehler beim Laden der Bilder");
             errorMessage = $"Fehler beim Laden der Daten: {ex.Message}";
-            // Handle other exceptions here
         }
         finally
         {

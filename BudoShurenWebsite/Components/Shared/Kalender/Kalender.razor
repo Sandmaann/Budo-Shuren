@@ -3,10 +3,18 @@
 @using Syncfusion.Blazor.Calendars
 @using Syncfusion.Blazor.Buttons
 @using System.Globalization
+
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject UserService UserService
+@inject ILogger<Kalender> Logger
 
 <div class="font-ptsans -mx-10 lg:-mx-32 md:mx-0">
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
+    }
+
     <SfSchedule @ref="scheduleObj"
                 CssClass="schedule-cell-dimension"
                 TValue="AppointmentData"
@@ -375,7 +383,6 @@
             IsWochenansicht = false;
         else
             IsWochenansicht = null;
-        // CurrentView = args.CurrentView;
     }
 
 
@@ -387,13 +394,11 @@
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
-        return base.SetParametersAsync(parameters);
-
         if (IsWochenansicht == true)
             CurrentView = View.Week;
         else if (IsWochenansicht == false)
             CurrentView = View.Month;
-
+        return base.SetParametersAsync(parameters);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -402,32 +407,34 @@
         if (firstRender)
         {
             await SetPermissions();
-            if (scheduleObj != null)
-            {
-                // await scheduleObj.RefreshAsync();
-            }
         }
     }
 
     private async Task SetPermissions()
     {
-        await UserService.InitializeAsync();
-        if (UserService.IsAbteilungsleiter || UserService.IsEditor || UserService.IsAdmin)
+        try
         {
-            Permission = true;
+            await UserService.InitializeAsync();
+            if (UserService.IsAbteilungsleiter || UserService.IsEditor || UserService.IsAdmin)
+            {
+                Permission = true;
+            }
+            else
+            {
+                Permission = false;
+            }
+            StateHasChanged();
         }
-        else
+        catch (Exception ex)
         {
-            Permission = false;
+            ErrorMessage = ex.Message;
+            Logger.LogError(ex, "Fehler beim Laden des Kalenders");
         }
-        StateHasChanged();
-
-        var e = AllowEditing;
     }
 
     private async void CloseQuickInfo()
     {
-        if(this.scheduleObj != null)
+        if (this.scheduleObj != null)
         {
             await scheduleObj.CloseQuickInfoPopupAsync();
         }
@@ -438,12 +445,10 @@
         if (ende.Subtract(start).TotalMinutes > 30)
         {
             return true;
-            // return "absolute";
         }
         else
         {
             return false;
-            // return "hidden";
         }
     }
     private async void OnDeleteClick(MouseEventArgs args, AppointmentData data)
@@ -452,8 +457,17 @@
 
         if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
         {
-            await UserService.InitializeAsync();
-            await scheduleObj.DeleteEventAsync(data);
+            try
+            {
+
+                await UserService.InitializeAsync();
+                await scheduleObj.DeleteEventAsync(data);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Fehler beim Löschen des Termins");
+                ErrorMessage = "Der Termin konnte nicht gelöscht werden.";
+            }
         }
     }
     private async void OnBearbeitenClick(MouseEventArgs args, AppointmentData data)

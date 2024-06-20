@@ -1,4 +1,6 @@
 ﻿@page "/Aikido"
+@page "/budoshuren/Aikido"
+
 <PageTitle>Iwama Ryu Aikido</PageTitle>
 <HeadContent>
     <meta name="description" content="Aikido Trainieren wie in Iwama, Japan. Trainiere traditionelles japanisches Aikido in Augsburg, Training für Kinder und Erwachsene." />
@@ -6,14 +8,14 @@
 
 <div class="container">
     <Headline Titel="合氣道"
-                 Untertitel="Aikido"
-                 Anekdote="" />
+              Untertitel="Aikido"
+              Anekdote="" />
 </div>
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
         <div class="mx-auto my-20 w-36 md:-mt-10">
-            <img class="h-36 w-36 object-fill" src="/images/aikido/mon.jpg" />
+            <img class="h-36 w-36 object-fill" src="/budoshuren/images/aikido/mon.jpg" alt="Ein Viereckiges Mon des Aiki Shuren Dojos" />
         </div>
 
         @if (ShowNachrichtGesendet)
@@ -21,7 +23,7 @@
             <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
         }
 
-        <section class="mt-20 md:flex md:flex-row md:justify-between">
+        <div class="mt-20 md:flex md:flex-row md:justify-between">
             <div class="mt-5 md:mt-0 md:mr-20">
                 <div class="mt-4">
                     <Standardtext Text="Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet." />
@@ -34,9 +36,9 @@
                 </div>
             </div>
             <div class="mt-10 min-w-52 md:mt-0 md:max-w-72">
-                <img src="/images/aikido2.jpg" />
+                <img src="/budoshuren/images/aikido2.jpg" alt="Zwei Aikidoka in traditioneller Kleidung, die eine Wurftechnik auf der Matte praktizieren." />
             </div>
-        </section>
+        </div>
 
         <section>
             <SectionBanner Titel="Das Training" />
@@ -69,7 +71,7 @@
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/budoshuren/images/aikido.jpg" alt="Zwei Aikidoka die eine Handhebeltechnick üben.">
                         </div>
                         <div class="mt-4">
                             <Standardtext Text="Alle Aikidoka erinnern sich nur zu gut an die Zeit, in der sie selbst noch Anfänger gewesen sind. Darum sind sie gerne bereit, den Neulingen dabei zu helfen, die Grundlagen zu erwerben. Da das im auch regulären Training geschehen kann, ist ein Einstieg jederzeit möglich﻿.﻿﻿" />
@@ -85,7 +87,7 @@
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/budoshuren/images/aikido.jpg" alt="Zwei Aikidoka die eine Handhebeltechnick üben.">
                         </div>
                         <div class="mt-4">
                             <Standardtext Text="Die Grundlage werden weiter vertieft. Nun soll auch zunächst gegen leichten später stärkeren Widerstand die Technik ausgeführt werden. Hierdurch kann an der korrekten Form gefeilt werden und das Bewusstsein, dass weniger Kraft als Technik zur Kontrolle des Angreifes führt. In den Waffentechniken werden zunehmend Partnerformen (Kumi-Tachi und Kumi-Jo) trainiert." />
@@ -98,7 +100,7 @@
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/budoshuren/images/aikido.jpg" alt="Zwei Aikidoka die eine Handhebeltechnick üben.">
                         </div>
                         <div class="mt-4">
                             <Standardtext Text="Dieses Training orientiert sich an dem Training in Iwama, Japan.﻿﻿" />
@@ -143,7 +145,7 @@
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido/aikiMinis.png">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/budoshuren/images/aikido/aikiMinis.png" alt="Mini Training beim Aikido">
                         </div>
                         <div class="mt-4">
                             <Standardtext Text="In einem spielerischen Rahmen lernen die Kinder die Grundlagen des Aikido: Dazu gehören Vorwärts- und rückwärts rollen, Fallschule, sicheren Stand und erste Aikidotechniken. Durch diese Übungen wird ihr Körpergefühl und ihre Koordination geschult." />
@@ -165,7 +167,7 @@
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16 md:max-h-72" src="/images/aikido/aikiKids.png">
+                            <img class="mb-4 max-w-64 md:ml-16 md:max-h-72" src="/budoshuren/images/aikido/aikiKids.png" alt="Kinder die eine Aikido-Technick in einer Reihe üben.">
                         </div>
                         <div class="mt-4">
                             <Standardtext Text="Die technische Seite des Aikido rückt mehr in den Vordergrund." />
@@ -181,7 +183,7 @@
                     </div>
                     <div class="mt-5 md:mt-0">
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
-                            <img class="mb-4 max-w-64 md:ml-16" src="/images/aikido/aikiTeens.jpg">
+                            <img class="mb-4 max-w-64 md:ml-16" src="/budoshuren/images/aikido/aikiTeens.jpg" alt="Teenager Training im Aikido">
                         </div>
                         <div class="mt-4">
                             <Standardtext Text="Die Aikidotechniken werden anspruchsvoller, und Selbstverteidigung wird thematisiert: Es geht darum, strategisches Denken zu entwickeln und das Gelernte verhältnismäßig einzusetzen, sowie belastende Situationen, wie Angriffe von mehreren oder stärkeren Gegnern, zu bewältigen. Durch dieses Training werden nicht nur Selbstbewusstsein und Verantwortungsgefühl geschult, sondern auch die Fähigkeit, schwierige Situationen zu meistern." />
@@ -200,7 +202,7 @@
                 <div class="md:mr-20">
                     <div>
                         <div>
-                            <img class="md:max-h-80" src="/images/aikido/carsten.jpeg" />
+                            <img class="md:max-h-80" src="/budoshuren/images/aikido/carsten.jpeg" alt="Porträtfoto von Dr. Carsten Oetzel, Gründer und ehemlaiger Vorstand des Budo Shuren Dojos." />
                         </div>
                         <div class="mt-4 md:mt-6">
                             <Subheadline Text="Dr. Carsten Oetzel﻿" />
@@ -219,7 +221,7 @@
                     </div>
                     <div class="mt-20">
                         <div>
-                            <img class="md:max-h-80" src="/images/aikido/karin.jpeg" />
+                            <img class="md:max-h-80" src="/budoshuren/images/aikido/karin.jpeg" alt="Porträtfoto von Karin Oetzel, stell. Vorsitzende und Kinder und Jugendbeauftragte." />
                         </div>
                         <div class="mt-4 md:mt-6">
                             <Subheadline Text="Karin Oetzel﻿" />
@@ -241,7 +243,7 @@
                     </div>
                     <div class="mt-20">
                         <div>
-                            <img class="md:max-h-80" src="/images/aikido/florian.jpeg" />
+                            <img class="md:max-h-80" src="/budoshuren/images/aikido/florian.jpeg" alt="Porträtfoto von Florian Lehmann, Trainer im Aikido für Erwachsene, Teens und Hochschulsport." />
                         </div>
                         <div class="mt-4 md:mt-6">
                             <Subheadline Text="Florian Lehmann" />
@@ -281,20 +283,24 @@
                         <ul class="mt-2 list-outside">
                             <li class="font-ptsans text-sm tracking-wider">Tai Jutsu:</li>
                             <li>
-                                <ul class="ml-5 mt-2 list-outside list-disc">
-                                    <li class="font-ptsans text-sm tracking-wider">Tai no henko</li>
-                                    <li class="font-ptsans text-sm tracking-wider">Katame waza: Katate dori Ikkyo (omote / ura)</li>
-                                    <li class="font-ptsans text-sm tracking-wider">Nage waza: Katate dori Kokyu ho</li>
-                                    <li class="font-ptsans text-sm tracking-wider">Suwari waza Kokyu ho</li>
-                                    <li class="font-ptsans text-sm tracking-wider">Mae Ukemi</li>
-                                </ul>
+                                <div>
+                                    <ul class="ml-5 mt-2 list-outside list-disc">
+                                        <li class="font-ptsans text-sm tracking-wider">Tai no henko</li>
+                                        <li class="font-ptsans text-sm tracking-wider">Katame waza: Katate dori Ikkyo (omote / ura)</li>
+                                        <li class="font-ptsans text-sm tracking-wider">Nage waza: Katate dori Kokyu ho</li>
+                                        <li class="font-ptsans text-sm tracking-wider">Suwari waza Kokyu ho</li>
+                                        <li class="font-ptsans text-sm tracking-wider">Mae Ukemi</li>
+                                    </ul>
+                                </div>
                             </li>
                             <li class="font-ptsans mt-4 text-sm tracking-wider">Buki waza:</li>
                             <li>
-                                <ul class="ml-5 mt-2 list-outside list-disc">
-                                    <li class="font-ptsans text-sm tracking-wider">Aiki-Ken: Ichi no Suburi, Ni no Suburi, San no Suburi</li>
-                                    <li class="font-ptsans text-sm tracking-wider">Aiki-Jo: Roku no jo</li>
-                                </ul>
+                                <div>
+                                    <ul class="ml-5 mt-2 list-outside list-disc">
+                                        <li class="font-ptsans text-sm tracking-wider">Aiki-Ken: Ichi no Suburi, Ni no Suburi, San no Suburi</li>
+                                        <li class="font-ptsans text-sm tracking-wider">Aiki-Jo: Roku no jo</li>
+                                    </ul>
+                                </div>
                             </li>
                         </ul>
                     </div>
@@ -443,7 +449,7 @@
                     <div class="md:w-52">
                         <Standardtext Text="Zum Download:" />
                     </div>
-                    <a href="/api/Documents/Download/prüfungsprogramm" downloads="Prüfungsprogramm.pdf" class="my-2 flex h-8 flex-row items-center">
+                    <a href="/budoshuren/api/Documents/Download/prüfungsprogramm" download="Prüfungsprogramm.pdf" class="my-2 flex h-8 flex-row items-center">
                         <span class="material-symbols-outlined text-2xl">
                             picture_as_pdf
                         </span>

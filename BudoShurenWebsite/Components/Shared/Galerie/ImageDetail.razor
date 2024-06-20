@@ -1,10 +1,12 @@
 ﻿@page "/Account/Member/Galerie/Images/{ImageName}/{EntryID}"
+@page "/budoshuren/Account/Member/Galerie/Images/{ImageName}/{EntryID}"
 @layout EmptyLayout
 
 @inject IHostEnvironment environment
 @inject ApplicationDbContext DbContext;
 @inject IJSRuntime JSRuntime
 @inject UserService UserService
+@inject ILogger<ImageDetail> Logger
 
 @rendermode InteractiveServer
 
@@ -103,6 +105,7 @@
                 }
                 catch (Exception e)
                 {
+                    Logger.LogError(e, "Fehler beim Löschen des Bildes");
                     await JSRuntime.InvokeVoidAsync("alert", "Das Bild konnte nicht gelöscht werden.");
                     return;
                 }
@@ -175,7 +178,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Logger.LogError(ex, "Fehler beim Laden der Berechtigungen");
             CanEdit = false;
         }
     }

@@ -218,61 +218,76 @@
 
     public async Task Clear()
     {
-        //Aufräumen
-        errorMessage = string.Empty;
-        SelectedEintrag = new InputModel();
-
-        if (uploadObj != null)
+        try
         {
 
-            var files = await uploadObj.GetFilesDataAsync();
-            if (files.Any())
+            //Aufräumen
+            errorMessage = string.Empty;
+            SelectedEintrag = new InputModel();
+
+            if (uploadObj != null)
             {
-                foreach (var file in files)
+
+                var files = await uploadObj.GetFilesDataAsync();
+                if (files.Any())
                 {
-                    await uploadObj.RemoveAsync(new FileInfo[] { file });
+                    foreach (var file in files)
+                    {
+                        await uploadObj.RemoveAsync(new FileInfo[] { file });
+                    }
+                    await uploadObj.ClearAllAsync();
                 }
-                await uploadObj.ClearAllAsync();
             }
+            uploadedFiles = new();
+            fileCount = 0;
         }
-        uploadedFiles = new();
-        fileCount = 0;
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Aufräumen der Daten");
+        }
     }
 
     public async void SetData(IEnumerable<GalerieEintrag> einträge)
     {
-        Einträge = einträge;
-        if (Einträge?.Count() > 0)
+        try
         {
-            var dummy = Einträge?.FirstOrDefault();
-            if (dummy != null)
+            Einträge = einträge;
+            if (Einträge?.Count() > 0)
             {
-                SelectedEintrag = new InputModel
-                    {
-                        Aikido = dummy.Aikido,
-                        Beschreibung = dummy.Beschreibung,
-                        Bujinkan = dummy.Bujinkan,
-                        Genbukan = dummy.Genbukan,
-                        Öffentlich = dummy.Öffentlich,
-                        Home = dummy.Home,
-                        ImageCreatedBy = dummy.ImageCreatedBy,
-                        ImageDate = dummy.ImageDate,
-                        Titel = dummy.Titel,
-                        Untertitel = dummy.Untertitel,
-                        Iaido = dummy.Iaido,
-                        Jodo = dummy.Jodo
-                    };
+                var dummy = Einträge?.FirstOrDefault();
+                if (dummy != null)
+                {
+                    SelectedEintrag = new InputModel
+                        {
+                            Aikido = dummy.Aikido,
+                            Beschreibung = dummy.Beschreibung,
+                            Bujinkan = dummy.Bujinkan,
+                            Genbukan = dummy.Genbukan,
+                            Öffentlich = dummy.Öffentlich,
+                            Home = dummy.Home,
+                            ImageCreatedBy = dummy.ImageCreatedBy,
+                            ImageDate = dummy.ImageDate,
+                            Titel = dummy.Titel,
+                            Untertitel = dummy.Untertitel,
+                            Iaido = dummy.Iaido,
+                            Jodo = dummy.Jodo
+                        };
+                }
             }
-        }
-        else
-        {
-            SelectedEintrag = new InputModel();
-            uploadedFiles = new();
+            else
+            {
+                SelectedEintrag = new InputModel();
+                uploadedFiles = new();
 
-            var i = IsNew;
-            var c = CanEdit;
+                var i = IsNew;
+                var c = CanEdit;
+            }
+            await SetPermissions();
         }
-        await SetPermissions();
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Setzen der Daten");
+        }
         StateHasChanged();
 
     }
@@ -304,40 +319,47 @@
 
     private async Task SetCanSave(bool ausSave = false)
     {
-        if (isUploading == true)
+        try
         {
-            errorMessage = "Bitte warten, bis alle Bilder hochgeladen wurden.";
-            CanSave = false;
-        }
-        else
-        {
-            if (ausSave)
+            if (isUploading == true)
             {
-                if (string.IsNullOrWhiteSpace(SelectedEintrag.Titel))
-                {
-                    errorMessage = "Bitte gib noch einen Titel an!";
-                    CanSave = false;
-                    return;
-                }
-                if (IsNew)
-                {
-                    var files = await uploadObj.GetFilesDataAsync();
-                    if (files.Any() == false)
-                    {
-                        errorMessage = "Bitte lade mindestens 1 Bild für die Gallerie hoch!";
-                        CanSave = false;
-                        return;
-                    }
-                    if (files.Any(x => x.StatusCode == "2") == false)
-                    {
-                        errorMessage = "Kein einziges gültiges Bild auswählt!";
-                        CanSave = false;
-                        return;
-                    }
-                }
+                errorMessage = "Bitte warten, bis alle Bilder hochgeladen wurden.";
+                CanSave = false;
             }
-            errorMessage = string.Empty;
-            CanSave = true;
+            else
+            {
+                if (ausSave)
+                {
+                    if (string.IsNullOrWhiteSpace(SelectedEintrag.Titel))
+                    {
+                        errorMessage = "Bitte gib noch einen Titel an!";
+                        CanSave = false;
+                        return;
+                    }
+                    if (IsNew)
+                    {
+                        var files = await uploadObj.GetFilesDataAsync();
+                        if (files.Any() == false)
+                        {
+                            errorMessage = "Bitte lade mindestens 1 Bild für die Gallerie hoch!";
+                            CanSave = false;
+                            return;
+                        }
+                        if (files.Any(x => x.StatusCode == "2") == false)
+                        {
+                            errorMessage = "Kein einziges gültiges Bild auswählt!";
+                            CanSave = false;
+                            return;
+                        }
+                    }
+                }
+                errorMessage = string.Empty;
+                CanSave = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Setzen der Berechtigungen zum Speichern");
         }
     }
 
@@ -368,7 +390,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Logger.LogError(ex, "Fehler beim Setzen der Berechtigungen");
             CanEdit = false;
         }
     }
@@ -380,22 +402,30 @@
 
     private async Task CloseSidebar()
     {
-        errorMessage = string.Empty;
-
-        if (uploadObj != null)
+        try
         {
-            //Aufräumen wenn die Sidebar geschlossen wird.
-            var files = await uploadObj.GetFilesDataAsync();
-            if (files.Any())
+
+            errorMessage = string.Empty;
+
+            if (uploadObj != null)
             {
-                foreach (var file in files)
+                //Aufräumen wenn die Sidebar geschlossen wird.
+                var files = await uploadObj.GetFilesDataAsync();
+                if (files.Any())
                 {
-                    await uploadObj.RemoveAsync(new FileInfo[] { file });
+                    foreach (var file in files)
+                    {
+                        await uploadObj.RemoveAsync(new FileInfo[] { file });
+                    }
+                    await uploadObj.ClearAllAsync();
                 }
-                await uploadObj.ClearAllAsync();
             }
+            await OnClose.InvokeAsync(savedSuccessfully);
         }
-        await OnClose.InvokeAsync(savedSuccessfully);
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Schließen der Sidebar");
+        }
     }
 
     private void BeforeUploadHandler(BeforeUploadEventArgs args)
@@ -410,18 +440,23 @@
     }
     public void SelectHandler(SelectedEventArgs args)
     {
-        // string selectedfile = args.FilesData[0].Name;
-
-        foreach (var file in args.FilesData)
+        try
         {
-            if (uploadedFiles.Contains(file.Name))
+            foreach (var file in args.FilesData)
             {
-                this.errorMessage = "Die Auswahl enthält Bilder, die bereits hochgeladen wurden!";
-                args.Cancel = true;
-                return;
+                if (uploadedFiles.Contains(file.Name))
+                {
+                    this.errorMessage = "Die Auswahl enthält Bilder, die bereits hochgeladen wurden!";
+                    args.Cancel = true;
+                    return;
+                }
             }
+            this.errorMessage = string.Empty;
         }
-        this.errorMessage = string.Empty;
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "SelectHandler");
+        }
     }
 
     private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
@@ -430,10 +465,18 @@
     }
     private async void OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
     {
-        // Here, you can customize your code.
-        isUploading = false;
-        fileCount = (await uploadObj.GetFilesDataAsync()).Count;
-        StateHasChanged();
+        try
+        {
+
+            // Here, you can customize your code.
+            isUploading = false;
+            fileCount = (await uploadObj.GetFilesDataAsync()).Count;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "OnActionCompleteHandler");
+        }
     }
 
     private async Task onSave()
@@ -480,6 +523,7 @@
         catch (Exception ex)
         {
             errorMessage = $"Bei der Erstellung der neuen Einträge ist ein Fehler aufgetreten: " + ex.Message;
+            Logger.LogError(ex, errorMessage);
         }
         finally
         {
@@ -533,97 +577,113 @@
             catch (Exception ex)
             {
                 errors.Add($"Fehler beim Speichern des Eintrags {eintrag.Titel}: {ex.Message}");
+                Logger.LogError(ex, $"Fehler beim Speichern des Eintrags {eintrag.Titel}: {ex.Message}");
             }
         }
     }
 
     private async Task SaveNewFiles()
     {
-        var files = await uploadObj.GetFilesDataAsync();
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        string? userId = "unbekannt";
-        if (user?.Identity?.IsAuthenticated == true)
+        try
         {
-            userId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        }
 
-        maxSave = files.Count();
-        currentSave = 0;
+            var files = await uploadObj.GetFilesDataAsync();
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
-        foreach (var file in files)
-        {
-            currentSave++;
-            savingText = $"Bild {currentSave} von {maxSave}";
-            // StateHasChanged();
-
-            var neuerEintrag = new GalerieEintrag
-                {
-                    Titel = SelectedEintrag.Titel,
-                    Untertitel = SelectedEintrag.Untertitel,
-                    Beschreibung = SelectedEintrag.Beschreibung,
-                    ImageDate = SelectedEintrag.ImageDate,
-                    ImageCreatedBy = SelectedEintrag.ImageCreatedBy,
-                    Öffentlich = SelectedEintrag.Öffentlich,
-                    Home = SelectedEintrag.Home,
-                    Aikido = SelectedEintrag.Aikido,
-                    Bujinkan = SelectedEintrag.Bujinkan,
-                    Genbukan = SelectedEintrag.Genbukan,
-                    Iaido = SelectedEintrag.Iaido,
-                    Jodo = SelectedEintrag.Jodo,
-                    EntryCreatedBy = userId,
-                    EntryCreationDateUTC = DateTime.UtcNow
-                };
-
-            //Environment-Pfad mit einbeziehen!
-
-            string tempFilePath = Path.Combine(environment.ContentRootPath, "wwwroot",
-                environment.EnvironmentName, "unsafe_uploads",
-                file.Name);
-
-            if (File.Exists(tempFilePath))
+            string? userId = "unbekannt";
+            if (user?.Identity?.IsAuthenticated == true)
             {
-                //Datei in Galerie-Ordner kopieren
-                string destination = Path.Combine(environment.ContentRootPath, "wwwroot", environment.EnvironmentName, "galery");
-                string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
-                string newFilePath = Path.Combine(destination, newFileName);
+                userId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            }
 
-                await CopyFileAsync(tempFilePath, newFilePath);
+            maxSave = files.Count();
+            currentSave = 0;
 
-                if (File.Exists(newFilePath))
+            foreach (var file in files)
+            {
+                currentSave++;
+                savingText = $"Bild {currentSave} von {maxSave}";
+                // StateHasChanged();
+
+                var neuerEintrag = new GalerieEintrag
+                    {
+                        Titel = SelectedEintrag.Titel,
+                        Untertitel = SelectedEintrag.Untertitel,
+                        Beschreibung = SelectedEintrag.Beschreibung,
+                        ImageDate = SelectedEintrag.ImageDate,
+                        ImageCreatedBy = SelectedEintrag.ImageCreatedBy,
+                        Öffentlich = SelectedEintrag.Öffentlich,
+                        Home = SelectedEintrag.Home,
+                        Aikido = SelectedEintrag.Aikido,
+                        Bujinkan = SelectedEintrag.Bujinkan,
+                        Genbukan = SelectedEintrag.Genbukan,
+                        Iaido = SelectedEintrag.Iaido,
+                        Jodo = SelectedEintrag.Jodo,
+                        EntryCreatedBy = userId,
+                        EntryCreationDateUTC = DateTime.UtcNow
+                    };
+
+                //Environment-Pfad mit einbeziehen!
+
+                string tempFilePath = Path.Combine(environment.ContentRootPath, "wwwroot",
+                    environment.EnvironmentName, "unsafe_uploads",
+                    file.Name);
+
+                if (File.Exists(tempFilePath))
                 {
-                    //Eintarg im FileUploader löschen!
-                    await uploadObj.RemoveAsync(new FileInfo[] { file });
-                    //Temp-Datei löschen wenn sie noch vorhanden ist (sollte redundant sein?!)
-                    if (File.Exists(tempFilePath))
-                        File.Delete(tempFilePath);
+                    //Datei in Galerie-Ordner kopieren
+                    string destination = Path.Combine(environment.ContentRootPath, "wwwroot", environment.EnvironmentName, "galery");
+                    string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
+                    string newFilePath = Path.Combine(destination, newFileName);
 
-                    neuerEintrag.ImagePath = newFilePath;
+                    await CopyFileAsync(tempFilePath, newFilePath);
 
-                    //Eintrag in DB anlegen
-                    await DbContext.Galerie.AddAsync(neuerEintrag);
-                    await DbContext.SaveChangesAsync();
-                    uploadedFiles.Remove(file.Name);
+                    if (File.Exists(newFilePath))
+                    {
+                        //Eintarg im FileUploader löschen!
+                        await uploadObj.RemoveAsync(new FileInfo[] { file });
+                        //Temp-Datei löschen wenn sie noch vorhanden ist (sollte redundant sein?!)
+                        if (File.Exists(tempFilePath))
+                            File.Delete(tempFilePath);
+
+                        neuerEintrag.ImagePath = newFilePath;
+
+                        //Eintrag in DB anlegen
+                        await DbContext.Galerie.AddAsync(neuerEintrag);
+                        await DbContext.SaveChangesAsync();
+                        uploadedFiles.Remove(file.Name);
+                    }
+                    else
+                    {
+                        //ErrorHandling
+                    }
                 }
                 else
                 {
-                    //ErrorHandling
+                    //Fehler...
+                    errors.Add($"Die Datei {file.Name} wurde nicht gefunden! Versuche bitte das Bild zu entfernen und einmal neu hinzuzufügen.");
                 }
             }
-            else
-            {
-                //Fehler...
-                errors.Add($"Die Datei {file.Name} wurde nicht gefunden! Versuche bitte das Bild zu entfernen und einmal neu hinzuzufügen.");
-            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Speichern der neuen Einträge");
         }
     }
 
     public async Task CopyFileAsync(string sourceFile, string destinationFile)
     {
-        using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan))
-        using (var destinationStream = new FileStream(destinationFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan))
-            await sourceStream.CopyToAsync(destinationStream);
+        try
+        {
+            using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan))
+            using (var destinationStream = new FileStream(destinationFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                await sourceStream.CopyToAsync(destinationStream);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Kopieren der Datei");
+        }
     }
 
 
