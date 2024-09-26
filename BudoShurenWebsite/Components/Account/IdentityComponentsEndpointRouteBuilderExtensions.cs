@@ -1,15 +1,4 @@
-﻿//using BudoShurenWebsite.Models.Auth;
-//using Microsoft.AspNetCore.Components.Authorization;
-//using Microsoft.AspNetCore.Identity;
-//using System.Security.Claims;
-
-//{
-//    public class IdentityComponentsEndpointRouteBuilderExtensions
-//    {
-//    }
-//}
-
-using BudoShurenWebsite.Components.Account.Pages;
+﻿using BudoShurenWebsite.Components.Account.Pages;
 using BudoShurenWebsite.Components.Account.Pages.Member;
 using BudoShurenWebsite.Components.Account.Pages.Member.Ausgemustert;
 using BudoShurenWebsite.Data;

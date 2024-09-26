@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BudoShurenWebsite", "BudoSh
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorTestApp", "BlazorTestApp\BlazorTestApp.csproj", "{145E9373-4638-42FD-A524-ABFD4DC53587}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StopBudoShuren", "StopBudoShuren\StopBudoShuren.csproj", "{7210EB8D-FFCE-47FD-A99F-A805AF3EBF7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StopBudoShuren", "StopBudoShuren\StopBudoShuren.csproj", "{7210EB8D-FFCE-47FD-A99F-A805AF3EBF7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

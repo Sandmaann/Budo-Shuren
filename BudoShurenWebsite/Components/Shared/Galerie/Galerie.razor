@@ -348,14 +348,10 @@
             !aikido && bujinkan && !genbukan && !iaido && !jodo && !home)
             {
                 gefilterteEinträge = Einträge.Where(x => x.Öffentlich);
-                // // Wenn der Suchtext leer ist, zeigen Sie alle Einträge an
-                // Gruppen = Einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
             }
             else
             {
                 // Wenn der Suchtext nicht leer ist, filtern Sie die Einträge
-
-                // bool aikido = Suchtext.Contains("aikido", StringComparison.OrdinalIgnoreCase);
                 gefilterteEinträge = Einträge.Where(x => x.Öffentlich);
 
                 if (!string.IsNullOrWhiteSpace(suchtext))

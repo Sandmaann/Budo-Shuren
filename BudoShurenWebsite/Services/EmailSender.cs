@@ -15,11 +15,6 @@ namespace BudoShurenWebsite.Services
     // Remove the "else if (EmailSender is IdentityNoOpEmailSender)" block from RegisterConfirmation.razor after updating with a real implementation.
     internal sealed class EmailSender : IEmailSender<ApplicationUser>
     {
-        //private readonly string smtpServer = "smtp.ionos.com";
-        //private readonly int smtpPort = 587; // oder 465 für SSL
-        //private readonly string smtpUser = "ihre-email@ionos.com";
-        //private readonly string smtpPassword = "IhrPasswort";
-
         private readonly IEmailSender emailSender = new NoOpEmailSender();
         private readonly IDbContextFactory<ApplicationDbContext> dbFactory;
 

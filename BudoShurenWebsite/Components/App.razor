@@ -10,9 +10,17 @@
     <meta name="author" content="Budo Shuren Dojo" />
 
     @* <base href="/" /> *@
-@*     <base href="@((Environment.IsDevelopment()) ? "/" : "/budoshuren/")" /> *@
+    @*     <base href="@((Environment.IsDevelopment()) ? "/" : "/budoshuren/")" /> *@
 
-    <base href="/" />
+    @* lokal, zum debuggen, oder wenn die App später untder der richtigen domain veröffnetlich ist*@
+    @* <base href="/" /> *@
+    
+    @* astrum, da die URL hier unter https://02gd.astrum-it.de/budoshuren/ läuft müssen auch die Routen entsprechend passen!*@
+    @* Das sollte man, wenn die App veröffentlich ist, entfernen!*@
+    @* Die Pfade der statischen Bilder müssen auch von / budoshuren / images / auf / images / umgestellt werden (bzw. umgekehrt) (48 Vorkommen aktuell !)*@
+    @* Achtung: Bei der Komponente "Weiterleitung" ist das /budoshuren ebenfalls fest drin - solange das drin ist, gehen keine EXTERNEN Links!*@
+    <base href="/budoshuren/" />
+
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styleguide.css" />
     <link rel="stylesheet" href="BudoShurenWebsite.styles.css" />
@@ -20,7 +28,7 @@
 
     <link rel="icon" type="image/x-icon" href="images/favicon.ico" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com"  />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     @* fonts *@
@@ -71,10 +79,3 @@
 </body>
 
 </html>
-
-
-@{
-    string pageTitle = "Default Title";
-    string pageDescription = "Default description.";
-    // string pageCanonical = NavigationManager.Uri;
-}

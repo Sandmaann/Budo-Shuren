@@ -33,7 +33,6 @@ namespace BudoShurenWebsite
             var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
             try
             {
-
                 // Registrieren des Ereignishandlers für unbeobachtete Task-Ausnahmen
                 TaskScheduler.UnobservedTaskException += (sender, e) =>
                 {
@@ -54,9 +53,9 @@ namespace BudoShurenWebsite
                 builder.Services.AddHttpClient();
 
 
-                //DEAKTIVEREN !!!
-                builder.Services.AddServerSideBlazor(options => options.DetailedErrors = true);
-                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!
+                //builder.Services.AddServerSideBlazor(options => options.DetailedErrors = true);
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!DEAKTIVEREN !!!
 
                 //Authentifizierung
                 builder.Services.AddCascadingAuthenticationState();
@@ -69,9 +68,8 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<UserService>();
                 builder.Services.AddScoped<FileService>();
                 builder.Services.AddScoped<EmailSender>();
-
-                //builder.Services.AddSingleton<IDataService, DataService>();
                 builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
+                builder.Services.AddScoped<VisitorCounterService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
@@ -86,17 +84,8 @@ namespace BudoShurenWebsite
                     .AddIdentityCookies();
 
                 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
-                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
 
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                //if (builder.Environment.IsDevelopment())
-                //{
-                //    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                //}
-                //else
-                //{
-                //    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                //}
                 if (string.IsNullOrWhiteSpace(connectionString))
                 {
                     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -118,14 +107,11 @@ namespace BudoShurenWebsite
 
                 builder.Services.AddAuthorization(options =>
                 {
-                    //options.AddPolicy("Aktiviert", policy => policy.RequireAssertion(context =>
-                    //    !context.User.IsInRole(Roles.Gast)));
                     options.AddPolicy("Aktiviert", policy => policy.Requirements.Add(new VerifiedUserRequirement()));
                     options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
                         !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
                 });
 
-                //builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
                 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
 
                 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("de-DE");
@@ -177,7 +163,7 @@ namespace BudoShurenWebsite
                 }
 
 
-                //Nur für Release oder bei Migration wichtig
+                //Nur bei DB-Migration wichtig
                 //MigrateDatabase(app);
 
                 app.UseHttpsRedirection();

@@ -14,7 +14,7 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ResendEmailConfirmation> Logger
 
-<PageTitle>Bestätigungs E-Mail erneut schicken</PageTitle>
+<PageTitle>Bestätigungs-E-Mail erneut senden</PageTitle>
 <HeadContent>
     <meta name="description" content="Du hast deine Bestätigungs-E-Mail nicht erhalten? Kein Problem, gebe einfach deine E-Mail-Adresse ein, um die Bestätigungs-E-Mail erneut zu versenden und deinen Registrierungsprozess abzuschließen.">
 </HeadContent>
@@ -22,7 +22,7 @@
 <Headline Titel="メール確認" Untertitel="E-Mail" />
 <div class="container mx-auto max-w-screen-md">
     <section class="mx-10">
-        <SectionBanner Titel="Bitte geben Sie Ihre E-Mail Adresse an" />
+        <SectionBanner Titel="Bitte gib deine E-Mail Adresse an" />
         <div>
             <StatusMessage Message="@message" />
             <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post">

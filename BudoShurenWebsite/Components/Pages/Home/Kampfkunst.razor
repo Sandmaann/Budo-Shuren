@@ -6,7 +6,7 @@
 
 <div>
     <div class="banner-header">
-        <div class="mb-10 flex flex-row justify-between md:mb-28 sm:justify-around">
+        <div class="mb-10 flex flex-row justify-between sm:justify-around md:mb-28">
             <div class="@(AikidoStyle) w-28 transform transition duration-150 ease-in-out active:scale-90" @onclick="(() => KampfkunstClick(0))">
                 <div class="border-2 @(AikidoStyle) mx-auto w-16 md:w-20">
                     <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">合<br />気<br />道</div>
@@ -35,11 +35,11 @@
                 <CarouselItem>
                     <div class="mx-10 mb-10 md:mx-20">
                         <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
-                            <div class="md:w-8/12">
-                                <img src="/budoshuren/images/aikido.jpg" alt="Abbildung zweier Aikidoka beim Training."/>
+                            <div class="md:w-7/12">
+                                <img src="/budoshuren/images/aikido/aikido_titel.jpg" alt="Abbildung zweier Aikidoka beim Training." />
                             </div>
                             @* Mobile-Ansicht *@
-                            <div class="min-h-[19rem] relative ml-auto flex-grow text-left md:hidden">
+                            <div class="relative ml-auto min-h-[19rem] flex-grow text-left md:hidden">
                                 <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Aikido</div>
                                 <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                 <div>
@@ -60,42 +60,17 @@
                                     <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:20</div>
                                 </div>
-                                <div class="max-w-[120px] mt-4 w-[120px]">
-                                    <Weiterleitung Link="/Aikido" />
+                                <div class="mt-4 w-[120px] max-w-[120px]">
+                                    <Weiterleitung Link="/budoshuren/Aikido" />
                                 </div>
                             </div>
-
-@*                             <div class="min-h-[19rem] font-ptsans relative mb-2 ml-auto flex-grow text-left text-sm font-normal tracking-wider text-black md:hidden">
-
-                                <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Aikido</div>
-                                <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-
-                                <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag, Mittwoch und Freitag</div>
-                                <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
-                                <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:15</div>
-                                </div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">16:00 - 16:50</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:20</div>
-                                </div>
-                                <div class="mt-4 flex flex-row justify-end">
-                                    <Weiterleitung Link="/Aikido" />
-                                </div>
-                            </div> *@
                             <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm md:hidden">
                                 Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet. Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung.
                             </div>
 
                             @* Desktop Ansicht *@
                             @* Ist getrennt, blöd aber ich finde keinen sinnvollen Weg diese Ansicht ansonsten zumzusetzen! *@
-
-                            <div class="ml-20 hidden w-4/12 md:block">
+                            <div class="ml-20 hidden w-5/12 md:block">
                                 <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Aikido</div>
                                 <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
                                     Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet. Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung.
@@ -115,7 +90,7 @@
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
                                     </div>
-                                    <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
+                                    <div class="font-ptsans mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
                                     <div class="flex flex-row justify-between">
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
@@ -134,7 +109,7 @@
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:20</div>
                                     </div>
                                     <div class="mt-4 flex flex-row justify-end">
-                                        <Weiterleitung Link="/Aikido" />
+                                        <Weiterleitung Link="/budoshuren/Aikido" />
                                     </div>
                                 </div>
                             </div>
@@ -145,56 +120,60 @@
                 <CarouselItem>
                     <div class="mx-10 mb-10 md:mx-20">
                         <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
-                            <div class="md:w-8/12">
-                                <img src="/budoshuren/images/iaido.jpg" alt="Ein Iaidoka im Hakama beim Training mit dem Schwert."/>
+                            <div class="md:w-7/12">
+                                <img src="/budoshuren/images/genbukan/genbukan_home.jpg" alt="Zwei Budoka in Hakama bedrohen sich gegenseitig." />
                             </div>
 
                             @* Mobile-Ansicht *@
-                            <div class="min-h-[19rem] font-ptsans relative mb-2 ml-auto flex-grow text-left text-sm font-normal tracking-wider text-black md:hidden">
+                            <div class="font-ptsans relative mb-2 ml-auto min-h-[19rem] flex-grow text-left text-sm font-normal tracking-wider text-black md:hidden">
                                 <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Genbukan</div>
                                 <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                 <div class="mb-2 mt-4">Jodo</div>
                                 <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch (Jodo)</div>
                                     <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:45 - 19:15</div>
                                 </div>
                                 <div class="mb-2 mt-4">Iaido</div>
                                 <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag (Iaido)</div>
                                     <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 19:30</div>
                                 </div>
                                 <div class="absolute bottom-0 right-0">
-                                    <Weiterleitung Link="/Genbukan" />
+                                    <Weiterleitung Link="/budoshuren/Genbukan" />
                                 </div>
                             </div>
                             <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
-                                Genbukan ist eine japanische Kampfkunstschule, die von Shoto Tanemura gegründet wurde und sich auf die Erhaltung und Weitergabe traditioneller Samurai-Kampfkünste konzentriert. Eine der Disziplinen, die im Genbukan gelehrt wird, ist Iaido, eine Kunst, die sich auf das Ziehen des Schwertes und die unmittelbare Reaktion auf einen Angriff konzentriert. Im Gegensatz zu vielen anderen Kampfkünsten legt Iaido weniger Wert auf den Kampf gegen einen physischen Gegner und konzentriert sich stattdessen auf die Perfektion von Bewegungen und die Entwicklung von innerer Ruhe und Klarheit des Geistes. Durch langsame und präzise Bewegungen lernen die Schüler, sich auf den Moment zu konzentrieren und ihren Geist zu beruhigen. Iaido wird oft als eine meditative Praxis angesehen, die sowohl körperliche Geschicklichkeit als auch geistige Disziplin fördert, während sie gleichzeitig die traditionelle Samurai-Ethik und -Philosophie ehrt.
+                                Die Abteilung Genbukan des Budo Shuren Dojo bietet Training in den traditionellen japanischen Kampfkünsten Iaido und Jodo.
+                                Iaido ist - sehr vereinfacht ausgedrückt - die Kunst des Schwertziehens, bei der Präzision, Konzentration und fließende Bewegungen im Vordergrund stehen. Dabei wird das Schwert gezogen, gegen einen oder mehrere imaginäre Gegner geführt und wieder sicher in die Scheide zurückgeführt – alles in einem harmonischen Ablauf. Jodo hingegen lehrt den Umgang mit dem Stock (Jo), der dazu dient, sich effizient gegen das Schwert zu verteidigen. Diese Disziplin fördert Schnelligkeit, Timing und Kontrolle.
+                                Bei Genbukan stehen Respekt, Disziplin und die kontinuierliche Weiterentwicklung von Körper und Geist im Zentrum des Trainings.
+                                Anfänger und Fortgeschrittene sind herzlich willkommen!
                             </div>
 
                             @* Desktop Ansicht *@
                             @* Ist getrennt, blöd aber ich finde keinen sinnvollen Weg diese Ansicht ansonsten zumzusetzen! *@
-
-                            <div class="font-ptsans mb-2 ml-20 hidden w-4/12 text-sm font-normal tracking-wider text-black md:block">
+                            <div class="font-ptsans mb-2 ml-20 hidden w-5/12 text-sm font-normal tracking-wider text-black md:block">
                                 <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Genbukan</div>
                                 <div class="font-ptsans text-left">
-                                    Genbukan ist eine japanische Kampfkunstschule, die von Shoto Tanemura gegründet wurde und sich auf die Erhaltung und Weitergabe traditioneller Samurai-Kampfkünste konzentriert. Eine der Disziplinen, die im Genbukan gelehrt wird, ist Iaido, eine Kunst, die sich auf das Ziehen des Schwertes und die unmittelbare Reaktion auf einen Angriff konzentriert. Im Gegensatz zu vielen anderen Kampfkünsten legt Iaido weniger Wert auf den Kampf gegen einen physischen Gegner und konzentriert sich stattdessen auf die Perfektion von Bewegungen und die Entwicklung von innerer Ruhe und Klarheit des Geistes. Durch langsame und präzise Bewegungen lernen die Schüler, sich auf den Moment zu konzentrieren und ihren Geist zu beruhigen. Iaido wird oft als eine meditative Praxis angesehen, die sowohl körperliche Geschicklichkeit als auch geistige Disziplin fördert, während sie gleichzeitig die traditionelle Samurai-Ethik und -Philosophie ehrt.
+                                    Die Abteilung Genbukan des Budo Shuren Dojo bietet Training in den traditionellen japanischen Kampfkünsten Iaido und Jodo.
+                                    Iaido ist - sehr vereinfacht ausgedrückt - die Kunst des Schwertziehens, bei der Präzision, Konzentration und fließende Bewegungen im Vordergrund stehen. Dabei wird das Schwert gezogen, gegen einen oder mehrere imaginäre Gegner geführt und wieder sicher in die Scheide zurückgeführt – alles in einem harmonischen Ablauf. Jodo hingegen lehrt den Umgang mit dem Stock (Jo), der dazu dient, sich effizient gegen das Schwert zu verteidigen. Diese Disziplin fördert Schnelligkeit, Timing und Kontrolle.
+                                    Bei Genbukan stehen Respekt, Disziplin und die kontinuierliche Weiterentwicklung von Körper und Geist im Zentrum des Trainings.
+                                    Anfänger und Fortgeschrittene sind herzlich willkommen!
+
                                 </div>
 
                                 <div class="relative mt-10 min-h-48">
                                     <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-                                    <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Jodo</div>
 
                                     <div class="flex flex-row justify-between">
-                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch (Jodo)</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:45 - 19:15</div>
                                     </div>
-                                    <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Iaido</div>
                                     <div class="flex flex-row justify-between">
-                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag (Iaido)</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 19:30</div>
                                     </div>
-                                    <div class="absolute bottom-0 right-0">
-                                        <Weiterleitung Link="/Genbukan" />
+                                    <div class="mt-4 flex flex-row justify-end">
+                                        <Weiterleitung Link="/budoshuren/Genbukan" />
                                     </div>
                                 </div>
                             </div>
@@ -205,12 +184,12 @@
                 <CarouselItem>
                     <div class="mx-10 mb-10 md:mx-20">
                         <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
-                            <div class="md:w-8/12">
-                                <img src="/budoshuren/images/budo.jpg" alt="Zwei Bujinkanler bei der Übung eines Handgelenkhebels"/>
+                            <div class="md:w-7/12">
+                                <img src="/budoshuren/images/bujinkan/bujinkan_home.jpg" alt="Zwei Bujinkanler bei der Übung eines Handgelenkhebels" />
                             </div>
 
                             @* Mobile-Ansicht *@
-                            <div class="min-h-[19rem] relative ml-auto flex-grow text-left md:hidden">
+                            <div class="relative ml-auto min-h-[19rem] flex-grow text-left md:hidden">
                                 <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Bujinkan</div>
                                 <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
                                 <div>
@@ -231,21 +210,50 @@
                                     <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                 </div>
                                 <div class="absolute bottom-0 right-0">
-                                    <Weiterleitung Link="/Bujinkan" />
+                                    <Weiterleitung Link="/budoshuren/Bujinkan" />
                                 </div>
                             </div>
                             <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
-                                Das Bujinkan Budo Taijutsu/Ninjutsu ist eine japanische Kampfkunst, die von Dr. Masaaki Hatsumi ins Leben gerufen wurde. Sie vereint neun unterschiedliche Schulen, die aus den alten Samurai- und Ninja-Traditionen stammen. Dadurch bietet das Bujinkan eine beeindruckende Vielfalt an Techniken und Philosophien. Neben unbewaffneten Techniken wie Hebeln, Würfen, Tritten, Block- und Schlagtechniken umfasst das Training im Bujinkan auch den Umgang mit verschiedenen traditionellen japanischen Waffen wie Katana, Bo, Yari und Naginata.
-                            </div>
+                                Das Bujinkan Budo Taijutsu/Ninjutsu ist eine
+                                japanische Kampfkunst, welche von Dr.
+                                Masaaki Hatsumi gegründet wurde. Sie
+                                vereint neun unterschiedliche Schulen,
+                                welche aus den alten Samurai- und Ninjaschulen 
+                                stammen. Dadurch bietet das Bujinkan 
+                                eine beeindruckende Vielfalt an
+                                Techniken und Strategien.
+                                Neben unbewaffneten Techniken wie Hebel,
+                                Würfe, Tritte, Block- und Schlagtechniken
+                                wird auch der Umgang mit traditionellen,
+                                japanischen Waffen wie Katana, Bo, Yari,
+                                Naginata usw. gelehrt.
+                                Dies macht das Bujinkan Budo
+                                Taijutsu/Ninjutsu zu einer sehr vielseitigen
+                                Kampfkunst.
+                            </div> 
 
                             @* Desktop Ansicht *@
                             @* Ist getrennt, blöd aber ich finde keinen sinnvollen Weg diese Ansicht ansonsten zumzusetzen! *@
-
-                            <div class="ml-20 hidden w-4/12 md:block">
+                            <div class="ml-20 hidden w-5/12 md:block">
                                 <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Bujinkan</div>
                                 <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
-                                    Das Bujinkan Budo Taijutsu/Ninjutsu ist eine japanische Kampfkunst, die von Dr. Masaaki Hatsumi ins Leben gerufen wurde. Sie vereint neun unterschiedliche Schulen, die aus den alten Samurai- und Ninja-Traditionen stammen. Dadurch bietet das Bujinkan eine beeindruckende Vielfalt an Techniken und Philosophien. Neben unbewaffneten Techniken wie Hebeln, Würfen, Tritten, Block- und Schlagtechniken umfasst das Training im Bujinkan auch den Umgang mit verschiedenen traditionellen japanischen Waffen wie Katana, Bo, Yari und Naginata.
-                                </div>
+                                    Das Bujinkan Budo Taijutsu/Ninjutsu ist eine
+                                    japanische Kampfkunst, welche von Dr.
+                                    Masaaki Hatsumi gegründet wurde. Sie
+                                    vereint neun unterschiedliche Schulen,
+                                    welche aus den alten Samurai- und Ninjaschulen
+                                    stammen. Dadurch bietet das Bujinkan 
+                                    eine beeindruckende Vielfalt an
+                                    Techniken und Strategien.
+                                    Neben unbewaffneten Techniken wie Hebel,
+                                    Würfe, Tritte, Block- und Schlagtechniken
+                                    wird auch der Umgang mit traditionellen,
+                                    japanischen Waffen wie Katana, Bo, Yari,
+                                    Naginata usw. gelehrt.
+                                    Dies macht das Bujinkan Budo
+                                    Taijutsu/Ninjutsu zu einer sehr vielseitigen
+                                    Kampfkunst.
+                                </div>       
 
                                 <div class="relative mt-10 min-h-48">
                                     <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
@@ -267,7 +275,7 @@
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
                                     <div class="absolute bottom-0 right-0">
-                                        <Weiterleitung Link="/Bujinkan" />
+                                        <Weiterleitung Link="/budoshuren/Bujinkan" />
                                     </div>
                                 </div>
                             </div>

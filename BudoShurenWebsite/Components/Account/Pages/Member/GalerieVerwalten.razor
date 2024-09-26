@@ -506,7 +506,7 @@
                 return;
             }
 
-            var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Möchten Sie alle {selectedItems.Count} ausgewählten Bilder wirklich löschen?");
+            var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Möchtest du alle {selectedItems.Count} ausgewählten Bilder wirklich löschen?");
             bool error = false;
             if (confirm)
             {
@@ -560,14 +560,10 @@
             !aikido && bujinkan && !genbukan && !iaido && !jodo && !home && !öffentlich)
             {
                 gefilterteEinträge = Einträge;
-                // // Wenn der Suchtext leer ist, zeigen Sie alle Einträge an
-                // Gruppen = Einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
             }
             else
             {
                 // Wenn der Suchtext nicht leer ist, filtern Sie die Einträge
-
-                // bool aikido = Suchtext.Contains("aikido", StringComparison.OrdinalIgnoreCase);
                 gefilterteEinträge = Einträge;
 
                 if (!string.IsNullOrWhiteSpace(suchtext))
@@ -699,7 +695,7 @@
 
                 await JSRuntime.InvokeVoidAsync("saveScrollPositionOnUnload", DotNetObjectReference.Create(this));
             }
-            catch (Exception ex)
+            catch
             {
                 // ignored
             }
@@ -713,7 +709,7 @@
                 var scrollPosition = await JSRuntime.InvokeAsync<int>("getScrollPosition");
                 await SessionStorage.SetAsync("scrollPosition", scrollPosition);
             }
-            catch (Exception ex)
+            catch
             {
                 // ignored
             }

@@ -11,25 +11,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.11.4" />
-    <PackageReference Include="MailKit" Version="4.6.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.6">
+    <PackageReference Include="Azure.Identity" Version="1.12.0" />
+    <PackageReference Include="MailKit" Version="4.7.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.11" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.4" />
-    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="26.1.35" />
-    <PackageReference Include="Syncfusion.Blazor.Grid" Version="26.1.35" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="26.1.35" />
-    <PackageReference Include="Syncfusion.Blazor.ProgressBar" Version="26.1.35" />
-    <PackageReference Include="Syncfusion.Blazor.Schedule" Version="26.1.35" />
-    <PackageReference Include="Syncfusion.Blazor.SplitButtons" Version="26.1.35" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="26.1.35" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.12" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.12" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
+    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="26.2.9" />
+    <PackageReference Include="Syncfusion.Blazor.Grid" Version="26.2.9" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="26.2.9" />
+    <PackageReference Include="Syncfusion.Blazor.ProgressBar" Version="26.2.9" />
+    <PackageReference Include="Syncfusion.Blazor.Schedule" Version="26.2.9" />
+    <PackageReference Include="Syncfusion.Blazor.SplitButtons" Version="26.2.9" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="26.2.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,6 +61,10 @@
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Components\Pages\Impressum.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Components\Pages\script.js" />
   </ItemGroup>
 
 </Project>

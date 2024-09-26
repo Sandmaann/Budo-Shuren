@@ -1,12 +1,16 @@
-﻿
-@* <a href="@Link" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">@Text</a> *@
-<a href="@("/budoshuren" + Link)" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">@Text</a>
+﻿@* <a href="@Link" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">@Text</a> *@
+<a href="@(Link)" target="@target" class="font-yuji text-justify text-base font-normal tracking-widest text-primary">@Text</a>
 
 
 @code {
     [Parameter]
-    public string? Text { get; set; } = "→ Weitere Infos";   
-    
+    public string? Text { get; set; } = "→ Weitere Infos";
+
     [Parameter]
     public string? Link { get; set; } = "/Home";
+
+    [Parameter]
+    public bool NewWindow { get; set; } = false;
+
+    private string target => NewWindow ? "_blank" : "_self";
 }

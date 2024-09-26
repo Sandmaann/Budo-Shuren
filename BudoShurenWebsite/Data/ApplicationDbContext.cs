@@ -40,6 +40,11 @@ namespace BudoShurenWebsite.Data
             // Set the table name and unique index for the Abteilung entity
             builder.Entity<Abteilung>().ToTable("Abteilungen");
             builder.Entity<Abteilung>().HasIndex(u => u.ID).IsUnique();
+
+
+            builder.Entity<Visit>().HasKey(u => u.ID);
+            builder.Entity<Visit>().ToTable("Visit");
+            builder.Entity<Visit>().HasIndex(u => u.ID).IsUnique();
         }
 
         public DbSet<GalerieEintrag> Galerie { get; set; }
@@ -47,6 +52,7 @@ namespace BudoShurenWebsite.Data
         public DbSet<AppointmentData> Appointments { get; set; }
         public DbSet<EmailSetting> EmailSettings { get; set; }
         public DbSet<Abteilung> Abteilungen { get; set; }
+        public DbSet<Visit> Visits { get; set; }
 
 
         public override int SaveChanges()

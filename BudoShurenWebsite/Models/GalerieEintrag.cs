@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Org.BouncyCastle.Security;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -78,9 +79,9 @@ namespace BudoShurenWebsite.Models
             {
                 GalerieTyp typ = GalerieTyp.None;
 
-                if(Home)
+                if (Home)
                     typ |= GalerieTyp.Home;
-                if(Aikido)
+                if (Aikido)
                     typ |= GalerieTyp.Aikido;
                 if (Bujinkan)
                     typ |= GalerieTyp.Bujinkan;

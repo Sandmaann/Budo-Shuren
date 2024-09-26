@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace BudoShurenWebsite.Components.Account
 {
+    [Obsolete("EmailSender verwenden.", true)]
     // Remove the "else if (EmailSender is IdentityNoOpEmailSender)" block from RegisterConfirmation.razor after updating with a real implementation.
     internal sealed class IdentityNoOpEmailSender : IEmailSender<ApplicationUser>
     {

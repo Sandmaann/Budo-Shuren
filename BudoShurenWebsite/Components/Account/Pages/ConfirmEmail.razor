@@ -22,21 +22,21 @@
         <div>
             @if (isSuccess)
             {
-                <StatusMessage Message="Ihre E-Mail Adresse wurde erfolgreich bestätigt!" />
+                <StatusMessage Message="Deine E-Mail Adresse wurde erfolgreich bestätigt!" />
                 <br />
 
                 @if (isVerified)
                 {
-                    <Standardtext Text="Sie können sich jetzt einloggen." />
+                    <Standardtext Text="Du kannst dich jetzt einloggen." />
                 }
                 else
                 {
-                    <Standardtext Text="Ihr Zugang muss jetzt noch von einem Abteilungsleiter bestätigt werden!" />
+                    <Standardtext Text="Dein Zugang muss jetzt noch von einem Abteilungsleiter bestätigt werden!" />
                 }
             }
             else
             {
-                <StatusMessage ShowAsError="true" Message="Ihr E-Mail Adresse konnte leider nicht bestätigt werden!" />
+                <StatusMessage ShowAsError="true" Message="Deine E-Mail Adresse konnte leider nicht bestätigt werden!" />
             }
         </div>
 
