@@ -13,13 +13,13 @@
     @*     <base href="@((Environment.IsDevelopment()) ? "/" : "/budoshuren/")" /> *@
 
     @* lokal, zum debuggen, oder wenn die App später untder der richtigen domain veröffnetlich ist*@
-    @* <base href="/" /> *@
+    <base href="/" />
     
     @* astrum, da die URL hier unter https://02gd.astrum-it.de/budoshuren/ läuft müssen auch die Routen entsprechend passen!*@
     @* Das sollte man, wenn die App veröffentlich ist, entfernen!*@
     @* Die Pfade der statischen Bilder müssen auch von / budoshuren / images / auf / images / umgestellt werden (bzw. umgekehrt) (48 Vorkommen aktuell !)*@
     @* Achtung: Bei der Komponente "Weiterleitung" ist das /budoshuren ebenfalls fest drin - solange das drin ist, gehen keine EXTERNEN Links!*@
-    <base href="/budoshuren/" />
+@*     <base href="/budoshuren/" /> *@
 
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styleguide.css" />

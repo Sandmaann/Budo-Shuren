@@ -4,7 +4,7 @@
 
 <div class="h-min w-full select-none bg-gray-100" @onclick="OnClick" @onpointerdown="MouseDown" @onpointerup="MouseUp">
     <div class="relative">
-        <img oncontextmenu="return false;" class="object-cover transition-all duration-500 ease-in-out @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")" src="@Eintrag.DisplayPath" title="@Eintrag.Titel" alt="@Eintrag.Untertitel" onerror="this.src='/budoshuren/images/missingimage.jpg'" />
+        <img oncontextmenu="return false;" class="object-cover transition-all duration-500 ease-in-out @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")" src="@Eintrag.DisplayPath" title="@Eintrag.Titel" alt="@Eintrag.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
         @if (Eintrag.IsSelected)
         {
             <div class="absolute inset-0 flex items-start justify-end">
@@ -162,7 +162,7 @@
             {
                 string fileName = Path.GetFileName(Eintrag.ImagePath);
                 if (!string.IsNullOrWhiteSpace(fileName))
-                    NavigationManager.NavigateTo($"/Account/Member/Galerie/budoshuren/images/{fileName}/{Eintrag.ID}");
+                    NavigationManager.NavigateTo($"/Account/Member/Galerie/images/{fileName}/{Eintrag.ID}");
                 // NavigationManager.NavigateTo($"/image/{fileName}");
             }
         }
@@ -182,7 +182,7 @@
             detailClicked = true;
             string fileName = Path.GetFileName(Eintrag.ImagePath);
             if (!string.IsNullOrWhiteSpace(fileName))
-                NavigationManager.NavigateTo($"/Account/Member/Galerie/budoshuren/images/{fileName}/{Eintrag.ID}");
+                NavigationManager.NavigateTo($"/Account/Member/Galerie/images/{fileName}/{Eintrag.ID}");
         }
     }
 }
