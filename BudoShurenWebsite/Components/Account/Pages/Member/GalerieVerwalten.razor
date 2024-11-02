@@ -1,5 +1,4 @@
 ﻿@page "/Account/Member/Galerie"
-@page "/budoshuren/Account/Member/Galerie"
 @rendermode InteractiveServer
 
 
@@ -24,6 +23,9 @@
             <div class="mx-auto max-w-screen-md">
                 <div class="mx-10">
                     <SectionBanner Titel="Galerie verwalten" />
+                    <div class="mb-10">
+                        <Standardtext Text="Bitte ladet nur Bilder hoch, an denen ihr die Rechte besitzt und bei denen die abgebildeten Personen der Veröffentlichung zugestimmt haben!" />
+                    </div>
                 </div>
             </div>
 
@@ -51,7 +53,7 @@
                                     </button>
                                     <InputText @bind-Value="Suchtext"
                                                @oninput="Suche"
-                                               class="!outline-none w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6"
+                                               class="w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black !outline-none transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6"
                                                placeholder="Suchen..." />
                                 }
 
@@ -248,6 +250,7 @@
 
 
 @code {
+    [AllowNull]
     EditGalerie editGalerie;
 
     string suchtext = string.Empty;
@@ -515,18 +518,26 @@
                     var dbItem = await DbContext.Galerie.FindAsync(item.ID);
                     if (dbItem != null)
                     {
+                        var dbImage = await DbContext.Images.FindAsync(dbItem.DbImageId);
                         try
                         {
                             DbContext.Galerie.Remove(dbItem);
+                            if (dbImage != null)
+                            {
+                                DbContext.Images.Remove(dbImage);
+                                var relatedRecords = DbContext.Neuigkeiten.Where(n => n.DbImageId == dbImage.Id);
+                                DbContext.Neuigkeiten.RemoveRange(relatedRecords);
+                            }
+
                             await DbContext.SaveChangesAsync();
 
-                            //Datei löschen!
-                            if (!string.IsNullOrWhiteSpace(dbItem.ImagePath) && File.Exists(dbItem.ImagePath))
-                                File.Delete(dbItem.ImagePath);
+                            // //Datei löschen!
+                            // if (!string.IsNullOrWhiteSpace(dbItem.ImagePath) && File.Exists(dbItem.ImagePath))
+                            //     File.Delete(dbItem.ImagePath);
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
-                            //TODO Logging
+                            Logger.LogError(ex, $"Fehler beim Löschen des Bildes {dbItem.ID}");
                             error = true;
                         }
                     }
@@ -640,7 +651,7 @@
             await Task.Delay(10);
 
             var einträge = await DbContext.Galerie.ToListAsync();
-            einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
+            // einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
 
             var groups = einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
             var gruppen = new List<GalerieGruppe>();

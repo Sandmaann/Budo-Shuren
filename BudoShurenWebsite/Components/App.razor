@@ -9,17 +9,7 @@
     <meta name="keywords" content="Aikido, Genbukan, Bujinkan, Kampfkünste, Augsburg, traditionell, japanisch, Budo, Iaido, Jodo, Ninjutsu, Taijutsu, Kenjutsu" />
     <meta name="author" content="Budo Shuren Dojo" />
 
-    @* <base href="/" /> *@
-    @*     <base href="@((Environment.IsDevelopment()) ? "/" : "/budoshuren/")" /> *@
-
-    @* lokal, zum debuggen, oder wenn die App später untder der richtigen domain veröffnetlich ist*@
     <base href="/" />
-    
-    @* astrum, da die URL hier unter https://02gd.astrum-it.de/budoshuren/ läuft müssen auch die Routen entsprechend passen!*@
-    @* Das sollte man, wenn die App veröffentlich ist, entfernen!*@
-    @* Die Pfade der statischen Bilder müssen auch von / budoshuren / images / auf / images / umgestellt werden (bzw. umgekehrt) (48 Vorkommen aktuell !)*@
-    @* Achtung: Bei der Komponente "Weiterleitung" ist das /budoshuren ebenfalls fest drin - solange das drin ist, gehen keine EXTERNEN Links!*@
-@*     <base href="/budoshuren/" /> *@
 
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styleguide.css" />
@@ -46,7 +36,8 @@
     <Routes />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Syncfusion.Blazor.Core/scripts/syncfusion-blazor.min.js" type="text/javascript"></script>
-    <script src="script.js" defer></script>
+    @* <script src="script.js" defer></script> *@
+    <script src="js/script.js" defer></script>
 
 
     @* Blazor Bug - scrollt nicht korrekt nach oben bei Navigation in .NET 8 - das hier ist ein workaround *@

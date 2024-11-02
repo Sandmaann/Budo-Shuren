@@ -1,6 +1,7 @@
 ﻿@inject ILogger<InteresseFormular> Logger
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject EmailSender EmailSender
+@inject VisitorCounterService VisitorCounterService
 
 @using System.ComponentModel.DataAnnotations
 @using Syncfusion.Blazor.DropDowns;
@@ -152,11 +153,7 @@
         Abteilungen = await context.Abteilungen.ToListAsync();
         if (Abteilungen.FirstOrDefault(x => x.ID == Abteilung) is Abteilung auswahl)
         {
-            Input.SelectedAbteilung = auswahl.ID;
-        }
-        else
-        {
-            // Input.SelectedAbteilung = LocalData.FirstOrDefault()?.ID ?? "";
+            Input.SelectedAbteilung = auswahl?.ID ?? "";
         }
     }
 
@@ -171,11 +168,14 @@
 
                 //E-Mail an Abteilungsleiter senden
                 string text = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", name).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
-                await EmailSender.SendEmailAsync(abteilung.Email, "Neue Anfrage von der Budo-Shuren-Dojo Webseite", text);
+                await EmailSender.SendEmailAsync(abteilung?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", text);
 
                 string infoAnAbsender = EmailSender.HtmlLayout_InteresseBestätigung.Replace("[NACHRICHT]", nachricht);
                 //Bestätigungsemail an den Absender schicken
                 await EmailSender.SendEmailAsync(Input.Email, "Bestätigung Kontaktformular Budo-Shuren-Dojo", infoAnAbsender);
+
+                //Counter
+                await VisitorCounterService.AddVisitorAsync(Input.Email, "InteresseEmail_" + abteilung?.Name ?? "unbekannt");
 
                 await OnSend.InvokeAsync(true);
 

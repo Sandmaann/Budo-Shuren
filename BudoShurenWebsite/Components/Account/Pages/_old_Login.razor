@@ -1,5 +1,4 @@
-﻿@page "/Account/Login"
-@page "/budoshuren/Account/Login"
+﻿@page "/Account/Old"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
@@ -7,7 +6,7 @@
 @using BudoShurenWebsite.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
-@inject ILogger<Login> Logger
+@inject ILogger<_old_Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject IJSRuntime JSRuntime
@@ -57,7 +56,7 @@
                             <div class="flex flex-row items-center justify-between">
                                 <div class="border-4 text-surface inline-block h-6 w-6 animate-spin rounded-full border-solid border-current border-e-transparent motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-white"
                                      role="status">
-                                    <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Sekunde ...</span>
+                                    <span class="!border-0 !absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !p-0 ![clip:rect(0,0,0,0)]">Sekunde ...</span>
                                 </div>
                                 <span class="ml-2">Lade</span>
                             </div>
@@ -98,8 +97,6 @@
 
     private bool LoginIsBusy = false;
 
-    private bool IsCapsLockEnabled { get; set; } = false;
-
     protected override async Task OnInitializedAsync()
     {
         //Brauche ich erst, wenn ich die externe Anmeldung implementiere
@@ -127,12 +124,14 @@
             if (result.Succeeded)
             {
                 Logger.LogInformation("User logged in.");
-                RedirectManager.RedirectTo("Account/Member");
+                NavigationManager.NavigateTo("Account/Member");
+                // RedirectManager.RedirectTo("Account/Member");
             }
             else if (result.IsLockedOut)
             {
                 Logger.LogWarning("User account locked out.");
-                RedirectManager.RedirectTo("Account/Lockout");
+                NavigationManager.NavigateTo("Account/Lockout");
+                // RedirectManager.RedirectTo("Account/Lockout");
             }
             else
             {
@@ -170,9 +169,3 @@
         public bool RememberMe { get; set; }
     }
 }
-
-<script>
-    window.onload = function () {
-        addCapsLockEventListener();
-    };
-</script>

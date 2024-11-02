@@ -51,6 +51,26 @@ namespace BudoShurenWebsite.Components.Account
                 return TypedResults.LocalRedirect($"~/{returnUrl}");
             });
 
+            //Möglicher Versuch eine Anmeldung innerhalb einer Interaktiven-Blazor-Komponente umzusetzen (wie wird das aber aufgerufen?)
+            //accountGroup.MapPost("/Login", async (
+            //    [FromForm] string email,
+            //    [FromForm] string password,
+            //    [FromServices] SignInManager<ApplicationUser> signInManager,
+            //    [FromServices] UserManager<ApplicationUser> userManager,
+            //    [FromForm] string returnUrl) =>
+            //{
+            //    var user = await userManager.FindByEmailAsync(email);
+            //    if (user != null)
+            //    {
+            //        var result = await signInManager.PasswordSignInAsync(user, password, false, lockoutOnFailure: true);
+            //        if (result.Succeeded)
+            //        {
+            //            return TypedResults.LocalRedirect($"~/{returnUrl}");
+            //        }
+            //    }
+            //    return Results.BadRequest("Ungültiger Anmeldeversuch.");
+            //});
+
             var manageGroup = accountGroup.MapGroup("/Member").RequireAuthorization();
 
             manageGroup.MapPost("/LinkExternalLogin", async (

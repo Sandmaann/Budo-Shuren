@@ -30,7 +30,27 @@
                             <CarouselItem>
                                 <figure class="mx-10 mb-10 md:mx-20 md:flex md:flex-row md:justify-between">
                                     <div class="md:max-w-[440px]">
-                                        <img class="mx-auto max-h-96 md:max-h-112" src="@eintrag.DisplayPath" />
+                                        @* <img class="mx-auto max-h-96 md:max-h-112" src="@eintrag.DisplayPath" /> *@
+                                        @* <img class="mx-auto max-h-96 md:max-h-112" src="@GetImageUrl(eintrag.DbImageId)" /> *@
+
+                                        @if (eintrag.IsLoading)
+                                        {
+                                            <Spinner />
+                                        }
+                                        <img class="mx-auto max-h-96 md:max-h-112"
+                                             loading="lazy"
+                                             src="@GetImageUrl(eintrag?.DbImageId)"
+                                             alt="@eintrag?.Titel"
+                                             @onload="eintrag.OnImageLoaded"
+                                             @onerror="eintrag.OnImageError" />
+
+                                        @if (eintrag.ShowErrorImage)
+                                        {
+                                            <img class="mx-auto max-h-96 md:max-h-112"
+                                                 src="/images/missingimage.jpg"
+                                                 alt="@eintrag?.Titel" />
+                                        }
+
                                     </div>
                                     <div class="mt-5 md:w-[213px] md:relative md:mt-0">
                                         <figcaption class="font-yuji text-3xl font-normal tracking-widest text-black">@eintrag.Titel</figcaption>
@@ -82,7 +102,7 @@
                             Unser Dojo
                         </div>
                         <div class="font-ptsans text-sm font-normal tracking-wider text-black md:absolute md:bottom-0">
-                            Bildbeschreibungen, die den Betrachter erklären was er da genau sieht, beispielsweise eine Aufführung, oder anderweitige Events.
+                            Hier sieht es aktuell noch leer aus. Bald wird es auch aktuelle Bilder aus dem Dojo geben!
                         </div>
                     </div>
                 </figure>
@@ -145,15 +165,29 @@
     [Parameter]
     public GalerieTyp Typ { get; set; } = GalerieTyp.None;
 
+    private bool imageIsLoading { get; set; } = true;
+    private bool showErrorImage { get; set; } = false;
+
     private bool IsLoading { get; set; } = false;
     private string ErrorMessage { get; set; } = string.Empty;
     private IEnumerable<GalerieEintrag> GalerieEinträge { get; set; } = new List<GalerieEintrag>();
-    private bool firstRender = true;
+    // private bool firstRender = true;
 
     private Guid ID = Guid.NewGuid();
 
     private bool paramsSet = false;
 
+    private void OnImageLoaded()
+    {
+        imageIsLoading = false;
+        StateHasChanged();
+    }
+    private void OnImageError()
+    {
+        imageIsLoading = false;
+        showErrorImage = true;
+        StateHasChanged();
+    }
 
     protected override async void OnAfterRender(bool firstRender)
     {
@@ -186,7 +220,9 @@
 
 
             foreach (var item in data)
-                item.EnvironmentPath = Environment.ContentRootPath;
+            {
+                item.StateHasChanged = () => StateHasChanged();
+            }
             GalerieEinträge = data;
         }
         catch (Exception ex)
@@ -200,5 +236,10 @@
             IsLoading = false;
             StateHasChanged();
         }
+    }
+
+    private string GetImageUrl(int? dbImageId)
+    {
+        return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}" : "/images/missingimage.jpg";
     }
 }

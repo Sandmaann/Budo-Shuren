@@ -4,7 +4,7 @@
     {
         public int ID { get; set; }
         public string VisitorID { get; set; } = string.Empty;
-        public string PageName { get; set; }
+        public string PageName { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
     }
 }

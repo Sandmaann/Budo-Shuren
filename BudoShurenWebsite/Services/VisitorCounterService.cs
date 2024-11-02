@@ -45,6 +45,20 @@ namespace BudoShurenWebsite.Services
                 if (!string.IsNullOrEmpty(pageName) && pageName.StartsWith("Login?ReturnUrl"))
                 {
                     pageName = "Login";
+                }   
+                if (!string.IsNullOrEmpty(pageName) && pageName.StartsWith("Auth?ReturnUrl"))
+                {
+                    pageName = "Login";
+                }
+
+                if (!string.IsNullOrEmpty(pageName) && pageName.StartsWith("ResetPassword?"))
+                {
+                    pageName = "ResetPassword";
+                }     
+                
+                if (!string.IsNullOrEmpty(pageName) && pageName.Contains("?"))
+                {
+                    pageName = pageName.Substring(0, pageName.IndexOf("?"));
                 }
 
                 using var dbContext = _dbContextFactory.CreateDbContext();

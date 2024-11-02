@@ -17,7 +17,7 @@ namespace BudoShurenWebsite.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -206,6 +206,37 @@ namespace BudoShurenWebsite.Migrations
                     b.ToTable("Appointments", (string)null);
                 });
 
+            modelBuilder.Entity("BudoShurenWebsite.Models.DbImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.ToTable("Images", (string)null);
+                });
+
             modelBuilder.Entity("BudoShurenWebsite.Models.EmailSetting", b =>
                 {
                     b.Property<int>("ID")
@@ -257,6 +288,9 @@ namespace BudoShurenWebsite.Migrations
                     b.Property<bool>("Bujinkan")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("DbImageId")
+                        .HasColumnType("int");
+
                     b.Property<string>("EntryCreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -278,9 +312,6 @@ namespace BudoShurenWebsite.Migrations
                     b.Property<DateTime?>("ImageDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ImagePath")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Jodo")
                         .HasColumnType("bit");
 
@@ -300,6 +331,10 @@ namespace BudoShurenWebsite.Migrations
                         .HasColumnType("bit");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("DbImageId")
+                        .IsUnique()
+                        .HasFilter("[DbImageId] IS NOT NULL");
 
                     b.HasIndex("ID")
                         .IsUnique();
@@ -325,11 +360,10 @@ namespace BudoShurenWebsite.Migrations
                     b.Property<DateTime?>("Datum")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EntryCreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("DbImageId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("ImagePath")
+                    b.Property<string>("EntryCreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -360,6 +394,10 @@ namespace BudoShurenWebsite.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("DbImageId")
+                        .IsUnique()
+                        .HasFilter("[DbImageId] IS NOT NULL");
 
                     b.HasIndex("ID")
                         .IsUnique();
@@ -527,6 +565,24 @@ namespace BudoShurenWebsite.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("BudoShurenWebsite.Models.GalerieEintrag", b =>
+                {
+                    b.HasOne("BudoShurenWebsite.Models.DbImage", "DbImage")
+                        .WithOne("GalerieEintrag")
+                        .HasForeignKey("BudoShurenWebsite.Models.GalerieEintrag", "DbImageId");
+
+                    b.Navigation("DbImage");
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.Neuigkeit", b =>
+                {
+                    b.HasOne("BudoShurenWebsite.Models.DbImage", "DbImage")
+                        .WithOne("Neuigkeit")
+                        .HasForeignKey("BudoShurenWebsite.Models.Neuigkeit", "DbImageId");
+
+                    b.Navigation("DbImage");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -576,6 +632,13 @@ namespace BudoShurenWebsite.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.DbImage", b =>
+                {
+                    b.Navigation("GalerieEintrag");
+
+                    b.Navigation("Neuigkeit");
                 });
 #pragma warning restore 612, 618
         }

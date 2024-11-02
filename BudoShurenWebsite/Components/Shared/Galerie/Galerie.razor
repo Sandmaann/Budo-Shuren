@@ -1,5 +1,4 @@
 ﻿@page "/Galerie"
-@page "/budoshuren/Galerie"
 @rendermode InteractiveServer
 
 <PageTitle>Galerie</PageTitle>
@@ -55,7 +54,7 @@
                                     </button>
                                     <InputText @bind-Value="Suchtext"
                                                @oninput="Suche"
-                                               class="!outline-none w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6"
+                                               class="w-44 truncate border border-white bg-white px-9 py-2 pl-10 text-sm font-semibold text-black !outline-none transition-all duration-1000 ease-out placeholder:tracking-widest focus:border focus:w-full focus:border-primary focus:ring-transparent sm:bg-transparent sm:pr-6"
                                                placeholder="Suchen..." />
                                 }
 
@@ -424,7 +423,7 @@
             await Task.Delay(10);
 
             var einträge = await DbContext.Galerie.Where(x => x.Öffentlich).ToListAsync();
-            einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
+            // einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
 
             var groups = einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
             var gruppen = new List<GalerieGruppe>();
@@ -478,7 +477,7 @@
 
                 await JSRuntime.InvokeVoidAsync("saveScrollPositionOnUnload", DotNetObjectReference.Create(this));
             }
-            catch (Exception ex)
+            catch
             {
                 // ignored
             }
@@ -492,7 +491,7 @@
                 var scrollPosition = await JSRuntime.InvokeAsync<int>("getScrollPosition");
                 await SessionStorage.SetAsync("scrollPosition", scrollPosition);
             }
-            catch (Exception ex)
+            catch
             {
                 // ignored
             }

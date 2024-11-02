@@ -36,7 +36,6 @@ markerView.addListener('click', ({ domEvent, latLng }) => {
     // Handle the click event.
     infoWindow.open(map, marker);
 });
-}
 
 // Define the address details
 var addressDetails = '<div>' +

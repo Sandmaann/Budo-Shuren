@@ -7,44 +7,41 @@ namespace BudoShurenWebsite.Models
     {
         [Key]
         public int ID { get; set; }
-        public string Titel { get; set; }
-        public string Beschreibung { get; set; }
-        public string Ort { get; set; }
-        public string Link { get; set; }
-        public string Linktext { get; set; }
+        public string Titel { get; set; } = string.Empty;
+        public string Beschreibung { get; set; } = string.Empty;
+        public string Ort { get; set; } = string.Empty;
+        public string Link { get; set; } = string.Empty;
+        public string Linktext { get; set; } = string.Empty;
         public DateTime? Datum { get; set; }
         public int Sortierung { get; set; }
-
-        public string ImagePath { get; set; }
-
-
         public DateTime? Created { get; set; }
-        public string EntryCreatedBy { get; set; }
+        public string EntryCreatedBy { get; set; } = string.Empty;
 
-        public string LastChangedBy { get; set; }
+        public string LastChangedBy { get; set; } = string.Empty;
         public DateTime? LastChange { get; set; }
-
-
-        [NotMapped]
-        public string TempFilePath { get; set; }
-
+        public int? DbImageId { get; set; }
+        public DbImage? DbImage { get; set; }
 
         [NotMapped]
-        public string DisplayPath
+        public bool IsLoading { get; set; } = true;
+        [NotMapped]
+        public bool ShowErrorImage { get; set; } = false;
+
+        public void OnImageLoaded()
         {
-            get
-            {
-                if (!string.IsNullOrWhiteSpace(ImagePath) && !string.IsNullOrWhiteSpace(EnvironmentPath) && File.Exists(ImagePath))
-                {
-                    string path = Path.Combine(EnvironmentPath, "wwwroot");
-                    var result = ImagePath.Replace(path, string.Empty);
-                    return result;
-                }
-                return string.Empty;
-            }
+            IsLoading = false;
+            if (StateHasChanged != null)
+                StateHasChanged();
+        }
+        public void OnImageError()
+        {
+            IsLoading = false;
+            ShowErrorImage = true;
+            if (StateHasChanged != null)
+                StateHasChanged();
         }
 
         [NotMapped]
-        public string EnvironmentPath { get; set; }
+        public Action? StateHasChanged { get; set; }
     }
 }

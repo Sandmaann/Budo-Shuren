@@ -25,7 +25,7 @@ namespace BudoShurenWebsite.Models
         public Nullable<int> RecurrenceID { get; set; }
 
         [Required(ErrorMessage = "Bitte wähle eine Abteilung aus.")]
-        public string Abteilung { get; set; }
+        public string Abteilung { get; set; } = string.Empty;
         public bool ShowInWeek { get; set; }
         public bool ShowInMonth { get; set; }
 
@@ -92,7 +92,7 @@ namespace BudoShurenWebsite.Models
             }
         }
         [NotMapped]
-        public string CustomErrorMessage { get; set; }
+        public string CustomErrorMessage { get; set; } = string.Empty;
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (!ShowInWeek && !ShowInMonth)

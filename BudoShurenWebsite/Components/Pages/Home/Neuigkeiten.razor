@@ -33,7 +33,7 @@
                             <div class="mx-10 mb-10 md:mx-20">
                                 <div class="headline mb-4 flex flex-col md:mb-8 md:flex-row">
                                     <div class="font-yuji text-justify text-3xl font-normal tracking-widest text-black">@neuigkeit.Titel</div>
-                                    <div class="md:flex-1">
+                                    <div class="min-w-0 md:flex-1 md:min-w-44">
                                         @if (!string.IsNullOrWhiteSpace(neuigkeit.Ort))
                                         {
                                             <div class="font-ptsans text-right text-sm tracking-wider text-black"><span class="font-bold">Ort:</span> @neuigkeit.Ort</div>
@@ -45,13 +45,32 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112" src="@neuigkeit.DisplayPath" alt="@neuigkeit.Titel" />
-                                    <Standardtext Text="@neuigkeit.Beschreibung" />
+                                    @* <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112" src="@neuigkeit.DisplayPath" alt="@neuigkeit.Titel" /> *@
+                                    @if (neuigkeit.IsLoading)
+                                    {
+                                        <Spinner />
+                                    }
+                                    <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
+                                         src="@GetImageUrl(neuigkeit?.DbImageId)"
+                                         loading="lazy"
+                                         alt="@neuigkeit?.Titel"
+                                         @onload="neuigkeit.OnImageLoaded"
+                                         @onerror="neuigkeit.OnImageError" />
+
+                                    @if (neuigkeit.ShowErrorImage)
+                                    {
+                                        <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
+                                             src="/images/missingimage.jpg"
+                                             alt="@neuigkeit?.Titel"/>
+                                    }
+
+
+                                    <Standardtext Text="@neuigkeit?.Beschreibung" />
                                 </div>
-                                @if (!string.IsNullOrWhiteSpace(neuigkeit.Link))
+                                @if (!string.IsNullOrWhiteSpace(neuigkeit?.Link))
                                 {
                                     <div class="mt-5">
-                                        <Weiterleitung Link="neuigkeit.Link" Text="@("→ " + neuigkeit.Linktext)" NewWindow="true" />
+                                        <Weiterleitung Link="@neuigkeit.Link" Text="@("→ " + neuigkeit.Linktext)" NewWindow="true" />
                                     </div>
                                 }
                             </div>
@@ -139,9 +158,14 @@
     private bool IsLoading { get; set; } = false;
     private string ErrorMessage { get; set; } = string.Empty;
     private IEnumerable<Neuigkeit> NeuigkeitenData { get; set; } = new List<Neuigkeit>();
-    private bool firstRender = true;
 
-    protected override async void OnAfterRender(bool firstRender)
+
+
+    private string GetImageUrl(int? dbImageId)
+    {
+        return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}" : "/images/missingimage.jpg";
+    }
+    protected override void OnAfterRender(bool firstRender)
     {
         base.OnAfterRender(firstRender);
         if (firstRender)
@@ -162,8 +186,12 @@
             StateHasChanged();
 
             var data = await context.Neuigkeiten.ToListAsync();
-            foreach (var item in data)
-                item.EnvironmentPath = Environment.ContentRootPath;
+            foreach(var item in data)
+            {
+                item.StateHasChanged = () => StateHasChanged();
+            }
+            // foreach (var item in data)
+            //     item.EnvironmentPath = Environment.ContentRootPath;
             NeuigkeitenData = data;
         }
         catch (Exception ex)

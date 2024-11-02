@@ -1,5 +1,4 @@
 ﻿@page "/Account/ConfirmEmail"
-@page "/budoshuren/Account/ConfirmEmail"
 
 @using System.Text
 @using Microsoft.AspNetCore.Identity
@@ -81,7 +80,7 @@
                 isSuccess = result.Succeeded;
                 isVerified = user.Verified;
 
-                if (isSuccess && previouslyConfirmed)
+                if (isSuccess && !previouslyConfirmed)
                 {
                     //Info an den Abteilungsleiter schicken dass er einen Zugang aktivieren sollte
                     using var context = ContextFactory.CreateDbContext();
@@ -93,7 +92,7 @@
                         //E-Mail an Abteilungsleiter senden
                         string text = EmailSender.HtmlLayout_NewUser.Replace("[NAME]", name);
 
-                        await EmailSender.SendEmailAsync(abteilung.Email, "Neuer Benutzer in deiner Abteilung!", text);
+                        await EmailSender.SendEmailAsync(abteilung?.Email ?? "", "Neuer Benutzer in deiner Abteilung!", text);
                     }
                 }
             }

@@ -6,12 +6,14 @@
         </svg>
         <span class="sr-only">Loading...</span>
     </div>
-    <span class="">@Text</span>
+    <span class="@TextCssClass">@Text</span>
 </div>
 
 @code {
+    [Parameter]
+    public string Text { get; set; } = string.Empty;
 
     [Parameter]
-    public string Text { get; set; }
+    public string TextCssClass { get; set; } = string.Empty;
 
 }

@@ -17,7 +17,7 @@ namespace BudoShurenWebsite.Data
         private readonly IHostEnvironment Environment;
 
         [Parameter]
-        public string Abteilung { get; set; }
+        public string? Abteilung { get; set; }
 
         [Parameter]
         public bool IsWeek { get; set; }
@@ -35,7 +35,7 @@ namespace BudoShurenWebsite.Data
         /// <param name="DataManagerRequest">DataManagerRequest contains the information regarding paging, grouping, filtering, searching, sorting which is handled on the Blazor DataGrid component side</param>
         /// <param name="Key">An optional parameter that can be used to perform additional data operations.</param>
         /// <returns>The data collection's type is determined by how this method has been implemented.</returns>
-        public override async Task<object> ReadAsync(DataManagerRequest dm, string Key = null)
+        public override async Task<object> ReadAsync(DataManagerRequest dm, string? Key = null)
         {
             //if (dm.Table == null)
             //    return new List<AppointmentData>();
@@ -89,7 +89,7 @@ namespace BudoShurenWebsite.Data
 
             return dm.RequiresCounts ? new DataResult() { Result = DataSource, Count = count } : (object)DataSource;
         }
-        public override async Task<object> InsertAsync(DataManager dataManager, object record, string additionalParam)
+        public override async Task<object> InsertAsync(DataManager dataManager, object record, string? additionalParam)
         {
             //await Task.Delay(2500);
 
