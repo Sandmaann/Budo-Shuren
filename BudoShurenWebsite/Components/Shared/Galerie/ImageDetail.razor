@@ -1,5 +1,5 @@
-﻿@page "/Account/Member/Galerie/budoshuren/images/{ImageName}/{EntryID}"
-@page "/budoshuren/Account/Member/Galerie/budoshuren/images/{ImageName}/{EntryID}"
+﻿@page "/Account/Member/Galerie/images/{ImageName}/{EntryID}"
+@page "/budoshuren/Account/Member/Galerie/images/{ImageName}/{EntryID}"
 @layout EmptyLayout
 
 @inject IHostEnvironment environment
@@ -18,7 +18,7 @@
             </button>
         </div>
         <div class="max-h-[95vh] max-w-full flex-grow self-center object-cover">
-            <img src="@ImagePath" class="mx-auto max-h-[95vh] max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/budoshuren/images/missingimage.jpg'" />
+            <img src="@ImagePath" class="mx-auto max-h-[95vh] max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
         </div>
         @if (CanEdit)
         {
