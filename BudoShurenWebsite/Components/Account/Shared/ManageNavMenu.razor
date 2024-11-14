@@ -22,6 +22,18 @@
                 <li class="nav-item px-3 py-1">
                     <NavLink class="nav-link underline-offset-4 hover:underline" href="Account/Member/Mitglieder" Match="NavLinkMatch.All">Mitglieder</NavLink>
                 </li>
+
+                <AuthorizeView Roles="Admin, Abteilungsleiter">
+                    <Authorized>
+                        <li class="nav-item px-3 py-1">
+                            <NavLink class="nav-link underline-offset-4 hover:underline" href="Account/Member/NeueMitglieder" Match="NavLinkMatch.All">Neue Mitglieder</NavLink>
+                        </li>
+                    </Authorized>
+                    <NotAuthorized>
+
+                    </NotAuthorized>
+                </AuthorizeView>
+
             </ul>
         </div>
     </div>

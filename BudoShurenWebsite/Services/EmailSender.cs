@@ -116,6 +116,13 @@ namespace BudoShurenWebsite.Services
             string subject = "Dein Zugang wurde bestätigt";
             string text = HtmlLayout_AccountVerified.Replace("[NAME]", user.Vorname ?? user.Name ?? user.UserName ?? "du");
             await SendEmailAsync(email, subject, text);
+        }  
+        
+        public async Task SendAccountDeclinedInfoAsync(ApplicationUser user, string email)
+        {
+            string subject = "Dein Zugang wurde abgelehnt";
+            string text = HtmlLayout_AccountDeclined.Replace("[NAME]", user.Vorname ?? user.Name ?? user.UserName ?? "du");
+            await SendEmailAsync(email, subject, text);
         }
 
         public static readonly string HtmlLayout_InteresseBestätigung = @"<!DOCTYPE html>
@@ -541,6 +548,67 @@ namespace BudoShurenWebsite.Services
             <p>Bei Fragen oder Problemen stehen wir dir gerne zur Verfügung. Kontaktiere einfach deinen Abteilungsleiter!</p>
             <br>            
             <p>Vielen Dank und herzlich willkommen!</p>
+        </div>
+        </div>
+        <div class=""footer"">
+            <p>Hier geht's direkt zu <a href=""https://www.budo-shuren-dojo.de/"" style=""color: #000000;"">unserer Webseite</a>.</p>
+        </div>
+    </div>
+</body>
+</html>";   
+        
+        private static readonly string HtmlLayout_AccountDeclined = @"<html>
+<head>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .header, .footer {
+            text-align: center;
+            padding: 10px 0;
+        }
+        .content {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            <h1>武道修練道場</h1>
+            <h2>Budo Shuren Dojo</h2>
+        </div>
+        <div class=""content"">
+            <p>Hallo [NAME],</p>
+            <p>dein Zugang für die Budo Shuren Dojo Webseite wurde von einem Abteilungsleiter leider abgelehnt.</p>
+            <p>Dein Zugang wurde dadurch gelöscht und du erhältst keinen Zugriff auf den Mitgliederbereich.</p>         
+            <p>Wenn dein Zugang fälschlicherweise abgelehnt worden ist:</p>
+            <p>Lege deinen Zugang noch einmal an. Deine verwendeten Zugangsdaten sind jetzt wieder verfügbar.</p>
+            <p>Besprich dich bitte direkt mit deinem Abteilungsleiter. Teile ihm deine Nutzerdaten (Name/Email) direkt mit, damit dein Zugang korrekt identifiziert werden kann.</p>
+            <br>
+            <p>Bei Fragen oder Problemen stehen wir dir gerne zur Verfügung. Kontaktiere einfach deinen Abteilungsleiter!</p>
+            <br>            
+            <p>Vielen Dank für dein Verständnis.</p>
         </div>
         </div>
         <div class=""footer"">

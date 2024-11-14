@@ -1,4 +1,4 @@
-﻿@page "/Account/Member/Mitglieder"
+﻿@page "/Account/Member/NeueMitglieder"
 @rendermode InteractiveServer
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -22,7 +22,7 @@
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
-        <SectionBanner Titel="Mitglieder verwalten" />
+        <SectionBanner Titel="Neue Mitglieder verwalten" />
 
         <div class="-mx-8 md:mx-0">
 
@@ -32,7 +32,7 @@
             }
 
             <SfGrid TValue="UserWithRoles" AllowSorting="true" AllowPaging="true" Toolbar="@(new List<string>() { "Edit", "Delete", "Search" })" Height="100%" Width="100%">
-                <SfDataManager AdaptorInstance="@typeof(MitgliederAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                <SfDataManager AdaptorInstance="@typeof(NeueMitgliederAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
                 <GridPageSettings PageSize="20"></GridPageSettings>
                 <GridEditSettings AllowEditOnDblClick="@AllowEditing" AllowEditing="@AllowEditing" AllowDeleting="@AllowDeletion" Mode="@EditMode.Dialog" ShowDeleteConfirmDialog="true" />
                 <GridEvents TValue="UserWithRoles" OnActionFailure="OnActionFailureHandler" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"></GridEvents>
@@ -51,29 +51,30 @@
                 </GridTemplates>
 
                 <GridColumns>
-                    <GridColumn Visible="AllowEditing" Field=@nameof(UserWithRoles.Verified) HeaderText="" Width="120" AllowEditing="false">
+                    <GridColumn Field=@nameof(UserWithRoles.Verified) HeaderText="" Width="120" AllowEditing="false">
                         <Template>
                             @{
                                 UserWithRoles user = (context as UserWithRoles)!;
-                                <button @onclick="(args) => userDeaktivierenClick(args,user)" class="font-yuji h-8 transform bg-transparent px-2 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-error active:scale-90">
-                                    <span class="text-center text-xs text-black">Deaktivieren</span>
+                                <button @onclick="(args) => userAktivierenClick(args,user)" class="mx-2 font-yuji h-8 transform bg-primary px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90">
+                                    <span class="text-center text-xs text-white">Aktivieren</span>
                                 </button>
                             }
                         </Template>
                         <EditTemplate>
                         </EditTemplate>
                     </GridColumn>
-
-@*                     <GridColumn Visible="IsAdmin" Field=@nameof(UserWithRoles.Verified) HeaderText="Aktiv" AllowSearching="true" Width="75" EditType="EditType.DropDownEdit">
+                    <GridColumn Field=@nameof(UserWithRoles.Verified) HeaderText="" Width="120" AllowEditing="false">
+                        <Template>
+                            @{
+                                UserWithRoles user = (context as UserWithRoles)!;
+                                <button @onclick="(args) => userAktivierenClick(args,user)" class="mx-2 font-yuji h-8 transform bg-error px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90">
+                                    <span class="text-center text-xs text-white">Ablehnen</span>
+                                </button>
+                            }
+                        </Template>
                         <EditTemplate>
-                            <SfDropDownList ID="Verified" TValue="string" TItem="string"
-                                            Placeholder="Aktiver Zugang"
-                                            FloatLabelType="FloatLabelType.Always"
-                                            DataSource="@AktiviertAuswahl" @bind-Value="@((context as UserWithRoles)!.Verified)">
-                                <DropDownListFieldSettings Value="Verified"></DropDownListFieldSettings>
-                            </SfDropDownList>
                         </EditTemplate>
-                    </GridColumn> *@
+                    </GridColumn>
 
                     <GridColumn Field=@nameof(UserWithRoles.Vorname) HeaderText="Vorname" AllowSearching="true" Width="120"></GridColumn>
                     <GridColumn Field=@nameof(UserWithRoles.Name) HeaderText="Nachname" AllowSearching="true" Width="150"></GridColumn>
@@ -103,38 +104,8 @@
             </SfGrid>
         </div>
     </div>
-    <div class="mx-10 mt-10">
-        <SectionBanner Titel="Besucherzahlen der letzten 30 Tage" />
-        <div class="-mx-8 flex flex-col md:mx-0">
-            <div>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">Anzahl der Aufrufe: <span>@NumberOfCalls</span></p>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">Einzigartige Besucher: <span>@UniqueVisitors</span></p>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">Anzahl der Aufrufe pro Seite:</p>
-            </div>
-            <div class="overflow-x-auto sm:overflow-x-visible">
-                <table class="min-w-[450px] border border-gray-200 bg-white">
-                    <thead>
-                        <tr>
-                            <th class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">Seitenname</th>
-                            <th class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">Einzigartige Besucher</th>
-                            <th class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">Gesamtanzahl der Aufrufe</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var entry in VisitorsPerPage)
-                        {
-                            <tr>
-                                <td class="font-ptsans max-w-screen-md text-wrap border-b px-4 py-2 text-sm font-normal tracking-wider text-black">@entry.Key</td>
-                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@entry.Value.UniqueVisitors</td>
-                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@entry.Value.TotalVisits</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
+
 
 @code {
     private UserWithRoles? currentUser = default!;
@@ -157,8 +128,74 @@
     private int UniqueVisitors { get; set; } = 0;
     private Dictionary<string, (int UniqueVisitors, int TotalVisits)> VisitorsPerPage = new Dictionary<string, (int UniqueVisitors, int TotalVisits)>();
 
+    private async void userAktivierenClick(Microsoft.AspNetCore.Components.Web.MouseEventArgs args, UserWithRoles userWithRoles)
+    {
+        try
+        {
+            if (currentUser == null)
+            {
+                errorMessage = "Internes Problem...";
+                return;
+            }
 
-    private async void userDeaktivierenClick(Microsoft.AspNetCore.Components.Web.MouseEventArgs args, UserWithRoles userWithRoles)
+            //ggf. nochmal Berechtigungen prüfen
+            if (currentUser.Abteilung != userWithRoles.Abteilung)
+            {
+                errorMessage = "Du bist nicht berechtigt, diesen Benutzer zu aktivieren.";
+                Logger.LogWarning($"User {currentUser.UserName} darf andere User nicht aktivieren (Abteilung)");
+                return;
+            }
+
+            if (Roles.IsAbteilungsleiter(currentUser.Roles) == false &&
+                Roles.IsAdmin(currentUser.Roles) == false)
+            {
+                errorMessage = "Du bist nicht berechtigt, diesen Benutzer zu aktivieren.";
+                Logger.LogWarning($"User {currentUser.UserName} darf andere User nicht aktivieren (Benutzerrolle)");
+                return;
+            }
+
+            //Kurz nachfragen ob wirklich aktiviert werden soll
+            bool confirm = await JSRuntime.InvokeAsync<bool>("confirm",
+                $"Möchtest du den Benutzer {userWithRoles.Vorname} {userWithRoles.Name}, {userWithRoles.UserName} wirklich für den Zugang zur Budo Shuren Webseite freischalten?");
+            if (confirm)
+            {
+                var user = userWithRoles.User;
+
+                user.Verified = true;
+                user.VerifiedBy = currentUser?.UserName ?? "Unbekannt";
+                user.VerifiedAt = DateTime.Now;
+
+                await UserManager.UpdateAsync(user);
+
+                var roles = await UserManager.GetRolesAsync(user);
+                if (roles.Contains(Roles.Gast))
+                {
+                    await UserManager.RemoveFromRoleAsync(user, Roles.Gast);
+                    await UserManager.AddToRoleAsync(user, Roles.Mitglied);
+                }
+                else if (roles.Any() == false)
+                {
+                    await UserManager.AddToRoleAsync(user, Roles.Mitglied);
+                }
+
+                if (user.Email != null)
+                    await EmailSender.SendAccountVerifiedInfoAsync(user, user.Email);
+                else
+                {
+                    Logger.LogWarning($"User {user.UserName} hat keine E-Mail Adresse hinterlegt. Es wurde keine Account-Verified-E-Mail versendet.");
+                }
+
+                NavigationManager.NavigateTo(NavigationManager.Uri, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Aktivieren des Benutzers");
+            errorMessage = "Der Benutzer konnte nicht aktiviert werden: " + ex.Message;
+        }
+    }
+
+    private async void userAblehnenClick(Microsoft.AspNetCore.Components.Web.MouseEventArgs args, UserWithRoles userWithRoles)
     {
         try
         {
@@ -170,46 +207,46 @@
 
             if (currentUser.UserName == userWithRoles.UserName)
             {
-                errorMessage = "Du kannst dich nicht selbst deaktivieren.";
+                errorMessage = "Du kannst dich nicht selbst ablehnen.";
                 return;
             }
 
             //ggf. nochmal Berechtigungen prüfen
             if (currentUser.Abteilung != userWithRoles.Abteilung)
             {
-                errorMessage = "Du bist nicht berechtigt, diesen Benutzer zu deaktivieren.";
-                Logger.LogWarning($"User {currentUser.UserName} darf andere User nicht deaktivieren (Abteilung)");
+                errorMessage = "Du bist nicht berechtigt, diesen Benutzer abzulehnen.";
+                Logger.LogWarning($"User {currentUser.UserName} darf andere User nicht ablehnen (Abteilung)");
                 return;
             }
 
             if (Roles.IsAbteilungsleiter(currentUser.Roles) == false &&
                 Roles.IsAdmin(currentUser.Roles) == false)
             {
-                errorMessage = "Du bist nicht berechtigt, diesen Benutzer zu deaktivieren.";
-                Logger.LogWarning($"User {currentUser.UserName} darf andere User nicht deaktivieren (Benutzerrolle)");
+                errorMessage = "Du bist nicht berechtigt, diesen Benutzer abzulehnen.";
+                Logger.LogWarning($"User {currentUser.UserName} darf andere User nicht ablehnen (Benutzerrolle)");
                 return;
             }
 
-            //Kurz nachfragen ob wirklich aktiviert werden soll
+            //Kurz nachfragen ob wirklich abgelehnt werden soll
             bool confirm = await JSRuntime.InvokeAsync<bool>("confirm",
-                $"Möchtest wirklich den Zugriff auf den Mitgliederbereich für {userWithRoles.Vorname} {userWithRoles.Name}, {userWithRoles.UserName} entfernen? Der User kann sich dann nicht mehr einloggen!");
+            "Möchtest du die Zugangsanfrage wirklich ablehnen?\n" +
+                $"Möchtest wirklich den Zugang auf den Mitgliederbereich für {userWithRoles.Vorname} {userWithRoles.Name}, {userWithRoles.UserName} ablehnen? Der Zugang wird dann abgelehnt und gelöscht.");
             if (confirm)
             {
                 var user = userWithRoles.User;
+                var email = user.Email;
 
-                user.Verified = false;
-                user.VerifiedBy = string.Empty;
-                user.VerifiedAt = null;
+                await UserManager.DeleteAsync(user);
 
-                await UserManager.UpdateAsync(user);
-                var roles = await UserManager.GetRolesAsync(user);
-
-                foreach (var role in roles)
+                try
                 {
-                    await UserManager.RemoveFromRoleAsync(user, role);
+                    await EmailSender.SendAccountDeclinedInfoAsync(user, email);
                 }
-
-                await UserManager.AddToRoleAsync(user, Roles.Gast);
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Fehler beim Versenden der Ablehnungs-E-Mail");
+                    errorMessage = "Der User wurde abgelehnt, es konnte jedoch keine E-Mail zur Information an ihn geschickt werden: " + ex.Message;
+                }
                 NavigationManager.NavigateTo(NavigationManager.Uri, true);
             }
         }
@@ -218,6 +255,7 @@
             Logger.LogError(ex, "Fehler beim Aktivieren des Benutzers");
             errorMessage = "Der Benutzer konnte nicht aktiviert werden: " + ex.Message;
         }
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -253,8 +291,16 @@
                         AllowDeletion = false;
                         AllowRoles = false;
                     }
+                    else
+                    {
+                        NavigationManager.NavigateTo("/Account/AccessDenied");
+                    }
                 }
             }
+        }
+        catch(NavigationException navi)
+        {
+            throw navi;
         }
         catch (Exception ex)
         {
