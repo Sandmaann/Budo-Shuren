@@ -14,9 +14,13 @@
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
-                @if (ShowNachrichtGesendet)
+        @if (ShowNachrichtGesendet)
         {
             <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
+        }
+        @if (ShowNachrichtGesendetError)
+        {
+            <StatusMessage ShowAsError="true" Message="Deine Nachricht konnte leider nicht versendet werden. Bitte versuche es noch einmal!" />
         }
         <section class="mt-20">
             <div class="flex flex-col md:flex-row">
@@ -138,13 +142,19 @@
 </div>
 
 @code {
-        private bool ShowNachrichtGesendet { get; set; } = false;
+    private bool ShowNachrichtGesendet { get; set; } = false;
+    private bool ShowNachrichtGesendetError { get; set; } = false;
 
     private void SetMessage(bool result)
     {
         if (result)
         {
             ShowNachrichtGesendet = true;
+            StateHasChanged();
+        }
+        else
+        {
+            ShowNachrichtGesendetError = true;
             StateHasChanged();
         }
     }

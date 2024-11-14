@@ -125,6 +125,13 @@ namespace BudoShurenWebsite.Services
             await SendEmailAsync(email, subject, text);
         }
 
+        public async Task SendKontaktformularConfirmation(string nachricht, string email)
+        {
+            string subject = "Bestätigung Kontaktformular Budo-Shuren-Dojo";
+            string text = HtmlLayout_InteresseBestätigung.Replace("[NACHRICHT]", nachricht);
+            await SendEmailAsync(email, subject, text);
+        }
+
         public static readonly string HtmlLayout_InteresseBestätigung = @"<!DOCTYPE html>
 <html>
 <head>
@@ -240,17 +247,15 @@ namespace BudoShurenWebsite.Services
         </div>
         <div class=""content"">
             <p>Hallo [NAME],</p>
-            <p>du hast von unserer Webseite eine Anfrage bekommen.</p>
-            <p>Zur Anfrage wurde folgende E-Mail für den Kontakt angegeben:<p>
-            <p><strong>[EMAIL]:</strong>
-            <br>
+            <p>du hast von unserer Webseite eine Anfrage bekommen. Wenn sich in deiner Abteilung mehrere Leute um das Kontaktformular kümmern, sprecht euch bitte ab!</p>
+            <p>Zur Anfrage wurde folgende E-Mail für den Kontakt angegeben:</p>
+            <p><strong><a href=""mailto:[EMAIL]"">[EMAIL]</a></strong></p>
             <p>Und hier folgt die Nachricht:</p>
             <br>            
             <p class=""blockquote"">
             [NACHRICHT]
             </p>
             <br>
-            
         </div>
         <div class=""footer"">
             <p>Hier geht's direkt zu <a href=""https://www.budo-shuren-dojo.de/"" style=""color: #000000;"">unserer Webseite</a>.</p>

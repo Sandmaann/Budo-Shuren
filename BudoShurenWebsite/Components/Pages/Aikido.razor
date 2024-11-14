@@ -21,6 +21,10 @@
         {
             <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
         }
+        @if (ShowNachrichtGesendetError)
+        {
+            <StatusMessage ShowAsError="true" Message="Deine Nachricht konnte leider nicht versendet werden. Bitte versuche es noch einmal!" />
+        }
 
         <div class="mt-20 md:flex md:flex-row md:justify-between">
             <div class="md:mr-20">
@@ -498,12 +502,18 @@
 
 @code {
     private bool ShowNachrichtGesendet { get; set; } = false;
+    private bool ShowNachrichtGesendetError { get; set; } = false;
 
     private void SetMessage(bool result)
     {
         if (result)
         {
             ShowNachrichtGesendet = true;
+            StateHasChanged();
+        }
+        else
+        {
+            ShowNachrichtGesendetError = true;
             StateHasChanged();
         }
     }
