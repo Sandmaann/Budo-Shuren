@@ -1,6 +1,7 @@
 ﻿using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace BudoShurenWebsite.Services
 {
@@ -11,11 +12,34 @@ namespace BudoShurenWebsite.Services
         private readonly ILogger<VisitorCounterService> _logger = logger;
         private const string VisitorCookieName = "VisitorId";
         private int _visitorCount = 0;
+        private readonly List<string> _knownBots = new List<string>
+    {
+        "Googlebot",
+        "Bingbot",
+        "Slurp",
+        "DuckDuckBot",
+        "Baiduspider",
+        "YandexBot",
+        "Sogou",
+        "Exabot",
+        "facebot",
+        "ia_archiver"
+    };
+
+        private readonly Regex _botRegex = new Regex(@"bot|crawler|slurp|spider|mediapartners|baiduspider|80legs|ia_archiver|voyager|curl|wget", RegexOptions.IgnoreCase);
+        //private readonly Regex _botRegex = new Regex(@"bot|crawl|slurp|spider|mediapartners", RegexOptions.IgnoreCase);
+
 
         public int VisitorCount => _visitorCount;
 
         public async Task AddVisitorAsync(string? visitorId, string pageName)
         {
+            if (CheckForBot())
+            {
+                _logger.LogDebug("Bot detected, not counting visit.");
+                return;
+            }
+
             if (string.IsNullOrEmpty(visitorId))
             {
                 visitorId = Guid.NewGuid().ToString();
@@ -142,6 +166,38 @@ namespace BudoShurenWebsite.Services
                 _logger.LogError(ex, "Failed to calculate unique visitors and total visits per page for the last 30 days");
                 return new Dictionary<string, (int UniqueVisitors, int TotalVisits)>();
             }
+        }
+
+        private bool CheckForBot()
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null)
+            {
+                return false;
+            }
+
+            var userAgent = context.Request.Headers["User-Agent"].ToString();
+            if (string.IsNullOrEmpty(userAgent))
+            {
+                return false;
+            }
+
+            // Check against known bots list
+            foreach (var bot in _knownBots)
+            {
+                if (userAgent.Contains(bot, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            // Check against bot regex
+            if (_botRegex.IsMatch(userAgent))
+            {
+                return true;
+            }
+
+            return false;
         }
 
 
