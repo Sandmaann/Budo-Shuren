@@ -76,6 +76,7 @@ namespace BudoShurenWebsite
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
+                builder.Services.AddScoped<NeueMitgliederAdaptor>();
                 builder.Services.AddScoped<NeuigkeitenAdaptor>();
                 builder.Services.AddScoped<AppointmentAdaptor>();
 

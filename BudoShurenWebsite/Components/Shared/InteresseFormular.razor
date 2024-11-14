@@ -2,16 +2,14 @@
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject EmailSender EmailSender
 @inject VisitorCounterService VisitorCounterService
-@* @inject IJSRuntime JSRuntime *@
-@* @inject GooglereCAPTCHAv3Service GooglereCAPTCHAv3Service *@
+@inject UserManager<ApplicationUser> UserManager
 
 @using Microsoft.Extensions.Options
-@using BudoShurenWebsite.Services.Recaptcha
 @using System.ComponentModel.DataAnnotations
 @using Syncfusion.Blazor.DropDowns;
 @using System.Text.Json;
 @using System.Text.Json.Serialization;
-
+@using Microsoft.AspNetCore.Identity
 
 <div class="h-full">
     @if (ShowText)
@@ -30,8 +28,6 @@
             <InputText id="email" @bind-Value="Input.Email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="email" aria-required="true" placeholder="beispiel@email.de" />
             <ValidationMessage For="() => Input.Email" class="text-error" />
         </div>
-
-
 
         @if (ShowAbteilung)
         {
@@ -158,9 +154,6 @@
     public string DropVal = string.Empty;
     private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
 
-    // string token = "";
-    // GooglereCAPTCHAv3Response? googlereCAPTCHAv3Response;
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -172,36 +165,6 @@
             Input.SelectedAbteilung = auswahl?.ID ?? "";
         }
     }
-
-    // protected override async void OnAfterRender(bool firstRender)
-    // {
-    //     if (firstRender)
-    //     {
-    //         try
-    //         {
-    //             token = await JSRuntime.InvokeAsync<string>("runCaptcha");
-    //         }
-    //         catch (Exception ex)
-    //         {
-    //             Logger.LogError(ex, "Fehler beim Laden des reCaptcha tokens");
-    //         }
-
-    //         try
-    //         {
-    //             using var context = DbContextFactory.CreateDbContext();
-    //             Abteilungen = await context.Abteilungen.ToListAsync();
-    //             if (Abteilungen.FirstOrDefault(x => x.ID == Abteilung) is Abteilung auswahl)
-    //             {
-    //                 Input.SelectedAbteilung = auswahl?.ID ?? "";
-    //             }
-    //         }
-    //         catch (Exception ex)
-    //         {
-    //             Logger.LogError(ex, "Fehler beim Laden der Abteilungen");
-    //         }
-    //         StateHasChanged();
-    //     }
-    // }
 
     public async Task SubmitNachricht()
     {
@@ -215,33 +178,60 @@
                 return;
             }
 
-            // googlereCAPTCHAv3Response = await GooglereCAPTCHAv3Service.Verify(token);
-            // if (googlereCAPTCHAv3Response is null || !googlereCAPTCHAv3Response.success)
-            // {
-            //     errorMessage = "Ungültige reCAPTCHA-Überprüfung.";
-            //     return;
-            // }
-            // // reCAPTCHA-Token überprüfen
-            // var recaptchaResponse = Input.RecaptchaToken;
-            // var isValidRecaptcha = await ValidateRecaptcha(recaptchaResponse);
-            // if (!isValidRecaptcha)
-            // {
-            //     errorMessage = "Ungültige reCAPTCHA-Überprüfung.";
-            //     return;
-            // }
-
             if (!string.IsNullOrWhiteSpace(Input.SelectedAbteilung) && Abteilungen.FirstOrDefault(x => x.ID == Input.SelectedAbteilung) is Abteilung abteilung)
             {
                 string nachricht = Input.Text;
                 string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
+                bool oneMailSended = false;
+
+                //E-Mail an Abteilung senden
+                if (!string.IsNullOrWhiteSpace(abteilung?.Email))
+                {
+                    try
+                    {
+                        //E-Mail an die "Abteilung" senden - die die in der DB zur Abteilung hinterlegt ist.
+                        string text = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", name).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
+                        await EmailSender.SendEmailAsync(abteilung?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", text);
+                        oneMailSended = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, $"Fehler beim Senden der Nachricht an Abteilung {abteilung.Name}");
+                    }
+                }
 
                 //E-Mail an Abteilungsleiter senden
-                string text = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", name).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
-                await EmailSender.SendEmailAsync(abteilung?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", text);
+                var users = await UserManager.GetUsersInRoleAsync(Roles.Abteilungsleiter);
+                users = users.Where(x => x.Abteilung == abteilung?.Name).ToList();
 
-                string infoAnAbsender = EmailSender.HtmlLayout_InteresseBestätigung.Replace("[NACHRICHT]", nachricht);
-                //Bestätigungsemail an den Absender schicken
-                await EmailSender.SendEmailAsync(Input.Email, "Bestätigung Kontaktformular Budo-Shuren-Dojo", infoAnAbsender);
+                foreach (var user in users)
+                {
+                    if (user.Email != abteilung.Email)
+                    {
+                        try
+                        {
+                            //E-Mail an Abteilungsleiter senden
+                            string userText = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", user.Vorname).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
+                            await EmailSender.SendEmailAsync(abteilung?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", userText);
+                            oneMailSended = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, $"Fehler beim Senden der Nachricht an Abteilungsleiter {user.UserName}");
+                        }
+                    }
+                }
+
+                if (oneMailSended)
+                {
+                    //Bestätigungsemail an den Absender schicken
+                    // string infoAnAbsender = EmailSender.HtmlLayout_InteresseBestätigung.Replace("[NACHRICHT]", nachricht);
+                    await EmailSender.SendKontaktformularConfirmation(nachricht, Input.Email);
+                }
+                else
+                {
+                    throw new Exception("An keine einzige der Abteilungs / Abteilungsleiter-Adressen konnte eine E-Mail geschickt werden.");
+                }
 
                 //Counter
                 await VisitorCounterService.AddVisitorAsync(Input.Email, "InteresseEmail_" + abteilung?.Name ?? "unbekannt");

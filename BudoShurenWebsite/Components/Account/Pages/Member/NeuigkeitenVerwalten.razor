@@ -172,6 +172,11 @@
                     AllowEditing = true;
                     AllowDeletion = true;
                 }
+                else if (Roles.IsEditor(user.Roles))
+                {
+                    AllowEditing = true;
+                    AllowDeletion = true;
+                }
                 else
                 {
                     AllowEditing = false;
