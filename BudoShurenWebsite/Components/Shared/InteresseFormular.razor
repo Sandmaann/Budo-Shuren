@@ -2,11 +2,8 @@
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject EmailSender EmailSender
 @inject VisitorCounterService VisitorCounterService
-@* @inject IJSRuntime JSRuntime *@
-@* @inject GooglereCAPTCHAv3Service GooglereCAPTCHAv3Service *@
 
 @using Microsoft.Extensions.Options
-@using BudoShurenWebsite.Services.Recaptcha
 @using System.ComponentModel.DataAnnotations
 @using Syncfusion.Blazor.DropDowns;
 @using System.Text.Json;
@@ -30,8 +27,6 @@
             <InputText id="email" @bind-Value="Input.Email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="email" aria-required="true" placeholder="beispiel@email.de" />
             <ValidationMessage For="() => Input.Email" class="text-error" />
         </div>
-
-
 
         @if (ShowAbteilung)
         {
