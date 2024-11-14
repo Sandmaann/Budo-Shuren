@@ -20,7 +20,8 @@
             _logger.LogDebug("Getting username from session");
             var httpContext = _httpContextAccessor.HttpContext;
             var session = httpContext?.Session;
-            return session?.GetString("Username");
+            var result = session?.GetString("Username");
+            return result;
         }
     }
 }

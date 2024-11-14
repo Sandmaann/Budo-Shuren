@@ -25,7 +25,7 @@
         <div>
             @* <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="loginUsername"> *@
             <EditForm Model="Input" OnValidSubmit="LoginUser" FormName="loginUsername">
-            @* <EditForm Model="Input" OnValidSubmit="LoginUser" FormName="loginUsername" Action="/Account/Login"> *@
+                @* <EditForm Model="Input" OnValidSubmit="LoginUser" FormName="loginUsername" Action="/Account/Login"> *@
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
@@ -78,17 +78,22 @@
 
     protected override void OnInitialized()
     {
-        // Setze den Benutzernamen in der Sitzung
-        // var username = session?.GetString("Username") ?? "";
-        var username = SessionService.GetUsername();
-        if (!string.IsNullOrWhiteSpace(username))
+        if (string.IsNullOrWhiteSpace(this.Input?.Email))
         {
-            this.Input.Email = username;
+            // Setze den Benutzernamen in der Sitzung
+            // var username = session?.GetString("Username") ?? "";
+            var username = SessionService.GetUsername();
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                this.Input.Email = username;
+            }
         }
     }
 
     public async Task LoginUser(EditContext editContext)
     {
+        bool skipRequestCount = false;
+
         if (LoginIsBusy)
             return;
 
@@ -113,6 +118,7 @@
             {
                 SessionService.SetUsername(Input.Email);
                 //User Found, go to Password-Entry-Page.
+                skipRequestCount = true;
                 NavigationManager.NavigateTo("Account/Password");
             }
             else
@@ -136,9 +142,13 @@
         }
         finally
         {
-            // Erhöhe den requestCount und speichere ihn im Cache
-            MemoryCache.Set(key, ++requestCount, TimeWindow);
-            LoginIsBusy = false;
+            //Nicht erhöhen wenn ein korrekter Login!
+            if (!skipRequestCount)
+            {
+                // Erhöhe den requestCount und speichere ihn im Cache
+                MemoryCache.Set(key, ++requestCount, TimeWindow);
+                LoginIsBusy = false;
+            }
         }
     }
 
