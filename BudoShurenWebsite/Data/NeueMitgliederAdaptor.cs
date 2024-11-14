@@ -12,13 +12,13 @@ namespace BudoShurenWebsite.Data
     /// Implementing CustomAdaptor by extending the <see cref=“DataAdaptor”/> class.
     /// The Blazor DataGrid component support for custom data binding, which enables the binding and manipulation of data in a personalized way, using user-defined methods.
     /// </summary>
-    public class MitgliederAdaptor : DataAdaptor
+    public class NeueMitgliederAdaptor : DataAdaptor
     {
         public UserManager<ApplicationUser> UserManager { get; set; }
         public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
-        public ILogger<MitgliederAdaptor> Logger { get; set; }
+        public ILogger<NeueMitgliederAdaptor> Logger { get; set; }
         private readonly UserService UserService;
-        public MitgliederAdaptor(UserService userService, UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider, ILogger<MitgliederAdaptor> logger)
+        public NeueMitgliederAdaptor(UserService userService, UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider, ILogger<NeueMitgliederAdaptor> logger)
         {
             UserService = userService;
             UserManager = userManager;
@@ -38,22 +38,10 @@ namespace BudoShurenWebsite.Data
                 {
                     foreach (var user in users)
                     {
-                        //user NICHT anzeigen wenn er "neu" ist - dafür gibts jetzt eine eigene Ansicht!
-
-                        if(user.Verified == false)
-                        {
+                        //user nur laden, wenn sie NICHT verifiziert sind = neue User sind
+                        //andere User werden in der anderen Seite verwaltet.
+                        if(user.Verified)
                             continue;
-                        }
-
-                        //User nach Rolle filtern. Admins und Abteilungsleiter dürfen alle sehen, alle anderen nur eigene Daten
-                        //if (Global.Roles.IsAdmin(currentUser.Roles) || Global.Roles.IsAbteilungsleiter(currentUser.Roles))
-                        //{
-
-
-
-                        //    var roles = await UserManager.GetRolesAsync(user);
-                        //    usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
-                        //}
 
                         //Admin darf alle User sehen
                         if (Global.Roles.IsAdmin(currentUser.Roles))
