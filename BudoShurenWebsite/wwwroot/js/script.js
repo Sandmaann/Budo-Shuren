@@ -27,6 +27,7 @@ window.saveScrollPositionOnUnload = function (dotnetHelper) {
     });
 }
 
+
 //window.addCapsLockEventListener = function () {
 //    document.addEventListener('keydown', function (e) {
 //        var isCapsLockEnabled = e.getModifierState && e.getModifierState('CapsLock');

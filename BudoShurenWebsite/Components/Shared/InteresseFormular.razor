@@ -3,8 +3,11 @@
 @inject EmailSender EmailSender
 @inject VisitorCounterService VisitorCounterService
 
+@using Microsoft.Extensions.Options
 @using System.ComponentModel.DataAnnotations
 @using Syncfusion.Blazor.DropDowns;
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
 
 
 <div class="h-full">
@@ -32,12 +35,11 @@
             </div>
             <div class="@(ShowMarginAuswahlfelder ? "ml-20" : "")">
                 <div id="abteilung">
-                    <SfDropDownList 
-                        TValue="string"
-                        TItem="Abteilung"
-                        Placeholder="Wähle eine Abteilung aus"
-                        @bind-Value="@Input.SelectedAbteilung"
-                        DataSource="@Abteilungen">
+                    <SfDropDownList TValue="string"
+                                    TItem="Abteilung"
+                                    Placeholder="Wähle eine Abteilung aus"
+                                    @bind-Value="@Input.SelectedAbteilung"
+                                    DataSource="@Abteilungen">
                         <DropDownListTemplates TItem="Abteilung">
                             <ItemTemplate Context="itemContext">
                                 <div class="my-auto py-4 text-center">
@@ -66,6 +68,12 @@
             <InputTextArea id="nachricht" @bind-Value="Input.Text" class="font-ptsans h-full min-h-80 w-full max-w-full resize-none border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="off" aria-required="true" placeholder="Was möchtest du schreiben?" />
             <ValidationMessage For="() => Input.Text" class="text-error" />
         </div>
+
+        <!-- Honeypot-Feld -->
+        <div style="display:none">
+            <InputText id="website" @bind-Value="Input.Website" />
+        </div>
+
 
         <div class="mt-8 flex justify-end">
             <button type="submit" class="font-yuji h-10 transform bg-black px-5 text-center text-sm font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-primary active:scale-90">
@@ -145,6 +153,9 @@
     public string DropVal = string.Empty;
     private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
 
+    // string token = "";
+    // GooglereCAPTCHAv3Response? googlereCAPTCHAv3Response;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -157,10 +168,63 @@
         }
     }
 
+    // protected override async void OnAfterRender(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         try
+    //         {
+    //             token = await JSRuntime.InvokeAsync<string>("runCaptcha");
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             Logger.LogError(ex, "Fehler beim Laden des reCaptcha tokens");
+    //         }
+
+    //         try
+    //         {
+    //             using var context = DbContextFactory.CreateDbContext();
+    //             Abteilungen = await context.Abteilungen.ToListAsync();
+    //             if (Abteilungen.FirstOrDefault(x => x.ID == Abteilung) is Abteilung auswahl)
+    //             {
+    //                 Input.SelectedAbteilung = auswahl?.ID ?? "";
+    //             }
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             Logger.LogError(ex, "Fehler beim Laden der Abteilungen");
+    //         }
+    //         StateHasChanged();
+    //     }
+    // }
+
     public async Task SubmitNachricht()
     {
         try
         {
+            // Überprüfen, ob das Honeypot-Feld ausgefüllt ist
+            if (!string.IsNullOrEmpty(Input.Website))
+            {
+                // Spam erkannt
+                errorMessage = "Spam erkannt";
+                return;
+            }
+
+            // googlereCAPTCHAv3Response = await GooglereCAPTCHAv3Service.Verify(token);
+            // if (googlereCAPTCHAv3Response is null || !googlereCAPTCHAv3Response.success)
+            // {
+            //     errorMessage = "Ungültige reCAPTCHA-Überprüfung.";
+            //     return;
+            // }
+            // // reCAPTCHA-Token überprüfen
+            // var recaptchaResponse = Input.RecaptchaToken;
+            // var isValidRecaptcha = await ValidateRecaptcha(recaptchaResponse);
+            // if (!isValidRecaptcha)
+            // {
+            //     errorMessage = "Ungültige reCAPTCHA-Überprüfung.";
+            //     return;
+            // }
+
             if (!string.IsNullOrWhiteSpace(Input.SelectedAbteilung) && Abteilungen.FirstOrDefault(x => x.ID == Input.SelectedAbteilung) is Abteilung abteilung)
             {
                 string nachricht = Input.Text;
@@ -205,6 +269,50 @@
 
         [Display(Name = "Abteilung")]
         public string SelectedAbteilung { get; set; } = "";
+
+        // Honeypot-Feld
+        public string Website { get; set; } = "";
+
+
+        public string? RecaptchaToken { get; set; } // Neues Feld für reCAPTCHA
+    }
+
+    private class RecaptchaResult
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+
+        [JsonPropertyName("challenge_ts")]
+        public DateTime ChallengeTimestamp { get; set; }
+
+        [JsonPropertyName("hostname")]
+        public string Hostname { get; set; }
     }
 
 }
+
+@* <script>
+    runCaptcha = function (actionName) {
+        return new Promise((resolve, reject) => {
+            grecaptcha.ready(function () {
+                grecaptcha.execute('@($"{BudoShurenWebsite.Services.Recaptcha.GooglereCAPTCHAv3Settings.SiteKey}")', { action: 'submit' }).then(function (token) {
+                    resolve(token);
+                });
+            });
+        });
+    };
+</script> *@
+@* <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY"></script>
+<script>
+    window.runCaptcha = function () {
+        return new Promise((resolve, reject) => {
+            grecaptcha.ready(function () {
+                grecaptcha.execute('@($"{BudoShurenWebsite.Services.Recaptcha.GooglereCAPTCHAv3Settings.SiteKey}")', { action: 'submit' }).then(function (token) {
+                    resolve(token);
+                }).catch(function (error) {
+                    reject(error);
+                });
+            });
+        });
+    };
+</script> *@

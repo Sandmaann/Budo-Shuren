@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore.Design;
 using Syncfusion.Blazor;
 using Microsoft.Extensions.Hosting;
 using System;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Globalization;
 
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -67,6 +66,7 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
 
                 //Meine Dienste
+                //builder.Services.AddScoped<GooglereCAPTCHAv3Service>();
                 builder.Services.AddScoped<SessionService>();
                 builder.Services.AddScoped<UserService>();
                 builder.Services.AddScoped<EmailSender>();

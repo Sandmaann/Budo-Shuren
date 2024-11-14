@@ -37,7 +37,6 @@ namespace BudoShurenWebsite.Data
             {
                 IEnumerable<Neuigkeit> DataSource = await DbContext.Neuigkeiten.ToListAsync();
 
-
                 int TotalRecordsCount = DataSource.Count();
 
                 // Handling Searching in CustomAdaptor.
