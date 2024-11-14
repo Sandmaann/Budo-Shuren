@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore.Design;
 using Syncfusion.Blazor;
 using Microsoft.Extensions.Hosting;
 using System;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Globalization;
 
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -23,6 +22,7 @@ using NLog.Web;
 using NLog;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace BudoShurenWebsite
 {
@@ -33,7 +33,6 @@ namespace BudoShurenWebsite
             var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
             try
             {
-
                 // Registrieren des Ereignishandlers für unbeobachtete Task-Ausnahmen
                 TaskScheduler.UnobservedTaskException += (sender, e) =>
                 {
@@ -50,13 +49,14 @@ namespace BudoShurenWebsite
                 // Register the locale service to localize the  SyncfusionBlazor components.
                 builder.Services.AddSingleton(typeof(ISyncfusionStringLocalizer), typeof(SyncfusionLocalizer));
 
+                // Konfiguriere die Datenprotektion, um Schlüssel im Dateisystem zu speichern
+                //builder.Services.AddDataProtection()
+                //    .PersistKeysToFileSystem(new DirectoryInfo(@"./keys"))
+                //    .SetDefaultKeyLifetime(TimeSpan.FromDays(90)) // Schlüssel alle 90 Tage rotieren
+                //    .SetApplicationName("BudoShurenWebsite");
+
                 builder.Services.AddControllers();
                 builder.Services.AddHttpClient();
-
-
-                //DEAKTIVEREN !!!
-                builder.Services.AddServerSideBlazor(options => options.DetailedErrors = true);
-                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                 //Authentifizierung
                 builder.Services.AddCascadingAuthenticationState();
@@ -66,12 +66,13 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<IAuthorizationHandler, VerifiedUserHandler>();
 
                 //Meine Dienste
+                //builder.Services.AddScoped<GooglereCAPTCHAv3Service>();
+                builder.Services.AddScoped<SessionService>();
                 builder.Services.AddScoped<UserService>();
-                builder.Services.AddScoped<FileService>();
                 builder.Services.AddScoped<EmailSender>();
-
-                //builder.Services.AddSingleton<IDataService, DataService>();
-                builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
+                builder.Services.AddScoped<ImageService>();
+                //builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
+                builder.Services.AddScoped<VisitorCounterService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
@@ -82,21 +83,11 @@ namespace BudoShurenWebsite
                 {
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
                     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-                })
-                    .AddIdentityCookies();
+                }).AddIdentityCookies();
 
-                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
                 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
 
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                //if (builder.Environment.IsDevelopment())
-                //{
-                //    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                //}
-                //else
-                //{
-                //    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-                //}
                 if (string.IsNullOrWhiteSpace(connectionString))
                 {
                     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -107,8 +98,14 @@ namespace BudoShurenWebsite
                 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseSqlServer(connectionString), optionsLifetime: ServiceLifetime.Singleton);
 
+                builder.Services.AddDbContext<DataProtectionKeyContext>(options =>
+                    options.UseSqlServer(connectionString));
+
                 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+                // Konfiguriere die Datenverschlüsselung, um EF Core zu verwenden
+                builder.Services.AddDataProtection()
+                    .PersistKeysToDbContext<DataProtectionKeyContext>();
 
                 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                     .AddRoles<IdentityRole>()
@@ -118,15 +115,22 @@ namespace BudoShurenWebsite
 
                 builder.Services.AddAuthorization(options =>
                 {
-                    //options.AddPolicy("Aktiviert", policy => policy.RequireAssertion(context =>
-                    //    !context.User.IsInRole(Roles.Gast)));
                     options.AddPolicy("Aktiviert", policy => policy.Requirements.Add(new VerifiedUserRequirement()));
                     options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
                         !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
                 });
 
-                //builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
                 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
+
+                // Registrieren Sie den MemoryCache-Dienst
+                builder.Services.AddMemoryCache();
+                builder.Services.AddSession(options =>
+                {
+                    options.IdleTimeout = TimeSpan.FromMinutes(15); // Setze die Timeout-Dauer
+                    options.Cookie.HttpOnly = true; // Setze HttpOnly auf true
+                    options.Cookie.IsEssential = true; // Setze IsEssential auf true
+                });
+                builder.Services.AddHttpContextAccessor();
 
                 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("de-DE");
                 CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("de-DE");
@@ -140,6 +144,8 @@ namespace BudoShurenWebsite
                 builder.Logging.AddConsole();
                 builder.Logging.AddDebug();
                 builder.Logging.AddEventLog();
+
+                builder.Services.AddDistributedMemoryCache();
 
                 var app = builder.Build();
 
@@ -177,13 +183,13 @@ namespace BudoShurenWebsite
                 }
 
 
-                //Nur für Release oder bei Migration wichtig
-                //MigrateDatabase(app);
+                //Nur bei DB-Migration wichtig
+                MigrateDatabase(app, logger);
 
                 app.UseHttpsRedirection();
-
                 app.UseStaticFiles();
                 app.UseAntiforgery();
+                app.UseSession();
 
                 app.MapRazorComponents<App>()
                     .AddInteractiveServerRenderMode();
@@ -191,7 +197,6 @@ namespace BudoShurenWebsite
                 // Add additional endpoints required by the Identity /Account Razor components.
                 app.MapAdditionalIdentityEndpoints();
                 app.MapControllers();
-
                 app.Run();
             }
             catch (Exception exception)
@@ -207,7 +212,7 @@ namespace BudoShurenWebsite
             }
         }
 
-        private static void MigrateDatabase(WebApplication host)
+        private static void MigrateDatabase(WebApplication host, Logger logger)
         {
             using var scope = host.Services.CreateScope();
             var services = scope.ServiceProvider;
@@ -219,10 +224,13 @@ namespace BudoShurenWebsite
                 Console.WriteLine("Datenbankmigration gestartet");
                 dbContext.Database.Migrate();
                 watch.Stop();
+
+                logger.Log(NLog.LogLevel.Info, $"Datenbankmigration erfolgreich durchgeführt: {watch.ElapsedMilliseconds} ms elapsed");
                 Console.WriteLine($"Datenbankmigration erfolgreich durchgeführt: {watch.ElapsedMilliseconds} ms elapsed");
             }
             catch (Exception ex)
             {
+                logger.Log(NLog.LogLevel.Error, ex, "Fehler beim Ausführen der Datenbankmigration");
                 Console.WriteLine("Fehler beim Ausführen der Datenbankmigration: " + ex.Message);
             }
 
@@ -234,6 +242,7 @@ namespace BudoShurenWebsite
             }
             catch (Exception ex)
             {
+                logger.Log(NLog.LogLevel.Error, ex, "Fehler beim Initialisieren der Rollen");
                 Console.WriteLine("Fehler beim Initialisieren der Rollen: " + ex.Message);
             }
         }

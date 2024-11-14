@@ -16,7 +16,7 @@ namespace BudoShurenWebsite.Services
             _authenticationStateProvider = authenticationStateProvider;
         }
 
-        ClaimsPrincipal _current = null;
+        ClaimsPrincipal? _current;
         public ClaimsPrincipal Current
         {
             get
@@ -27,7 +27,7 @@ namespace BudoShurenWebsite.Services
             }
         }
 
-        UserWithRoles _currentUser = null;
+        UserWithRoles? _currentUser = null;
         public UserWithRoles CurrentUser
         {
             get
@@ -43,15 +43,17 @@ namespace BudoShurenWebsite.Services
             if (_current != null)
                 return;
             var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-            if (authState.User.Identity.IsAuthenticated)
+            if (authState?.User?.Identity?.IsAuthenticated == true)
             {
 
                 _current = authState.User;
 
                 var currentUser = await _userManager.GetUserAsync(_current);
-                var roles = await _userManager.GetRolesAsync(currentUser);
-
-                _currentUser = new UserWithRoles { User = currentUser, Roles = roles };
+                if (currentUser != null)
+                {
+                    var roles = await _userManager.GetRolesAsync(currentUser);
+                    _currentUser = new UserWithRoles { User = currentUser, Roles = roles };
+                }
             }
             else
             {

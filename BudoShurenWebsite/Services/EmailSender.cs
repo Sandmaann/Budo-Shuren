@@ -15,11 +15,6 @@ namespace BudoShurenWebsite.Services
     // Remove the "else if (EmailSender is IdentityNoOpEmailSender)" block from RegisterConfirmation.razor after updating with a real implementation.
     internal sealed class EmailSender : IEmailSender<ApplicationUser>
     {
-        //private readonly string smtpServer = "smtp.ionos.com";
-        //private readonly int smtpPort = 587; // oder 465 für SSL
-        //private readonly string smtpUser = "ihre-email@ionos.com";
-        //private readonly string smtpPassword = "IhrPasswort";
-
         private readonly IEmailSender emailSender = new NoOpEmailSender();
         private readonly IDbContextFactory<ApplicationDbContext> dbFactory;
 
@@ -43,7 +38,6 @@ namespace BudoShurenWebsite.Services
                 throw new NullReferenceException("No SMTP server found in email settings.");
             if (string.IsNullOrWhiteSpace(settings.SmtpUser))
                 throw new NullReferenceException("No SMTP user found in email settings.");
-
 
             return settings;
         }
@@ -100,7 +94,6 @@ namespace BudoShurenWebsite.Services
         {
             string subject = "Bitte bestätige deine E-Mail Adresse";
             string text = HtmlLayout_EmailConfirmation.Replace("[CONFIRMLINK]", $"<a href='{confirmationLink}'>Klicke hier, um deine E-Mail Adresse zu bestätigen</a>");
-            //string text = $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.";
 
             await SendEmailAsync(email, subject, text);
         }
@@ -108,7 +101,6 @@ namespace BudoShurenWebsite.Services
         {
             string subject = "Passwort zurücksetzen";
             string text = HtmlLayout_PasswortResetLink.Replace("[RESETLINK]", $"<a href='{resetLink}'>Passwort jetzt zurücksetzen</a>");
-            //string text = $"Please reset your password by .";
 
             await SendEmailAsync(email, subject, text);
         }
@@ -116,8 +108,13 @@ namespace BudoShurenWebsite.Services
         {
             string subject = "Passwort zurücksetzen";
             string text = HtmlLayout_PasswortResetCode.Replace("[ResetCode]", resetCode);
-            //string text = $"Please reset your password using the following code: {resetCode}";
 
+            await SendEmailAsync(email, subject, text);
+        }
+        public async Task SendAccountVerifiedInfoAsync(ApplicationUser user, string email)
+        {
+            string subject = "Dein Zugang wurde bestätigt";
+            string text = HtmlLayout_AccountVerified.Replace("[NAME]", user.Vorname ?? user.Name ?? user.UserName ?? "du");
             await SendEmailAsync(email, subject, text);
         }
 
@@ -494,5 +491,63 @@ namespace BudoShurenWebsite.Services
 </body>
 </html>
 ";
+
+        private static readonly string HtmlLayout_AccountVerified = @"<html>
+<head>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .header, .footer {
+            text-align: center;
+            padding: 10px 0;
+        }
+        .content {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            <h1>武道修練道場</h1>
+            <h2>Budo Shuren Dojo</h2>
+        </div>
+        <div class=""content"">
+            <p>Hallo [NAME],</p>
+            <p>dein Zugang für die Budo Shuren Dojo Webseite wurde gerade bestätigt.</p>
+            <p>Du kannst dich jetzt anmelden.</p>         
+            <br>
+            <p>Bei Fragen oder Problemen stehen wir dir gerne zur Verfügung. Kontaktiere einfach deinen Abteilungsleiter!</p>
+            <br>            
+            <p>Vielen Dank und herzlich willkommen!</p>
+        </div>
+        </div>
+        <div class=""footer"">
+            <p>Hier geht's direkt zu <a href=""https://www.budo-shuren-dojo.de/"" style=""color: #000000;"">unserer Webseite</a>.</p>
+        </div>
+    </div>
+</body>
+</html>";
     }
 }

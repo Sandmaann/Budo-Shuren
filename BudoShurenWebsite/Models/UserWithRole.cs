@@ -1,4 +1,5 @@
 ﻿using BudoShurenWebsite.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BudoShurenWebsite.Models
 {
@@ -24,7 +25,7 @@ namespace BudoShurenWebsite.Models
         }
 
 
-        public IList<string> Roles { get; set; }
+        public IList<string> Roles { get; set; } = new List<string>();
 
         public string Rolle
         {
@@ -48,5 +49,8 @@ namespace BudoShurenWebsite.Models
                     throw new Exception("Rolle nicht bekannt");
             }
         }
+
+
+
     }
 }

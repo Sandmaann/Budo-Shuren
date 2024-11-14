@@ -21,3 +21,35 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    [AllowNull]
+    [Inject] private VisitorCounterService VisitorCounter { get; set; }
+    [AllowNull]
+    [Inject] private ILogger<MainLayout> Logger { get; set; }
+    [AllowNull]
+    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; }
+    [AllowNull]
+    [Inject] private NavigationManager NavigationManager { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        var pageName = NavigationManager.Uri.Replace(NavigationManager.BaseUri, string.Empty);
+        var context = HttpContextAccessor.HttpContext;
+        var visitorId = context?.Request.Cookies["VisitorId"];
+
+        // Start the visitor counting task in the background
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await VisitorCounter.AddVisitorAsync(visitorId, pageName);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Fehler beim zählen eines Besuchers, Aufruf aus {pageName}");
+            }
+        });
+        return Task.CompletedTask;
+    }
+}

@@ -133,7 +133,7 @@
     <value>Keine Einträge vorhanden</value>
   </data>
   <data name="DatePicker_Placeholder" xml:space="preserve">
-    <value>Wählen Sie ein Datum</value>
+    <value>Wähle ein Datum</value>
   </data>
   <data name="DatePicker_Today" xml:space="preserve">
     <value>Heute</value>
@@ -154,7 +154,7 @@
     <value>Endtermin</value>
   </data>
   <data name="DateRangePicker_Placeholder" xml:space="preserve">
-    <value>Wählen Sie einen Datumsbereich</value>
+    <value>Wähle einen Datumsbereich</value>
   </data>
   <data name="DateRangePicker_SelectedDays" xml:space="preserve">
     <value>Ausgewählte Tage</value>
@@ -163,7 +163,7 @@
     <value>Anfangsdatum</value>
   </data>
   <data name="DateTimePicker_Placeholder" xml:space="preserve">
-    <value>Wählen Sie ein Datum und eine Uhrzeit</value>
+    <value>Wähle ein Datum und eine Uhrzeit</value>
   </data>
   <data name="DateTimePicker_Today" xml:space="preserve">
     <value>Heute</value>
@@ -202,7 +202,7 @@
     <value>TDie Anfrage ist fehlgeschlagen</value>
   </data>
   <data name="DropDownTree_SelectAll" xml:space="preserve">
-    <value>Wählen Sie Alle</value>
+    <value>Wähle Alle</value>
   </data>
   <data name="DropDownTree_UnSelectAll" xml:space="preserve">
     <value>Alles wiederufen</value>
@@ -220,7 +220,7 @@
     <value>+${count} mehr ..</value>
   </data>
   <data name="MultiSelect_SelectAllText" xml:space="preserve">
-    <value>Wählen Sie Alle</value>
+    <value>Wähle Alle</value>
   </data>
   <data name="MultiSelect_TotalCountTemplate" xml:space="preserve">
     <value>${count} ausgewählt</value>
@@ -232,7 +232,7 @@
     <value>Wert verringern</value>
   </data>
   <data name="NumericTextBox_IncrementTitle" xml:space="preserve">
-    <value>Inkrementieren Sie den Wert</value>
+    <value>Inkrementiere den Wert</value>
   </data>
   <data name="TimePicker_Placeholder" xml:space="preserve">
     <value>Wähle eine Zeit</value>
@@ -367,7 +367,7 @@
     <value>Keine Aufzeichnungen gefunden</value>
   </data>
   <data name="ListBox_SelectAllText" xml:space="preserve">
-    <value>Wählen Sie Alle</value>
+    <value>Wähle Alle</value>
   </data>
   <data name="ListBox_UnSelectAllText" xml:space="preserve">
     <value>Alles wiederufen</value>
@@ -394,7 +394,7 @@
     <value>Gruppe löschen</value>
   </data>
   <data name="QueryBuilder_DeleteRule" xml:space="preserve">
-    <value>Entfernen Sie diesen Zustand</value>
+    <value>Entferne diesen Zustand</value>
   </data>
   <data name="QueryBuilder_Edit" xml:space="preserve">
     <value>Bearbeiten</value>
@@ -448,7 +448,7 @@
     <value>ENTFERNEN</value>
   </data>
   <data name="QueryBuilder_SelectField" xml:space="preserve">
-    <value>Wählen Sie ein Feld aus</value>
+    <value>Wähle ein Feld aus</value>
   </data>
   <data name="QueryBuilder_SelectOperator" xml:space="preserve">
     <value>Operator auswählen</value>
@@ -460,10 +460,10 @@
     <value>Wähle Wert</value>
   </data>
   <data name="QueryBuilder_PlaceholderDateRangeValue" xml:space="preserve">
-    <value>Wählen Sie einen Bereich</value>
+    <value>Wähle einen Bereich</value>
   </data>
   <data name="QueryBuilder_PlaceholderDateValue" xml:space="preserve">
-    <value>Wählen Sie ein Datum aus</value>
+    <value>Wähle ein Datum aus</value>
   </data>
   <data name="QueryBuilder_StartsWith" xml:space="preserve">
     <value>Beginnt mit</value>

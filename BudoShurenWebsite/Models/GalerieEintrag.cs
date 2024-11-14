@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Org.BouncyCastle.Security;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -32,8 +33,6 @@ namespace BudoShurenWebsite.Models
         public bool Iaido { get; set; }
         public bool Jodo { get; set; }
 
-        public string? ImagePath { get; set; }
-
         public DateTime? ImageDate { get; set; }
         public string? ImageCreatedBy { get; set; }
 
@@ -48,24 +47,6 @@ namespace BudoShurenWebsite.Models
         public DateTime? SortDate => ImageDate ?? EntryCreationDateUTC;
 
         [NotMapped]
-        public string DisplayPath
-        {
-            get
-            {
-                if (!string.IsNullOrWhiteSpace(ImagePath) && !string.IsNullOrWhiteSpace(EnvironmentPath) && File.Exists(ImagePath))
-                {
-                    string path = Path.Combine(EnvironmentPath, "wwwroot");
-                    var result = ImagePath.Replace(path, string.Empty);
-                    return result;
-                }
-                return string.Empty;
-            }
-        }
-
-        [NotMapped]
-        public string EnvironmentPath { get; set; }
-
-        [NotMapped]
         public bool IsSelected { get; set; }
 
         [NotMapped]
@@ -78,9 +59,9 @@ namespace BudoShurenWebsite.Models
             {
                 GalerieTyp typ = GalerieTyp.None;
 
-                if(Home)
+                if (Home)
                     typ |= GalerieTyp.Home;
-                if(Aikido)
+                if (Aikido)
                     typ |= GalerieTyp.Aikido;
                 if (Bujinkan)
                     typ |= GalerieTyp.Bujinkan;
@@ -93,14 +74,32 @@ namespace BudoShurenWebsite.Models
                 return typ;
             }
         }
-        public bool IsValid()
+
+        // Navigation property
+        public int? DbImageId { get; set; }
+        public DbImage? DbImage { get; set; }
+
+
+        [NotMapped]
+        public bool IsLoading { get; set; } = true;
+        [NotMapped]
+        public bool ShowErrorImage { get; set; } = false;
+
+        public void OnImageLoaded()
         {
-            if (!string.IsNullOrWhiteSpace(ImagePath))
-            {
-                if (File.Exists(ImagePath))
-                    return true;
-            }
-            return false;
+            IsLoading = false;
+            if (StateHasChanged != null)
+                StateHasChanged();
         }
+        public void OnImageError()
+        {
+            IsLoading = false;
+            ShowErrorImage = true;
+            if (StateHasChanged != null)
+                StateHasChanged();
+        }
+
+        [NotMapped]
+        public Action? StateHasChanged { get; set; }
     }
 }

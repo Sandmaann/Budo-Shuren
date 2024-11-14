@@ -13,16 +13,14 @@ namespace BudoShurenWebsite.Data
     {
         private readonly UserService UserService;
         private readonly ApplicationDbContext DbContext;
-        private readonly FileService FileService;
         private readonly IHostEnvironment Environment;
         private readonly ILogger<NeuigkeitenAdaptor> Logger;
 
 
-        public NeuigkeitenAdaptor(UserService userService, ApplicationDbContext dbContext, FileService fileService, IHostEnvironment environment, ILogger<NeuigkeitenAdaptor> logger)
+        public NeuigkeitenAdaptor(UserService userService, ApplicationDbContext dbContext, IHostEnvironment environment, ILogger<NeuigkeitenAdaptor> logger)
         {
             UserService = userService;
             DbContext = dbContext;
-            FileService = fileService;
             Environment = environment;
             Logger = logger;
         }
@@ -33,12 +31,10 @@ namespace BudoShurenWebsite.Data
         /// <param name="DataManagerRequest">DataManagerRequest contains the information regarding paging, grouping, filtering, searching, sorting which is handled on the Blazor DataGrid component side</param>
         /// <param name="Key">An optional parameter that can be used to perform additional data operations.</param>
         /// <returns>The data collection's type is determined by how this method has been implemented.</returns>
-        public override async Task<object> ReadAsync(DataManagerRequest dm, string Key = null)
+        public override async Task<object> ReadAsync(DataManagerRequest dm, string? Key = null)
         {
             try
             {
-
-
                 IEnumerable<Neuigkeit> DataSource = await DbContext.Neuigkeiten.ToListAsync();
 
 
@@ -68,10 +64,10 @@ namespace BudoShurenWebsite.Data
                     DataSource = DataOperations.PerformTake(DataSource, dm.Take);
                 }
 
-                foreach (var item in DataSource)
-                {
-                    item.EnvironmentPath = Environment.ContentRootPath;
-                }
+                //foreach (var item in DataSource)
+                //{
+                //    item.EnvironmentPath = Environment.ContentRootPath;
+                //}
                 return dm.RequiresCounts ? new DataResult() { Result = DataSource, Count = count } : (object)DataSource;
             }
             catch (Exception ex)
@@ -109,50 +105,16 @@ namespace BudoShurenWebsite.Data
                         }
                         else
                         {
-                            //ImagePath verarbeiten!
-                            if (obj.TempFilePath == null)
+                            //Prüfen ob es ein Bild gibt
+                            if (obj.DbImageId == null)
                                 throw new Exception("Kein Bild ausgewählt!");
-                            if (!File.Exists(obj.TempFilePath))
-                                throw new Exception("Datei " + obj.TempFilePath + " nicht gefunden!");
 
-                            //Datei in Galerie-Ordner kopieren
-                            string destination = FileService.GetGaleryDestinationPath(obj.TempFilePath);
-                            await FileService.CopyFileAsync(obj.TempFilePath, destination);
+                            obj.Created = DateTime.Now;
+                            obj.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
+                            obj.LastChange = DateTime.Now;
+                            obj.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
 
-                            if (File.Exists(destination))
-                            {
-                                //Temp-Datei löschen wenn sie noch vorhanden ist (sollte redundant sein?!)
-                                if (File.Exists(obj.TempFilePath))
-                                    File.Delete(obj.TempFilePath);
-
-                                obj.ImagePath = destination;
-
-                                obj.Created = DateTime.Now;
-                                obj.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
-                                obj.LastChange = DateTime.Now;
-                                obj.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
-
-                                await DbContext.Neuigkeiten.AddAsync(obj);
-
-                                //Galerie-Eintrag erstellen
-
-                                var galeryItem = new GalerieEintrag
-                                {
-                                    Titel = obj.Titel,
-                                    Beschreibung = obj.Beschreibung,
-                                    ImagePath = obj.ImagePath,
-                                    ImageDate = obj.Datum,
-                                    EntryCreationDateUTC = obj.Created,
-                                    EntryCreatedBy = obj.EntryCreatedBy,
-                                    LastChangedUTC = obj.LastChange,
-                                    LastChangedBy = obj.LastChangedBy
-                                };
-                                await DbContext.Galerie.AddAsync(galeryItem);
-                            }
-                            else
-                            {
-                                throw new Exception("Fehler beim Kopieren der Datei " + obj.TempFilePath + " nach " + destination);
-                            }
+                            await DbContext.Neuigkeiten.AddAsync(obj);
                         }
                     }
                     try
@@ -220,21 +182,39 @@ namespace BudoShurenWebsite.Data
         {
             try
             {
-
-                if (value is string obj)
+                if (keyField == "ID")
                 {
-                    await UserService.InitializeAsync();
-                    if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+                    if(value is int Id)
                     {
-                        var neuigkeit = await DbContext.Neuigkeiten.FindAsync(obj);
-                        if (neuigkeit != null)
+                        await UserService.InitializeAsync();
+                        if(UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
                         {
-                            DbContext.Neuigkeiten.Remove(neuigkeit);
-                            await DbContext.SaveChangesAsync();
+                            var neuigkeit = await DbContext.Neuigkeiten.FirstOrDefaultAsync(x => x.ID == Id);
+                            if(neuigkeit != null)
+                            {
+                                DbContext.Neuigkeiten.Remove(neuigkeit);
+                                await DbContext.SaveChangesAsync();
+                            }
                         }
                     }
-                    else
-                        throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Neuigkeiten zu bearbeiten!");
+                }
+                else
+                {
+                    if (value is string obj)
+                    {
+                        await UserService.InitializeAsync();
+                        if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+                        {
+                            var neuigkeit = await DbContext.Neuigkeiten.FindAsync(obj);
+                            if (neuigkeit != null)
+                            {
+                                DbContext.Neuigkeiten.Remove(neuigkeit);
+                                await DbContext.SaveChangesAsync();
+                            }
+                        }
+                        else
+                            throw new Exception(UserService.CurrentUser?.UserName + " hat nicht die Berechtigung Neuigkeiten zu bearbeiten!");
+                    }
                 }
                 return value;
             }

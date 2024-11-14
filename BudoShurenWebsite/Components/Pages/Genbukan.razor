@@ -1,5 +1,4 @@
 ﻿@page "/Genbukan"
-@page "/budoshuren/Genbukan"
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
@@ -19,30 +18,34 @@
     <div class="mx-10">
         @* <div class="mx-auto my-20 w-36 md:-mt-10"> *@
         <div class="mx-auto my-20 w-36 md:-mt-10">
-            <img src="/budoshuren/images/genbukan/logo.png" alt="Das Runde Mon des Genubkan Augsburg"/>
+            <img src="/images/genbukan/logo.png" alt="Das Runde Mon des Genubkan Augsburg"/>
         </div>
         @if (ShowNachrichtGesendet)
         {
             <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
         }
-        <section class="md:flex md:flex-row md:justify-between">
-            <div class="mt-5 md:mt-0 md:mr-20">
-                <p class="font-ptsans text-sm tracking-wider">
-                    ... ist zunächst einmal der Name, den unser Lehrer, <b>MASAKAZU OSHITA Sensei</b>, uns erlaubt hat zu nutzen. Oshita Sensei selbst betreibt das KOBE GENBUKAN in Kobe, Japan.
-                    Es gibt zwei Gründe, weswegen Oshita Sensei 1995 diesen Namen für sein Dôjô (Übungsort für japanische Kampfkünste) gewählt hat:
-                </p>
-                <p class="font-ptsans mt-4 text-sm tracking-wider">
-                    1. <b>"Genbuin"</b> ist der posthume Name, den TOMEGAHARA TOMIYOSHI Sensei, einer von Oshita Senseis Lehrern, nach buddhistischem Ritus verliehen bekommen hat.
-                </p>
-                <p class="font-ptsans mt-4 text-sm tracking-wider">
-                    2.  <b>"Genbugan"</b> ist die japanische Bezeichnung für das Gestein Basalt. Basalt findet sich überall auf der Welt. Oshita Senseis Vision ist es, dass sich Ableger seines Dôjô irgendwann auch weltweit finden.
-                </p>
-                <p class="font-ptsans mt-4 text-sm tracking-wider">
+        <section>
+            <div class="md:flex md:flex-row md:justify-between">
+                <div class="mt-5 md:mt-0 md:mr-20">
+                    <p class="font-ptsans text-sm tracking-wider">
+                        ... ist zunächst einmal der Name, den unser Lehrer, <b>MASAKAZU OSHITA Sensei</b>, uns erlaubt hat zu nutzen. Oshita Sensei selbst betreibt das KOBE GENBUKAN in Kobe, Japan.
+                        Es gibt zwei Gründe, weswegen Oshita Sensei 1995 diesen Namen für sein Dôjô (Übungsort für japanische Kampfkünste) gewählt hat:
+                    </p>
+                    <p class="font-ptsans mt-4 text-sm tracking-wider">
+                        1. <b>"Genbuin"</b> ist der posthume Name, den TOMEGAHARA TOMIYOSHI Sensei, einer von Oshita Senseis Lehrern, nach buddhistischem Ritus verliehen bekommen hat.
+                    </p>
+                    <p class="font-ptsans mt-4 text-sm tracking-wider">
+                        2.  <b>"Genbugan"</b> ist die japanische Bezeichnung für das Gestein Basalt. Basalt findet sich überall auf der Welt. Oshita Senseis Vision ist es, dass sich Ableger seines Dôjô irgendwann auch weltweit finden.
+                    </p>
+                </div>
+                <div class="mt-10 min-w-56 md:mt-0">
+                    <img src="/images/genbukan/genbukan_titel.jpg" alt="Drei Iaidoka bei der Übung einer Kata" />
+                </div>
+            </div>
+            <div>
+                <p class="font-ptsans mt-4 text-sm tracking-wider md:mt-10">
                     Abgesehen von besagten zwei Gründen, gibt es die Legende von <b>Genbu (chin.: Xuanwu)</b>. Diese Legende erzählt von einem schlechten Menschen, welcher sich durch grausame Läuterung dem Guten zuwendet und dadurch Göttlichkeit erlangt. Sein Symboltier ist eine Symbiose aus Schildkröte und Schlange. Die Schildkröte/Schlange steht als eine der "Vier Bestien der Himmelsrichtungen" im Norden. Genbu wird daher auch der "Dunkle Krieger des Nordens" genannt. Die zweitgrößte Ninjutsu-Strömung (neben dem Bujinkan) in Deutschland nennt sich auch "Genbukan". Wertneutral sei hier angemerkt, dass wir nichts mit der sicherlich hochwertigen Kunst des Ninjutsu zu tun haben. 
                 </p>
-            </div>
-            <div class="mt-10 min-w-52 md:mt-0">
-                <img src="/budoshuren/images/genbukan/genbukanSchwert.png" alt="Kunstvolles Bild eines Japanischen Schwertes"/>
             </div>
         </section>
 
@@ -74,14 +77,14 @@
                     </div>
                 </div>
 
-                <div class="my-4 max-w-32 md:order-1 md:mx-0 md:mt-0 md:h-44 md:max-w-112">
-                    <div class="mr-1">
-                        <img src="/budoshuren/images/genbukan/iaido_klein.png" alt="Bild von zwei japanischen Schwertern auf einem Schwertständer."/>
+                <div class="my-4 max-w-32 md:order-1 md:mx-0 md:mt-0 md:h-44 md:max-h-32 md:max-w-112">
+                    <div class="mr-1 transform transition duration-150 ease-in-out active:scale-90 md:max-h-48" @onclick="GoToIaido">
+                        <img class="max-h-48" src="/images/genbukan/iaido_klein.jpg" alt="Bild von zwei japanischen Schwertern auf einem Schwertständer." />
                     </div>
                 </div>
-                <div class="my-4 ml-auto max-w-32 md:order-4 md:mx-0 md:mt-0 md:h-44 md:max-w-112">
-                    <div class="ml-1">
-                        <img src="/budoshuren/images/genbukan/jodo_klein.png" alt="Abbildung eines Jo, der Stockwaffe im Jodo"/>
+                <div class="my-4 ml-auto max-w-32 md:order-4 md:mx-0 md:mt-0 md:h-44 md:max-h-44 md:max-w-112">
+                    <div class="ml-1 transform transition duration-150 ease-in-out active:scale-90 md:ml-auto md\:max-h-48" @onclick="GoToJodo">
+                        <img class="max-h-48 md:ml-auto" src="/images/genbukan/jodo_5.jpg" alt="Abbildung eines Jo, der Stockwaffe im Jodo" />
                     </div>
                 </div>
                 <div class="my-4 md:order-5">
@@ -144,32 +147,32 @@
                         <path d="M0.646454 3.64643C0.451187 3.84169 0.451187 4.15827 0.646454 4.35354L3.82843 7.53552C4.0237 7.73078 4.34027 7.73078 4.53554 7.53552C4.73079 7.34026 4.73079 7.02367 4.53554 6.82841L1.70711 3.99998L4.53554 1.17156C4.73079 0.976294 4.73079 0.659712 4.53554 0.46445C4.34027 0.269188 4.0237 0.269188 3.82843 0.46445L0.646454 3.64643ZM191 3.5L1 3.49998L1 4.49998L191 4.5L191 3.5Z" fill="black" />
                     </svg>
                 </div>
-                <div class="top-[380px] absolute left-20">
+                <div class="absolute left-20 top-[380px]">
                     <svg width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
                     </svg>
                 </div>
-                <div class="top-[220px] absolute left-52">
+                <div class="absolute left-52 top-[220px]">
                     <svg width="138" height="206" viewBox="0 0 138 206" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M134 1H134.5V0.5H134V1ZM133.646 205.354C133.842 205.549 134.158 205.549 134.354 205.354L137.536 202.172C137.731 201.976 137.731 201.66 137.536 201.464C137.34 201.269 137.024 201.269 136.828 201.464L134 204.293L131.172 201.464C130.976 201.269 130.66 201.269 130.464 201.464C130.269 201.66 130.269 201.976 130.464 202.172L133.646 205.354ZM0 1.5H134V0.5H0V1.5ZM133.5 1V205H134.5V1H133.5Z" fill="black" />
                     </svg>
                 </div>
-                <div class="top-[620px] left-[188px] absolute">
+                <div class="absolute left-[188px] top-[620px]">
                     <svg width="51" height="9" viewBox="0 0 51 9" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M50.3536 4.85355C50.5488 4.65829 50.5488 4.34171 50.3536 4.14645L47.1716 0.964466C46.9763 0.769204 46.6597 0.769204 46.4645 0.964466C46.2692 1.15973 46.2692 1.47631 46.4645 1.67157L49.2929 4.5L46.4645 7.32843C46.2692 7.52369 46.2692 7.84027 46.4645 8.03553C46.6597 8.2308 46.9763 8.2308 47.1716 8.03553L50.3536 4.85355ZM0 5L50 5V4L0 4L0 5Z" fill="black" />
                     </svg>
                 </div>
-                <div class="top-[620px] left-[446px] absolute">
+                <div class="absolute left-[446px] top-[620px]">
                     <svg width="51" height="9" viewBox="0 0 51 9" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M50.3536 4.85355C50.5488 4.65829 50.5488 4.34171 50.3536 4.14645L47.1716 0.964466C46.9763 0.769204 46.6597 0.769204 46.4645 0.964466C46.2692 1.15973 46.2692 1.47631 46.4645 1.67157L49.2929 4.5L46.4645 7.32843C46.2692 7.52369 46.2692 7.84027 46.4645 8.03553C46.6597 8.2308 46.9763 8.2308 47.1716 8.03553L50.3536 4.85355ZM0 5L50 5V4L0 4L0 5Z" fill="black" />
                     </svg>
                 </div>
-                <div class="top-[800px] left-[346px] absolute">
+                <div class="absolute left-[346px] top-[800px]">
                     <svg width="157" height="191" viewBox="0 0 157 191" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M0.999977 187L0.499977 187L0.499977 187.5L0.999977 187.5L0.999977 187ZM156.854 187.354C157.049 187.158 157.049 186.842 156.854 186.646L153.672 183.464C153.476 183.269 153.16 183.269 152.964 183.464C152.769 183.66 152.769 183.976 152.964 184.172L155.793 187L152.964 189.828C152.769 190.024 152.769 190.34 152.964 190.536C153.16 190.731 153.476 190.731 153.672 190.536L156.854 187.354ZM0.499985 -6.81898e-06L0.499977 187L1.49998 187L1.49998 -6.77527e-06L0.499985 -6.81898e-06ZM0.999977 187.5L156.5 187.5L156.5 186.5L0.999977 186.5L0.999977 187.5Z" fill="black" />
                     </svg>
                 </div>
-                <div class="top-[800px] left-[600px] absolute">
+                <div class="absolute left-[600px] top-[800px]">
                     <svg width="8" height="51" viewBox="0 0 8 51" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3.64644 50.3536C3.84171 50.5488 4.15829 50.5488 4.35355 50.3536L7.53553 47.1716C7.73079 46.9763 7.73079 46.6597 7.53553 46.4645C7.34027 46.2692 7.02369 46.2692 6.82843 46.4645L4 49.2929L1.17157 46.4645C0.976309 46.2692 0.659726 46.2692 0.464464 46.4645C0.269202 46.6597 0.269202 46.9763 0.464464 47.1716L3.64644 50.3536ZM3.5 -2.18557e-08L3.5 50L4.5 50L4.5 2.18557e-08L3.5 -2.18557e-08Z" fill="black" />
                     </svg>
@@ -212,7 +215,7 @@
                 @* Bild und Text zu **Yamamoto Harusuke** *@
                 <div class="col-start-2 flex flex-row md:order-1 md:col-start-1 md:flex-col">
                     <div>
-                        <img src="/budoshuren/images/genbukan/yamamotoHarusuke.png" alt="Schwarz-/Weißporträtfoto von Yamamoto Harusuke" />
+                        <img src="/images/genbukan/yamamotoHarusuke.png" alt="Schwarz-/Weißporträtfoto von Yamamoto Harusuke" />
                     </div>
                     <div class="mx-2 md:mt-2 md:mx-0">
                         <p class="font-ptsans leading-6 text-sm tracking-wider">
@@ -244,7 +247,7 @@
                 @* Bild und Text zu **Yamashibu Yoshikazu** *@
                 <div class="col-start-2 flex flex-row md:order-3 md:col-start-1 md:flex-col md:mt-22">
                     <div>
-                        <img src="/budoshuren/images/genbukan/yamashibuYoshikazu.png" alt="Schwarz-/Weißporträtfoto von Yamashibu Yoshikazu" />
+                        <img src="/images/genbukan/yamashibuYoshikazu.png" alt="Schwarz-/Weißporträtfoto von Yamashibu Yoshikazu" />
                     </div>
                     <div class="mx-2 md:mt-2 md:mx-0">
                         <p class="font-ptsans leading-6 text-sm tracking-wider">
@@ -291,7 +294,7 @@
                 @* Bild und Text zu **Haruna Matsuo** *@
                 <div class="col-start-2 flex flex-row md:order-4 md:flex-col md:mt-22 md:justify-self-center md:mx-auto">
                     <div>
-                        <img src="/budoshuren/images/genbukan/harunaMatsuo.png" alt="Schwarz-/Weißporträtfoto von Haruna Matsuo" />
+                        <img src="/images/genbukan/harunaMatsuo.png" alt="Schwarz-/Weißporträtfoto von Haruna Matsuo" />
                     </div>
                     <div class="mx-2 md:mt-2 md:mx-0">
                         <p class="font-ptsans leading-6 text-sm tracking-wider">
@@ -325,7 +328,7 @@
                 @* Bild und Text zu **Oshita Masakazu** *@
                 <div class="col-start-2 flex flex-row md:justify-self-end md:mt-22 md:order-5 md:col-start-3 md:flex-col md:ml-auto">
                     <div>
-                        <img src="/budoshuren/images/genbukan/oshitaMasakazu.png" alt="Schwarz-/Weißporträtfoto von Oshita Masakazu" />
+                        <img src="/images/genbukan/oshitaMasakazu.png" alt="Schwarz-/Weißporträtfoto von Oshita Masakazu" />
                     </div>
                     <div class="mx-2 md:mt-2 md:mx-0">
                         <p class="font-ptsans leading-6 mt-2 text-sm tracking-wider">
@@ -365,7 +368,7 @@
                 @* Bild und Text zu **Henry Schubert** *@
                 <div class="col-span-1 col-start-2 flex flex-row md:justify-self-end md:col-span-3 md:mt-22 md:flex-col md:order-6 md:col-start-1 md:ml-auto">
                     <div>
-                        <img src="/budoshuren/images/genbukan/henrySchubert.png" alt="Schwarz-/Weißporträtfoto von Henry Schubert" />
+                        <img src="/images/genbukan/henrySchubert.png" alt="Schwarz-/Weißporträtfoto von Henry Schubert" />
                     </div>
                     <div class="mx-2 md:mt-2 md:mx-0">
                         <p class="font-ptsans leading-6 mt-2 text-sm tracking-wider">
@@ -394,7 +397,7 @@
                     <div class="my-4">
                         <Standardtext Text="1996, nachdem sein Haus während der großen Hanshin-Erdbeben-Katastrophe zerstört wurde, hat Oshita Sensei nicht nur sein Haus wieder aufgebaut, sondern auf dem Haus seiner Eltern, direkt nebenan, ein eigenes Dôjô errichtet. Im Mai 1996 haben mein Senpai („älterer Schüler“, eine Art Mentor, der den „Jüngeren“ führt oder eben höheren Lehrern vorstellt) Trevor Jones und ich als einzige Nicht-Japaner im Rahmen der offiziellen Eröffnungsfeier zu Senseis Dôjô vor den geladenen höchstrangigen Sensei aus ganz Japan eine Enbû (Vorführung) gemacht." />
                     </div>
-                    <Standardtext Text="Oshita Sensei ist derzeit als 8. Dan Kyoshi graduiert, besucht nach wie vor regelmäßig Großbritannien und Europa, um zu unterrichten. Zusätzlich zu Iai hält er Graduierungen in weiteren Kampfkünste, wie Kendô, Jôdô und Daitô-Ryû Aikijujutsu." />
+                    <Standardtext Text="Oshita Sensei ist derzeit als 8. Dan Kyoshi graduiert, besucht nach wie vor regelmäßig Großbritannien und Europa, um zu unterrichten. Zusätzlich zu Iai hält er Graduierungen in weiteren Kampfkünsten wie Kendô, Jôdô und Daitô-Ryû Aikijujutsu." />
                 </div>
             </div>
             <div class="mt-20 md:flex md:flex-row">
@@ -409,10 +412,10 @@
                         <Standardtext Text="Haruna Sensei stand zwei Jahre in Folge (1988 und 1989) im Finale in der 7. Dan-Kategorie der All-Japanischen Meisterschaften. 1988 wurde er Zweiter und hat 1989 in seiner Kategorie mit einem unschlagbaren 3:0- Ergebnis in jeder Runde gewonnen. Haruna Sensei war in vielen Wettkämpfen in ganz Japan erfolgreich. Ein unglaublicher Erfolg in einem Land, in dem weitaus mehr Menschen Iaidô üben als man hierzulande vermuten mag." />
                     </div>
                     <div class="mb-4">
-                        <Standardtext Text="Haruna Sensei hat über viele Jahre im Ausland unterrichtet, mit dem Ziel, dadurch zur Verbreitung des Iaidô auf der gesamten Welt beizutragen. Sein erster Besuch in Europa war 1982 in Großbritannien, gefolgt von regelmäßigen Besuchen von 1984 bis 2001. Ich bin Haruna Sensei 1990 das erste Mal in Dartford, England, begegnet. 1993 war ich das erste Mal in meinem Leben in Japan und habe zwei Monate bei Haruna Sensei, bzw. im Haus der Familie seiner Tochter gelebt und jeden Tag mit diesem großartigen Lehrer authentischer japanischer Kampfkunst geübt. Ich verdanke ihm die umfassenden Grundlagen meines sicherlich unzureichenden Wissens und somit eigentlich alles." />
+                        <Standardtext Text="Haruna Sensei hat über viele Jahre im Ausland unterrichtet, mit dem Ziel, dadurch zur Verbreitung des Iaidô auf der gesamten Welt beizutragen. Sein erster Besuch in Europa war 1982 in Großbritannien, gefolgt von regelmäßigen Besuchen von 1984 bis 2001. Ich bin Haruna Sensei 1990 das erste Mal in Dartford, England, begegnet. 1993 war ich das erste Mal in meinem Leben in Japan und habe zwei Monate bei Haruna Sensei bzw. im Haus der Familie seiner Tochter gelebt und jeden Tag mit diesem großartigen Lehrer authentischer japanischer Kampfkunst geübt. Ich verdanke ihm die umfassenden Grundlagen meines sicherlich unzureichenden Wissens und somit eigentlich alles." />
                     </div>
                     <div class="mb-4">
-                        <Standardtext Text="Haruna Sensei war zum Zeitpunkt seines Todes, am 14. September 2002, als 8. Dan Kyoshi graduiert, hielt außer in Iaidô eine Gradierung in Kendô und hat Niten-Ichi Ryû, die von Miyamoto Musashi begründete “eine Schule der zwei Schwerter” geübt." />
+                        <Standardtext Text="Haruna Sensei war zum Zeitpunkt seines Todes am 14. September 2002 als 8. Dan Kyoshi graduiert, hielt außer in Iaidô eine Gradierung in Kendô und hat Niten-Ichi Ryû, die von Miyamoto Musashi begründete “eine Schule der zwei Schwerter” geübt." />
                     </div>
                 </div>
             </div>
@@ -438,7 +441,7 @@
             <div class="mt-10 md:flex md:flex-row md:justify-between md:h-auto">
 
                 <div class="mt-auto">
-                    <Weiterleitung Link="http://www.genbukan-augsburg.de/index.html" Text="→ Zu Genbukan Augsburg" />
+                    <Weiterleitung Link="http://www.genbukan-augsburg.de/index.html" Text="→ Zu Genbukan Augsburg" NewWindow="true" />
                 </div>
                 <div>
                     <InteresseFormular Abteilung="@(Abteilung.Genbukan)" OnSend="SetMessage" />

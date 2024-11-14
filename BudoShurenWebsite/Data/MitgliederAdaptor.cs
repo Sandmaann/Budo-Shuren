@@ -4,6 +4,7 @@ using Syncfusion.Blazor;
 using Microsoft.EntityFrameworkCore;
 using BudoShurenWebsite.Models;
 using Microsoft.AspNetCore.Components.Authorization;
+using BudoShurenWebsite.Services;
 
 namespace BudoShurenWebsite.Data
 {
@@ -16,14 +17,14 @@ namespace BudoShurenWebsite.Data
         public UserManager<ApplicationUser> UserManager { get; set; }
         public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
         public ILogger<MitgliederAdaptor> Logger { get; set; }
-
-        public MitgliederAdaptor(UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider, ILogger<MitgliederAdaptor> logger)
+        private readonly UserService UserService;
+        public MitgliederAdaptor(UserService userService, UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider, ILogger<MitgliederAdaptor> logger)
         {
+            UserService = userService;
             UserManager = userManager;
             AuthenticationStateProvider = authenticationStateProvider;
             Logger = logger;
         }
-
 
         private async Task<List<UserWithRoles>> GetUsersWithRoles()
         {
@@ -33,23 +34,45 @@ namespace BudoShurenWebsite.Data
                 var usersWithRoles = new List<UserWithRoles>();
 
                 var currentUser = await GetCurrentUser();
-
-                foreach (var user in users)
+                if (currentUser != null)
                 {
-                    //User nach Rolle filtern. Admins und Abteilungsleiter dürfen alle sehen, alle anderen nur eigene Daten
-                    if (Global.Roles.IsAdmin(currentUser?.Roles) || Global.Roles.IsAbteilungsleiter(currentUser?.Roles))
+                    foreach (var user in users)
                     {
-                        var roles = await UserManager.GetRolesAsync(user);
-                        usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
-                    }
-                    else if (user.UserName == currentUser.UserName)
-                    {
-                        var roles = await UserManager.GetRolesAsync(user);
-                        usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
-                    }
-                    else
-                    {
-                        continue;
+                        //User nach Rolle filtern. Admins und Abteilungsleiter dürfen alle sehen, alle anderen nur eigene Daten
+                        //if (Global.Roles.IsAdmin(currentUser.Roles) || Global.Roles.IsAbteilungsleiter(currentUser.Roles))
+                        //{
+
+
+
+                        //    var roles = await UserManager.GetRolesAsync(user);
+                        //    usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                        //}
+
+                        //Admin darf alle User sehen
+                        if (Global.Roles.IsAdmin(currentUser.Roles))
+                        {
+                            var roles = await UserManager.GetRolesAsync(user);
+                            usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                        }
+                        //Abteilungsleiter darf seine Abteilung sehen
+                        else if (Global.Roles.IsAbteilungsleiter(currentUser.Roles))
+                        {
+                            if(user.Abteilung == currentUser.Abteilung)
+                            {
+                                var roles = await UserManager.GetRolesAsync(user);
+                                usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                            }
+                        }
+                        //Alle anderen dürfen nur sich selbst sehen
+                        else if (user.UserName == currentUser.UserName)
+                        {
+                            var roles = await UserManager.GetRolesAsync(user);
+                            usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                 }
                 return usersWithRoles;
@@ -71,13 +94,16 @@ namespace BudoShurenWebsite.Data
                 if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
                 {
                     var user = await UserManager.GetUserAsync(userPrincipal);
-                    var roles = await UserManager.GetRolesAsync(user);
-
-                    return new UserWithRoles
+                    if (user != null)
                     {
-                        User = user,
-                        Roles = roles
-                    };
+                        var roles = await UserManager.GetRolesAsync(user);
+
+                        return new UserWithRoles
+                        {
+                            User = user,
+                            Roles = roles
+                        };
+                    }
                 }
                 return null;
             }
@@ -94,11 +120,10 @@ namespace BudoShurenWebsite.Data
         /// <param name="DataManagerRequest">DataManagerRequest contains the information regarding paging, grouping, filtering, searching, sorting which is handled on the Blazor DataGrid component side</param>
         /// <param name="Key">An optional parameter that can be used to perform additional data operations.</param>
         /// <returns>The data collection's type is determined by how this method has been implemented.</returns>
-        public override async Task<object> ReadAsync(DataManagerRequest dm, string Key = null)
+        public override async Task<object> ReadAsync(DataManagerRequest dm, string? Key = null)
         {
             try
             {
-
                 IEnumerable<UserWithRoles> DataSource = await GetUsersWithRoles();
 
                 int TotalRecordsCount = DataSource.Count();
@@ -140,8 +165,6 @@ namespace BudoShurenWebsite.Data
         {
             try
             {
-
-
                 if (value is UserWithRoles obj)
                 {
                     var user = await UserManager.FindByNameAsync(obj.UserName);
@@ -194,12 +217,16 @@ namespace BudoShurenWebsite.Data
         {
             try
             {
-
                 if (value is string email)
                 {
                     var user = await UserManager.FindByNameAsync(email);
-                    if (user != null)
+                    if (user != null && user.Email != null)
                     {
+                        await UserService.InitializeAsync();
+                        var currentUser = UserService.CurrentUser;
+                        if (user.Id == currentUser.User.Id)
+                            throw new InvalidOperationException("Bitte lösche dich nicht selbst!");
+
                         var result = await UserManager.RemoveLoginAsync(user, user.Id, user.Email);
                         if (result?.Succeeded == true)
                         {
@@ -207,7 +234,6 @@ namespace BudoShurenWebsite.Data
                         }
                     }
                 }
-
                 return value;
             }
             catch (Exception ex)

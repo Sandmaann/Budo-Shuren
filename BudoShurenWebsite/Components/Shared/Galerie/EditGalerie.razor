@@ -6,6 +6,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
 @inject UserService UserService
+@inject ImageService ImageService
 
 @rendermode InteractiveServer
 
@@ -46,7 +47,7 @@
         @if (IsNew && CanEdit)
         {
             <div class="sidebarHeight:overflow-auto">
-                <SfUploader @ref="uploadObj" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg" MaxFileSize=5242880>
+                <SfUploader @ref="uploadObj" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg, .webp" MaxFileSize=5242880>
                     <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
                     <UploaderEvents FileSelected="SelectHandler" Success="SuccessHandler" OnFailure="@OnFailureHandler" OnActionComplete="@OnActionCompleteHandler" BeforeUpload="@BeforeUploadHandler"></UploaderEvents>
                 </SfUploader>
@@ -61,17 +62,17 @@
             <div class="flex flex-col p-4">
                 <div class="mt-5">
                     <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Titel*</label>
-                    <InputText @bind-Value="SelectedEintrag.Titel" disabled="@isSaving" title="Geben Sie den Titel ein" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+                    <InputText @bind-Value="SelectedEintrag.Titel" disabled="@isSaving" title="Gib bitte den Titel ein" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
                 </div>
 
                 <div class="mt-2">
                     <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Untertitel</label>
-                    <InputText @bind-Value="SelectedEintrag.Untertitel" disabled="@isSaving" title="Geben Sie den Untertitel ein" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+                    <InputText @bind-Value="SelectedEintrag.Untertitel" disabled="@isSaving" title="Gib bitte einen Untertitel ein" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
                 </div>
 
                 <div class="mt-2">
                     <label class="font-ptsans tracking-[0.375rem] text-sm font-normal leading-tight text-black">Beschreibung</label>
-                    <InputText @bind-Value="SelectedEintrag.Beschreibung" disabled="@isSaving" title="Geben Sie eine Beschreibung ein" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
+                    <InputText @bind-Value="SelectedEintrag.Beschreibung" disabled="@isSaving" title="Gib bitte eine Beschreibung ein" class="font-ptsans w-full border border-black px-3 py-1 text-sm font-normal tracking-widest" />
                 </div>
 
                 <div class="mt-2">
@@ -185,6 +186,8 @@
 </div>
 
 @code {
+
+    [AllowNull]
     private SfUploader uploadObj { get; set; }
 
     [Parameter]
@@ -260,15 +263,15 @@
                     SelectedEintrag = new InputModel
                         {
                             Aikido = dummy.Aikido,
-                            Beschreibung = dummy.Beschreibung,
+                            Beschreibung = dummy.Beschreibung ?? "",
                             Bujinkan = dummy.Bujinkan,
                             Genbukan = dummy.Genbukan,
                             Öffentlich = dummy.Öffentlich,
                             Home = dummy.Home,
-                            ImageCreatedBy = dummy.ImageCreatedBy,
+                            ImageCreatedBy = dummy.ImageCreatedBy ?? "",
                             ImageDate = dummy.ImageDate,
-                            Titel = dummy.Titel,
-                            Untertitel = dummy.Untertitel,
+                            Titel = dummy.Titel ?? "",
+                            Untertitel = dummy.Untertitel ?? "",
                             Iaido = dummy.Iaido,
                             Jodo = dummy.Jodo
                         };
@@ -363,14 +366,15 @@
         }
     }
 
-    private bool filesUploaded = false;
+    // private bool filesUploaded = false;
     private string errorMessage = string.Empty;
     private bool isUploading { get; set; }
     private bool savedSuccessfully = false;
     List<string> errors = new();
     bool isSaving { get; set; } = false;
 
-    List<string> uploadedFiles = new();
+    List<UploadedFile> uploadedFiles = new();
+    // List<string> uploadedFiles = new();
 
 
     private async Task SetPermissions()
@@ -404,9 +408,6 @@
     {
         try
         {
-
-            errorMessage = string.Empty;
-
             if (uploadObj != null)
             {
                 //Aufräumen wenn die Sidebar geschlossen wird.
@@ -415,7 +416,11 @@
                 {
                     foreach (var file in files)
                     {
-                        await uploadObj.RemoveAsync(new FileInfo[] { file });
+                        var uploadedFile = uploadedFiles.FirstOrDefault(x => x.FileName == file.Name);
+                        if (uploadedFile?.EntryCreated != true)
+                        {
+                            await uploadObj.RemoveAsync(new FileInfo[] { file });
+                        }
                     }
                     await uploadObj.ClearAllAsync();
                 }
@@ -434,17 +439,13 @@
         isUploading = true;
     }
 
-    public void SuccessHandler(SuccessEventArgs args)
-    {
-        uploadedFiles.Add(args.File.Name);
-    }
     public void SelectHandler(SelectedEventArgs args)
     {
         try
         {
             foreach (var file in args.FilesData)
             {
-                if (uploadedFiles.Contains(file.Name))
+                if (uploadedFiles.Any(x => x.FileName == file.Name))
                 {
                     this.errorMessage = "Die Auswahl enthält Bilder, die bereits hochgeladen wurden!";
                     args.Cancel = true;
@@ -459,16 +460,114 @@
         }
     }
 
+    public async void SuccessHandler(SuccessEventArgs args)
+    {
+        //Ich kann hier jetzt die Antwort auslesen!
+        //Kann ich den aktuellen User eintragen um nachzuverfolgen, wer welches Bild angelegt hat?
+        //Oder nur büer die Galery-Eintrag?
+
+        //1. Ich bekomme eine ID von den Images -  die brauche ich hier um sie im Galery-Eintrag zu hinterlegen.
+        //2. Wenn Fehler passieren muss ich das in OnFailureHandler abfangen, und dem User anzeigen.
+        //3. (geht das?) die Dateien in OnActionCompleteHandler prüfen ob nur gültige Einträge da sind
+        // -> sind die das sowieso? sind da alle drin? oder nur erfolgreiche?
+        //4. Die Bilder müssen auch wieder geladen werden!
+        //4.1 Bilder der Galerie entsprechend laden
+        //4.2 Wie lade ich viele Bilder am Sinnvollsten?
+        //-> async "lazy" laden... vielleicht erst wenn das Item "in view" kommt anfangen das BIld zu laden?
+        //jede Komponente ist ja sowieso ein Objekt... dann ginge das doch?
+        //Jedes ein eigenes laden, jedes einen Busy-Indicator
+        //Was wenn die "auserhalb der View" sind? zerstören? In memory?
+        //-> api Endpunkt wie AI vorschlägt klingt erstmal sinnvoll für den ersten Versuch.
+
+        //Weiter:
+        //5. Neuigkeiten-Bilder sind dann genauso dran!
+        //6. Alle Gallerien Überprüfen
+        //Home, große Galery, Edit-Galery, Detail-Bild-Ansicht
+
+        try
+        {
+            if (args.Operation == "upload")
+            {
+                var jsonResponse = args.Response.ResponseText;
+                var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                var uploadResponse = JsonSerializer.Deserialize<UploadResponse>(jsonResponse, options);
+
+                if (uploadResponse != null && uploadResponse.Success)
+                {
+                    foreach (var file in uploadResponse.Files)
+                    {
+                        // Hier kannst du auf die hochgeladenen Dateien zugreifen
+                        // Console.WriteLine($"Datei hochgeladen: {file.FileName}, ID: {file.Id}");
+                        if (uploadResponse.Files.FirstOrDefault(x => x.FileName == args.File.Name) is UploadedFile uploadedFile)
+                        {
+                            //Hat es Id?
+                            uploadedFiles.Add(uploadedFile);
+                        }
+                        else
+                        {
+                            Logger.LogWarning($"Die Datei {args.File.Name} wurde nicht in der Liste der hochgeladenen Dateien gefunden!");
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Upload war nicht erfolgreich.");
+                }
+            }
+            else if (args.Operation == "remove")
+            {
+                //Datei wurde gelöscht - aus der Liste entfernen?
+                var uploadedFile = uploadedFiles.FirstOrDefault(x => x.FileName == args.File.Name);
+                if (uploadedFile != null)
+                {
+                    uploadedFiles.Remove(uploadedFile);
+                    fileCount = (await uploadObj.GetFilesDataAsync()).Count;
+
+                    await ImageService.RemoveImageAsync(uploadedFile.Id);
+
+                    await InvokeAsync(() => StateHasChanged());
+                }
+            }
+            else
+            {
+                errorMessage = $"Die Operation '{args.Operation}' ist hier noch nicht implementiert!";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "SuccessHandler");
+            Console.WriteLine($"Fehler beim Verarbeiten der Upload-Antwort: {ex.Message}");
+            errorMessage = $"Fehler beim Verarbeiten der Upload-Antwort: {ex.Message}";
+        }
+        // uploadedFiles.Add(args.File.Name);
+    }
+
     private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
     {
-        // Here, you can customize your code.
+        try
+        {
+            using (JsonDocument doc = JsonDocument.Parse(args.Response.ResponseText))
+            {
+                JsonElement root = doc.RootElement;
+                if (root.TryGetProperty("message", out JsonElement messageElement))
+                {
+                    errorMessage = messageElement.GetString() ?? "Unbekannter Fehler";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Parsen der JSON-Antwort");
+            errorMessage = "Ein unbekannter Fehler ist aufgetreten.";
+        }
     }
     private async void OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
     {
         try
         {
-
-            // Here, you can customize your code.
             isUploading = false;
             fileCount = (await uploadObj.GetFilesDataAsync()).Count;
             StateHasChanged();
@@ -516,8 +615,13 @@
                 SelectedEintrag.Changed = false;
                 savedSuccessfully = true;
                 isSaving = false;
+
+
                 if (IsNew)
+                {
+                    await uploadObj.ClearAllAsync();
                     await CloseSidebar();
+                }
             }
         }
         catch (Exception ex)
@@ -586,7 +690,6 @@
     {
         try
         {
-
             var files = await uploadObj.GetFilesDataAsync();
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -602,73 +705,79 @@
 
             foreach (var file in files)
             {
-                currentSave++;
-                savingText = $"Bild {currentSave} von {maxSave}";
-                // StateHasChanged();
-
-                var neuerEintrag = new GalerieEintrag
-                    {
-                        Titel = SelectedEintrag.Titel,
-                        Untertitel = SelectedEintrag.Untertitel,
-                        Beschreibung = SelectedEintrag.Beschreibung,
-                        ImageDate = SelectedEintrag.ImageDate,
-                        ImageCreatedBy = SelectedEintrag.ImageCreatedBy,
-                        Öffentlich = SelectedEintrag.Öffentlich,
-                        Home = SelectedEintrag.Home,
-                        Aikido = SelectedEintrag.Aikido,
-                        Bujinkan = SelectedEintrag.Bujinkan,
-                        Genbukan = SelectedEintrag.Genbukan,
-                        Iaido = SelectedEintrag.Iaido,
-                        Jodo = SelectedEintrag.Jodo,
-                        EntryCreatedBy = userId,
-                        EntryCreationDateUTC = DateTime.UtcNow
-                    };
-
-                //Environment-Pfad mit einbeziehen!
-
-                string tempFilePath = Path.Combine(environment.ContentRootPath, "wwwroot",
-                    environment.EnvironmentName, "unsafe_uploads",
-                    file.Name);
-
-                if (File.Exists(tempFilePath))
+                try
                 {
-                    //Datei in Galerie-Ordner kopieren
-                    string destination = Path.Combine(environment.ContentRootPath, "wwwroot", environment.EnvironmentName, "galery");
-                    string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
-                    string newFilePath = Path.Combine(destination, newFileName);
-
-                    await CopyFileAsync(tempFilePath, newFilePath);
-
-                    if (File.Exists(newFilePath))
+                    if (file.StatusCode != "2")
                     {
-                        //Eintarg im FileUploader löschen!
-                        await uploadObj.RemoveAsync(new FileInfo[] { file });
-                        //Temp-Datei löschen wenn sie noch vorhanden ist (sollte redundant sein?!)
-                        if (File.Exists(tempFilePath))
-                            File.Delete(tempFilePath);
-
-                        neuerEintrag.ImagePath = newFilePath;
-
-                        //Eintrag in DB anlegen
-                        await DbContext.Galerie.AddAsync(neuerEintrag);
-                        await DbContext.SaveChangesAsync();
-                        uploadedFiles.Remove(file.Name);
+                        //Status überprüfen
+                        //nur erfolgreich hochgeladene Dateien speichern
+                        errors.Add($"Die Datei {file.Name} wurde nicht erfolgreich hochgeladen!");
+                        continue;
                     }
-                    else
+
+                    currentSave++;
+                    savingText = $"Bild {currentSave} von {maxSave}";
+
+                    var uploadedFile = uploadedFiles.FirstOrDefault(x => x.FileName == file.Name);
+                    if (uploadedFile == null)
                     {
-                        //ErrorHandling
+                        errors.Add($"Die Datei {file.Name} wurde nicht in der Liste der hochgeladenen Dateien gefunden!");
+                        continue;
                     }
+                    int dbImageId = uploadedFile.Id;
+                    if (dbImageId == 0)
+                    {
+                        errors.Add($"Die Datei {file.Name} wurde nicht in der Liste der hochgeladenen Dateien gefunden!");
+                        continue;
+                    }
+
+                    var dbImage = await DbContext.Images.FindAsync(dbImageId);
+                    if (dbImage == null)
+                    {
+                        errors.Add($"Die Datei {file.Name} wurde nicht in der Datenbank gefunden!");
+                        continue;
+                    }
+
+                    var neuerEintrag = new GalerieEintrag
+                        {
+                            Titel = SelectedEintrag.Titel,
+                            Untertitel = SelectedEintrag.Untertitel,
+                            Beschreibung = SelectedEintrag.Beschreibung,
+                            ImageDate = SelectedEintrag.ImageDate,
+                            ImageCreatedBy = SelectedEintrag.ImageCreatedBy,
+                            Öffentlich = SelectedEintrag.Öffentlich,
+                            Home = SelectedEintrag.Home,
+                            Aikido = SelectedEintrag.Aikido,
+                            Bujinkan = SelectedEintrag.Bujinkan,
+                            Genbukan = SelectedEintrag.Genbukan,
+                            Iaido = SelectedEintrag.Iaido,
+                            Jodo = SelectedEintrag.Jodo,
+                            EntryCreatedBy = userId,
+                            EntryCreationDateUTC = DateTime.UtcNow,
+                            DbImageId = dbImageId,
+                            DbImage = dbImage
+                        };
+                    await DbContext.Galerie.AddAsync(neuerEintrag);
+                    await DbContext.SaveChangesAsync();
+
+                    uploadedFile.EntryCreated = true;
                 }
-                else
+                catch (Exception ex)
                 {
-                    //Fehler...
-                    errors.Add($"Die Datei {file.Name} wurde nicht gefunden! Versuche bitte das Bild zu entfernen und einmal neu hinzuzufügen.");
+                    errors.Add($"Fehler beim Speichern der neuen Datei {file.Name}");
+                    Logger.LogError(ex, $"Fehler beim Speichern der neuen Datei {file.Name}");
                 }
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Fehler beim Speichern der neuen Einträge");
+            Logger.LogError(ex, "Fehler beim Speichern der neuen Datei");
+            errorMessage = "Fehler beim Speichern der neuen Datei";
+            savedSuccessfully = false;
+        }
+        finally
+        {
+            isSaving = false;
         }
     }
 
@@ -838,4 +947,7 @@
 
         }
     }
+
+
+
 }

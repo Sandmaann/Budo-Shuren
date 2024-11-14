@@ -8,7 +8,7 @@
 @inject UserService UserService
 @inject ILogger<Kalender> Logger
 
-<div class="font-ptsans -mx-10 lg:-mx-32 md:mx-0">
+<div class="font-ptsans -mx-10 md:mx-0 lg:-mx-32">
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
@@ -33,9 +33,9 @@
                     var appointment = context as AppointmentData;
                 }
                 <div>
-                    <div class="flex flex-row justify-between rounded p-2" style="background:@(appointment.Color)">
+                    <div class="flex flex-row justify-between rounded p-2" style="background:@(appointment?.Color)">
                         <p class="font-yuji text-xl font-normal tracking-widest text-white md:text-2xl">
-                            @appointment.Subject
+                            @appointment?.Subject
                         </p>
                         <button class="bg-transparent text-white" @onclick="CloseQuickInfo">
                             <span class="material-symbols-outlined">close</span>
@@ -54,7 +54,7 @@
                 else
                 {
                     <div>
-                        <div class="">Abteilung: @((context as AppointmentData).Abteilung)</div>
+                        <div class="">Abteilung: @((context as AppointmentData)?.Abteilung)</div>
                     </div>
                 }
             </FooterTemplate>
@@ -73,19 +73,19 @@
                         <div class="template-wrap" style="background:@(appointment.Color)">
                             @if (appointment.IsAllDay)
                             {
-                                <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm lg:text-base md:px-2">@appointment.Subject</div>
+                                <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm md:px-2 lg:text-base">@appointment.Subject</div>
                             }
                             else
                             {
                                 if (MoreThanHalfAnHour(appointment.StartTime, appointment.EndTime))
                                 {
-                                    <div class="font-ptsans text-2xs hidden text-balance px-0 pb-0.5 pt-1 text-center font-bold tracking-wider text-white md:px-1 md:text-2xs lg:text-xs md:pt-1.5 md:block">@GetTimeString(appointment.StartTime) - @GetTimeString(appointment.EndTime)</div>
-                                    <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm lg:text-base md:px-2">@appointment.Subject</div>
+                                    <div class="font-ptsans text-2xs hidden text-balance px-0 pb-0.5 pt-1 text-center font-bold tracking-wider text-white md:px-1 md:text-2xs md:pt-1.5 md:block lg:text-xs">@GetTimeString(appointment.StartTime) - @GetTimeString(appointment.EndTime)</div>
+                                    <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm md:px-2 lg:text-base">@appointment.Subject</div>
                                     <div class="font-ptsans text-2xs text-balance px-1 font-bold tracking-wide text-white md:px-2 md:py-1 md:text-xs">@appointment.Description</div>
                                 }
                                 else
                                 {
-                                    <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm lg:text-base md:px-2">@appointment.Subject</div>
+                                    <div class="font-ptsans text-2xs text-wrap break-all px-1 py-1 font-bold tracking-wider text-white md:break-normal md:py-0 md:text-sm md:px-2 lg:text-base">@appointment.Subject</div>
                                 }
                             }
                         </div>
@@ -451,53 +451,60 @@
             return false;
         }
     }
-    private async void OnDeleteClick(MouseEventArgs args, AppointmentData data)
+    private async void OnDeleteClick(MouseEventArgs args, AppointmentData? data)
     {
-        await scheduleObj.CloseQuickInfoPopupAsync();
-
-        if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+        if (data != null)
         {
-            try
-            {
+            await scheduleObj.CloseQuickInfoPopupAsync();
 
-                await UserService.InitializeAsync();
-                await scheduleObj.DeleteEventAsync(data);
-            }
-            catch (Exception ex)
+            if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
             {
-                Logger.LogError(ex, "Fehler beim Löschen des Termins");
-                ErrorMessage = "Der Termin konnte nicht gelöscht werden.";
+                try
+                {
+
+                    await UserService.InitializeAsync();
+                    await scheduleObj.DeleteEventAsync(data);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Fehler beim Löschen des Termins");
+                    ErrorMessage = "Der Termin konnte nicht gelöscht werden.";
+                }
             }
         }
     }
-    private async void OnBearbeitenClick(MouseEventArgs args, AppointmentData data)
+    private async void OnBearbeitenClick(MouseEventArgs args, AppointmentData? data)
     {
-        await scheduleObj.CloseQuickInfoPopupAsync();
-
-        await UserService.InitializeAsync();
-        if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+        if (data != null)
         {
-            string abteilung;
-            if (Abteilung == "Alle")
-                abteilung = string.Empty;
-            else
-                abteilung = Abteilung;
 
-            AppointmentData eventData = new AppointmentData
-                {
-                    Id = data.Id,
-                    Subject = data.Subject,
-                    Location = data.Location,
-                    Description = data.Description,
-                    StartTime = data.StartTime,
-                    EndTime = data.EndTime,
-                    IsAllDay = data.IsAllDay,
-                    Abteilung = abteilung,
-                    RecurrenceException = data.RecurrenceException,
-                    RecurrenceID = data.RecurrenceID,
-                    RecurrenceRule = data.RecurrenceRule
-                };
-            await scheduleObj.OpenEditorAsync(eventData, CurrentAction.Save);
+            await scheduleObj.CloseQuickInfoPopupAsync();
+            await UserService.InitializeAsync();
+
+            if (UserService.IsEditor || UserService.IsAbteilungsleiter || UserService.IsAdmin)
+            {
+                string abteilung;
+                if (Abteilung == "Alle")
+                    abteilung = string.Empty;
+                else
+                    abteilung = Abteilung;
+
+                AppointmentData eventData = new AppointmentData
+                    {
+                        Id = data.Id,
+                        Subject = data.Subject,
+                        Location = data.Location,
+                        Description = data.Description,
+                        StartTime = data.StartTime,
+                        EndTime = data.EndTime,
+                        IsAllDay = data.IsAllDay,
+                        Abteilung = abteilung,
+                        RecurrenceException = data.RecurrenceException,
+                        RecurrenceID = data.RecurrenceID,
+                        RecurrenceRule = data.RecurrenceRule
+                    };
+                await scheduleObj.OpenEditorAsync(eventData, CurrentAction.Save);
+            }
         }
     }
 

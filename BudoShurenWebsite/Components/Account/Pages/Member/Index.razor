@@ -1,5 +1,4 @@
 ﻿@page "/Account/Member"
-@page "/budoshuren/Account/Member"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -37,16 +36,16 @@
                     </div>
                     <label for="username" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Benutzername</label>
                     <div class="mb-3">
-                        <input type="text" value="@username" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Bitte wählen Sie Ihren Benutzernamen" disabled />
+                        <input type="text" value="@username" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Bitte wähle deinen Benutzernamen" disabled />
                     </div>
                     <label for="name" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Name</label>
                     <div class="mb-3">
-                        <InputText @bind-Value="Input.Name" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Gebe bitte deinen Nachnamen an." />
+                        <InputText @bind-Value="Input.Name" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Gib bitte deinen Nachnamen an." />
                         <ValidationMessage For="() => Input.Name" class="text-error" />
                     </div>
                     <label for="vorname" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Vorname</label>
                     <div class="mb-3">
-                        <InputText @bind-Value="Input.Vorname" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Gebe bitte deinen Vornamen an." />
+                        <InputText @bind-Value="Input.Vorname" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Gib bitte deinen Vornamen an." />
                         <ValidationMessage For="() => Input.Vorname" class="text-error" />
                     </div>
 
@@ -68,7 +67,7 @@
                         <div>
                             <label for="email" class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black">Aktuelle E-Mail Adresse</label>
                             <div class="mb-3">
-                                <input type="text" value="@email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Bitte geben Sie eine E-Mail Adresse an" disabled />
+                                <input type="text" value="@email" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" placeholder="Bitte trage eine E-Mail Adresse ein." disabled />
                             </div>
                             <button type="submit" class="font-yuji mb-8 h-10 transform bg-black px-5 text-center text-sm font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-primary active:scale-90" form="send-verification-form">Bestätigungsmail erneut schicken</button>
                         </div>
@@ -105,8 +104,8 @@
         <SectionBanner Titel="Personenbezogene Daten" />
         <section>
             <div>
-                <Standardtext Text="Ihr Konto enthält persönliche Daten, die Sie uns zur Verfügung gestellt haben. Diese Seite ermöglicht es Ihnen, diese Daten herunterzuladen oder zu löschen." />
-                <p class="font-ptsans text-sm tracking-wider"><b>Das Löschen dieser Daten wird Ihr Konto dauerhaft entfernen, und dies kann nicht wiederhergestellt werden.</b></p>
+                <Standardtext Text="Dein Konto enthält persönliche Daten, die du uns zur Verfügung gestellt hast. Diese Seite ermöglicht es dir, diese Daten herunterzuladen oder zu löschen." />
+                <p class="font-ptsans text-sm tracking-wider"><b>Das Löschen dieser Daten wird dein Konto dauerhaft entfernen, und dies kann nicht wiederhergestellt werden.</b></p>
                 <form class="mt-4" action="Account/Member/DownloadPersonalData" method="post">
                     <AntiforgeryToken />
                     <button class="default-button local-button2 transform transition duration-150 ease-in-out active:scale-90" type="submit">Download</button>
@@ -187,7 +186,7 @@
 
             await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
 
-            message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
+            message = "Der Bestätigungslink wurde verschickt. Bitte prüfe dein E-Mail Postfach.";
         }
         catch (Exception ex)
         {
@@ -205,7 +204,7 @@
 
             bool any = false;
 
-            string localMessage = "Ihr Profil wurde aktualisiert.";
+            string localMessage = "Dein Profil wurde aktualisiert.";
             if (Input.Name != name)
             {
                 any = true;
@@ -235,7 +234,7 @@
                     new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
 
                 await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
-                message = "Der Bestätigungslink wurde verschickt. Bitte prüfen Sie Ihr E-Mail Postfach.";
+                message = "Der Bestätigungslink wurde verschickt. Bitte prüfe dein E-Mail Postfach.";
                 localMessage = message;
             }
 

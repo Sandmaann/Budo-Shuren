@@ -1,5 +1,4 @@
-﻿@page "/Account/Member/Galerie/Images/{ImageName}/{EntryID}"
-@page "/budoshuren/Account/Member/Galerie/Images/{ImageName}/{EntryID}"
+﻿@page "/Account/Member/Galerie/images/{EntryID}"
 @layout EmptyLayout
 
 @inject IHostEnvironment environment
@@ -18,7 +17,24 @@
             </button>
         </div>
         <div class="max-h-[95vh] max-w-full flex-grow self-center object-cover">
-            <img src="@ImagePath" class="max-h-[95vh] mx-auto max-w-full object-cover" title="@Item?.Titel" alt="@Item?.Untertitel" onerror="this.src='/images/missingimage.jpg'" />
+            @if (isLoading)
+            {
+                <Spinner Text="Augenblick, dein Bild ist gleich bereit!" TextCssClass="text-white" />
+            }
+
+            <img @onload="OnImageLoaded"
+                 @onerror="OnImageError"
+                 src="@GetImageUrl(Item?.DbImageId)"
+                 class="mx-auto max-h-[95vh] max-w-full object-cover"
+                 title="@Item?.Titel"
+                 alt="@Item?.Untertitel"/>
+            @if (showErrorImage)
+            {
+                <img src="/images/missingimage.jpg"
+                     class="mx-auto max-h-[95vh] max-w-full object-cover"
+                     alt="Fehler beim Laden des Bildes" />
+            }
+
         </div>
         @if (CanEdit)
         {
@@ -41,7 +57,16 @@
             <div @onclick="toggleSlideoverBlazor" id="slideover-bg" class="opacity-0 absolute inset-0 h-full w-full bg-gray-900 transition-all duration-500 ease-out"></div>
 
             <div onclick="" id="slideover" class="absolute right-0 h-full w-96 translate-x-full overflow-auto bg-white transition-all duration-300 ease-out">
-                <EditGalerie @ref="editGalerie" Einträge="(new List<GalerieEintrag> {Item})" OnClose="onSidebarClosed" />
+                @if (Item != null)
+                {
+                    <EditGalerie @ref="editGalerie" Einträge="(new List<GalerieEintrag> { Item })" OnClose="onSidebarClosed" />
+                }
+                else
+                {
+                    <div class="p-5">
+                        <Standardtext Text="Keine Daten gefunden!" />
+                    </div>
+                }
             </div>
         </div>
     }
@@ -57,14 +82,14 @@
     }
 </script>
 @code {
-
+    [AllowNull]
     EditGalerie editGalerie;
 
-    [Parameter]
-    public string ImageName { get; set; }
+    // [Parameter]
+    // public string ImageName { get; set; } = string.Empty;
 
     [Parameter]
-    public string EntryID { get; set; }
+    public string EntryID { get; set; } = string.Empty;
 
     public GalerieEintrag? Item { get; set; }
 
@@ -73,6 +98,20 @@
 
     public bool CanEdit { get; set; } = false;
 
+    private bool isLoading { get; set; } = true;
+    private bool showErrorImage { get; set; } = false;
+
+    private void OnImageLoaded()
+    {
+        isLoading = false;
+        StateHasChanged();
+    }
+    private void OnImageError()
+    {
+        isLoading = false;
+        showErrorImage = true;
+        StateHasChanged();
+    }
 
     private async Task deleteImage()
     {
@@ -82,7 +121,7 @@
         {
             return;
         }
-        bool confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Möchten Sie dieses Bild wirklich löschen?");
+        bool confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Möchtest du dieses Bild wirklich löschen?");
         if (confirm)
         {
             // Code zum Löschen des Bildes
@@ -91,12 +130,11 @@
             {
                 try
                 {
+                    var dbImage = await DbContext.Images.FindAsync(item.DbImageId);
+                    if (dbImage != null)
+                        DbContext.Images.Remove(dbImage);
                     DbContext.Galerie.Remove(item);
                     await DbContext.SaveChangesAsync();
-
-                    //Datei löschen!
-                    if (!string.IsNullOrWhiteSpace(item.ImagePath) && File.Exists(item.ImagePath))
-                        File.Delete(item.ImagePath);
 
                     deleted = true;
 
@@ -132,7 +170,10 @@
         await JSRuntime.InvokeVoidAsync("toggleSlideover");
         if (isOpen)
         {
-            editGalerie.SetData(new List<GalerieEintrag> { Item });
+            if (Item != null)
+            {
+                editGalerie.SetData(new List<GalerieEintrag> { Item });
+            }
         }
     }
 
@@ -141,19 +182,23 @@
         await JSRuntime.InvokeVoidAsync("history.back");
     }
 
-    public string ImagePath
-    {
-        get
-        {
-            if (!string.IsNullOrWhiteSpace(ImageName))
-            {
-                string path = Path.Combine(environment.EnvironmentName, "galery", ImageName);
-                return path;
-            }
-            return string.Empty;
-        }
-    }
+    // public string ImagePath
+    // {
+    //     get
+    //     {
+    //         if (!string.IsNullOrWhiteSpace(ImageName))
+    //         {
+    //             string path = Path.Combine(environment.EnvironmentName, "galery", ImageName);
+    //             return path;
+    //         }
+    //         return string.Empty;
+    //     }
+    // }
 
+    private string GetImageUrl(int? dbImageId)
+    {
+        return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}" : "/images/missingimage.jpg";
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -167,7 +212,7 @@
         {
             await UserService.InitializeAsync();
             var user = UserService.CurrentUser;
-            if (user != null && ( Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles)))
+            if (user != null && (Global.Roles.IsEditor(user.Roles) || Global.Roles.IsAbteilungsleiter(user.Roles) || Global.Roles.IsAdmin(user.Roles)))
             {
                 CanEdit = true;
             }

@@ -35,11 +35,13 @@ namespace BudoShurenWebsite.Controllers
                     filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents", "Prüfungsprogramm.pdf");
                     break;
                 default:
+                    logger.LogWarning($"Das Dokument {documentName} ist in DownloadDocument nicht implementiert!");
                     return NotFound("Das angeforderte Dokument wurde nicht gefunden.");
             }
 
             if (!System.IO.File.Exists(filePath))
             {
+                logger.LogWarning($"Das Dokument {documentName} wurde unter dem pfad {filePath} nicht gefunden!");
                 return NotFound("Das angeforderte Dokument wurde nicht gefunden.");
             }
 

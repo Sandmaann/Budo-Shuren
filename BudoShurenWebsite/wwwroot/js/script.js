@@ -27,17 +27,35 @@ window.saveScrollPositionOnUnload = function (dotnetHelper) {
     });
 }
 
-window.addCapsLockEventListener = function () {
-    document.addEventListener('keydown', function (e) {
-        var isCapsLockEnabled = e.getModifierState ? e.getModifierState('CapsLock') : e.keyCode === 20;
-        var warningElement = document.getElementById('capsLockWarning');
-        if (isCapsLockEnabled) {
-            warningElement.style.display = 'block';
-        } else {
-            warningElement.style.display = 'none';
-        }
-    });
-};
+
+//window.addCapsLockEventListener = function () {
+//    document.addEventListener('keydown', function (e) {
+//        var isCapsLockEnabled = e.getModifierState && e.getModifierState('CapsLock');
+//        var warningElement = document.getElementById('capsLockWarning');
+//        if (isCapsLockEnabled) {
+//            warningElement.style.display = 'block';
+//        } else {
+//            warningElement.style.display = 'none';
+//        }
+//        // Call the .NET method to update the Caps Lock state
+//        DotNet.invokeMethodAsync('BudoShurenWebsite', 'UpdateCapsLockState', isCapsLockEnabled);
+//    });
+//};
+
+//e.keyCode is deprecated, test above code
+//window.addCapsLockEventListener = function () {
+//    document.addEventListener('keydown', function (e) {
+//        var isCapsLockEnabled = e.getModifierState ? e.getModifierState('CapsLock') : e.keyCode === 20;
+//        var warningElement = document.getElementById('capsLockWarning');
+//        if (isCapsLockEnabled) {
+//            warningElement.style.display = 'block';
+//        } else {
+//            warningElement.style.display = 'none';
+//        }
+//    });
+//};
+
+
     
 
 //lazy-loading für Bilder. Verwende ich aktuell NICHT

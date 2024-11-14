@@ -1,5 +1,4 @@
 ﻿@page "/Account/Register"
-@page "/budoshuren/Account/Register"
 @rendermode InteractiveServer
 
 @using System.ComponentModel.DataAnnotations
@@ -8,6 +7,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using BudoShurenWebsite.Data
+@using BudoShurenWebsite.Models
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -22,7 +22,6 @@
 <HeadContent>
     <meta name="description" content="Erstelle dein Konto und werde Teil unserer Gemeinschaft. Registriere dich jetzt, um Zugang zu exklusiven Inhalten und Funktionen zu erhalten.">
 </HeadContent>
-
 
 <Headline Titel="登録" Untertitel="Registrierung" />
 
@@ -86,13 +85,28 @@
                             <Standardtext Text="Feststelltaste ist aktiv!" />
                         </div>
                     </div>
-                    <InputText type="password" @bind-Value="Input.Password" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="new-password" aria-required="true" placeholder="Passwort" />
+                    <div class="flex flex-row items-center">
+                        <InputText id="passwordInput" type="password" @bind-Value="Input.Password" class="font-ptsans w-full grow border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="current-password" aria-required="true" placeholder="Bitte gib dein Passwort ein." />
+                        <button type="button" class="ml-2 h-12 w-12" onclick="togglePasswordVisibility()" title="Passwort anzeigen/verbergen">
+                            <span id="toggleIcon" class="material-symbols-outlined !text-3xl">lock</span>
+                        </button>
+                    </div>
+
+                    @* <InputText type="password" @bind-Value="Input.Password" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="new-password" aria-required="true" placeholder="Passwort" /> *@
                     <ValidationMessage For="() => Input.Password" class="" />
                 </div>
 
                 <label class="font-ptsans tracking-[0.375rem] text-right text-sm font-normal leading-tight text-black" for="confirm-password">Passwort best&auml;tigen</label>
                 <div class="mb-3">
-                    <InputText type="password" @bind-Value="Input.ConfirmPassword" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="new-password" aria-required="true" placeholder="Passwort best&auml;tigen" />
+                    @* <InputText type="password" @bind-Value="Input.ConfirmPassword" class="font-ptsans w-full border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="new-password" aria-required="true" placeholder="Passwort best&auml;tigen" /> *@
+
+                    <div class="flex flex-row items-center">
+                        <InputText id="passwordConfirmInput" type="password" @bind-Value="Input.ConfirmPassword" class="font-ptsans w-full grow border border-black px-3 py-4 text-sm font-normal tracking-widest" autocomplete="current-password" aria-required="true" placeholder="Bitte gib dein Passwort ein." />
+                        <button type="button" class="ml-2 h-12 w-12" onclick="togglePasswordVisibilityConfirm()" title="Passwort anzeigen/verbergen">
+                            <span id="toggleIconConfirm" class="material-symbols-outlined !text-3xl">lock</span>
+                        </button>
+                    </div>
+                    
                     <ValidationMessage For="() => Input.ConfirmPassword" class="" />
                 </div>
                 <div class="mt-8">
@@ -104,6 +118,33 @@
         </div>
     </section>
 </div>
+
+<script>
+    function togglePasswordVisibility() {
+        var passwordInput = document.getElementById('passwordInput');
+        var toggleIcon = document.getElementById('toggleIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.textContent = 'lock_open_right';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.textContent = 'lock';
+        }
+    };
+
+    function togglePasswordVisibilityConfirm() {
+        var passwordConfirmInput = document.getElementById('passwordConfirmInput');
+        var toggleIconConfirm = document.getElementById('toggleIconConfirm');
+        if (passwordConfirmInput.type === 'password') {
+            passwordConfirmInput.type = 'text';
+            toggleIconConfirm.textContent = 'lock_open_right';
+        } else {
+            passwordConfirmInput.type = 'password';
+            toggleIconConfirm.textContent = 'lock';
+        }
+    };
+</script>
+
 
 <style>
     .resize-horizontal {
@@ -149,7 +190,7 @@
 
 @code {
 
-    private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
+    private IEnumerable<BudoShurenWebsite.Models.Abteilung> Abteilungen = Array.Empty<Abteilung>();
 
     private IEnumerable<IdentityError>? identityErrors;
 
@@ -168,7 +209,7 @@
         Abteilungen = await context.Abteilungen.ToListAsync();
     }
 
-    public async Task RegisterUser(EditContext editContext)
+    public async Task RegisterUser()
     {
         try
         {
@@ -191,27 +232,27 @@
             if (user != null)
             {
                 await UserManager.AddToRoleAsync(user, Global.Roles.Gast);
+                Logger.LogInformation($"Added User to Role '{Global.Roles.Gast}'");
+
+                var userId = await UserManager.GetUserIdAsync(user);
+                var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                    NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                    new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+                await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+                if (UserManager.Options.SignIn.RequireConfirmedAccount)
+                {
+                    RedirectManager.RedirectTo(
+                        "Account/RegisterConfirmation",
+                        new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+                }
+
+                await SignInManager.SignInAsync(user, isPersistent: false);
+                RedirectManager.RedirectTo(ReturnUrl);
             }
-            Logger.LogInformation($"Added User to Role '{Global.Roles.Gast}'");
-
-            var userId = await UserManager.GetUserIdAsync(user);
-            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
-
-            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-            if (UserManager.Options.SignIn.RequireConfirmedAccount)
-            {
-                RedirectManager.RedirectTo(
-                    "Account/RegisterConfirmation",
-                    new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
-            }
-
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            RedirectManager.RedirectTo(ReturnUrl);
         }
         catch (NavigationException navi)
         {
@@ -230,7 +271,7 @@
         try
         {
             var user = Activator.CreateInstance<ApplicationUser>();
-            if (Input.SelectedAbteilung == null)
+            if (Input.SelectedAbteilung == null || string.IsNullOrEmpty(Input.SelectedAbteilung.Name))
             {
                 throw new InvalidOperationException("Die ausgewählte Abteuilung ist leer!");
             }
@@ -272,11 +313,11 @@
 
         [Required(ErrorMessage = "Bitte gib deinen Vornamen an")]
         [Display(Name = "Vorname")]
-        public string Vorname { get; set; } = null;
+        public string Vorname { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Bitte gib deinen Nachnamen an")]
         [Display(Name = "Nachname")]
-        public string Nachname { get; set; } = null;
+        public string Nachname { get; set; } = string.Empty;
 
         [Required(ErrorMessage = Messages.PasswordRequiredErrorMessage)]
         [StringLength(100, ErrorMessage = "Das {0} muss mindestens {2} und maximal {1} Zeichen lang sein.", MinimumLength = 6)]
@@ -290,9 +331,3 @@
         public string ConfirmPassword { get; set; } = "";
     }
 }
-
-<script>
-    window.onload = function () {
-        addCapsLockEventListener();
-    };
-</script>
