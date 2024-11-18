@@ -95,6 +95,7 @@ namespace BudoShurenWebsite.Data
                                 neuigkeit.Ort = obj.Ort;
                                 neuigkeit.Link = obj.Link;
                                 neuigkeit.Linktext = obj.Linktext;
+                                neuigkeit.Quellenangabe = obj.Quellenangabe;
                                 neuigkeit.Datum = obj.Datum;
                                 neuigkeit.LastChange = DateTime.Now;
                                 neuigkeit.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
@@ -157,6 +158,7 @@ namespace BudoShurenWebsite.Data
                             neuigkeit.Ort = obj.Ort;
                             neuigkeit.Link = obj.Link;
                             neuigkeit.Linktext = obj.Linktext;
+                            neuigkeit.Quellenangabe = obj.Quellenangabe;
                             neuigkeit.Datum = obj.Datum;
                             neuigkeit.LastChange = DateTime.Now;
                             neuigkeit.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";

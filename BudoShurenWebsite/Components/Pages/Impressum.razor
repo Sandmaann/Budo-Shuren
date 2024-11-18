@@ -79,7 +79,7 @@
             <br />
             <Standardtext Text="Unsere Webseite enthält Links zu externen Webseiten Dritter sowie eingebettete YouTube-Videos, auf deren Inhalte wir keinen Einfluss haben. Für die Inhalte der verlinkten Seiten und Videos ist stets der jeweilige Anbieter oder Betreiber verantwortlich. Wir übernehmen keine Haftung für die Richtigkeit, Vollständigkeit oder Verfügbarkeit dieser Inhalte. Zum Zeitpunkt der Verlinkung wurden die externen Inhalte auf mögliche Rechtsverstöße überprüft, illegale Inhalte waren zu diesem Zeitpunkt nicht erkennbar." />
             <br />
-            <Standardtext Text="V 1.0.0.1" />
+            <Standardtext Text="@version" />
         </div>
         <SectionBanner Titel="Sponsor" />
         <div>
@@ -94,5 +94,10 @@
 </div>
 
 @code {
+    private string version = string.Empty;
 
+    protected override void OnInitialized()
+    {
+        version = "Version: " + System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ?? "unbekannt";
+    }
 }
