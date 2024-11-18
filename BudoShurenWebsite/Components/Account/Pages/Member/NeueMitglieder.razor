@@ -67,7 +67,7 @@
                         <Template>
                             @{
                                 UserWithRoles user = (context as UserWithRoles)!;
-                                <button @onclick="(args) => userAktivierenClick(args,user)" class="mx-2 font-yuji h-8 transform bg-error px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90">
+                                <button @onclick="(args) => userAblehnenClick(args,user)" class="mx-2 font-yuji h-8 transform bg-error px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90">
                                     <span class="text-center text-xs text-white">Ablehnen</span>
                                 </button>
                             }

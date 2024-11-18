@@ -12,6 +12,7 @@ namespace BudoShurenWebsite.Models
         public string Ort { get; set; } = string.Empty;
         public string Link { get; set; } = string.Empty;
         public string Linktext { get; set; } = string.Empty;
+        public string Quellenangabe { get; set; } = string.Empty;
         public DateTime? Datum { get; set; }
         public int Sortierung { get; set; }
         public DateTime? Created { get; set; }

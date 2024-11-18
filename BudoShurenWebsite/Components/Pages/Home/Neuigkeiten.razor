@@ -54,6 +54,7 @@
                                          src="@GetImageUrl(neuigkeit?.DbImageId)"
                                          loading="lazy"
                                          alt="@neuigkeit?.Titel"
+                                         title="@neuigkeit?.Quellenangabe"
                                          @onload="neuigkeit.OnImageLoaded"
                                          @onerror="neuigkeit.OnImageError" />
 
