@@ -25,7 +25,7 @@
         }
         else
         {
-            <SfCarousel ShowIndicators="true" AutoPlay="false">
+            <SfCarousel ShowIndicators="true" AutoPlay="true">
                 <ChildContent>
                     @foreach (var neuigkeit in NeuigkeitenData)
                     {
@@ -186,7 +186,7 @@
             IsLoading = true;
             StateHasChanged();
 
-            var data = await context.Neuigkeiten.ToListAsync();
+            var data = await context.Neuigkeiten.OrderBy(x => x.Sortierung).ToListAsync();
             foreach(var item in data)
             {
                 item.StateHasChanged = () => StateHasChanged();
