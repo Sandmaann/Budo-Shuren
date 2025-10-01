@@ -10,6 +10,11 @@ namespace BudoShurenWebsite.Models
         public string? Abteilungsleiter { get; set; }
         public string? Email { get; set; }
 
+
+        public string? Kontaktperson { get; set; }
+        public string? Telefon { get; set; }
+        public int SortOrder { get; set; }
+
         public static string Bujinkan => "Bujinkan";
         public static string Aikido => "Aikido";
         public static string Genbukan => "Genbukan";

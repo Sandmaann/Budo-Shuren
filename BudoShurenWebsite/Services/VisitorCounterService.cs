@@ -27,30 +27,38 @@ namespace BudoShurenWebsite.Services
     };
 
         private readonly Regex _botRegex = new Regex(@"bot|crawler|slurp|spider|mediapartners|baiduspider|80legs|ia_archiver|voyager|curl|wget", RegexOptions.IgnoreCase);
-        //private readonly Regex _botRegex = new Regex(@"bot|crawl|slurp|spider|mediapartners", RegexOptions.IgnoreCase);
-
-
         public int VisitorCount => _visitorCount;
 
         public async Task AddVisitorAsync(string? visitorId, string pageName)
         {
-            if (CheckForBot())
+            try
             {
-                _logger.LogDebug("Bot detected, not counting visit.");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(visitorId))
-            {
-                visitorId = Guid.NewGuid().ToString();
-                // Set the cookie in the response
-                var context = _httpContextAccessor.HttpContext;
-                context?.Response.Cookies.Append(VisitorCookieName, visitorId, new CookieOptions
+                if (CheckForBot())
                 {
-                    Expires = DateTime.UtcNow.AddYears(1),
-                    HttpOnly = true,
-                    Secure = true
-                });
+                    _logger.LogDebug("Bot detected, not counting visit.");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(visitorId))
+                {
+                    visitorId = Guid.NewGuid().ToString();
+                    // Set the cookie in the response
+                    var context = _httpContextAccessor.HttpContext;
+                    context?.Response.Cookies.Append(VisitorCookieName, visitorId, new CookieOptions
+                    {
+                        Expires = DateTime.UtcNow.AddYears(1),
+                        HttpOnly = true,
+                        Secure = true
+                    });
+                }
+            }
+            catch(InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Failed to add visit to database 1");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add visit to database 2");
             }
 
             try
@@ -69,7 +77,7 @@ namespace BudoShurenWebsite.Services
                 if (!string.IsNullOrEmpty(pageName) && pageName.StartsWith("Login?ReturnUrl"))
                 {
                     pageName = "Login";
-                }   
+                }
                 if (!string.IsNullOrEmpty(pageName) && pageName.StartsWith("Auth?ReturnUrl"))
                 {
                     pageName = "Login";
@@ -78,8 +86,8 @@ namespace BudoShurenWebsite.Services
                 if (!string.IsNullOrEmpty(pageName) && pageName.StartsWith("ResetPassword?"))
                 {
                     pageName = "ResetPassword";
-                }     
-                
+                }
+
                 if (!string.IsNullOrEmpty(pageName) && pageName.Contains("?"))
                 {
                     pageName = pageName.Substring(0, pageName.IndexOf("?"));

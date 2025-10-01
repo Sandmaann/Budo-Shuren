@@ -3,16 +3,10 @@
 @using Syncfusion.Blazor.Navigations
 @using Syncfusion.Blazor.Buttons
 
-@* @inject ApplicationDbContext DbContext *@
 @inject IHostEnvironment Environment
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
-
-
-
 <div class="-mx-10 md:-mx-20">
-
-
     @if (IsLoading)
     {
         <Spinner Text="Einen Moment, wir suche die neuesten Informationen zusammen." />
@@ -25,7 +19,7 @@
         }
         else
         {
-            <SfCarousel ShowIndicators="true" AutoPlay="false">
+            <SfCarousel ShowIndicators="true" AutoPlay="true">
                 <ChildContent>
                     @foreach (var neuigkeit in NeuigkeitenData)
                     {
@@ -160,8 +154,6 @@
     private string ErrorMessage { get; set; } = string.Empty;
     private IEnumerable<Neuigkeit> NeuigkeitenData { get; set; } = new List<Neuigkeit>();
 
-
-
     private string GetImageUrl(int? dbImageId)
     {
         return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}" : "/images/missingimage.jpg";
@@ -186,7 +178,7 @@
             IsLoading = true;
             StateHasChanged();
 
-            var data = await context.Neuigkeiten.ToListAsync();
+            var data = await context.Neuigkeiten.OrderBy(x => x.Sortierung).ToListAsync();
             foreach(var item in data)
             {
                 item.StateHasChanged = () => StateHasChanged();
