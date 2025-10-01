@@ -3,16 +3,10 @@
 @using Syncfusion.Blazor.Navigations
 @using Syncfusion.Blazor.Buttons
 
-@* @inject ApplicationDbContext DbContext *@
 @inject IHostEnvironment Environment
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
-
-
-
 <div class="-mx-10 md:-mx-20">
-
-
     @if (IsLoading)
     {
         <Spinner Text="Einen Moment, wir suche die neuesten Informationen zusammen." />
@@ -159,8 +153,6 @@
     private bool IsLoading { get; set; } = false;
     private string ErrorMessage { get; set; } = string.Empty;
     private IEnumerable<Neuigkeit> NeuigkeitenData { get; set; } = new List<Neuigkeit>();
-
-
 
     private string GetImageUrl(int? dbImageId)
     {

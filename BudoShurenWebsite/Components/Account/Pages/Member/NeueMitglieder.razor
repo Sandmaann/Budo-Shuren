@@ -109,7 +109,7 @@
 
 @code {
     private UserWithRoles? currentUser = default!;
-    SfButton EditBtnResolved;
+    // SfButton EditBtnResolved;
 
     private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
     private IEnumerable<string> AbteilungenText => Abteilungen?.Select(x => x.Name ?? string.Empty) ?? Array.Empty<string>();

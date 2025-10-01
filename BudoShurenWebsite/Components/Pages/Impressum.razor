@@ -1,4 +1,9 @@
 ﻿@page "/Impressum"
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject ILogger<Impressum> Logger
+
 <PageTitle>Impressum - Budo Shuren Dojo Augsburg</PageTitle>
 <HeadContent>
     <meta name="description" content="Offizielles Impressum des Budo Shuren Dojo e.V.. Hier findest du alle rechtlichen Informationen und Kontaktdaten.">
@@ -13,12 +18,14 @@
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
         <SectionBanner Titel="Verein" />
+
+
         <div>
             <Standardtext IsBold="true" Text="Budo Shuren Dojo e.V. " />
-            <Standardtext Text="Austraße 23 1/5" />
-            <Standardtext Text="86153 Augsburg" />
+            <Standardtext Text="Ulmer Str. 178" />
+            <Standardtext Text="86156 Augsburg" />
             <br />
-            <Standardtext Text="Tel.: +49 174 2010622" />
+            <Standardtext Text="Tel.: +49 172 9937005" />
             <Standardtext Text="E-Mail: info@budo-shuren-dojo.de" />
             <br />
             <Standardtext Text="1. Vorstand: Björn Rosenstiel﻿﻿" />
@@ -29,7 +36,38 @@
         </div>
         <SectionBanner Titel="Kontaktdaten der Abteilungen" />
         <div>
-            <Standardtext IsBold="true" Text="Aikido" />
+            @if (IsLoading)
+            {
+                <Spinner Text="Einen Moment, wir laden die Daten." />
+            }
+            else
+            {
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
+
+                    <Standardtext IsBold="true" Text="@FallbackAbteilung.Name" />
+                    <Standardtext Text="@FallbackAbteilung.Kontaktperson" />
+                    <Standardtext Text="@("Tel: " + FallbackAbteilung.Telefon)" />
+                    <Standardtext Text="@("E-Mail: " + FallbackAbteilung.Email)" />
+                }
+                else
+                {
+                    @foreach (var abteilung in Abteilungen)
+                    {
+                        <Standardtext IsBold="true" Text="@abteilung.Name" />
+                        <Standardtext Text="@abteilung.Kontaktperson" />
+                        <Standardtext Text="@("Tel: " + abteilung.Telefon)" />
+                        <Standardtext Text="@("E-Mail: " + abteilung.Email)" />
+                        if (abteilung != Abteilungen.Last())
+                        {
+                            <br />
+                        }
+                    }
+                }
+            }
+
+            @*             <Standardtext IsBold="true" Text="Aikido" />
             <Standardtext Text="Björn Rosenstiel﻿﻿, Dr. Carsten Oetzel, Uwe Sattler, Karin Oetzel (Ansprechpartnerin Kinder/Jugend)" />
             <Standardtext Text="Tel.: +49 174 2010622" />
             <Standardtext Text="E-Mail: Info@iwama-aikido-augsburg.de" />
@@ -38,7 +76,7 @@
             <Standardtext IsBold="true" Text="Genbukan" />
             <Standardtext Text="Henry Schubert, Diana Schubert" />
             <Standardtext Text="Tel.: +49 8236 9 574 574 oder +49 178 460 82 58" />
-            <Standardtext Text="E-Mail: henryschubert@bukei.de" />
+            <Standardtext Text="E-Mail: henryschubert@web.de" />
 
             <br />
             <Standardtext IsBold="true" Text="Bujinkan" />
@@ -50,7 +88,7 @@
             <Standardtext IsBold="true" Text="Yoga" />
             <Standardtext Text="Liz Trapichler" />
             <Standardtext Text="Tel.: +49 172 7001036" />
-            <Standardtext Text="E-Mail: liz@yogatherapie-augsburg.de" />
+            <Standardtext Text="E-Mail: liz@yogatherapie-augsburg.de" /> *@
 
         </div>
         <SectionBanner Titel="Datenschutz" />
@@ -95,9 +133,61 @@
 
 @code {
     private string version = string.Empty;
+    private bool IsLoading { get; set; } = false;
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private List<Abteilung> Abteilungen { get; set; } = new();
+    private Abteilung FallbackAbteilung => new Abteilung
+    {
+        ID = Abteilung.Aikido,
+        Name = Abteilung.Aikido,
+        Abteilungsleiter = "",
+        Email = "",
+        Kontaktperson = "",
+        Telefon = "",
+        SortOrder = 0,
+    };
 
     protected override void OnInitialized()
     {
         version = "Version: " + System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ?? "unbekannt";
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender)
+        {
+            _ = LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (IsLoading)
+            return;
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            Abteilungen = new();
+            StateHasChanged();
+
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var data = await context.Abteilungen.OrderBy(x => x.SortOrder).ThenBy(x => x.Name).AsNoTracking().ToListAsync();
+            if (data != null)
+                this.Abteilungen = data;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            IsLoading = false;
+            Logger.LogError(ex, "Fehler beim Laden der Daten für das Impressum.");
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
     }
 }

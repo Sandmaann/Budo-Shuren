@@ -18,7 +18,6 @@ namespace BudoShurenWebsite.Data
             builder.Entity<GalerieEintrag>().ToTable("Galerie");
             builder.Entity<GalerieEintrag>().HasIndex(u => u.ID).IsUnique();
 
-
             // Set the primary key for the Neuigkeit entity
             builder.Entity<DbImage>().HasKey(u => u.Id);
             // Set the table name and unique index for the GalerieEintrag entity
@@ -40,11 +39,6 @@ namespace BudoShurenWebsite.Data
                 .HasOne(n => n.DbImage)
                 .WithOne(d => d.GalerieEintrag)
                 .HasForeignKey<GalerieEintrag>(n => n.DbImageId);
-
-            //builder.Entity<GalerieEintrag>()
-            //    .HasMany(g => g.Images)
-            //    .WithOne(i => i.GalerieEintrag)
-            //    .HasForeignKey(i => i.GalerieEintragId);
 
             // Set the primary key for the AppointmentData entity
             builder.Entity<AppointmentData>().HasKey(u => u.Id);

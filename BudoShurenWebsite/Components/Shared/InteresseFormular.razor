@@ -145,11 +145,8 @@
     [Parameter]
     public EventCallback<bool> OnSend { get; set; }
 
-    // public string? SelectedAbteilung = string.Empty;
-
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
-
 
     public string DropVal = string.Empty;
     private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
@@ -212,7 +209,7 @@
                         {
                             //E-Mail an Abteilungsleiter senden
                             string userText = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", user.Vorname).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
-                            await EmailSender.SendEmailAsync(abteilung?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", userText);
+                            await EmailSender.SendEmailAsync(user?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", userText);
                             oneMailSended = true;
                         }
                         catch (Exception ex)
@@ -234,7 +231,14 @@
                 }
 
                 //Counter
-                await VisitorCounterService.AddVisitorAsync(Input.Email, "InteresseEmail_" + abteilung?.Name ?? "unbekannt");
+                try
+                {
+                    await VisitorCounterService.AddVisitorAsync(Input.Email, "InteresseEmail_" + abteilung?.Name ?? "unbekannt");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Fehler beim Zählen eines Besuchers (Interesse Formular)");
+                }
 
                 await OnSend.InvokeAsync(true);
 
@@ -285,29 +289,3 @@
     }
 
 }
-
-@* <script>
-    runCaptcha = function (actionName) {
-        return new Promise((resolve, reject) => {
-            grecaptcha.ready(function () {
-                grecaptcha.execute('@($"{BudoShurenWebsite.Services.Recaptcha.GooglereCAPTCHAv3Settings.SiteKey}")', { action: 'submit' }).then(function (token) {
-                    resolve(token);
-                });
-            });
-        });
-    };
-</script> *@
-@* <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY"></script>
-<script>
-    window.runCaptcha = function () {
-        return new Promise((resolve, reject) => {
-            grecaptcha.ready(function () {
-                grecaptcha.execute('@($"{BudoShurenWebsite.Services.Recaptcha.GooglereCAPTCHAv3Settings.SiteKey}")', { action: 'submit' }).then(function (token) {
-                    resolve(token);
-                }).catch(function (error) {
-                    reject(error);
-                });
-            });
-        });
-    };
-</script> *@

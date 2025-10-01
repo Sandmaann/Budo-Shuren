@@ -6,13 +6,6 @@ using Microsoft.Extensions.Hosting.Internal;
 
 namespace BudoShurenWebsite.Controllers
 {
-    //[Authorize]
-    //[Authorize(Policy = "NotGuest")]
-    //[Authorize(Policy = "Aktiviert")]
-    //[Authorize(Roles = Roles.Admin)]
-
-    //https://localhost:7280/Custom/Api/StopApp
-
     [AllowAnonymous]
     [Route("Custom/[controller]")]
     [ApiController]
@@ -35,10 +28,17 @@ namespace BudoShurenWebsite.Controllers
         }
 
         [HttpGet("StopApp")]
-        public async Task <IActionResult> StopApp()
+        public async Task<IActionResult> StopApp()
         {
             logger.Log(LogLevel.Information, "Stoppe API (Admin)");
-            await visitorCounterService.AddVisitorAsync("API", "Stop");
+            try
+            {
+                await visitorCounterService.AddVisitorAsync("API", "Stop");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to add visit to database (Stopp)");
+            }
             applicationLifetime.StopApplication();
             return new EmptyResult();
         }

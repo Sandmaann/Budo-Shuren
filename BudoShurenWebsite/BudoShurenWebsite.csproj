@@ -26,7 +26,7 @@
     </PackageReference>
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.14" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.14" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
     <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="27.1.57" />
     <PackageReference Include="Syncfusion.Blazor.Grid" Version="27.1.57" />
     <PackageReference Include="Syncfusion.Blazor.Navigations" Version="27.1.57" />
