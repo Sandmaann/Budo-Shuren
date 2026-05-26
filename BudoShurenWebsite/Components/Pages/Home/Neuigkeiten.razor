@@ -39,7 +39,6 @@
                                     </div>
                                 </div>
                                 <div>
-                                    @* <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112" src="@neuigkeit.DisplayPath" alt="@neuigkeit.Titel" /> *@
                                     @if (neuigkeit.IsLoading)
                                     {
                                         <Spinner />
@@ -56,7 +55,7 @@
                                     {
                                         <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
                                              src="/images/missingimage.jpg"
-                                             alt="@neuigkeit?.Titel"/>
+                                             alt="@neuigkeit?.Titel" />
                                     }
 
 
@@ -179,7 +178,7 @@
             StateHasChanged();
 
             var data = await context.Neuigkeiten.OrderBy(x => x.Sortierung).ToListAsync();
-            foreach(var item in data)
+            foreach (var item in data)
             {
                 item.StateHasChanged = () => StateHasChanged();
             }
