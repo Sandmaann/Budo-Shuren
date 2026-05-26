@@ -57,6 +57,7 @@ namespace BudoShurenWebsite
 
                 builder.Services.AddControllers();
                 builder.Services.AddHttpClient();
+                builder.Services.AddMemoryCache();
 
                 //Authentifizierung
                 builder.Services.AddCascadingAuthenticationState();
@@ -73,12 +74,15 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<ImageService>();
                 //builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
                 builder.Services.AddScoped<VisitorCounterService>();
+                builder.Services.AddScoped<WissenService>();
+                builder.Services.AddScoped<SlugService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
                 builder.Services.AddScoped<NeueMitgliederAdaptor>();
                 builder.Services.AddScoped<NeuigkeitenAdaptor>();
                 builder.Services.AddScoped<AppointmentAdaptor>();
+                builder.Services.AddScoped<WissenBeitragAdaptor>();
 
                 builder.Services.AddAuthentication(options =>
                 {

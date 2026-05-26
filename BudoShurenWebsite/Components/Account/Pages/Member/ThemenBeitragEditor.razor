@@ -1,0 +1,471 @@
+@page "/Account/Member/Themen/Editor"
+@page "/Account/Member/Themen/Editor/{Id:int}"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Models.Enums
+@using BudoShurenWebsite.Services
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@inject WissenService WissenService
+@inject SlugService SlugService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        <SectionBanner Titel="@(Id.HasValue ? "Beitrag bearbeiten" : "Neuen Beitrag erstellen")" />
+
+        @if (!string.IsNullOrWhiteSpace(_statusMessage))
+        {
+            <StatusMessage ShowAsError="@_isError" Message="@_statusMessage" />
+        }
+
+        @if (_isLoading)
+        {
+            <Standardtext Text="Laden..." />
+        }
+        else
+        {
+            <div class="space-y-6">
+
+                <!-- Metadaten -->
+                <div class="rounded border border-gray-200 p-5">
+                    <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">Metadaten</h4>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="font-ptsans mb-1 block text-xs font-bold">Titel *</label>
+                            <input type="text"
+                                   value="@_beitrag.Titel"
+                                   @oninput="OnTitelChanged"
+                                   class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+                                   placeholder="Titel des Beitrags" />
+                        </div>
+
+                        <div>
+                            <label class="font-ptsans mb-1 block text-xs font-bold">
+                                URL-Slug *
+                                <span class="ml-1 font-normal text-gray-500">(wird als /themen/<em>slug</em> angezeigt)</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <input type="text"
+                                       @bind="_beitrag.Slug"
+                                       class="font-ptsans flex-1 rounded border border-gray-300 p-2 text-sm"
+                                       placeholder="url-freundlicher-slug" />
+                                <button type="button" @onclick="RegenerateSlug"
+                                        class="font-ptsans rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-100"
+                                        title="Slug aus Titel neu generieren">
+                                    ↺ Aus Titel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="font-ptsans mb-1 block text-xs font-bold">Kategorie *</label>
+                            <select @bind="_beitrag.KategorieId"
+                                    class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm">
+                                @foreach (var kat in _kategorien)
+                                {
+                                    <option value="@kat.Id">
+                                        @(kat.Abteilung != null ? $"{kat.Abteilung.Name} — {kat.Name}" : kat.Name)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="rounded border border-amber-200 bg-amber-50 p-4 space-y-4">
+                            <p class="font-ptsans text-xs font-bold text-amber-800">Seitenüberschrift (Headline)</p>
+                            <p class="font-ptsans text-xs text-amber-700">
+                                Diese Texte erscheinen groß über dem Beitrag. Bitte <strong>korrektes Kanji (漢字)</strong> verwenden —
+                                bei Unsicherheit einen Muttersprachler oder ein Wörterbuch zurate ziehen.
+                            </p>
+                            <div>
+                                <label class="font-ptsans mb-1 block text-xs font-bold">
+                                    Kanji-Hauptzeichen
+                                    <span class="ml-1 font-normal text-gray-600">(wird sehr groß angezeigt, z. B. 知識)</span>
+                                </label>
+                                <input type="text"
+                                       @bind="_beitrag.HeadlineTitel"
+                                       class="font-ptsans w-full rounded border border-amber-300 p-2 text-sm"
+                                       placeholder="知識" />
+                                <p class="font-ptsans mt-1 text-xs text-amber-700">
+                                    ⚠ Bitte nur korrektes Kanji (漢字) eintragen. Standard: 知識 (Wissen)
+                                </p>
+                            </div>
+                            <div>
+                                <label class="font-ptsans mb-1 block text-xs font-bold">
+                                    Anekdote / Zusatztext
+                                    <span class="ml-1 font-normal text-gray-600">(klein unten rechts, z. B. Stilbegriff, Zitat)</span>
+                                </label>
+                                <input type="text"
+                                       @bind="_beitrag.HeadlineAnekdote"
+                                       class="font-ptsans w-full rounded border border-amber-300 p-2 text-sm"
+                                       placeholder="z. B. 武道、居合道 ..." />
+                                <p class="font-ptsans mt-1 text-xs text-amber-700">
+                                    ⚠ Bitte nur korrektes Kanji/Kana verwenden. Leer lassen = Kategoriename wird angezeigt.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="font-ptsans mb-1 block text-xs font-bold">
+                                SEO-Titel
+                                <span class="ml-1 font-normal text-gray-500">(erscheint im Browser-Tab)</span>
+                            </label>
+                            <input type="text"
+                                   @bind="_beitrag.MetaTitel"
+                                   class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+                                   placeholder="Seitentitel für Suchmaschinen (empfohlen: 50–60 Zeichen)" />
+                            <p class="font-ptsans mt-1 text-xs text-gray-400">@(_beitrag.MetaTitel?.Length ?? 0)/60 Zeichen</p>
+                        </div>
+
+                        <div>
+                            <label class="font-ptsans mb-1 block text-xs font-bold">
+                                SEO-Beschreibung
+                                <span class="ml-1 font-normal text-gray-500">(erscheint in Suchergebnissen)</span>
+                            </label>
+                            <textarea @bind="_beitrag.MetaBeschreibung"
+                                      class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+                                      rows="3"
+                                      placeholder="Kurze Beschreibung des Beitrags (empfohlen: 150–160 Zeichen)"></textarea>
+                            <p class="font-ptsans mt-1 text-xs text-gray-400">@(_beitrag.MetaBeschreibung?.Length ?? 0)/160 Zeichen</p>
+                        </div>
+
+                        <div>
+                            <label class="font-ptsans mb-1 block text-xs font-bold">Sortierung</label>
+                            <input type="number"
+                                   @bind="_beitrag.SortOrder"
+                                   class="font-ptsans w-32 rounded border border-gray-300 p-2 text-sm" />
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox"
+                                   id="veroeffentlicht"
+                                   @bind="_beitrag.Veroeffentlicht" />
+                            <label for="veroeffentlicht" class="font-ptsans cursor-pointer text-sm">
+                                Beitrag veröffentlichen
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Block-Editor -->
+                <div>
+                    <div class="mb-3 flex items-center justify-between">
+                        <h4 class="font-ptsans text-sm font-bold tracking-wider">Inhaltsblöcke</h4>
+                        @if (_beitrag.Bloecke.Any())
+                        {
+                            <span class="font-ptsans text-xs text-gray-500">@_beitrag.Bloecke.Count Block(s)</span>
+                        }
+                    </div>
+
+                    @if (!_beitrag.Bloecke.Any())
+                    {
+                        <div class="rounded border border-dashed border-gray-300 p-8 text-center">
+                            <p class="font-ptsans text-sm text-gray-500">Noch keine Blöcke vorhanden. Füge unten einen Block hinzu.</p>
+                        </div>
+                    }
+
+                    @foreach (var (block, index) in _beitrag.Bloecke.OrderBy(b => b.Sortierung).Select((b, i) => (b, i)))
+                    {
+                        <div class="mb-4">
+                            <!-- Block-Header mit Typ-Label und Sortierungs-Buttons -->
+                            <div class="mb-1 flex items-center justify-between rounded-t border border-b-0 border-gray-300 bg-gray-50 px-3 py-2">
+                                <span class="font-ptsans text-xs font-bold text-gray-600">@GetBlockTypLabel(block.Typ)</span>
+                                <div class="flex gap-1">
+                                    <button type="button" @onclick="() => MoveBlockUp(block)"
+                                            disabled="@(index == 0)"
+                                            class="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-200 disabled:opacity-30"
+                                            title="Block nach oben">↑</button>
+                                    <button type="button" @onclick="() => MoveBlockDown(block)"
+                                            disabled="@(index == _beitrag.Bloecke.Count - 1)"
+                                            class="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-200 disabled:opacity-30"
+                                            title="Block nach unten">↓</button>
+                                    <button type="button" @onclick="() => RemoveBlock(block)"
+                                            class="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                                            title="Block entfernen">✕</button>
+                                </div>
+                            </div>
+                            <!-- Block-Editor-Komponente -->
+                            @switch (block.Typ)
+                            {
+                                case WissenBlockTyp.TextAbsatz:
+                                    <TextAbsatzEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.SectionBanner:
+                                    <SectionBannerEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.Subheadline:
+                                    <SubheadlineEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.BildMitText:
+                                    <BildTextEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.BildEinzel:
+                                    <BildEinzelEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.Aufzaehlung:
+                                    <AufzaehlungEditor Block="block" />
+                                    break;
+                            }
+                        </div>
+                    }
+
+                    <!-- Block hinzufügen -->
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="font-ptsans self-center text-xs text-gray-500">Block hinzufügen:</span>
+                        @foreach (var typ in Enum.GetValues<WissenBlockTyp>())
+                        {
+                            <button type="button" @onclick="() => AddBlock(typ)"
+                                    class="font-ptsans rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-50">
+                                + @GetBlockTypLabel(typ)
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Aktionsbuttons -->
+                <div class="flex flex-wrap gap-3 border-t border-gray-200 pt-6 pb-12">
+                    <button type="button" @onclick="Speichern"
+                            disabled="@_isSaving"
+                            class="font-ptsans rounded border border-black px-5 py-2 text-sm tracking-wider hover:bg-gray-100 disabled:opacity-50">
+                        @(_isSaving ? "Speichern..." : "💾 Speichern")
+                    </button>
+
+                    @if (Id.HasValue)
+                    {
+                        <button type="button" @onclick="VorschauOeffnen"
+                                class="font-ptsans rounded border border-blue-400 px-5 py-2 text-sm tracking-wider text-blue-700 hover:bg-blue-50">
+                            👁 Vorschau
+                        </button>
+                    }
+
+                    <a href="/Account/Member/Themen"
+                       class="font-ptsans rounded border border-gray-400 px-5 py-2 text-sm tracking-wider hover:bg-gray-50">
+                        Abbrechen
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private WissenBeitrag _beitrag = new();
+    private List<WissenKategorie> _kategorien = new();
+    private bool _isLoading = true;
+    private bool _isSaving = false;
+    private string _statusMessage = string.Empty;
+    private bool _isError = false;
+    private bool _slugManuallyEdited = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _kategorien = await WissenService.GetKategorienAsync();
+
+        if (Id.HasValue)
+        {
+            var existing = await WissenService.GetBeitragByIdAsync(Id.Value);
+            if (existing != null)
+            {
+                _beitrag = existing;
+                _slugManuallyEdited = true;
+            }
+            else
+            {
+                _statusMessage = "Beitrag nicht gefunden.";
+                _isError = true;
+            }
+        }
+        else
+        {
+            // Neue Beitrag-Defaults
+            _beitrag.KategorieId = _kategorien.FirstOrDefault()?.Id ?? 0;
+            _beitrag.Bloecke = new List<WissenBlock>();
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task OnTitelChanged(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+    {
+        _beitrag.Titel = e.Value?.ToString() ?? string.Empty;
+
+        // Auto-Slug nur wenn nicht manuell bearbeitet oder neuer Beitrag
+        if (!_slugManuallyEdited || !Id.HasValue)
+        {
+            _beitrag.Slug = SlugService.GenerateSlug(_beitrag.Titel);
+        }
+    }
+
+    private async Task RegenerateSlug()
+    {
+        _beitrag.Slug = await SlugService.GenerateUniqueSlugAsync(_beitrag.Titel, null!, Id);
+        _slugManuallyEdited = false;
+    }
+
+    private void AddBlock(WissenBlockTyp typ)
+    {
+        var maxSortierung = _beitrag.Bloecke.Any() ? _beitrag.Bloecke.Max(b => b.Sortierung) + 1 : 0;
+        _beitrag.Bloecke.Add(new WissenBlock
+        {
+            Typ = typ,
+            Sortierung = maxSortierung,
+            BildPosition = "links"
+        });
+    }
+
+    private void RemoveBlock(WissenBlock block)
+    {
+        _beitrag.Bloecke.Remove(block);
+        NormalizeSortierung();
+    }
+
+    private void MoveBlockUp(WissenBlock block)
+    {
+        var ordered = _beitrag.Bloecke.OrderBy(b => b.Sortierung).ToList();
+        var index = ordered.IndexOf(block);
+        if (index <= 0) return;
+
+        var prev = ordered[index - 1];
+        (block.Sortierung, prev.Sortierung) = (prev.Sortierung, block.Sortierung);
+    }
+
+    private void MoveBlockDown(WissenBlock block)
+    {
+        var ordered = _beitrag.Bloecke.OrderBy(b => b.Sortierung).ToList();
+        var index = ordered.IndexOf(block);
+        if (index >= ordered.Count - 1) return;
+
+        var next = ordered[index + 1];
+        (block.Sortierung, next.Sortierung) = (next.Sortierung, block.Sortierung);
+    }
+
+    private void NormalizeSortierung()
+    {
+        var ordered = _beitrag.Bloecke.OrderBy(b => b.Sortierung).ToList();
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            ordered[i].Sortierung = i;
+        }
+    }
+
+    private async Task Speichern()
+    {
+        if (string.IsNullOrWhiteSpace(_beitrag.Titel))
+        {
+            _statusMessage = "Bitte gib einen Titel ein.";
+            _isError = true;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_beitrag.Slug))
+        {
+            _beitrag.Slug = SlugService.GenerateSlug(_beitrag.Titel);
+        }
+
+        _isSaving = true;
+        _statusMessage = string.Empty;
+
+        try
+        {
+            NormalizeSortierung();
+
+            if (Id.HasValue)
+            {
+                // Vorhandene Blöcke aktualisieren — neue/gelöschte separat behandeln
+                var existing = await WissenService.GetBeitragByIdAsync(Id.Value);
+                if (existing != null)
+                {
+                    // Gelöschte Blöcke
+                    var toDelete = existing.Bloecke
+                        .Where(eb => !_beitrag.Bloecke.Any(b => b.Id == eb.Id && b.Id > 0))
+                        .ToList();
+                    foreach (var del in toDelete)
+                    {
+                        await WissenService.DeleteBlockAsync(del.Id);
+                    }
+
+                    // Neue und geänderte Blöcke
+                    foreach (var block in _beitrag.Bloecke)
+                    {
+                        if (block.Id == 0)
+                        {
+                            block.BeitragId = Id.Value;
+                            await WissenService.CreateBlockAsync(block);
+                        }
+                        else
+                        {
+                            await WissenService.UpdateBlockAsync(block);
+                        }
+                    }
+
+                    // Beitrag-Metadaten updaten
+                    existing.Titel = _beitrag.Titel;
+                    existing.Slug = _beitrag.Slug;
+                    existing.KategorieId = _beitrag.KategorieId;
+                    existing.MetaTitel = _beitrag.MetaTitel;
+                    existing.MetaBeschreibung = _beitrag.MetaBeschreibung;
+                    existing.Veroeffentlicht = _beitrag.Veroeffentlicht;
+                    existing.SortOrder = _beitrag.SortOrder;
+                    await WissenService.UpdateBeitragAsync(existing);
+                }
+
+                _statusMessage = "Beitrag erfolgreich gespeichert.";
+                _isError = false;
+            }
+            else
+            {
+                // Neuer Beitrag
+                _beitrag.Erstellt = DateTime.Now;
+                var bloecke = _beitrag.Bloecke.ToList();
+                _beitrag.Bloecke = new List<WissenBlock>();
+
+                var created = await WissenService.CreateBeitragAsync(_beitrag);
+
+                foreach (var block in bloecke)
+                {
+                    block.BeitragId = created.Id;
+                    await WissenService.CreateBlockAsync(block);
+                }
+
+                NavigationManager.NavigateTo($"/Account/Member/Themen/Editor/{created.Id}");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            _statusMessage = $"Fehler beim Speichern: {ex.Message}";
+            _isError = true;
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task VorschauOeffnen()
+    {
+        if (Id.HasValue)
+        {
+            await JSRuntime.InvokeVoidAsync("open", $"/themen/preview/{Id.Value}", "_blank");
+        }
+    }
+
+    private static string GetBlockTypLabel(WissenBlockTyp typ) => typ switch
+    {
+        WissenBlockTyp.TextAbsatz => "Textabsatz",
+        WissenBlockTyp.SectionBanner => "Abschnittstitel",
+        WissenBlockTyp.Subheadline => "Zwischenüberschrift",
+        WissenBlockTyp.BildMitText => "Bild mit Text",
+        WissenBlockTyp.BildEinzel => "Einzelbild",
+        WissenBlockTyp.Aufzaehlung => "Aufzählung",
+        _ => typ.ToString()
+    };
+}

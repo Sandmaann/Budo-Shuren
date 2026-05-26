@@ -112,6 +112,18 @@
                             Kontakt
                         </NavLink>
                     </li>
+                    <li id="themen-menu" class="nav-item px-3 py-1">
+                        <NavLink href="/themen" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Themen
+                        </NavLink>
+                        <div id="themen-dropdown" class="fixed w-28 bg-white">
+                            <div class="mx-auto flex flex-col items-center justify-center">
+                                <NavLink href="/themen" class="nav-link underline-offset-4 my-2 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                                    Alle Themen
+                                </NavLink>
+                            </div>
+                        </div>
+                    </li>
                     <li class="nav-item px-3 py-1">
                         <NavLink href="/Galerie" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                             Galerie
@@ -138,6 +150,14 @@
     }
 
     #genbukan-menu:hover #dropdown {
+        display: block;
+    }
+
+    #themen-dropdown {
+        display: none;
+    }
+
+    #themen-menu:hover #themen-dropdown {
         display: block;
     }
 

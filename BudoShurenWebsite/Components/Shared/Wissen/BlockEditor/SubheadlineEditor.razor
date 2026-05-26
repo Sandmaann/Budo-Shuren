@@ -1,0 +1,26 @@
+@using BudoShurenWebsite.Models
+
+<div class="rounded border border-gray-300 p-4">
+    <h5 class="font-ptsans mb-3 text-sm font-bold">Zwischenüberschrift (Subheadline)</h5>
+
+    <input type="text"
+           @bind="Block.UntertitelText"
+           @bind:event="oninput"
+           class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+           placeholder="Zwischenüberschrift eingeben" />
+
+    @if (!string.IsNullOrWhiteSpace(Block.UntertitelText))
+    {
+        <div class="mt-3 rounded border border-blue-200 bg-blue-50 p-3">
+            <p class="font-ptsans mb-1 text-xs font-bold text-blue-800">Vorschau:</p>
+            <h4 class="font-yuji text-2xl font-normal tracking-widest md:text-3xl">
+                @Block.UntertitelText
+            </h4>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public WissenBlock Block { get; set; } = null!;
+}

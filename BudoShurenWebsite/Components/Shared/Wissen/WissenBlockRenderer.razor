@@ -1,0 +1,107 @@
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Models.Enums
+@using Markdig
+@using System.Text.Json
+
+@if (Block != null)
+{
+    switch (Block.Typ)
+    {
+        case WissenBlockTyp.TextAbsatz:
+            <div class="mt-4">
+                <p class="font-ptsans text-sm tracking-wider">
+                    @((MarkupString)RenderMarkdown(Block.TextInhalt ?? ""))
+                </p>
+            </div>
+            break;
+
+        case WissenBlockTyp.SectionBanner:
+            <div class="mb-10 mt-20">
+                <h3 class="font-ptsans text-xs font-normal tracking-widest text-black">@Block.UntertitelText</h3>
+                <hr class="border-t border-solid border-black" />
+            </div>
+            break;
+
+        case WissenBlockTyp.Subheadline:
+            <div class="mt-10 md:my-10">
+                <h4 class="font-yuji text-2xl font-normal tracking-widest md:text-3xl">
+                    @Block.UntertitelText
+                </h4>
+            </div>
+            break;
+
+        case WissenBlockTyp.BildMitText:
+            <div class="mt-10 md:grid md:grid-cols-2 md:grid-rows-[2rem_auto]">
+                @if (!string.IsNullOrEmpty(Block.UntertitelText))
+                {
+                    <h5 class="font-yuji mb-2 text-sm font-bold tracking-wider text-black md:col-start-2 md:row-start-1 md:ml-16">
+                        @Block.UntertitelText
+                    </h5>
+                }
+                @if (Block.BildId.HasValue)
+                {
+                    var bildPosition = Block.BildPosition?.ToLower() == "rechts" ? "md:col-start-2 md:row-span-2" : "md:col-start-1 md:row-span-2";
+                    var textPosition = Block.BildPosition?.ToLower() == "rechts" ? "md:col-start-1 md:row-start-2" : "md:col-start-2 md:row-start-2";
+
+                    <img class="@bildPosition" src="/api/images/@Block.BildId" alt="@Block.AltText" />
+
+                    <div class="@textPosition mx-10 mt-2 md:ml-24 md:mr-0">
+                        <p class="font-ptsans text-sm tracking-wider">
+                            @((MarkupString)RenderMarkdown(Block.TextInhalt ?? ""))
+                        </p>
+                    </div>
+                }
+            </div>
+            break;
+
+        case WissenBlockTyp.BildEinzel:
+            @if (Block.BildId.HasValue)
+            {
+                <div class="mt-10 flex justify-center">
+                    <img class="max-w-full md:max-w-72" src="/api/images/@Block.BildId" alt="@Block.AltText" />
+                </div>
+            }
+            break;
+
+        case WissenBlockTyp.Aufzaehlung:
+            @if (!string.IsNullOrEmpty(Block.ListenItemsJson))
+            {
+                var items = JsonSerializer.Deserialize<List<string>>(Block.ListenItemsJson);
+                if (items != null && items.Any())
+                {
+                    <div class="mx-10 mt-5 md:ml-32">
+                        <ul class="list-disc">
+                            @foreach (var item in items)
+                            {
+                                <li class="mt-2">
+                                    <p class="font-ptsans text-sm tracking-wider">
+                                        @((MarkupString)RenderMarkdown(item))
+                                    </p>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+            break;
+    }
+}
+
+@code {
+    [Parameter]
+    public WissenBlock? Block { get; set; }
+
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
+        .DisableHtml()
+        .UseEmphasisExtras()
+        .UseAutoLinks()
+        .Build();
+
+    private string RenderMarkdown(string? markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+            return string.Empty;
+
+        return Markdown.ToHtml(markdown, MarkdownPipeline);
+    }
+}

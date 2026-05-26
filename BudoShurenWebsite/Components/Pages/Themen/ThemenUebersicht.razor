@@ -1,0 +1,75 @@
+@page "/themen"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Services
+
+@inject WissenService WissenService
+
+<PageTitle>Themen & Wissen | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="description" content="Wissensartikel und Hintergrundinformationen zu Aikido, Genbukan, Bujinkan und allgemeinen Dojo-Themen des Budo Shuren Dojo.">
+</HeadContent>
+
+<div>
+    <Headline Titel="知識"
+              Untertitel="Themen"
+              Anekdote="" />
+</div>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        @if (_isLoading)
+        {
+            <div class="mt-20 text-center">
+                <Standardtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
+            </div>
+        }
+        else if (!_kategorien.Any())
+        {
+            <div class="mt-20">
+                <Standardtext Text="Es sind noch keine Themen vorhanden." />
+            </div>
+        }
+        else
+        {
+            @foreach (var kategorie in _kategorien)
+            {
+                var beitraege = _beitraege.Where(b => b.KategorieId == kategorie.Id).ToList();
+                if (!beitraege.Any()) continue;
+
+                <section>
+                    <SectionBanner Titel="@(kategorie.Abteilung != null ? $"{kategorie.Abteilung.Name} — {kategorie.Name}" : kategorie.Name)" />
+                    <div class="grid gap-6 md:grid-cols-2">
+                        @foreach (var beitrag in beitraege.OrderBy(b => b.SortOrder))
+                        {
+                            <a href="/themen/@beitrag.Slug"
+                               class="group block rounded border border-gray-200 p-5 transition hover:border-black hover:shadow-sm">
+                                <h3 class="font-yuji mb-2 text-base font-normal tracking-wider text-black group-hover:underline">
+                                    @beitrag.Titel
+                                </h3>
+                                @if (!string.IsNullOrWhiteSpace(beitrag.MetaBeschreibung))
+                                {
+                                    <p class="font-ptsans text-xs tracking-wider text-gray-600">@beitrag.MetaBeschreibung</p>
+                                }
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<WissenKategorie> _kategorien = new();
+    private List<WissenBeitrag> _beitraege = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _kategorien = await WissenService.GetKategorienAsync();
+        _beitraege = await WissenService.GetBeitraegeAsync(nurVeroeffentlichte: true);
+        _isLoading = false;
+    }
+}
