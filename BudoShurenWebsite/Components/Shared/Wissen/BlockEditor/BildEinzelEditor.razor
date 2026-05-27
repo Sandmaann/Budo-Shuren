@@ -1,6 +1,7 @@
 @using BudoShurenWebsite.Models
 @using Syncfusion.Blazor.Inputs
 @using System.Text.Json
+@inject BudoShurenWebsite.Services.ImageService ImageService
 
 <div class="rounded border border-gray-300 p-4">
     <h5 class="font-ptsans mb-3 text-sm font-bold">Einzelbild (zentriert)</h5>
@@ -18,13 +19,13 @@
         }
         else
         {
-            <SfUploader ID="BildEinzelUpload"
+            <SfUploader ID="UploadFiles"
                         AllowedExtensions=".png, .jpg, .jpeg, .webp"
                         MaxFileSize="5242880"
                         AutoUpload="true">
                 <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save"
                                        RemoveUrl="Account/Member/Filesave/Remove" />
-                <UploaderEvents Success="SuccessHandler" />
+                <UploaderEvents Success="SuccessHandler" OnFailure="FailureHandler" />
             </SfUploader>
         }
         @if (!string.IsNullOrEmpty(_uploadError))
@@ -58,7 +59,7 @@
 
     private string _uploadError = string.Empty;
 
-    private async Task SuccessHandler(SuccessEventArgs args)
+    private async void SuccessHandler(SuccessEventArgs args)
     {
         try
         {
@@ -72,17 +73,43 @@
                     _uploadError = string.Empty;
                     StateHasChanged();
                 }
+                else
+                {
+                    _uploadError = $"Server-Antwort ungültig: {args.Response.ResponseText}";
+                    StateHasChanged();
+                }
             }
         }
         catch (Exception ex)
         {
             _uploadError = $"Fehler beim Verarbeiten des Uploads: {ex.Message}";
+            StateHasChanged();
         }
     }
 
-    private void RemoveBild()
+    private void FailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
     {
-        Block.BildId = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(args.Response.ResponseText);
+            _uploadError = doc.RootElement.TryGetProperty("message", out var msg)
+                ? msg.GetString() ?? "Upload fehlgeschlagen."
+                : $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        catch
+        {
+            _uploadError = $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        StateHasChanged();
+    }
+
+    private async Task RemoveBild()
+    {
+        if (Block.BildId.HasValue)
+        {
+            await ImageService.RemoveImageAsync(Block.BildId.Value);
+            Block.BildId = null;
+        }
         _uploadError = string.Empty;
     }
 

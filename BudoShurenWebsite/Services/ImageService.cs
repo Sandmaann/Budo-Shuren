@@ -71,6 +71,13 @@ namespace BudoShurenWebsite.Services
             if (galerieEintrag != null)
                 return true;
 
+            //Prüfen ob es ein Bild in einem veröffentlichten Wissens-Beitrag ist
+            var wissenBlock = await _context.WissenBloecke
+                .Include(b => b.Beitrag)
+                .FirstOrDefaultAsync(b => b.BildId == id && b.Beitrag != null && b.Beitrag.Veroeffentlicht);
+            if (wissenBlock != null)
+                return true;
+
             return false;
         }
     }

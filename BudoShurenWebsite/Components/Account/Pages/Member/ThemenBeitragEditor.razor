@@ -79,7 +79,7 @@
                         <div class="rounded border border-amber-200 bg-amber-50 p-4 space-y-4">
                             <p class="font-ptsans text-xs font-bold text-amber-800">Seitenüberschrift (Headline)</p>
                             <p class="font-ptsans text-xs text-amber-700">
-                                Diese Texte erscheinen groß über dem Beitrag. Bitte <strong>korrektes Kanji (漢字)</strong> verwenden —
+                                Diese Texte erscheinen groß über dem Beitrag. Bitte <strong>korrekte Kanji (漢字)</strong> verwenden —
                                 bei Unsicherheit einen Muttersprachler oder ein Wörterbuch zurate ziehen.
                             </p>
                             <div>
@@ -92,7 +92,7 @@
                                        class="font-ptsans w-full rounded border border-amber-300 p-2 text-sm"
                                        placeholder="知識" />
                                 <p class="font-ptsans mt-1 text-xs text-amber-700">
-                                    ⚠ Bitte nur korrektes Kanji (漢字) eintragen. Standard: 知識 (Wissen)
+                                    ⚠ Bitte nur korrekte Kanji (漢字) eintragen. Standard: 知識 (Wissen)
                                 </p>
                             </div>
                             <div>
@@ -105,7 +105,7 @@
                                        class="font-ptsans w-full rounded border border-amber-300 p-2 text-sm"
                                        placeholder="z. B. 武道、居合道 ..." />
                                 <p class="font-ptsans mt-1 text-xs text-amber-700">
-                                    ⚠ Bitte nur korrektes Kanji/Kana verwenden. Leer lassen = Kategoriename wird angezeigt.
+                                    ⚠ Bitte nur korrekte Kanji/Kana verwenden. Leer lassen = Kategoriename wird angezeigt.
                                 </p>
                             </div>
                         </div>
@@ -210,20 +210,71 @@
                                 case WissenBlockTyp.Aufzaehlung:
                                     <AufzaehlungEditor Block="block" />
                                     break;
+                                case WissenBlockTyp.TextUndBildRechts:
+                                    <TextUndBildRechtsEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.UeberschriftMitEingeruecktemText:
+                                    <UeberschriftUndTextEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.UeberschriftMitZweiTextbloecken:
+                                    <UeberschriftZweiTexteEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.TextMitUeberschriftRechts:
+                                    <UeberschriftRechtsTextLinksEditor Block="block" />
+                                    break;
+                                case WissenBlockTyp.ZwischenüberschriftUndBildMitText:
+                                    <HeadlineUndBildMitTextEditor Block="block" />
+                                    break;
                             }
                         </div>
                     }
 
                     <!-- Block hinzufügen -->
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <span class="font-ptsans self-center text-xs text-gray-500">Block hinzufügen:</span>
-                        @foreach (var typ in Enum.GetValues<WissenBlockTyp>())
-                        {
-                            <button type="button" @onclick="() => AddBlock(typ)"
-                                    class="font-ptsans rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-50">
-                                + @GetBlockTypLabel(typ)
-                            </button>
-                        }
+                    <div class="mt-4 space-y-4">
+                        <!-- Vorlagen -->
+                        <div>
+                            <div class="mb-2 flex items-baseline gap-2">
+                                <span class="font-ptsans text-xs font-semibold text-black">Vorlage hinzufügen</span>
+                                <span class="font-ptsans text-xs text-gray-400">— bitte möglichst vollständig ausfüllen</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var typ in Enum.GetValues<WissenBlockTyp>().Where(t => (int)t >= 10))
+                                {
+                                    var desc = GetBlockTypDescription(typ);
+                                    <button type="button" @onclick="() => AddBlock(typ)"
+                                            title="@desc"
+                                            class="font-ptsans flex flex-col items-start rounded border border-gray-600 bg-white px-3 py-2 text-left text-xs hover:bg-gray-50">
+                                        <span class="font-semibold">+ @GetBlockTypLabel(typ)</span>
+                                        @if (!string.IsNullOrWhiteSpace(desc))
+                                        {
+                                            <span class="mt-0.5 font-normal text-gray-500">@desc</span>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Weitere Bausteine -->
+                        <div>
+                            <div class="mb-2">
+                                <span class="font-ptsans text-xs font-semibold text-gray-400">Weitere Bausteine</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var typ in Enum.GetValues<WissenBlockTyp>().Where(t => (int)t < 10))
+                                {
+                                    var desc = GetBlockTypDescription(typ);
+                                    <button type="button" @onclick="() => AddBlock(typ)"
+                                            title="@desc"
+                                            class="font-ptsans flex flex-col items-start rounded border border-gray-300 bg-gray-50 px-3 py-2 text-left text-xs text-gray-500 hover:bg-gray-100">
+                                        <span class="font-semibold">+ @GetBlockTypLabel(typ)</span>
+                                        @if (!string.IsNullOrWhiteSpace(desc))
+                                        {
+                                            <span class="mt-0.5 font-normal text-gray-400">@desc</span>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -466,6 +517,20 @@
         WissenBlockTyp.BildMitText => "Bild mit Text",
         WissenBlockTyp.BildEinzel => "Einzelbild",
         WissenBlockTyp.Aufzaehlung => "Aufzählung",
+        WissenBlockTyp.TextUndBildRechts => "Text & Bild rechts",
+        WissenBlockTyp.UeberschriftMitEingeruecktemText => "Überschrift & eingerückter Text",
+        WissenBlockTyp.UeberschriftMitZweiTextbloecken => "Überschrift & zwei Textblöcke",
+        WissenBlockTyp.TextMitUeberschriftRechts => "Text & Überschrift rechts",
+        WissenBlockTyp.ZwischenüberschriftUndBildMitText => "Zwischenüberschrift & Bild mit Text",
         _ => typ.ToString()
     };
+
+    private static string? GetBlockTypDescription(WissenBlockTyp typ)
+    {
+        var field = typ.GetType().GetField(typ.ToString());
+        if (field == null) return null;
+        var attr = field.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false)
+                        .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
+        return attr?.Description;
+    }
 }

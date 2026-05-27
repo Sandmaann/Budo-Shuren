@@ -1,0 +1,206 @@
+@using BudoShurenWebsite.Models
+@using Markdig
+@using Syncfusion.Blazor.Inputs
+@using System.Text.Json
+@inject BudoShurenWebsite.Services.ImageService ImageService
+
+<div class="rounded border border-gray-300 p-4">
+    <h5 class="font-ptsans mb-1 text-sm font-bold">Text &amp; Bild rechts</h5>
+    <p class="font-ptsans mb-3 text-xs text-gray-500">
+        Text fließt links, Bild schwebt rechts daneben (max. 288 px). Mehrere Textabsätze durch Leerzeile trennen.
+    </p>
+
+    <!-- SectionBanner -->
+    <div class="mb-4 rounded border border-gray-200 bg-gray-50 p-3">
+        <div class="mb-2 flex items-center gap-3">
+            <label class="font-ptsans text-xs font-bold">Abschnittstitel (SectionBanner)</label>
+            <label class="flex cursor-pointer items-center gap-1 text-xs text-gray-600">
+                <input type="checkbox" @bind="Block.BannerAusblenden" class="accent-gray-600" />
+                ausblenden
+            </label>
+        </div>
+        @if (!Block.BannerAusblenden)
+        {
+            <input type="text"
+                   @bind="Block.BannerTitel"
+                   class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+                   placeholder="z. B. Grundlagen des Bujinkan" />
+        }
+    </div>
+    <div class="mb-3">
+        <label class="font-ptsans mb-1 block text-xs font-bold">Bild (rechts, max. 288 px Breite)</label>
+        @if (Block.BildId.HasValue)
+        {
+            <div class="mb-2 flex items-center gap-3">
+                <img src="/Account/Member/Filesave/GetImage/@Block.BildId"
+                     class="h-20 w-auto rounded border" alt="Vorschau" />
+                <button type="button" @onclick="RemoveBild"
+                        class="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50">
+                    Bild entfernen
+                </button>
+            </div>
+        }
+        else
+        {
+            <SfUploader ID="UploadFiles"
+                        AllowedExtensions=".png, .jpg, .jpeg, .webp"
+                        MaxFileSize="5242880"
+                        AutoUpload="true">
+                <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save"
+                                       RemoveUrl="Account/Member/Filesave/Remove" />
+                <UploaderEvents Success="SuccessHandler" OnFailure="FailureHandler" />
+            </SfUploader>
+        }
+        @if (!string.IsNullOrEmpty(_uploadError))
+        {
+            <p class="mt-1 text-xs text-red-600">@_uploadError</p>
+        }
+    </div>
+
+    <!-- Alt-Text -->
+    <div class="mb-3">
+        <label class="font-ptsans mb-1 block text-xs font-bold">Alt-Text (Barrierefreiheit)</label>
+        <input type="text"
+               @bind="Block.AltText"
+               class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+               placeholder="Kurze Bildbeschreibung für Screenreader" />
+    </div>
+
+    <!-- Text -->
+    <div class="mb-3">
+        <label class="font-ptsans mb-1 block text-xs font-bold">
+            Text
+            <span class="ml-1 font-normal text-gray-500">
+                (Absätze durch Leerzeile trennen — jeder Absatz wird einzeln dargestellt)
+            </span>
+        </label>
+        <div class="mb-1 flex gap-2">
+            <button type="button" @onclick="InsertBold"
+                    class="rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100"><strong>Fett</strong></button>
+            <button type="button" @onclick="InsertItalic"
+                    class="rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100"><em>Kursiv</em></button>
+            <button type="button" @onclick="InsertLink"
+                    class="rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100">🔗 Link</button>
+        </div>
+        <textarea @bind="Block.TextInhalt"
+                  @bind:event="oninput"
+                  class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+                  rows="8"
+                  placeholder="Absatz 1&#10;&#10;Absatz 2&#10;&#10;Absatz 3"></textarea>
+    </div>
+
+    <!-- Vorschau -->
+    @if (!string.IsNullOrWhiteSpace(Block.TextInhalt) || Block.BildId.HasValue)
+    {
+        <div class="mt-3 rounded border border-blue-200 bg-blue-50 p-3">
+            <p class="font-ptsans mb-2 text-xs font-bold text-blue-800">Vorschau:</p>
+            @if (!Block.BannerAusblenden && !string.IsNullOrWhiteSpace(Block.BannerTitel))
+            {
+                <div class="mb-10 mt-4">
+                    <h3 class="font-ptsans text-xs font-normal tracking-widest text-black">@Block.BannerTitel</h3>
+                    <hr class="border-t border-solid border-black" />
+                </div>
+            }
+            <section class="flex flex-col justify-center md:flex-row">
+                <div>
+                    @if (Block.BildId.HasValue)
+                    {
+                        <div class="flex justify-center md:float-right md:flex-grow">
+                            <img class="mb-4 max-w-full md:max-w-72 md:ml-16"
+                                 src="/Account/Member/Filesave/GetImage/@Block.BildId"
+                                 alt="@Block.AltText" />
+                        </div>
+                    }
+                    @foreach (var absatz in GetAbsaetze())
+                    {
+                        <div class="mt-4 first:mt-0">
+                            <p class="font-ptsans text-sm tracking-wider">
+                                @((MarkupString)RenderMarkdown(absatz))
+                            </p>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public WissenBlock Block { get; set; } = null!;
+
+    private string _uploadError = string.Empty;
+
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .DisableHtml().UseEmphasisExtras().UseAutoLinks().Build();
+
+    private string RenderMarkdown(string? md)
+        => string.IsNullOrWhiteSpace(md) ? string.Empty : Markdown.ToHtml(md, Pipeline);
+
+    // Jede durch Leerzeile getrennte Gruppe = ein <Standardtext>-Absatz
+    private IEnumerable<string> GetAbsaetze()
+        => (Block.TextInhalt ?? string.Empty)
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries)
+            .Select(a => a.Trim())
+            .Where(a => a.Length > 0);
+
+    private async void SuccessHandler(SuccessEventArgs args)
+    {
+        try
+        {
+            if (args.Operation == "upload")
+            {
+                var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var resp = JsonSerializer.Deserialize<UploadResponse>(args.Response.ResponseText, opts);
+                if (resp?.Success == true && resp.Files.FirstOrDefault() is { } f)
+                {
+                    Block.BildId = f.Id;
+                    _uploadError = string.Empty;
+                }
+                else
+                {
+                    _uploadError = $"Server-Antwort ungültig: {args.Response.ResponseText}";
+                }
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            _uploadError = $"Fehler: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void FailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(args.Response.ResponseText);
+            _uploadError = doc.RootElement.TryGetProperty("message", out var msg)
+                ? msg.GetString() ?? "Upload fehlgeschlagen."
+                : $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        catch
+        {
+            _uploadError = $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        StateHasChanged();
+    }
+
+    private async Task RemoveBild()
+    {
+        if (Block.BildId.HasValue)
+        {
+            await ImageService.RemoveImageAsync(Block.BildId.Value);
+            Block.BildId = null;
+        }
+        _uploadError = string.Empty;
+    }
+
+    private void InsertBold()   => Block.TextInhalt += "**fetter Text**";
+    private void InsertItalic() => Block.TextInhalt += "*kursiver Text*";
+    private void InsertLink()   => Block.TextInhalt += "[Linktext](https://beispiel.de)";
+
+    private record UploadResponse(bool Success, List<UploadedFile> Files);
+    private record UploadedFile(string FileName, int Id);
+}

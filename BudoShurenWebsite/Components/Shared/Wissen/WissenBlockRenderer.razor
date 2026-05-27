@@ -43,7 +43,7 @@
                     var bildPosition = Block.BildPosition?.ToLower() == "rechts" ? "md:col-start-2 md:row-span-2" : "md:col-start-1 md:row-span-2";
                     var textPosition = Block.BildPosition?.ToLower() == "rechts" ? "md:col-start-1 md:row-start-2" : "md:col-start-2 md:row-start-2";
 
-                    <img class="@bildPosition" src="/api/images/@Block.BildId" alt="@Block.AltText" />
+                    <img class="@bildPosition" src="/Account/Member/Filesave/GetImage/@Block.BildId" alt="@Block.AltText" />
 
                     <div class="@textPosition mx-10 mt-2 md:ml-24 md:mr-0">
                         <p class="font-ptsans text-sm tracking-wider">
@@ -58,7 +58,7 @@
             @if (Block.BildId.HasValue)
             {
                 <div class="mt-10 flex justify-center">
-                    <img class="max-w-full md:max-w-72" src="/api/images/@Block.BildId" alt="@Block.AltText" />
+                    <img class="max-w-full md:max-w-72" src="/Account/Member/Filesave/GetImage/@Block.BildId" alt="@Block.AltText" />
                 </div>
             }
             break;
@@ -84,9 +84,188 @@
                 }
             }
             break;
+
+        case WissenBlockTyp.TextUndBildRechts:
+            <section>
+                @if (!Block.BannerAusblenden)
+                {
+                    <div class="mb-10 mt-20">
+                        <h3 class="font-ptsans text-xs font-normal tracking-widest text-black">@Block.BannerTitel</h3>
+                        <hr class="border-t border-solid border-black" />
+                    </div>
+                }
+                <div class="flex flex-col justify-center md:flex-row">
+                    <div>
+                        @if (Block.BildId.HasValue)
+                        {
+                            <div class="flex justify-center md:float-right md:flex-grow">
+                                <img class="mb-4 max-w-full md:max-w-72 md:ml-16"
+                                     src="/Account/Member/Filesave/GetImage/@Block.BildId"
+                                     alt="@Block.AltText" />
+                            </div>
+                        }
+                        @foreach (var absatz in GetAbsaetze(Block.TextInhalt))
+                        {
+                            <div class="mt-4 first:mt-0">
+                                <p class="font-ptsans text-sm tracking-wider">
+                                    @((MarkupString)RenderMarkdown(absatz))
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+            break;
+
+        case WissenBlockTyp.UeberschriftMitEingeruecktemText:
+            <section>
+                @if (!Block.BannerAusblenden)
+                {
+                    <div class="mb-10 mt-20">
+                        <h3 class="font-ptsans text-xs font-normal tracking-widest text-black">@Block.BannerTitel</h3>
+                        <hr class="border-t border-solid border-black" />
+                    </div>
+                }
+                <div>
+                    @if (!string.IsNullOrWhiteSpace(Block.UntertitelText))
+                    {
+                        <div class="mt-10 md:my-10">
+                            <h4 class="font-yuji text-2xl font-normal tracking-widest md:text-3xl">
+                                @Block.UntertitelText
+                            </h4>
+                        </div>
+                    }
+                    <div class="font-ptsans mt-10 tracking-widest text-black md:ml-72">
+                        @foreach (var absatz in GetAbsaetze(Block.TextInhalt))
+                        {
+                            <p class="font-ptsans text-sm tracking-wider text-black">
+                                @((MarkupString)RenderMarkdown(absatz))
+                            </p>
+                        }
+                    </div>
+                </div>
+            </section>
+            break;
+
+        case WissenBlockTyp.UeberschriftMitZweiTextbloecken:
+            <section>
+                @if (!Block.BannerAusblenden)
+                {
+                    <div class="mb-10 mt-20">
+                        <h3 class="font-ptsans text-xs font-normal tracking-widest text-black">@Block.BannerTitel</h3>
+                        <hr class="border-t border-solid border-black" />
+                    </div>
+                }
+                <div class="mt-12 justify-between md:flex md:flex-row">
+                    @if (!string.IsNullOrWhiteSpace(Block.UntertitelText))
+                    {
+                        <div class="md:w-52">
+                            <h4 class="font-yuji text-2xl font-normal tracking-widest md:text-3xl">
+                                @Block.UntertitelText
+                            </h4>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Block.TextInhalt))
+                    {
+                        <div class="mt-5 flex-1 md:ml-18 md:mt-0">
+                            @foreach (var absatz in GetAbsaetze(Block.TextInhalt))
+                            {
+                                <p class="font-ptsans text-sm tracking-wider text-black">
+                                    @((MarkupString)RenderMarkdown(absatz))
+                                </p>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="mt-10">
+                    @if (Block.BildId.HasValue)
+                    {
+                        <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
+                            <img class="mb-4 max-w-64 md:ml-16"
+                                 src="/Account/Member/Filesave/GetImage/@Block.BildId"
+                                 alt="@Block.AltText" />
+                        </div>
+                    }
+                    @foreach (var absatz in GetAbsaetze(Block.TextInhalt2))
+                    {
+                        <div class="mt-4 md:mr-64">
+                            <p class="font-ptsans text-sm tracking-wider text-black">
+                                @((MarkupString)RenderMarkdown(absatz))
+                            </p>
+                        </div>
+                    }
+                </div>
+            </section>
+            break;
+            case WissenBlockTyp.TextMitUeberschriftRechts:
+                <section>
+                    @if (!Block.BannerAusblenden)
+                    {
+                        <div class="mb-10 mt-20">
+                            <h3 class="font-ptsans text-xs font-normal tracking-widest text-black">@Block.BannerTitel</h3>
+                            <hr class="border-t border-solid border-black" />
+                        </div>
+                    }
+                    <div class="mt-20 md:flex md:flex-row">
+                        @if (!string.IsNullOrWhiteSpace(Block.UntertitelText))
+                        {
+                            <div class="min-w-48 max-w-48 md:ml-18 md:order-2">
+                                <h4 class="font-yuji text-2xl font-normal tracking-widest md:text-3xl">
+                                    @Block.UntertitelText
+                                </h4>
+                            </div>
+                        }
+                        <div class="mt-5 md:order-1 md:mt-0">
+                            @foreach (var absatz in GetAbsaetze(Block.TextInhalt))
+                            {
+                                <p class="font-ptsans mb-4 text-sm tracking-wider text-black first:mt-0">
+                                    @((MarkupString)RenderMarkdown(absatz))
+                                </p>
+                            }
+                        </div>
+                    </div>
+                </section>
+                break;
+
+        case WissenBlockTyp.ZwischenüberschriftUndBildMitText:
+            <section>
+                @if (!Block.BannerAusblenden)
+                {
+                    <div class="mb-10 mt-20">
+                        <h3 class="font-ptsans text-xs font-normal tracking-widest text-black">@Block.BannerTitel</h3>
+                        <hr class="border-t border-solid border-black" />
+                    </div>
+                }
+                <div class="mt-10">
+                    @if (!string.IsNullOrWhiteSpace(Block.UntertitelText))
+                    {
+                        <div class="font-bold">
+                            <p class="font-ptsans text-sm tracking-wider">@Block.UntertitelText</p>
+                        </div>
+                    }
+                    <div class="mt-5 md:mt-0">
+                        @if (Block.BildId.HasValue)
+                        {
+                            <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
+                                <img class="mb-4 max-w-64 md:ml-16"
+                                     src="/Account/Member/Filesave/GetImage/@Block.BildId"
+                                     alt="@Block.AltText" />
+                            </div>
+                        }
+                        @foreach (var absatz in GetAbsaetze(Block.TextInhalt))
+                        {
+                            <div class="mt-4">
+                                <p class="font-ptsans text-sm tracking-wider">
+                                    @((MarkupString)RenderMarkdown(absatz))
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+            break;
     }
 }
-
 @code {
     [Parameter]
     public WissenBlock? Block { get; set; }
@@ -104,4 +283,10 @@
 
         return Markdown.ToHtml(markdown, MarkdownPipeline);
     }
+
+    private static IEnumerable<string> GetAbsaetze(string? text)
+        => (text ?? string.Empty)
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries)
+            .Select(a => a.Trim())
+            .Where(a => a.Length > 0);
 }
