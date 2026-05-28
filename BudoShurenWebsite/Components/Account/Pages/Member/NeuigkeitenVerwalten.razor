@@ -99,6 +99,20 @@
                                                   TValue="int"
                                                   @bind-Value="@neuigkeit.Sortierung"></SfNumericTextBox>
                             </div>
+                            <div class="my-2">
+                                <label class="font-ptsans tracking-[0.375rem] flex items-center text-sm font-normal leading-tight text-black">
+                                    <InputCheckbox @bind-Value="neuigkeit.IstStandardneuigkeit" class="h-5 w-5" />
+                                    <span class="ml-2">Standardneuigkeit (kein Ablaufdatum)</span>
+                                </label>
+                            </div>
+                            @if (!neuigkeit.IstStandardneuigkeit)
+                            {
+                                <div>
+                                    <SfDateTimePicker Placeholder="Ablaufdatum (optional)"
+                                                      FloatLabelType="FloatLabelType.Always"
+                                                      @bind-Value="@neuigkeit.Ablaufdatum"></SfDateTimePicker>
+                                </div>
+                            }
                             @if (IsAddNew)
                             {
                                 <div class="mt-10">
@@ -129,6 +143,8 @@
                     <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules{ Required= true })"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Ort) HeaderText="Ort" AllowSearching="true" Width="100"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Datum) HeaderText="Datum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="true" Width="85"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Ablaufdatum) HeaderText="Ablaufdatum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="false" Width="95"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.IstStandardneuigkeit) HeaderText="Standard" DisplayAsCheckBox="true" AllowSearching="false" Width="70"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Sortierung) HeaderText="Sort" AllowSearching="true" Width="55"></GridColumn>
                 </GridColumns>
             </SfGrid>

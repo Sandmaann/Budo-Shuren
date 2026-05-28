@@ -149,6 +149,8 @@
 
 
 @code {
+    private const int Schwellenwert = 5;
+
     private bool IsLoading { get; set; } = false;
     private string ErrorMessage { get; set; } = string.Empty;
     private IEnumerable<Neuigkeit> NeuigkeitenData { get; set; } = new List<Neuigkeit>();
@@ -177,13 +179,27 @@
             IsLoading = true;
             StateHasChanged();
 
-            var data = await context.Neuigkeiten.OrderBy(x => x.Sortierung).ToListAsync();
+            var now = DateTime.Now;
+            var all = await context.Neuigkeiten.OrderBy(x => x.Sortierung).ToListAsync();
+
+            // Echte Neuigkeiten: nicht Standard, nicht abgelaufen
+            var echte = all
+                .Where(x => !x.IstStandardneuigkeit && (x.Ablaufdatum == null || x.Ablaufdatum > now))
+                .ToList();
+
+            // Standardneuigkeiten: nur so viele, wie der Schwellenwert es erlaubt
+            var fehlende = Math.Max(0, Schwellenwert - echte.Count);
+            var standards = all
+                .Where(x => x.IstStandardneuigkeit)
+                .Take(fehlende)
+                .ToList();
+
+            var data = echte.Concat(standards).OrderBy(x => x.Sortierung).ToList();
+
             foreach (var item in data)
             {
                 item.StateHasChanged = () => StateHasChanged();
             }
-            // foreach (var item in data)
-            //     item.EnvironmentPath = Environment.ContentRootPath;
             NeuigkeitenData = data;
         }
         catch (Exception ex)
