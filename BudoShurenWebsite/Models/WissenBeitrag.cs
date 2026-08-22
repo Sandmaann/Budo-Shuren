@@ -28,6 +28,7 @@ namespace BudoShurenWebsite.Models
         public string MetaBeschreibung { get; set; } = string.Empty;
 
         public bool Veroeffentlicht { get; set; }
+        public bool AbteilungLink { get; set; }
 
         public int SortOrder { get; set; }
 

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting.Internal;
 
 namespace BudoShurenWebsite.Controllers
 {
-    [AllowAnonymous]
+    [Authorize(Policy = "AdminOnly")]
     [Route("Custom/[controller]")]
     [ApiController]
     public class ApiController : Controller

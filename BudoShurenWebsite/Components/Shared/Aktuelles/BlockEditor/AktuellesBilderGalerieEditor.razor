@@ -1,0 +1,219 @@
+@using BudoShurenWebsite.Models
+@using Syncfusion.Blazor.Inputs
+@using System.Text.Json
+@inject BudoShurenWebsite.Services.ImageService ImageService
+@inject ILogger<AktuellesBilderGalerieEditor> Logger
+
+<div class="rounded border border-t-0 border-gray-300 p-4">
+    <h5 class="font-ptsans mb-3 text-sm font-bold">Bilder-Galerie</h5>
+
+    <div class="mb-3">
+        <label class="font-ptsans mb-1 block text-xs font-bold">Bilder hochladen</label>
+        @*         <SfUploader ID="UploadAktuellesEditorFiles"
+                    AllowedExtensions=".png, .jpg, .jpeg, .webp"
+                    MaxFileSize="5242880"
+                    AutoUpload="true">
+            <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save"
+                                   RemoveUrl="Account/Member/Filesave/Remove" />
+            <UploaderEvents Success="SuccessHandler" OnFailure="FailureHandler" />
+        </SfUploader> *@
+
+        <SfUploader @ref="uploadObj"
+                    ID="UploadFiles"
+                    AllowedExtensions=".png, .jpg, .jpeg, .webp"
+                    MaxFileSize=5242880
+                    AutoUpload="true">
+            <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save"
+                                   RemoveUrl="Account/Member/Filesave/Remove">
+            </UploaderAsyncSettings>
+            <UploaderEvents FileSelected="SelectHandler"
+                            Success="SuccessHandler"
+                            OnFailure="@FailureHandler"
+                            OnActionComplete="@OnActionCompleteHandler">
+            </UploaderEvents>
+        </SfUploader>
+
+        @if (!string.IsNullOrEmpty(_uploadError))
+        {
+            <p class="mt-1 text-xs text-red-600">@_uploadError</p>
+        }
+    </div>
+
+    @if (Block.Bilder != null && Block.Bilder.Any())
+    {
+        <div class="mt-3 grid grid-cols-3 gap-2">
+            @foreach (var bild in Block.Bilder.OrderBy(b => b.Sortierung))
+            {
+                <div class="relative">
+                    <img src="/Account/Member/Filesave/GetImage/@bild.BildId"
+                         alt="Bild"
+                         class="h-32 w-full rounded object-cover" />
+                    <button type="button"
+                            class="absolute right-1 top-1 rounded bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600"
+                            @onclick="() => BildEntfernen(bild)">
+                        ✕
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <div>
+            <label class="font-ptsans mb-1 block text-xs font-bold">Bilder pro Reihe (1–6)</label>
+            <input type="number" min="1" max="6"
+                   class="w-20 rounded border border-gray-300 p-2 text-sm"
+                   @bind="Block.BilderProReihe" />
+        </div>
+        <div>
+            <label class="font-ptsans mb-1 block text-xs font-bold">Bildunterschrift (optional)</label>
+            <input type="text"
+                   class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+                   @bind="Block.BildUnterschrift"
+                   placeholder="z.B. Trainingslager 2024" />
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [AllowNull]
+    private SfUploader uploadObj { get; set; }
+
+    [Parameter]
+    public AktuellesBlock Block { get; set; } = null!;
+
+    private string _uploadError = string.Empty;
+    private bool isUploading { get; set; }
+    private int fileCount { get; set; }
+
+    private readonly string _instanceId = Guid.NewGuid().ToString("N")[..8];
+    List<UploadedFile> uploadedFiles = new();
+
+
+    public void SelectHandler(SelectedEventArgs args)
+    {
+        try
+        {
+            foreach (var file in args.FilesData)
+            {
+                if (uploadedFiles.Any(x => x.FileName == file.Name))
+                {
+                    this._uploadError = "Die Auswahl enthält Bilder, die bereits hochgeladen wurden!";
+                    args.Cancel = true;
+                    return;
+                }
+            }
+            this._uploadError = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "SelectHandler");
+        }
+    }
+
+
+    private async void SuccessHandler(SuccessEventArgs args)
+    {
+        try
+        {
+            if (args.Operation == "upload")
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var response = JsonSerializer.Deserialize<UploadResponse>(args.Response.ResponseText, options);
+                if (response?.Success == true && response.Files.FirstOrDefault() is { } uploaded)
+                {
+                    var sortierung = Block.Bilder.Any() ? Block.Bilder.Max(b => b.Sortierung) + 1 : 0;
+                    Block.Bilder.Add(new AktuellesBild
+                    {
+                        BlockId = Block.Id,
+                        BildId = uploaded.Id,
+                        Sortierung = sortierung
+                    });
+                    _uploadError = string.Empty;
+                    StateHasChanged();
+                }
+                else if (response?.Success == true)
+                {
+                    _uploadError = string.Empty;
+                    StateHasChanged();
+                }
+                else
+                {
+                    _uploadError = $"Server-Antwort ungültig: {args.Response.ResponseText}";
+                    StateHasChanged();
+                }
+            }
+            else if (args.Operation == "remove")
+            {
+                // //Datei wurde gelöscht - aus der Liste entfernen?
+                // var uploadedFile = uploadedFiles.FirstOrDefault(x => x.FileName == args.File.Name);
+                // if (uploadedFile != null)
+                // {
+                //     uploadedFiles.Remove(uploadedFile);
+                //     fileCount = (await uploadObj.GetFilesDataAsync()).Count;
+
+                //     await ImageService.RemoveImageAsync(uploadedFile.Id);
+
+                //     await InvokeAsync(() => StateHasChanged());
+                // }
+            }
+            else
+            {
+                _uploadError = $"Die Operation '{args.Operation}' ist hier noch nicht implementiert!";
+            }
+        }
+        catch (Exception ex)
+        {
+            _uploadError = $"Fehler beim Verarbeiten des Uploads: {ex.Message}";
+            StateHasChanged();
+        }
+        await Task.CompletedTask;
+    }
+
+    private void FailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(args.Response.ResponseText);
+            _uploadError = doc.RootElement.TryGetProperty("message", out var msg)
+                ? msg.GetString() ?? "Upload fehlgeschlagen."
+                : $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        catch
+        {
+            _uploadError = $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        StateHasChanged();
+    }
+
+    private async void OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
+    {
+        try
+        {
+            isUploading = false;
+            fileCount = (await uploadObj.GetFilesDataAsync()).Count;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "OnActionCompleteHandler");
+        }
+    }
+
+    private void BildEntfernen(AktuellesBild bild)
+    {
+        Block.Bilder.Remove(bild);
+        StateHasChanged();
+    }
+
+    private void BeforeUploadHandler(BeforeUploadEventArgs args)
+    {
+        // You can prevent uploading by setting "args.Cancel" to true.
+        isUploading = true;
+    }
+
+
+    private record UploadResponse(bool Success, List<UploadedFile> Files);
+    private record UploadedFile(string FileName, int Id);
+}

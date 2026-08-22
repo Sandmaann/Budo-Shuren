@@ -4,16 +4,31 @@
     {
 
         public string ID { get; set; } = Guid.NewGuid().ToString();
-        public string Titel
+
+        private string? titel;
+        public string? Titel
         {
             get
             {
-                if(Datum.Year == DateTime.Today.Year)
-                    return Datum.ToString("MMMM");
+                if (string.IsNullOrWhiteSpace(titel))
+                {
+                    if (Datum.Year == DateTime.Today.Year)
+                        return Datum.ToString("MMMM");
+                    else
+                        return Datum.ToString("MMMM yyyy");
+                }
                 else
-                    return Datum.ToString("MMMM yyyy");
+                    return titel;
+            }
+            set
+            {
+                titel = value;
             }
         }
+
+        public bool DisableSelection { get; set; } = false;
+        public bool DisableHover { get; set; } = false;
+
         public ICollection<GalerieEintrag> Items { get; set; } = new List<GalerieEintrag>();
 
         public DateTime Datum { get; set; }

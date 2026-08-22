@@ -140,6 +140,139 @@ namespace BudoShurenWebsite.Migrations
                     b.ToTable("Abteilungen", (string)null);
                 });
 
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBeitrag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AbteilungId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Erstellt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErstelltVon")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("Geaendert")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GeaendertVon")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("MetaBeschreibung")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("MetaTitel")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Titel")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("Veroeffentlicht")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AbteilungId");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("AktuellesBeitraege", (string)null);
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBild", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BildId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Sortierung")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BildId");
+
+                    b.HasIndex("BlockId");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.ToTable("AktuellesBilder", (string)null);
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBlock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BeitragId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BildUnterschrift")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("BilderProReihe")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MarkdownInhalt")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Sortierung")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Typ")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BeitragId");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.ToTable("AktuellesBloecke", (string)null);
+                });
+
             modelBuilder.Entity("BudoShurenWebsite.Models.AppointmentData", b =>
                 {
                     b.Property<int>("Id")
@@ -459,6 +592,9 @@ namespace BudoShurenWebsite.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AbteilungLink")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("Erstellt")
                         .HasColumnType("datetime2");
 
@@ -765,6 +901,46 @@ namespace BudoShurenWebsite.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBeitrag", b =>
+                {
+                    b.HasOne("BudoShurenWebsite.Models.Abteilung", "Abteilung")
+                        .WithMany()
+                        .HasForeignKey("AbteilungId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Abteilung");
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBild", b =>
+                {
+                    b.HasOne("BudoShurenWebsite.Models.DbImage", "Bild")
+                        .WithMany()
+                        .HasForeignKey("BildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BudoShurenWebsite.Models.AktuellesBlock", "Block")
+                        .WithMany("Bilder")
+                        .HasForeignKey("BlockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bild");
+
+                    b.Navigation("Block");
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBlock", b =>
+                {
+                    b.HasOne("BudoShurenWebsite.Models.AktuellesBeitrag", "Beitrag")
+                        .WithMany("Bloecke")
+                        .HasForeignKey("BeitragId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Beitrag");
+                });
+
             modelBuilder.Entity("BudoShurenWebsite.Models.GalerieEintrag", b =>
                 {
                     b.HasOne("BudoShurenWebsite.Models.DbImage", "DbImage")
@@ -871,6 +1047,16 @@ namespace BudoShurenWebsite.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBeitrag", b =>
+                {
+                    b.Navigation("Bloecke");
+                });
+
+            modelBuilder.Entity("BudoShurenWebsite.Models.AktuellesBlock", b =>
+                {
+                    b.Navigation("Bilder");
                 });
 
             modelBuilder.Entity("BudoShurenWebsite.Models.DbImage", b =>

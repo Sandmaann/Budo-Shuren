@@ -18,67 +18,65 @@ namespace BudoShurenWebsite.Data
         public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
         public ILogger<MitgliederAdaptor> Logger { get; set; }
         private readonly UserService UserService;
-        public MitgliederAdaptor(UserService userService, UserManager<ApplicationUser> userManager, AuthenticationStateProvider authenticationStateProvider, ILogger<MitgliederAdaptor> logger)
+        private readonly IDbContextFactory<ApplicationDbContext> DbContextFactory;
+
+
+        public MitgliederAdaptor(
+            UserService userService,
+            UserManager<ApplicationUser> userManager,
+            AuthenticationStateProvider authenticationStateProvider,
+            ILogger<MitgliederAdaptor> logger,
+            IDbContextFactory<ApplicationDbContext> dbContextFactory)
         {
             UserService = userService;
             UserManager = userManager;
             AuthenticationStateProvider = authenticationStateProvider;
             Logger = logger;
+            DbContextFactory = dbContextFactory;
         }
-
         private async Task<List<UserWithRoles>> GetUsersWithRoles()
         {
             try
             {
-                var users = await UserManager.Users.ToListAsync();
-                var usersWithRoles = new List<UserWithRoles>();
+                using var context = DbContextFactory.CreateDbContext();
 
+                // Lade alle Benutzer
+                var users = await context.Users.ToListAsync();
+                var usersWithRoles = new List<UserWithRoles>();
                 var currentUser = await GetCurrentUser();
+
                 if (currentUser != null)
                 {
                     foreach (var user in users)
                     {
-                        //user NICHT anzeigen wenn er "neu" ist - dafür gibts jetzt eine eigene Ansicht!
-
-                        if(user.Verified == false)
-                        {
+                        if (user.Verified == false)
                             continue;
-                        }
 
-                        //User nach Rolle filtern. Admins und Abteilungsleiter dürfen alle sehen, alle anderen nur eigene Daten
-                        //if (Global.Roles.IsAdmin(currentUser.Roles) || Global.Roles.IsAbteilungsleiter(currentUser.Roles))
-                        //{
+                        // Nutze den lokalen Context um Rollen zu laden
+                        var roles = await context.UserRoles
+                            .Where(ur => ur.UserId == user.Id)
+                            .Join(context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                            .ToListAsync();
 
+                        // Filter-Logik
+                        bool shouldAdd = false;
 
-
-                        //    var roles = await UserManager.GetRolesAsync(user);
-                        //    usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
-                        //}
-
-                        //Admin darf alle User sehen
                         if (Global.Roles.IsAdmin(currentUser.Roles))
                         {
-                            var roles = await UserManager.GetRolesAsync(user);
-                            usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                            shouldAdd = true;
                         }
-                        //Abteilungsleiter darf seine Abteilung sehen
                         else if (Global.Roles.IsAbteilungsleiter(currentUser.Roles))
                         {
-                            if(user.Abteilung == currentUser.Abteilung)
-                            {
-                                var roles = await UserManager.GetRolesAsync(user);
-                                usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
-                            }
+                            shouldAdd = user.Abteilung == currentUser.Abteilung;
                         }
-                        //Alle anderen dürfen nur sich selbst sehen
                         else if (user.UserName == currentUser.UserName)
                         {
-                            var roles = await UserManager.GetRolesAsync(user);
-                            usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
+                            shouldAdd = true;
                         }
-                        else
+
+                        if (shouldAdd)
                         {
-                            continue;
+                            usersWithRoles.Add(new UserWithRoles { User = user, Roles = roles });
                         }
                     }
                 }
@@ -87,7 +85,15 @@ namespace BudoShurenWebsite.Data
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Fehler beim Laden der Benutzerdaten");
-                throw;
+                if (!ex.Message.StartsWith("A second operation was started on this context instance before a previous operation completed."))
+                {
+                    throw;
+                }
+                else
+                {
+                    //ignore
+                    throw new Exception("Wenn keine Daten angezeigt werden, bitte die Seite aktualisieren.");
+                }
             }
         }
 
@@ -95,21 +101,16 @@ namespace BudoShurenWebsite.Data
         {
             try
             {
-
                 var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
                 var userPrincipal = authState.User;
-                if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
+
+                if (userPrincipal?.Identity?.IsAuthenticated == true)
                 {
                     var user = await UserManager.GetUserAsync(userPrincipal);
                     if (user != null)
                     {
                         var roles = await UserManager.GetRolesAsync(user);
-
-                        return new UserWithRoles
-                        {
-                            User = user,
-                            Roles = roles
-                        };
+                        return new UserWithRoles { User = user, Roles = roles };
                     }
                 }
                 return null;
@@ -121,12 +122,6 @@ namespace BudoShurenWebsite.Data
             }
         }
 
-        /// <summary>
-        /// Returns the data collection after performing data operations based on request from <see cref=”DataManagerRequest”/>
-        /// </summary>
-        /// <param name="DataManagerRequest">DataManagerRequest contains the information regarding paging, grouping, filtering, searching, sorting which is handled on the Blazor DataGrid component side</param>
-        /// <param name="Key">An optional parameter that can be used to perform additional data operations.</param>
-        /// <returns>The data collection's type is determined by how this method has been implemented.</returns>
         public override async Task<object> ReadAsync(DataManagerRequest dm, string? Key = null)
         {
             try
@@ -135,34 +130,29 @@ namespace BudoShurenWebsite.Data
 
                 int TotalRecordsCount = DataSource.Count();
 
-                // Handling Searching in CustomAdaptor.
                 if (dm.Search != null && dm.Search.Count > 0)
                 {
-                    // Searching
                     DataSource = DataOperations.PerformSearching(DataSource, dm.Search);
-                    //Add custom logic here if needed and remove above method
                 }
                 if (dm.Sorted != null && dm.Sorted.Count > 0)
                 {
-                    // Sorting
                     DataSource = DataOperations.PerformSorting(DataSource, dm.Sorted);
                 }
 
                 int count = DataSource.Count();
                 if (dm.Skip != 0)
                 {
-                    //Paging
                     DataSource = DataOperations.PerformSkip(DataSource, dm.Skip);
                 }
                 if (dm.Take != 0)
                 {
                     DataSource = DataOperations.PerformTake(DataSource, dm.Take);
                 }
-                return dm.RequiresCounts ? new DataResult() { Result = DataSource, Count = count } : (object)DataSource;
+                return dm.RequiresCounts ? new DataResult { Result = DataSource, Count = count } : new DataResult { Result = DataSource };
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Fehler beim Laden der Mitgliederdaten");
+                Logger.LogError(ex, "Fehler beim Lesen der Daten");
                 throw;
             }
         }

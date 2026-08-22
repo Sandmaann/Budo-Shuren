@@ -76,6 +76,7 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<VisitorCounterService>();
                 builder.Services.AddScoped<WissenService>();
                 builder.Services.AddScoped<SlugService>();
+                builder.Services.AddScoped<IAktuellesService, AktuellesService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
@@ -83,6 +84,7 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<NeuigkeitenAdaptor>();
                 builder.Services.AddScoped<AppointmentAdaptor>();
                 builder.Services.AddScoped<WissenBeitragAdaptor>();
+                builder.Services.AddScoped<AktuellesBeitragAdaptor>();
 
                 builder.Services.AddAuthentication(options =>
                 {
@@ -118,11 +120,14 @@ namespace BudoShurenWebsite
                     .AddSignInManager()
                 .AddDefaultTokenProviders();
 
+                builder.Services.AddScoped<AdminMaintenanceService>();
+
                 builder.Services.AddAuthorization(options =>
                 {
                     options.AddPolicy("Aktiviert", policy => policy.Requirements.Add(new VerifiedUserRequirement()));
                     options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
                         !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
+                    options.AddPolicy("AdminOnly", policy => policy.RequireRole(Roles.Admin));
                 });
 
                 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();

@@ -1,5 +1,5 @@
 ﻿ 
  In CMD ausführen um Tailwind CLI zu starten:
- 
+ (vom BudoShurenWebsite Ordner aus!)
  
 ./../Tailwind/tailwindcss.exe -i ./Styles/budo-shuren.css -o ./wwwroot/budo-shuren.css --watch

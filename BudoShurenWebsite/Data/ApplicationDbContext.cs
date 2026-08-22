@@ -108,6 +108,42 @@ namespace BudoShurenWebsite.Data
                     SortOrder = 0
                 }
             );
+
+            // AktuellesBeitrag configuration
+            builder.Entity<AktuellesBeitrag>().HasKey(b => b.Id);
+            builder.Entity<AktuellesBeitrag>().ToTable("AktuellesBeitraege");
+            builder.Entity<AktuellesBeitrag>().HasIndex(b => b.Id).IsUnique();
+            builder.Entity<AktuellesBeitrag>().HasIndex(b => b.Slug).IsUnique();
+            builder.Entity<AktuellesBeitrag>()
+                .HasOne(b => b.Abteilung)
+                .WithMany()
+                .HasForeignKey(b => b.AbteilungId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // AktuellesBlock configuration
+            builder.Entity<AktuellesBlock>().HasKey(bl => bl.Id);
+            builder.Entity<AktuellesBlock>().ToTable("AktuellesBloecke");
+            builder.Entity<AktuellesBlock>().HasIndex(bl => bl.Id).IsUnique();
+            builder.Entity<AktuellesBlock>()
+                .HasOne(bl => bl.Beitrag)
+                .WithMany(b => b.Bloecke)
+                .HasForeignKey(bl => bl.BeitragId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // AktuellesBild configuration
+            builder.Entity<AktuellesBild>().HasKey(bi => bi.Id);
+            builder.Entity<AktuellesBild>().ToTable("AktuellesBilder");
+            builder.Entity<AktuellesBild>().HasIndex(bi => bi.Id).IsUnique();
+            builder.Entity<AktuellesBild>()
+                .HasOne(bi => bi.Block)
+                .WithMany(bl => bl.Bilder)
+                .HasForeignKey(bi => bi.BlockId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<AktuellesBild>()
+                .HasOne(bi => bi.Bild)
+                .WithMany()
+                .HasForeignKey(bi => bi.BildId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<GalerieEintrag> Galerie { get; set; }
@@ -120,6 +156,9 @@ namespace BudoShurenWebsite.Data
         public DbSet<WissenKategorie> WissenKategorien { get; set; }
         public DbSet<WissenBeitrag> WissenBeitraege { get; set; }
         public DbSet<WissenBlock> WissenBloecke { get; set; }
+        public DbSet<AktuellesBeitrag> AktuellesBeitraege { get; set; }
+        public DbSet<AktuellesBlock> AktuellesBloecke { get; set; }
+        public DbSet<AktuellesBild> AktuellesBilder { get; set; }
         public override int SaveChanges()
         {
             Validate();

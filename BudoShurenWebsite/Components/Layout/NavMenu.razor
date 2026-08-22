@@ -56,7 +56,7 @@
             //Geteilte Werte
             var basis = "transition-height ease-in-out duration-500 overflow-hidden";
             //Expanded-Werte, Höhe muss angegeben werden ansonsten greift die Transition nicht
-            var expanded = "h-[300px] " + basis;
+            var expanded = "h-[400px] " + basis;
             //Collapsed-Werte mit MediaQuery für Desktop
             var collapsed = "h-0 md:h-auto " + basis;
             //Sichtbarkeit der Nav-Bar je nach Button-Klick
@@ -112,17 +112,15 @@
                             Kontakt
                         </NavLink>
                     </li>
-                    <li id="themen-menu" class="nav-item px-3 py-1">
+                    <li class="nav-item px-3 py-1">
                         <NavLink href="/themen" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                             Themen
                         </NavLink>
-                        <div id="themen-dropdown" class="fixed w-28 bg-white">
-                            <div class="mx-auto flex flex-col items-center justify-center">
-                                <NavLink href="/themen" class="nav-link underline-offset-4 my-2 hover:underline" aria-current="page" Match="NavLinkMatch.All">
-                                    Alle Themen
-                                </NavLink>
-                            </div>
-                        </div>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/aktuelles" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Aktuelles
+                        </NavLink>
                     </li>
                     <li class="nav-item px-3 py-1">
                         <NavLink href="/Galerie" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">

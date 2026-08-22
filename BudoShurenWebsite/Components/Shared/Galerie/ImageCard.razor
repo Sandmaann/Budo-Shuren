@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 @inject ILogger<ImageCard> Logger
 
-<div class="h-min w-full select-none bg-gray-100" @onclick="OnClick" @onpointerdown="MouseDown" @onpointerup="MouseUp">
+<div class="h-min w-full select-none bg-gray-100 @(OnImageClicked.HasDelegate ? "cursor-pointer" : "")" @onclick="OnClick" @onpointerdown="MouseDown" @onpointerup="MouseUp">
     <div class="relative">
 
         @if (isLoading)
@@ -11,7 +11,7 @@
                 <Spinner />
             </div>
         }
-        <img oncontextmenu="return false;"
+        <img oncontextmenu="@(Eintrag.DisableHover ? "" : "return false;")"
              class="object-cover transition-all duration-500 ease-in-out @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")"
              loading="lazy"
              src="@GetImageUrl(Eintrag.DbImageId)"
@@ -34,45 +34,52 @@
                 </div>
             </div>
         }
-        <div class="opacity-0 z-10 absolute inset-0 hidden flex-col justify-between duration-300 md:flex md:hover:opacity-100">
-            <div class="flex items-start justify-end">
-                <button class="" @onclick="OnCheckClicked" aria-label="Auswählen" title="Auswählen">
-                    <div class="m-2 flex items-center rounded-full @(Eintrag.IsSelected ? "bg-primary" : "bg-gray-400")">
-                        <span class="material-symbols-outlined m-0.5 text-white">done</span>
-                    </div>
-                </button>
-            </div>
-            <div class="hidden items-end justify-center bg-opacity-70 bg-gradient-to-t from-black md:flex">
-                <div class="text-wrap px-4 py-2 pt-10 text-white">
-                    <Subheadline Text="@Eintrag.Titel" />
-                </div>
-            </div>
-            @if (Eintrag.IsSelected)
-            {
-                <div class="absolute inset-0 hidden items-end justify-end md:flex">
-                    <button class="transform transition duration-150 ease-in-out active:scale-90" @onclick="OnDetailClicked" aria-label="Details anzeigen" title="Details anzeigen">
-                        <div class="m-2 flex items-center rounded-full">
-                            <span class="material-symbols-outlined m-0.5 text-white">search</span>
+        @if (!Eintrag.DisableHover)
+        {
+            <div class="opacity-0 z-10 absolute inset-0 hidden flex-col justify-between duration-300 md:flex md:hover:opacity-100">
+                <div class="flex items-start justify-end">
+                    <button class="" @onclick="OnCheckClicked" aria-label="Auswählen" title="Auswählen">
+                        <div class="m-2 flex items-center rounded-full @(Eintrag.IsSelected ? "bg-primary" : "bg-gray-400")">
+                            <span class="material-symbols-outlined m-0.5 text-white">done</span>
                         </div>
                     </button>
                 </div>
-            }
-        </div>
+                <div class="hidden items-end justify-center bg-opacity-70 bg-gradient-to-t from-black md:flex">
+                    <div class="text-wrap px-4 py-2 pt-10 text-white">
+                        <Subheadline Text="@Eintrag.Titel" />
+                    </div>
+                </div>
+                @if (Eintrag.IsSelected)
+                {
+                    <div class="absolute inset-0 hidden items-end justify-end md:flex">
+                        <button class="transform transition duration-150 ease-in-out active:scale-90" @onclick="OnDetailClicked" aria-label="Details anzeigen" title="Details anzeigen">
+                            <div class="m-2 flex items-center rounded-full">
+                                <span class="material-symbols-outlined m-0.5 text-white">search</span>
+                            </div>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
 
 @code {
+
     [Parameter]
     public GalerieEintrag Eintrag { get; set; } = new GalerieEintrag
-        {
-            Titel = "Unbekannt"
-        };
+    {
+        Titel = "Unbekannt"
+    };
 
     [Parameter]
     public EventCallback OnSelectionChanged { get; set; }
 
     [Parameter]
     public bool IsScrolling { get; set; }
+
+    [Parameter]
+    public EventCallback<GalerieEintrag> OnImageClicked { get; set; }
 
     private bool isLoading { get; set; } = true;
     private bool showErrorImage { get; set; } = false;
@@ -101,6 +108,9 @@
 
     void MouseDown()
     {
+        if (Eintrag?.DisableSelection == true)
+            return;
+
         timerFired = false;
         // await Task.Delay(50);
         timer = new Timer(_ =>
@@ -127,6 +137,9 @@
 
     void MouseUp()
     {
+        if (Eintrag?.DisableSelection == true)
+            return;
+
         if (timer != null)
         {
             timer.Dispose();
@@ -153,6 +166,15 @@
 
     private async void OnClick()
     {
+        if (OnImageClicked.HasDelegate)
+        {
+            await OnImageClicked.InvokeAsync(Eintrag);
+            return;
+        }
+
+        if (Eintrag?.DisableSelection == true)
+            return;
+
         if (timerFired)
         {
             return;
@@ -192,6 +214,9 @@
 
     private async void OnCheckClicked()
     {
+        if (Eintrag?.DisableSelection == true)
+            return;
+
         checkClicked = true;
         Eintrag.IsSelected = !Eintrag.IsSelected;
         await OnSelectionChanged.InvokeAsync();

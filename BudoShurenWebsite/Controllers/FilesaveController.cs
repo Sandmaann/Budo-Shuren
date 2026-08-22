@@ -37,6 +37,11 @@ namespace BudoShurenWebsite.Controllers
             this.imageService = imageService;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="UploadFiles">ACHTUNG: dieser Name MUSS die ID des SfUploaders sein!!</param>
+        /// <returns></returns>
         [HttpPost("[action]")]
         public async Task<IActionResult> Save(IList<IFormFile> UploadFiles)
         {

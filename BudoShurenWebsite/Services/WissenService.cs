@@ -135,6 +135,26 @@ namespace BudoShurenWebsite.Services
             return beitrag;
         }
 
+        public async Task<List<WissenBeitrag>?> GetBeitragByAbteilung(string abteilung, bool nurVeroeffentlichte = true)
+        {
+            var query = _context.WissenBeitraege
+                .Include(b => b.Kategorie)
+                .ThenInclude(k => k.Abteilung)
+                .Where(b =>
+                b.AbteilungLink &&
+                b.Kategorie.Abteilung.Name == abteilung)
+                .AsNoTracking()
+                .OrderBy(b => b.SortOrder)
+                .AsQueryable();
+
+            if (nurVeroeffentlichte)
+            {
+                query = query.Where(b => b.Veroeffentlicht);
+            }
+
+            return await query.ToListAsync();
+        }
+
         public async Task<WissenBeitrag?> GetBeitragByIdAsync(int id)
         {
             return await _context.WissenBeitraege

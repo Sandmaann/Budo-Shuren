@@ -43,7 +43,7 @@
                                             <span class="material-symbols-outlined">close</span>
                                         </button>
                                         <div>
-                                            <Standardtext Text="@(selectedEinträgeCount > 0 ? $"{selectedEinträgeCount} ausgewählt" :"Keine Auswahl")" />
+                                            <Standardtext Text="@(selectedEinträgeCount > 0 ? $"{selectedEinträgeCount} ausgewählt" : "Keine Auswahl")" />
                                         </div>
                                     </div>
                                 }
@@ -154,7 +154,11 @@
                 <div>
                     <Virtualize Items="Gruppen">
                         <ItemContent>
-                            <ImageGroup @key="context.ID" Gruppe="@context" OnSelectionChanged="SelectionChanged" IsScrolling="isScrolling" />
+                            <ImageGroup @key="context.ID"
+                                        Gruppe="@context"
+                                        OnSelectionChanged="SelectionChanged"
+                                        IsScrolling="isScrolling"
+                                        OnImageClicked="OpenImagePopup" />
                         </ItemContent>
                         <Placeholder>
                             <div class="flex justify-center">
@@ -187,6 +191,49 @@
     </div>
 </div>
 
+<!-- Bild Popup/Overlay -->
+<div @onclick="CloseImagePopup"
+     class="@(ShowImagePopup ? "visible opacity-100" : "invisible opacity-0") fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 transition-opacity duration-300"
+     style="cursor: pointer;">
+
+    <div @onclick:stopPropagation
+         class="relative max-w-4xl max-h-[95vh] bg-white rounded-lg shadow-2xl overflow-hidden">
+
+        <!-- Schließen Button -->
+        <button @onclick="CloseImagePopup"
+                class="absolute top-4 right-4 z-10 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition duration-150"
+                aria-label="Schließen"
+                title="Popup schließen">
+            <span class="material-symbols-outlined m-2">close</span>
+        </button>
+
+        <!-- Bild anzeigen -->
+        @if (SelectedImage != null)
+        {
+            <img src="@GetImageUrl(SelectedImage.DbImageId)"
+                 alt="@SelectedImage.Untertitel"
+                 class="mx-auto max-h-[80vh] max-w-4xl object-contain"
+                 loading="lazy"
+                 style="cursor: default;" />
+
+            <!-- Bildinfo -->
+            <div class="p-4 font-ptsans"
+                 style="cursor: default;">
+                <h3 class="font-yuji">@SelectedImage.Titel</h3>
+                @if (!string.IsNullOrWhiteSpace(SelectedImage.Untertitel))
+                {
+                    <p class="text-sm">@SelectedImage.Untertitel</p>
+                }
+                @if (SelectedImage.ImageDate.HasValue)
+                {
+                    <p class="text-xs">@SelectedImage.ImageDate.Value.ToLocalTime().ToString("dd. MMMM yyyy")</p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+
 <style>
     .e-menu-item {
         font-size: 1rem;
@@ -201,6 +248,11 @@
 
 
 @code {
+
+    // Popup-Zustand
+    private bool ShowImagePopup { get; set; } = false;
+    private GalerieEintrag? SelectedImage { get; set; }
+
     string suchtext = string.Empty;
     private string errorMessage { get; set; } = string.Empty;
     private string Suchtext { get => suchtext; set { if (value != suchtext) { suchtext = value; Suche(); } } }
@@ -391,10 +443,10 @@
             foreach (var group in groups.OrderByDescending(x => x.Key))
             {
                 var neueGruppe = new GalerieGruppe
-                    {
-                        Datum = group.Key,
-                        Items = group.ToList()
-                    };
+                {
+                    Datum = group.Key,
+                    Items = group.ToList()
+                };
                 gruppen.Add(neueGruppe);
             }
             Gruppen = gruppen;
@@ -422,18 +474,24 @@
 
             await Task.Delay(10);
 
-            var einträge = await DbContext.Galerie.Where(x => x.Öffentlich).ToListAsync();
+            var einträge = await DbContext.Galerie
+            .Where(x => x.Öffentlich)
+            .AsNoTracking()
+            .ToListAsync();
             // einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
 
             var groups = einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));
             var gruppen = new List<GalerieGruppe>();
             foreach (var group in groups.OrderByDescending(x => x.Key))
             {
+                var items = group.ToList();
+                items.ForEach(x => x.DisableSelection = true);
                 var neueGruppe = new GalerieGruppe
-                    {
-                        Datum = group.Key,
-                        Items = group.ToList()
-                    };
+                {
+                    Datum = group.Key,
+                    Items = group.ToList(),
+                    DisableSelection = true
+                };
                 gruppen.Add(neueGruppe);
             }
 
@@ -500,6 +558,26 @@
 
     public string[] suchdata = { "Aikido", "Bujinkan", "Genbukan", "Iaido", "Jodo", "Home" };
 
+    private void OpenImagePopup(GalerieEintrag image)
+    {
+        SelectedImage = image;
+        ShowImagePopup = true;
+    }
+
+    private void CloseImagePopup()
+    {
+        ShowImagePopup = false;
+        SelectedImage = null;
+    }
+
+    private string GetImageUrl(int? dbImageId)
+    {
+        if (dbImageId.HasValue)
+        {
+            return $"/Account/Member/Filesave/GetImage/{dbImageId.Value}";
+        }
+        return "/images/missingimage.jpg";
+    }
 
 
     [JSInvokable]
@@ -536,7 +614,7 @@
     let scrollTimeout;
     let dotNetObject = null;
 
-    window.addEventListener('scroll', function () {
+    window.addEventListener('scroll', function() {
         clearTimeout(scrollTimeout);
         if (dotNetObject) {
             dotNetObject.invokeMethodAsync('OnScrollStart');
@@ -549,7 +627,7 @@
         }, 100);
     });
 
-    window.registerScrolling = function (obj) {
+    window.registerScrolling = function(obj) {
         dotNetObject = obj;
     }
 </script>

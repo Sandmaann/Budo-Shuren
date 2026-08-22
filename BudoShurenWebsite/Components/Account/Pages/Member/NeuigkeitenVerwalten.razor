@@ -17,7 +17,7 @@
 @using Syncfusion.Blazor
 @using Syncfusion.Blazor.Calendars
 
-<div class="container mx-auto max-w-screen-md">
+<div class="container mx-auto max-w-screen-lg">
     <div class="mx-10">
         <SectionBanner Titel="Neuigkeiten verwalten" />
         <div class="mb-10">
@@ -74,15 +74,15 @@
                                            @bind-Value="@neuigkeit.Ort"></SfTextBox>
                             </div>
                             <div>
+                                <SfTextBox Placeholder="Linktext (Anzeigetext)"
+                                           FloatLabelType="FloatLabelType.Always"
+                                           @bind-Value="@neuigkeit.Linktext"></SfTextBox>
+                            </div>
+                            <div>
                                 <SfTextBox Placeholder="Link"
                                            FloatLabelType="FloatLabelType.Always"
                                            @bind-Value="@neuigkeit.Link"></SfTextBox>
                             </div>
-                            <div>
-                                <SfTextBox Placeholder="Linktext (Anzeigetext)"
-                                           FloatLabelType="FloatLabelType.Always"
-                                           @bind-Value="@neuigkeit.Linktext"></SfTextBox>
-                            </div> 
                             <div>
                                 <SfTextBox Placeholder="Quellenangabe (Bild)"
                                            FloatLabelType="FloatLabelType.Always"
@@ -116,7 +116,11 @@
                             @if (IsAddNew)
                             {
                                 <div class="mt-10">
-                                    <SfUploader @ref="sfUploader" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg, .webp" MaxFileSize=5242880 AllowMultiple=false>
+                                    <SfUploader @ref="sfUploader"
+                                                ID="UploadFiles"
+                                                AllowedExtensions=".png, .jpg, .jpeg, .webp"
+                                                MaxFileSize=5242880
+                                                AllowMultiple=false>
                                         <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
                                         <UploaderEvents FileSelected="SelectHandler" Success="SuccessHandler" OnFailure="@OnFailureHandler" OnActionComplete="@OnActionCompleteHandler" BeforeUpload="@BeforeUploadHandler"></UploaderEvents>
                                     </SfUploader>
@@ -139,8 +143,8 @@
                             }
                         </Template>
                     </GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Titel) HeaderText="Titel" AllowSearching="true" Width="120" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules{ Required= true })"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules{ Required= true })"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Titel) HeaderText="Titel" AllowSearching="true" Width="120" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules { Required = true })"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules { Required = true })"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Ort) HeaderText="Ort" AllowSearching="true" Width="100"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Datum) HeaderText="Datum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="true" Width="85"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Ablaufdatum) HeaderText="Ablaufdatum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="false" Width="95"></GridColumn>
@@ -282,9 +286,9 @@
             {
                 var jsonResponse = args.Response.ResponseText;
                 var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    };
+                {
+                    PropertyNameCaseInsensitive = true
+                };
                 var uploadResponse = JsonSerializer.Deserialize<UploadResponse>(jsonResponse, options);
 
                 if (uploadResponse != null && uploadResponse.Success)
