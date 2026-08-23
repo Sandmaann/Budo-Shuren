@@ -27,64 +27,36 @@ window.saveScrollPositionOnUnload = function (dotnetHelper) {
     });
 }
 
+window.neuigkeitenDialogLifecycle = window.neuigkeitenDialogLifecycle || {
+    visibilityHandler: null,
+    pageHideHandler: null,
 
-//window.addCapsLockEventListener = function () {
-//    document.addEventListener('keydown', function (e) {
-//        var isCapsLockEnabled = e.getModifierState && e.getModifierState('CapsLock');
-//        var warningElement = document.getElementById('capsLockWarning');
-//        if (isCapsLockEnabled) {
-//            warningElement.style.display = 'block';
-//        } else {
-//            warningElement.style.display = 'none';
-//        }
-//        // Call the .NET method to update the Caps Lock state
-//        DotNet.invokeMethodAsync('BudoShurenWebsite', 'UpdateCapsLockState', isCapsLockEnabled);
-//    });
-//};
+    register: function (dotNetHelper) {
+        this.unregister();
 
-//e.keyCode is deprecated, test above code
-//window.addCapsLockEventListener = function () {
-//    document.addEventListener('keydown', function (e) {
-//        var isCapsLockEnabled = e.getModifierState ? e.getModifierState('CapsLock') : e.keyCode === 20;
-//        var warningElement = document.getElementById('capsLockWarning');
-//        if (isCapsLockEnabled) {
-//            warningElement.style.display = 'block';
-//        } else {
-//            warningElement.style.display = 'none';
-//        }
-//    });
-//};
+        this.visibilityHandler = function () {
+            if (document.hidden) {
+                dotNetHelper.invokeMethodAsync("HandlePageHiddenAsync");
+            }
+        };
 
+        this.pageHideHandler = function () {
+            dotNetHelper.invokeMethodAsync("HandlePageHiddenAsync");
+        };
 
-    
+        document.addEventListener("visibilitychange", this.visibilityHandler);
+        window.addEventListener("pagehide", this.pageHideHandler);
+    },
 
-//lazy-loading für Bilder. Verwende ich aktuell NICHT
-//document.addEventListener("DOMContentLoaded", function () {
-//    var lazyloadImages = document.querySelectorAll("img.lazyload");
-//    var lazyloadThrottleTimeout;
+    unregister: function () {
+        if (this.visibilityHandler) {
+            document.removeEventListener("visibilitychange", this.visibilityHandler);
+            this.visibilityHandler = null;
+        }
 
-//    function lazyload() {
-//        if (lazyloadThrottleTimeout) {
-//            clearTimeout(lazyloadThrottleTimeout);
-//        }
-
-//        lazyloadThrottleTimeout = setTimeout(function () {
-//            var scrollTop = window.pageYOffset;
-//            lazyloadImages.forEach(function (img) {
-//                if (img.offsetTop < (window.innerHeight + scrollTop)) {
-//                    img.src = img.dataset.src;
-//                    img.classList.remove('lazyload');
-//                }
-//            });
-//            if (lazyloadImages.length == 0) {
-//                document.removeEventListener("scroll", lazyload);
-//                window.removeEventListener("resize", lazyload);
-//                window.removeEventListener("orientationChange", lazyload);
-//            }
-//        }, 20);
-//    }
-
-//    document.addEventListener("scroll", lazyload);
-//    window.addEventListener("resize", lazyload);
-//    window.addEventListener("orientationChange", lazyload);
-//});
+        if (this.pageHideHandler) {
+            window.removeEventListener("pagehide", this.pageHideHandler);
+            this.pageHideHandler = null;
+        }
+    }
+};

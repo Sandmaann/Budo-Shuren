@@ -8,10 +8,10 @@ namespace BudoShurenWebsite.Controllers
     public class DocumentsController : ControllerBase
     {
         private readonly IHostEnvironment env;
-        private readonly ILogger<FilesaveController> logger;
+        private readonly ILogger<DocumentsController> logger;
 
         public DocumentsController(IHostEnvironment env,
-            ILogger<FilesaveController> logger)
+            ILogger<DocumentsController> logger)
         {
             this.env = env;
             this.logger = logger;

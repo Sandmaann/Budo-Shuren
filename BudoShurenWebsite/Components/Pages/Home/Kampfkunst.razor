@@ -3,274 +3,363 @@
 @using Syncfusion.Blazor.Navigations
 @using Syncfusion.Blazor.Buttons
 
-
 <div>
-    <div class="banner-header">
-        <div class="mb-10 flex flex-row justify-between sm:justify-around md:mb-28">
-            <div class="@(AikidoStyle) w-28 transform transition duration-150 ease-in-out active:scale-90" @onclick="(() => KampfkunstClick(0))">
-                <div class="border-2 @(AikidoStyle) mx-auto w-16 md:w-20">
-                    <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">合<br />気<br />道</div>
-                </div>
-                <div class="font-yuji text-center text-lg font-normal tracking-widest">Aikido</div>
-            </div>
-            <div class="@(GenbukanStyle) w-28 transform transition duration-150 ease-in-out active:scale-90" @onclick="(() => KampfkunstClick(1))">
-                <div class="border-2 @(GenbukanStyle) mx-auto w-16 md:w-20">
-                    <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">玄<br />武<br />館</div>
-                </div>
-                <div class="font-yuji text-center text-lg font-normal tracking-widest">Genbukan</div>
-            </div>
-            <div class="@(BujinkanStyle) w-28 transform transition duration-150 ease-in-out active:scale-90" @onclick="(() => KampfkunstClick(2))">
-                <div class="border-2 @(BujinkanStyle) mx-auto w-16 md:w-20">
-                    <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">武<br />神<br />館</div>
-                </div>
-                <div class="font-yuji text-center text-lg font-normal tracking-widest">Bujinkan</div>
+    @if (!_interactiveReady)
+    {
+        <div class="banner-header">
+            <div class="mb-10 flex flex-row justify-between sm:justify-around md:mb-28">
+                <a href="#aikido" class="@(AikidoStyle) w-28 transform transition duration-150 ease-in-out active:scale-90">
+                    <div class="border-2 @(AikidoStyle) mx-auto w-16 md:w-20">
+                        <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">合<br />気<br />道</div>
+                    </div>
+                    <div class="font-yuji text-center text-lg font-normal tracking-widest">Aikido</div>
+                </a>
+
+                <a href="#genbukan" class="@(GenbukanStyle) w-28 transform transition duration-150 ease-in-out active:scale-90">
+                    <div class="border-2 @(GenbukanStyle) mx-auto w-16 md:w-20">
+                        <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">玄<br />武<br />館</div>
+                    </div>
+                    <div class="font-yuji text-center text-lg font-normal tracking-widest">Genbukan</div>
+                </a>
+
+                <a href="#bujinkan" class="@(BujinkanStyle) w-28 transform transition duration-150 ease-in-out active:scale-90">
+                    <div class="border-2 @(BujinkanStyle) mx-auto w-16 md:w-20">
+                        <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">武<br />神<br />館</div>
+                    </div>
+                    <div class="font-yuji text-center text-lg font-normal tracking-widest">Bujinkan</div>
+                </a>
             </div>
         </div>
-    </div>
 
-    <div class="-mx-10 md:-mx-20">
-        <SfCarousel ShowIndicators="true" AutoPlay="false"
-                    @bind-SelectedIndex="@CurrentIndex">
-            <ChildContent>
-                <CarouselItem>
-                    <div class="mx-10 mb-10 md:mx-20">
-                        <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
-                            <div class="md:w-7/12">
-                                <img src="/images/aikido/aikido_titel.jpg" alt="Abbildung zweier Aikidoka beim Training." />
-                            </div>
-                            @* Mobile-Ansicht *@
-                            <div class="relative ml-auto min-h-[19rem] flex-grow text-left md:hidden">
-                                <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Aikido</div>
-                                <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag,</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">und Freitag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
-                                </div>
-                                <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:15</div>
-                                </div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">16:00 - 16:50</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:20</div>
-                                </div>
-                                <div class="mt-4 w-[120px] max-w-[120px]">
-                                    <Weiterleitung Link="/Aikido" />
-                                </div>
-                            </div>
-                            <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm md:hidden">
-                                Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet. Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung.
-                            </div>
+        <section id="aikido" class="mx-10 mb-16 md:mx-20">
+            <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
+                <div class="md:w-7/12">
+                    <img src="/images/aikido/aikido_titel.jpg" alt="Abbildung zweier Aikidoka beim Training." />
+                </div>
 
-                            @* Desktop Ansicht *@
-                            @* Ist getrennt, blöd aber ich finde keinen sinnvollen Weg diese Ansicht ansonsten zumzusetzen! *@
-                            <div class="ml-20 hidden w-5/12 md:block">
-                                <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Aikido</div>
-                                <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
-                                    Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet. Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung.
+                <div class="mt-5 md:ml-20 md:w-5/12">
+                    <h2 class="font-yuji -mt-2 mb-6 text-left text-3xl font-normal tracking-widest text-primary">Aikido</h2>
+
+                    <p class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
+                        Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet. Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung.
+                    </p>
+
+                    <div class="mt-10">
+                        <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
+
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
+                        </div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
+                        </div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
+                        </div>
+
+                        <div class="font-ptsans mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
+
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                        </div>
+                        <div class="flex flex-row justify-end">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:15</div>
+                        </div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">16:00 - 16:50</div>
+                        </div>
+                        <div class="flex flex-row justify-end">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                        </div>
+                        <div class="flex flex-row justify-end">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:20</div>
+                        </div>
+
+                        <div class="mt-4 flex flex-row justify-end">
+                            <Weiterleitung Link="/Aikido" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="genbukan" class="mx-10 mb-16 md:mx-20">
+            <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
+                <div class="md:w-7/12">
+                    <img src="/images/genbukan/genbukan_home.jpg" alt="Zwei Budoka in Hakama bedrohen sich gegenseitig." />
+                </div>
+
+                <div class="mt-5 md:ml-20 md:w-5/12">
+                    <h2 class="font-yuji -mt-2 mb-6 text-left text-3xl font-normal tracking-widest text-primary">Genbukan</h2>
+
+                    <p class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
+                        Die Abteilung Genbukan des Budo Shuren Dojo bietet Training in den traditionellen japanischen Kampfkünsten Iaido und Jodo. Iaido ist - sehr vereinfacht ausgedrückt - die Kunst des Schwertziehens, bei der Präzision, Konzentration und fließende Bewegungen im Vordergrund stehen. Dabei wird das Schwert gezogen, gegen einen oder mehrere imaginäre Gegner geführt und wieder sicher in die Scheide zurückgeführt – alles in einem harmonischen Ablauf. Jodo hingegen lehrt den Umgang mit dem Stock (Jo), der dazu dient, sich effizient gegen das Schwert zu verteidigen. Diese Disziplin fördert Schnelligkeit, Timing und Kontrolle. Bei Genbukan stehen Respekt, Disziplin und die kontinuierliche Weiterentwicklung von Körper und Geist im Zentrum des Trainings. Anfänger und Fortgeschrittene sind herzlich willkommen!
+                    </p>
+
+                    <div class="mt-10">
+                        <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
+
+                        <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Jodo</div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch (Jodo)</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:45 - 19:15</div>
+                        </div>
+
+                        <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Iaido</div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag (Iaido)</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 19:30</div>
+                        </div>
+
+                        <div class="mt-4 flex flex-row justify-end">
+                            <Weiterleitung Link="/Genbukan" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="bujinkan" class="mx-10 mb-16 md:mx-20">
+            <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
+                <div class="md:w-7/12">
+                    <img src="/images/bujinkan/bujinkan_home.jpg" alt="Zwei Bujinkanler bei der Übung eines Handgelenkhebels" />
+                </div>
+
+                <div class="mt-5 md:ml-20 md:w-5/12">
+                    <h2 class="font-yuji -mt-2 mb-6 text-left text-3xl font-normal tracking-widest text-primary">Bujinkan</h2>
+
+                    <p class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
+                        Das Bujinkan Budo Taijutsu/Ninjutsu ist eine japanische Kampfkunst, welche von Dr. Masaaki Hatsumi gegründet wurde. Sie vereint neun unterschiedliche Schulen, welche aus den alten Samurai- und Ninjaschulen stammen. Dadurch bietet das Bujinkan eine beeindruckende Vielfalt an Techniken und Strategien. Neben unbewaffneten Techniken wie Hebel, Würfe, Tritte, Block- und Schlagtechniken wird auch der Umgang mit traditionellen, japanischen Waffen wie Katana, Bo, Yari, Naginata usw. gelehrt. Dies macht das Bujinkan Budo Taijutsu/Ninjutsu zu einer sehr vielseitigen Kampfkunst.
+                    </p>
+
+                    <div class="mt-10">
+                        <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
+
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
+                        </div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
+                        </div>
+
+                        <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                        </div>
+                        <div class="flex flex-row justify-between">
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                        </div>
+
+                        <div class="mt-4 flex flex-row justify-end">
+                            <Weiterleitung Link="/Bujinkan" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+    else
+    {
+        <div class="banner-header">
+            <div class="mb-10 flex flex-row justify-between sm:justify-around md:mb-28">
+                <div class="@(AikidoStyle) w-28 transform transition duration-150 ease-in-out active:scale-90" @onclick="(() => KampfkunstClick(0))">
+                    <div class="border-2 @(AikidoStyle) mx-auto w-16 md:w-20">
+                        <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">合<br />気<br />道</div>
+                    </div>
+                    <div class="font-yuji text-center text-lg font-normal tracking-widest">Aikido</div>
+                </div>
+
+                <div class="@(GenbukanStyle) w-28 transform transition duration-150 ease-in-out active:scale-90" @onclick="(() => KampfkunstClick(1))">
+                    <div class="border-2 @(GenbukanStyle) mx-auto w-16 md:w-20">
+                        <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">玄<br />武<br />館</div>
+                    </div>
+                    <div class="font-yuji text-center text-lg font-normal tracking-widest">Genbukan</div>
+                </div>
+
+                <div class="@(BujinkanStyle) w-28 transform transition duration-150 ease-in-out active:scale-90" @onclick="(() => KampfkunstClick(2))">
+                    <div class="border-2 @(BujinkanStyle) mx-auto w-16 md:w-20">
+                        <div class="font-yuji tracking-[.4rem] my-5 text-center text-3xl font-normal md:text-5xl">武<br />神<br />館</div>
+                    </div>
+                    <div class="font-yuji text-center text-lg font-normal tracking-widest">Bujinkan</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="-mx-10 md:-mx-20">
+            <SfCarousel ShowIndicators="true" AutoPlay="false"
+                        @bind-SelectedIndex="@CurrentIndex">
+                <ChildContent>
+                    <CarouselItem>
+                        <div class="mx-10 mb-10 md:mx-20">
+                            <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
+                                <div class="md:w-7/12">
+                                    <img src="/images/aikido/aikido_titel.jpg" alt="Abbildung zweier Aikidoka beim Training." />
                                 </div>
 
-                                <div class="font-ptsans relative mt-10 min-h-48 text-sm font-normal tracking-wider text-black">
+                                <div class="relative ml-auto min-h-[19rem] flex-grow text-left md:hidden">
+                                    <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Aikido</div>
                                     <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-                                    <div class="flex flex-row justify-between">
-                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
-                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
-                                    </div>
-                                    <div class="flex flex-row justify-between">
+                                    <div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag,</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch</div>
+                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">und Freitag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
                                     </div>
-                                    <div class="flex flex-row justify-between">
-                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
-                                        <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
-                                    </div>
-                                    <div class="font-ptsans mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
-                                    <div class="flex flex-row justify-between">
+                                    <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                    </div>
-                                    <div class="flex flex-row justify-end">
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:15</div>
                                     </div>
-                                    <div class="flex flex-row justify-between">
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">16:00 - 16:50</div>
-                                    </div>
-                                    <div class="flex flex-row justify-end">
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                    </div>
-                                    <div class="flex flex-row justify-end">
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:20</div>
                                     </div>
-                                    <div class="mt-4 flex flex-row justify-end">
+                                    <div class="mt-4 w-[120px] max-w-[120px]">
                                         <Weiterleitung Link="/Aikido" />
                                     </div>
                                 </div>
+
+                                <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm md:hidden">
+                                    Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet. Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung.
+                                </div>
+
+                                <div class="ml-20 hidden w-5/12 md:block">
+                                    <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Aikido</div>
+                                    <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
+                                        Aikido, der „Weg der universellen Energie“, ist eine moderne japanische Kampfkunst und Selbstverteidigung, deren Wurzeln auf die klassischen Kriegskünste Japans (Bugei) verweisen. Diese Künste werden auch unter dem Begriff „Budo“ (Weg der Kampfkünste) zusammengefasst, was korrekt übersetzt „Hände, die den Speer stoppen“ bedeutet. Aikido ist kein Wettkampfsport und keine Streetfighter-Rezeptsammlung! Es enthält effektive Verteidigungstechniken und wendet sich dabei an anspruchsvolle Menschen mit langem Atem und Interesse an geistig-körperlicher Entwicklung.
+                                    </div>
+
+                                    <div class="font-ptsans relative mt-10 min-h-48 text-sm font-normal tracking-wider text-black">
+                                        <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">19:30 - 21:00</div>
+                                        </div>
+                                        <div class="font-ptsans mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Montag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                                        </div>
+                                        <div class="flex flex-row justify-end">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:15</div>
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Freitag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">16:00 - 16:50</div>
+                                        </div>
+                                        <div class="flex flex-row justify-end">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                                        </div>
+                                        <div class="flex flex-row justify-end">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:15 - 19:20</div>
+                                        </div>
+                                        <div class="mt-4 flex flex-row justify-end">
+                                            <Weiterleitung Link="/Aikido" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </CarouselItem>
+                    </CarouselItem>
 
-                <CarouselItem>
-                    <div class="mx-10 mb-10 md:mx-20">
-                        <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
-                            <div class="md:w-7/12">
-                                <img src="/images/genbukan/genbukan_home.jpg" alt="Zwei Budoka in Hakama bedrohen sich gegenseitig." />
-                            </div>
-
-                            @* Mobile-Ansicht *@
-                            <div class="font-ptsans relative mb-2 ml-auto min-h-[19rem] flex-grow text-left text-sm font-normal tracking-wider text-black md:hidden">
-                                <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Genbukan</div>
-                                <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-                                <div class="mb-2 mt-4">Jodo</div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch (Jodo)</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:45 - 19:15</div>
-                                </div>
-                                <div class="mb-2 mt-4">Iaido</div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag (Iaido)</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 19:30</div>
-                                </div>
-                                <div class="absolute bottom-0 right-0">
-                                    <Weiterleitung Link="/Genbukan" />
-                                </div>
-                            </div>
-                            <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
-                                Die Abteilung Genbukan des Budo Shuren Dojo bietet Training in den traditionellen japanischen Kampfkünsten Iaido und Jodo.
-                                Iaido ist - sehr vereinfacht ausgedrückt - die Kunst des Schwertziehens, bei der Präzision, Konzentration und fließende Bewegungen im Vordergrund stehen. Dabei wird das Schwert gezogen, gegen einen oder mehrere imaginäre Gegner geführt und wieder sicher in die Scheide zurückgeführt – alles in einem harmonischen Ablauf. Jodo hingegen lehrt den Umgang mit dem Stock (Jo), der dazu dient, sich effizient gegen das Schwert zu verteidigen. Diese Disziplin fördert Schnelligkeit, Timing und Kontrolle.
-                                Bei Genbukan stehen Respekt, Disziplin und die kontinuierliche Weiterentwicklung von Körper und Geist im Zentrum des Trainings.
-                                Anfänger und Fortgeschrittene sind herzlich willkommen!
-                            </div>
-
-                            @* Desktop Ansicht *@
-                            @* Ist getrennt, blöd aber ich finde keinen sinnvollen Weg diese Ansicht ansonsten zumzusetzen! *@
-                            <div class="font-ptsans mb-2 ml-20 hidden w-5/12 text-sm font-normal tracking-wider text-black md:block">
-                                <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Genbukan</div>
-                                <div class="font-ptsans text-left">
-                                    Die Abteilung Genbukan des Budo Shuren Dojo bietet Training in den traditionellen japanischen Kampfkünsten Iaido und Jodo.
-                                    Iaido ist - sehr vereinfacht ausgedrückt - die Kunst des Schwertziehens, bei der Präzision, Konzentration und fließende Bewegungen im Vordergrund stehen. Dabei wird das Schwert gezogen, gegen einen oder mehrere imaginäre Gegner geführt und wieder sicher in die Scheide zurückgeführt – alles in einem harmonischen Ablauf. Jodo hingegen lehrt den Umgang mit dem Stock (Jo), der dazu dient, sich effizient gegen das Schwert zu verteidigen. Diese Disziplin fördert Schnelligkeit, Timing und Kontrolle.
-                                    Bei Genbukan stehen Respekt, Disziplin und die kontinuierliche Weiterentwicklung von Körper und Geist im Zentrum des Trainings.
-                                    Anfänger und Fortgeschrittene sind herzlich willkommen!
-
+                    <CarouselItem>
+                        <div class="mx-10 mb-10 md:mx-20">
+                            <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
+                                <div class="md:w-7/12">
+                                    <img src="/images/genbukan/genbukan_home.jpg" alt="Zwei Budoka in Hakama bedrohen sich gegenseitig." />
                                 </div>
 
-                                <div class="relative mt-10 min-h-48">
+                                <div class="font-ptsans relative mb-2 ml-auto min-h-[19rem] flex-grow text-left text-sm font-normal tracking-wider text-black md:hidden">
+                                    <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Genbukan</div>
                                     <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-
-                                    <div class="flex flex-row justify-between">
+                                    <div class="mb-2 mt-4">Jodo</div>
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch (Jodo)</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:45 - 19:15</div>
                                     </div>
-                                    <div class="flex flex-row justify-between">
+                                    <div class="mb-2 mt-4">Iaido</div>
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag (Iaido)</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 19:30</div>
                                     </div>
-                                    <div class="mt-4 flex flex-row justify-end">
+                                    <div class="absolute bottom-0 right-0">
                                         <Weiterleitung Link="/Genbukan" />
+                                    </div>
+                                </div>
+
+                                <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
+                                    Die Abteilung Genbukan des Budo Shuren Dojo bietet Training in den traditionellen japanischen Kampfkünsten Iaido und Jodo. Iaido ist - sehr vereinfacht ausgedrückt - die Kunst des Schwertziehens, bei der Präzision, Konzentration und fließende Bewegungen im Vordergrund stehen. Dabei wird das Schwert gezogen, gegen einen oder mehrere imaginäre Gegner geführt und wieder sicher in die Scheide zurückgeführt – alles in einem harmonischen Ablauf. Jodo hingegen lehrt den Umgang mit dem Stock (Jo), der dazu dient, sich effizient gegen das Schwert zu verteidigen. Diese Disziplin fördert Schnelligkeit, Timing und Kontrolle. Bei Genbukan stehen Respekt, Disziplin und die kontinuierliche Weiterentwicklung von Körper und Geist im Zentrum des Trainings. Anfänger und Fortgeschrittene sind herzlich willkommen!
+                                </div>
+
+                                <div class="font-ptsans mb-2 ml-20 hidden w-5/12 text-sm font-normal tracking-wider text-black md:block">
+                                    <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Genbukan</div>
+                                    <div class="font-ptsans text-left">
+                                        Die Abteilung Genbukan des Budo Shuren Dojo bietet Training in den traditionellen japanischen Kampfkünsten Iaido und Jodo. Iaido ist - sehr vereinfacht ausgedrückt - die Kunst des Schwertziehens, bei der Präzision, Konzentration und fließende Bewegungen im Vordergrund stehen. Dabei wird das Schwert gezogen, gegen einen oder mehrere imaginäre Gegner geführt und wieder sicher in die Scheide zurückgeführt – alles in einem harmonischen Ablauf. Jodo hingegen lehrt den Umgang mit dem Stock (Jo), der dazu dient, sich effizient gegen das Schwert zu verteidigen. Diese Disziplin fördert Schnelligkeit, Timing und Kontrolle. Bei Genbukan stehen Respekt, Disziplin und die kontinuierliche Weiterentwicklung von Körper und Geist im Zentrum des Trainings. Anfänger und Fortgeschrittene sind herzlich willkommen!
+                                    </div>
+
+                                    <div class="relative mt-10 min-h-48">
+                                        <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Mittwoch (Jodo)</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:45 - 19:15</div>
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag (Iaido)</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 19:30</div>
+                                        </div>
+                                        <div class="mt-4 flex flex-row justify-end">
+                                            <Weiterleitung Link="/Genbukan" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </CarouselItem>
+                    </CarouselItem>
 
-                <CarouselItem>
-                    <div class="mx-10 mb-10 md:mx-20">
-                        <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
-                            <div class="md:w-7/12">
-                                <img src="/images/bujinkan/bujinkan_home.jpg" alt="Zwei Bujinkanler bei der Übung eines Handgelenkhebels" />
-                            </div>
+                    <CarouselItem>
+                        <div class="mx-10 mb-10 md:mx-20">
+                            <div class="grid-cols-[auto_140px] grid md:flex md:flex-row">
+                                <div class="md:w-7/12">
+                                    <img src="/images/bujinkan/bujinkan_home.jpg" alt="Zwei Bujinkanler bei der Übung eines Handgelenkhebels" />
+                                </div>
 
-                            @* Mobile-Ansicht *@
-                            <div class="relative ml-auto min-h-[19rem] flex-grow text-left md:hidden">
-                                <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Bujinkan</div>
-                                <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
-                                </div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
-                                </div>
-                                <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                </div>
-                                <div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
-                                    <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
-                                </div>
-                                <div class="absolute bottom-0 right-0">
-                                    <Weiterleitung Link="/Bujinkan" />
-                                </div>
-                            </div>
-                            <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
-                                Das Bujinkan Budo Taijutsu/Ninjutsu ist eine
-                                japanische Kampfkunst, welche von Dr.
-                                Masaaki Hatsumi gegründet wurde. Sie
-                                vereint neun unterschiedliche Schulen,
-                                welche aus den alten Samurai- und Ninjaschulen 
-                                stammen. Dadurch bietet das Bujinkan 
-                                eine beeindruckende Vielfalt an
-                                Techniken und Strategien.
-                                Neben unbewaffneten Techniken wie Hebel,
-                                Würfe, Tritte, Block- und Schlagtechniken
-                                wird auch der Umgang mit traditionellen,
-                                japanischen Waffen wie Katana, Bo, Yari,
-                                Naginata usw. gelehrt.
-                                Dies macht das Bujinkan Budo
-                                Taijutsu/Ninjutsu zu einer sehr vielseitigen
-                                Kampfkunst.
-                            </div> 
-
-                            @* Desktop Ansicht *@
-                            @* Ist getrennt, blöd aber ich finde keinen sinnvollen Weg diese Ansicht ansonsten zumzusetzen! *@
-                            <div class="ml-20 hidden w-5/12 md:block">
-                                <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Bujinkan</div>
-                                <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
-                                    Das Bujinkan Budo Taijutsu/Ninjutsu ist eine
-                                    japanische Kampfkunst, welche von Dr.
-                                    Masaaki Hatsumi gegründet wurde. Sie
-                                    vereint neun unterschiedliche Schulen,
-                                    welche aus den alten Samurai- und Ninjaschulen
-                                    stammen. Dadurch bietet das Bujinkan 
-                                    eine beeindruckende Vielfalt an
-                                    Techniken und Strategien.
-                                    Neben unbewaffneten Techniken wie Hebel,
-                                    Würfe, Tritte, Block- und Schlagtechniken
-                                    wird auch der Umgang mit traditionellen,
-                                    japanischen Waffen wie Katana, Bo, Yari,
-                                    Naginata usw. gelehrt.
-                                    Dies macht das Bujinkan Budo
-                                    Taijutsu/Ninjutsu zu einer sehr vielseitigen
-                                    Kampfkunst.
-                                </div>       
-
-                                <div class="relative mt-10 min-h-48">
+                                <div class="relative ml-auto min-h-[19rem] flex-grow text-left md:hidden">
+                                    <div class="font-yuji -mt-2 text-left text-xl font-normal tracking-widest text-primary">Bujinkan</div>
                                     <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
-                                    <div class="flex flex-row justify-between">
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
-                                    <div class="flex flex-row justify-between">
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
                                     </div>
                                     <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
-                                    <div class="flex flex-row justify-between">
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
-                                    <div class="flex flex-row justify-between">
+                                    <div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
                                         <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
                                     </div>
@@ -278,34 +367,72 @@
                                         <Weiterleitung Link="/Bujinkan" />
                                     </div>
                                 </div>
+
+                                <div class="beschreibung col-span-2 font-ptsans mt-5 text-sm font-normal tracking-wider text-black md:hidden">
+                                    Das Bujinkan Budo Taijutsu/Ninjutsu ist eine japanische Kampfkunst, welche von Dr. Masaaki Hatsumi gegründet wurde. Sie vereint neun unterschiedliche Schulen, welche aus den alten Samurai- und Ninjaschulen stammen. Dadurch bietet das Bujinkan eine beeindruckende Vielfalt an Techniken und Strategien. Neben unbewaffneten Techniken wie Hebel, Würfe, Tritte, Block- und Schlagtechniken wird auch der Umgang mit traditionellen, japanischen Waffen wie Katana, Bo, Yari, Naginata usw. gelehrt. Dies macht das Bujinkan Budo Taijutsu/Ninjutsu zu einer sehr vielseitigen Kampfkunst.
+                                </div>
+
+                                <div class="ml-20 hidden w-5/12 md:block">
+                                    <div class="font-yuji -mt-2 mb-10 text-left text-3xl font-normal tracking-widest text-primary">Bujinkan</div>
+                                    <div class="font-ptsans text-left text-sm font-normal tracking-wider text-black">
+                                        Das Bujinkan Budo Taijutsu/Ninjutsu ist eine japanische Kampfkunst, welche von Dr. Masaaki Hatsumi gegründet wurde. Sie vereint neun unterschiedliche Schulen, welche aus den alten Samurai- und Ninjaschulen stammen. Dadurch bietet das Bujinkan eine beeindruckende Vielfalt an Techniken und Strategien. Neben unbewaffneten Techniken wie Hebel, Würfe, Tritte, Block- und Schlagtechniken wird auch der Umgang mit traditionellen, japanischen Waffen wie Katana, Bo, Yari, Naginata usw. gelehrt. Dies macht das Bujinkan Budo Taijutsu/Ninjutsu zu einer sehr vielseitigen Kampfkunst.
+                                    </div>
+
+                                    <div class="font-ptsans relative mt-10 min-h-48 text-sm font-normal tracking-wider text-black">
+                                        <div class="font-ptsans mb-2 text-sm font-normal tracking-wider text-black">Trainingszeiten:</div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">18:00 - 21:00</div>
+                                        </div>
+                                        <div class="font-ptsans mb-2 mt-4 text-sm font-normal tracking-wider text-black">Kindertraining:</div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Dienstag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                                        </div>
+                                        <div class="flex flex-row justify-between">
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">Donnerstag</div>
+                                            <div class="font-ptsans text-sm font-normal tracking-wider text-black">17:00 - 18:00</div>
+                                        </div>
+                                        <div class="mt-4 flex flex-row justify-end">
+                                            <Weiterleitung Link="/Bujinkan" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </CarouselItem>
-            </ChildContent>
-            <IndicatorsTemplate>
-                @{
-                    <div class="indicator">
-                        <div class="fs-6"></div>
-                    </div>
-                }
-            </IndicatorsTemplate>
-            <PreviousButtonTemplate>
-                <SfButton CssClass="e-flat e-outline nav-btn" title="Previous">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
-                        <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
-                    </svg>
-                </SfButton>
-            </PreviousButtonTemplate>
-            <NextButtonTemplate>
-                <SfButton CssClass="e-flat e-outline nav-btn" title="Next">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
-                        <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
-                    </svg>
-                </SfButton>
-            </NextButtonTemplate>
-        </SfCarousel>
-    </div>
+                    </CarouselItem>
+                </ChildContent>
+
+                <IndicatorsTemplate>
+                    @{
+                        <div class="indicator">
+                            <div class="fs-6"></div>
+                        </div>
+                    }
+                </IndicatorsTemplate>
+
+                <PreviousButtonTemplate>
+                    <SfButton CssClass="e-flat e-outline nav-btn" title="Previous">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                            <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                        </svg>
+                    </SfButton>
+                </PreviousButtonTemplate>
+
+                <NextButtonTemplate>
+                    <SfButton CssClass="e-flat e-outline nav-btn" title="Next">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+                            <path d="m13.5 7.01 13 13m-13 13 13-13"></path>
+                        </svg>
+                    </SfButton>
+                </NextButtonTemplate>
+            </SfCarousel>
+        </div>
+    }
 </div>
 
 <style>
@@ -355,11 +482,11 @@
         background-color: #2A6749;
         color: #fff;
     }
-
 </style>
 
-
 @code {
+    private bool _interactiveReady;
+
     private int currentIndex = 0;
     public int CurrentIndex
     {
@@ -368,6 +495,17 @@
         {
             currentIndex = value;
             OnCurrentIndexChanged();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            _interactiveReady = true;
+            StateHasChanged();
         }
     }
 
@@ -398,14 +536,10 @@
         CurrentIndex = args;
     }
 
-    string defaultInnerBlockStyle = "border-black text-black";
-    // string defaultInnerBlockStyle = "color: var(--default-text-color);";
-    string focusedInnerBlockStyle = "border-primary text-primary";
-    // string focusedInnerBlockStyle = "color: var(--highlight-text-color);";
+    private readonly string defaultInnerBlockStyle = "border-black text-black";
+    private readonly string focusedInnerBlockStyle = "border-primary text-primary";
 
-    string AikidoStyle { get; set; } = "border-primary text-primary";
-    string BujinkanStyle { get; set; } = "border-black text-black";
-    string GenbukanStyle { get; set; } = "border-black text-black";
-
-
+    private string AikidoStyle { get; set; } = "border-primary text-primary";
+    private string BujinkanStyle { get; set; } = "border-black text-black";
+    private string GenbukanStyle { get; set; } = "border-black text-black";
 }

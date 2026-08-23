@@ -1,10 +1,12 @@
 ﻿@page "/Account/Member/Neuigkeiten"
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 
 @inject ImageService ImageService
 @inject UserService UserService
 @inject IdentityUserAccessor UserAccessor
 @inject ILogger<Neuigkeit> Logger
+@inject IJSRuntime JSRuntime
 
 @using BudoShurenWebsite.Data
 @using Microsoft.AspNetCore.Identity
@@ -29,8 +31,13 @@
             {
                 <StatusMessage ShowAsError="true" Message="@errorMessage" />
             }
-
-            <SfGrid TValue="Neuigkeit" AllowSorting="true" AllowPaging="false" Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Search" })" Height="100%" Width="100%">
+            <SfGrid @ref="grid"
+                    TValue="Neuigkeit"
+                    AllowSorting="true"
+                    AllowPaging="false"
+                    Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Search" })"
+                    Height="100%"
+                    Width="100%">
                 <SfDataManager AdaptorInstance="@typeof(NeuigkeitenAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
                 <GridEvents TValue="Neuigkeit" OnActionFailure="OnActionFailureHandler" OnActionBegin="OnActionBeginHandler" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"></GridEvents>
                 <GridTemplates>
@@ -116,13 +123,18 @@
                             @if (IsAddNew)
                             {
                                 <div class="mt-10">
-                                    <SfUploader @ref="sfUploader"
+                                    <SfUploader @key="uploaderRenderKey"
+                                                @ref="sfUploader"
                                                 ID="UploadFiles"
                                                 AllowedExtensions=".png, .jpg, .jpeg, .webp"
-                                                MaxFileSize=5242880
-                                                AllowMultiple=false>
+                                                MaxFileSize="5242880"
+                                                AllowMultiple="false">
                                         <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
-                                        <UploaderEvents FileSelected="SelectHandler" Success="SuccessHandler" OnFailure="@OnFailureHandler" OnActionComplete="@OnActionCompleteHandler" BeforeUpload="@BeforeUploadHandler"></UploaderEvents>
+                                        <UploaderEvents FileSelected="SelectHandler"
+                                                        Success="SuccessHandler"
+                                                        OnFailure="OnFailureHandler"
+                                                        OnActionComplete="OnActionCompleteHandler"
+                                                        BeforeUpload="BeforeUploadHandler"></UploaderEvents>
                                     </SfUploader>
                                 </div>
                             }
@@ -160,11 +172,18 @@
     [AllowNull]
     private SfUploader sfUploader { get; set; }
 
+    [AllowNull]
+    private SfGrid<Neuigkeit> grid { get; set; }
+
+    private DotNetObjectReference<NeuigkeitenVerwalten>? dotNetReference;
+    private int uploaderRenderKey = 0;
+    private bool isClosingDialogFromLifecycle = false;
+
+
     private UserWithRoles? user = default!;
 
     private bool AllowEditing { get; set; } = false;
     private bool AllowDeletion { get; set; } = false;
-    // private FileInfo? UploadedImage { get; set; }
     private UploadedFile? _uploadedFile { get; set; }
     private string errorMessage { get; set; } = string.Empty;
     private bool IsLoading { get; set; } = false;
@@ -173,12 +192,32 @@
 
     public bool IsAddNew { get; set; } = false;
 
-    // private bool isUploading = false;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            dotNetReference = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("neuigkeitenDialogLifecycle.register", dotNetReference);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("neuigkeitenDialogLifecycle.unregister");
+        }
+        catch
+        {
+        }
+
+        dotNetReference?.Dispose();
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        // if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
-
         await base.OnInitializedAsync();
         try
         {
@@ -218,36 +257,48 @@
     public void OnActionFailureHandler(Syncfusion.Blazor.Grids.FailureEventArgs args)
     {
         errorMessage = args.Error?.Message ?? "Unbekannter Fehler";
-        // var s = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(args.Error));  //get details
     }
 
-    private async void OnActionBeginHandler(Syncfusion.Blazor.Grids.ActionEventArgs<Neuigkeit> args)
+    private async Task OnActionBeginHandler(Syncfusion.Blazor.Grids.ActionEventArgs<Neuigkeit> args)
     {
-        //Das muss passieren, bevor IsAddNew gesetz wird, damit ich weiß ob es vorher ein Add war. Erst danach IsAddNew aktualisieren.
         if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
         {
-            if (IsAddNew)
+            if (IsAddNew && sfUploader != null)
             {
-                //wenn eine Datei hochgeladen wurde, diese löschen.
                 var files = await sfUploader.GetFilesDataAsync();
-                await sfUploader.RemoveAsync(files.ToArray());
+                if (files.Any())
+                {
+                    await sfUploader.RemoveAsync(files.ToArray());
+                }
             }
+
+            IsAddNew = false;
+            SelectedEditNeuigkeit = null;
+            return;
         }
 
-        IsAddNew = args.RequestType == Syncfusion.Blazor.Grids.Action.Add;
-        if (IsAddNew)
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
         {
+            IsAddNew = true;
+            uploaderRenderKey++;
+
             if (sfUploader != null)
             {
                 await sfUploader.ClearAllAsync();
             }
-            SelectedEditNeuigkeit = args.Data;
-        }
-        else if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
-        {
 
+            _uploadedFile = null;
+            SelectedEditNeuigkeit = args.Data;
+            return;
+        }
+
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+        {
+            IsAddNew = false;
         }
     }
+  
+    
     public void DataBoundHandler()
     {
         IsLoading = false;
@@ -278,7 +329,8 @@
         }
         this.errorMessage = string.Empty;
     }
-    public async void SuccessHandler(SuccessEventArgs args)
+  
+    public async Task SuccessHandler(SuccessEventArgs args)
     {
         try
         {
@@ -295,35 +347,31 @@
                 {
                     foreach (var file in uploadResponse.Files)
                     {
-                        // Hier kannst du auf die hochgeladenen Dateien zugreifen
-                        // Console.WriteLine($"Datei hochgeladen: {file.FileName}, ID: {file.Id}");
                         if (uploadResponse.Files.FirstOrDefault(x => x.FileName == args.File.Name) is UploadedFile uploadedFile)
                         {
-                            //Hat es Id?
                             _uploadedFile = uploadedFile;
                         }
                         else
                         {
-                            Logger.LogWarning($"Die Datei {args.File.Name} wurde nicht in der Liste der hochgeladenen Dateien gefunden!");
+                            Logger.LogWarning("Die Datei {FileName} wurde nicht in der Liste der hochgeladenen Dateien gefunden!", args.File.Name);
                         }
                     }
                 }
                 else
                 {
                     errorMessage = "Der Upload war nicht erfolgreich.";
-                    Console.WriteLine("Upload war nicht erfolgreich.");
                 }
             }
             else if (args.Operation == "remove")
             {
-                //Datei wurde gelöscht - aus der Liste entfernen?
                 if (_uploadedFile?.Id > 0)
                 {
-                    //Image löschen
                     await ImageService.RemoveImageAsync(_uploadedFile.Id);
                     _uploadedFile = null;
                     if (SelectedEditNeuigkeit != null)
+                    {
                         SelectedEditNeuigkeit.DbImageId = null;
+                    }
                 }
             }
             else
@@ -336,8 +384,8 @@
             Logger.LogError(ex, "Fehler beim Speichern des Bildes im SfUploader");
             errorMessage = ex.Message;
         }
-        // UploadedImage = args.File;
     }
+
     private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
     {
         try
@@ -358,27 +406,56 @@
             errorMessage = "Ein unbekannter Fehler ist aufgetreten.";
         }
     }
-    private async void OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
+    
+    private async Task OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
     {
-        if (SelectedEditNeuigkeit != null)
+        if (SelectedEditNeuigkeit != null && sfUploader != null)
         {
             var files = await sfUploader.GetFilesDataAsync();
             var file = files.FirstOrDefault();
             if (file != null && _uploadedFile?.Id > 0 && _uploadedFile.FileName == file.Name)
             {
                 SelectedEditNeuigkeit.DbImageId = _uploadedFile.Id;
-                // var tempPath = FileService.GetTempFilePath(file);
-                // SelectedEditNeuigkeit.TempFilePath = tempPath;
             }
         }
+
         StateHasChanged();
     }
+
     private void BeforeUploadHandler(BeforeUploadEventArgs args)
     {
         // You can prevent uploading by setting "args.Cancel" to true.
-        // isUploading = true;
     }
+   
 
+
+    #endregion
+
+    #region Lifestyle Callback
+
+    [JSInvokable]
+    public async Task HandlePageHiddenAsync()
+    {
+        if (isClosingDialogFromLifecycle || !IsAddNew || grid == null)
+        {
+            return;
+        }
+
+        isClosingDialogFromLifecycle = true;
+
+        try
+        {
+            await grid.CloseEditAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Edit-Dialog konnte beim Verlassen des Tabs nicht geschlossen werden.");
+        }
+        finally
+        {
+            isClosingDialogFromLifecycle = false;
+        }
+    }
 
     #endregion
 }

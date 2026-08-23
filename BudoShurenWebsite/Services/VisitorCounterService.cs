@@ -54,11 +54,11 @@ namespace BudoShurenWebsite.Services
             }
             catch(InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Failed to add visit to database 1");
+                _logger.LogWarning(ex, "Failed to add visit to database 1");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to add visit to database 2");
+                _logger.LogWarning(ex, "Failed to add visit to database 2");
             }
 
             try
