@@ -1,23 +1,21 @@
 using BudoShurenWebsite.Components;
 using BudoShurenWebsite.Components.Account;
-using BudoShurenWebsite.Services;
 using BudoShurenWebsite.Data;
-
+using BudoShurenWebsite.Global;
+using BudoShurenWebsite.Middleware;
+using BudoShurenWebsite.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-
-using Syncfusion.Blazor;
-using System.Globalization;
-
-using BudoShurenWebsite.Global;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-using NLog.Web;
 using NLog;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.DataProtection;
+using NLog.Web;
+using Syncfusion.Blazor;
 using System.Diagnostics;
+using System.Globalization;
+using System.Security.Claims;
 
 namespace BudoShurenWebsite
 {
@@ -163,6 +161,9 @@ namespace BudoShurenWebsite
                 builder.Services.AddDistributedMemoryCache();
 
                 var app = builder.Build();
+
+                // GANZ ZUERST: Wartungsmodus-Check, bevor irgendetwas anderes läuft
+                app.UseMiddleware<MaintenanceMiddleware>();
 
                 // Configure the HTTP request pipeline.
                 if (app.Environment.IsDevelopment())
