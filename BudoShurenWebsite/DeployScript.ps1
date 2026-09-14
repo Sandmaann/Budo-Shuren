@@ -133,6 +133,7 @@ try {
         Write-Log "Check, ob die Haupt-DLL '$MainDllName' in Verwendung ist..."
         if (Test-FileInUse -filePath $targetMainDll) {
             Write-Log "Abbruch: Die Haupt-DLL '$MainDllName' ist aktuell in Verwendung. Deployment wird nicht durchgeführt." "ERROR"
+            Read-Host -Prompt "Drücke Enter zum Beenden"
             return
         }
     }

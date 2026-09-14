@@ -62,6 +62,13 @@
                         @{
                             var neuigkeit = context as Neuigkeit;
                         }
+                        <!-- Hinweisbanner nur auf Mobile (md breakpoint) -->
+                        <div class="md:hidden mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                            <p class="text-sm text-yellow-700 font-ptsans">
+                                Achtung: Bei wechsel aus dem Tab heraus geht die Bearbeitung verloren.
+                            </p>
+                        </div>
+
                         <div>
                             <SfTextBox Placeholder="Titel"
                                        FloatLabelType="FloatLabelType.Always"
@@ -297,8 +304,8 @@
             IsAddNew = false;
         }
     }
+
   
-    
     public void DataBoundHandler()
     {
         IsLoading = false;
@@ -329,7 +336,7 @@
         }
         this.errorMessage = string.Empty;
     }
-  
+
     public async Task SuccessHandler(SuccessEventArgs args)
     {
         try
@@ -406,7 +413,7 @@
             errorMessage = "Ein unbekannter Fehler ist aufgetreten.";
         }
     }
-    
+
     private async Task OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
     {
         if (SelectedEditNeuigkeit != null && sfUploader != null)
@@ -426,8 +433,8 @@
     {
         // You can prevent uploading by setting "args.Cancel" to true.
     }
-   
 
+   
 
     #endregion
 

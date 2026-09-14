@@ -223,6 +223,7 @@
 
 @code {
     private const int Schwellenwert = 5;
+    private static readonly Random _random = new Random();
 
     private bool _interactiveReady;
     private string ErrorMessage { get; set; } = string.Empty;
@@ -274,9 +275,15 @@
                 .ToList();
 
             var data = echte
-                .Concat(standards)
-                .OrderBy(x => x.Sortierung)
-                .ToList();
+.Concat(standards)
+.GroupBy(x => x.Sortierung)
+.SelectMany(group => group.OrderBy(_ => _random.Next()))
+.ToList();
+
+            // var data = echte
+            //     .Concat(standards)
+            //     .OrderBy(x => x.Sortierung)
+            //     .ToList();
 
             foreach (var item in data)
             {

@@ -89,7 +89,7 @@ namespace BudoShurenWebsite.Controllers
 
                                         var encoder = new JpegEncoder
                                         {
-                                            Quality = 90 // Qualitätseinstellung hier anpassen
+                                            Quality = CalculateQualityByDimensions(bild.Width, bild.Height)
                                         };
 
                                         await using (var outputStream = new MemoryStream())
@@ -135,6 +135,21 @@ namespace BudoShurenWebsite.Controllers
             };
 
             return Ok(successResponse);
+        }
+
+        // Und füge diese Helper-Methode hinzu:
+        private int CalculateQualityByDimensions(int width, int height)
+        {
+            var pixelCount = (long)width * height;
+
+            // Je größer das Bild, desto stärker komprimieren
+            return pixelCount switch
+            {
+                > 2000000 => 70,      // Großes Bild (z.B. 1920x1080) → 70%
+                > 1000000 => 75,      // Mittleres Bild → 75%
+                > 500000 => 85,      // Kleineres Bild → 85%
+                _ => 90               // Sehr kleines Bild → 90%
+            };
         }
 
         [HttpPost("[action]")]
