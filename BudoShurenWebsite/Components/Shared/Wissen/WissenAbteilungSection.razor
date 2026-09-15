@@ -1,0 +1,66 @@
+﻿@rendermode InteractiveServer
+
+@inject WissenService WissenService
+@inject ILogger<WissenAbteilungSection> Logger
+
+@if (_beitraege?.Any() == true)
+{
+    <section>
+        <SectionBanner Titel="Das könnte dich auch interessieren:" />
+
+        @foreach (var beitrag in _beitraege)
+        {
+            <div class="mb-4 mt-10">
+                <Weiterleitung Link="@($"/themen/{beitrag.Slug}")" Text="@beitrag.Titel" NewWindow="true" />
+            </div>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string? Abteilung { get; set; }
+
+    private List<WissenBeitrag>? _beitraege { get; set; }
+
+    private const int _maxCount = 5;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadWeiterleitungen();
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    private async Task LoadWeiterleitungen()
+    {
+        try
+        {
+            _beitraege = null;
+
+            if (string.IsNullOrWhiteSpace(Abteilung))
+                throw new InvalidOperationException($"Die Abteilung '{Abteilung ?? "NULL"}' kann hier nicht geladen werden.");
+
+            var result = await WissenService.GetBeitragByAbteilung(abteilung: Abteilung, nurVeroeffentlichte: true);
+            if (result?.Count > _maxCount)
+            {
+                var guaranteed = result.OrderBy(x => x.SortOrder).Take(2).ToList();
+                var remaining = result.Except(guaranteed).OrderBy(x => Guid.NewGuid()).Take(_maxCount - 2).ToList();
+                _beitraege = guaranteed.Concat(remaining).ToList();
+            }
+            else
+            {
+                _beitraege = result;
+            }
+            await InvokeAsync(() => StateHasChanged());
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error on Loading Beiträge in AbteilungSection {Abteilung}");
+        }
+    }
+}

@@ -1,0 +1,100 @@
+@using BudoShurenWebsite.Models
+@using System.Text.Json
+
+<div class="rounded border border-gray-300 p-4">
+    <h5 class="font-ptsans mb-3 text-sm font-bold">Aufzählung</h5>
+
+    <div class="mb-3 space-y-2">
+        @for (int i = 0; i < _items.Count; i++)
+        {
+            int index = i;
+            <div class="flex items-center gap-2">
+                <span class="font-ptsans text-xs text-gray-500">@(index + 1).</span>
+                <input type="text"
+                       value="@_items[index]"
+                       @oninput="e => UpdateItem(index, e.Value?.ToString() ?? string.Empty)"
+                       class="font-ptsans flex-1 rounded border border-gray-300 p-2 text-sm"
+                       placeholder="Listeneintrag eingeben..." />
+                <button type="button" @onclick="() => RemoveItem(index)"
+                        class="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                        title="Eintrag entfernen">
+                    ✕
+                </button>
+            </div>
+        }
+    </div>
+
+    <button type="button" @onclick="AddItem"
+            class="font-ptsans rounded border border-gray-400 px-3 py-1 text-sm hover:bg-gray-50">
+        + Eintrag hinzufügen
+    </button>
+
+    @if (_items.Any(i => !string.IsNullOrWhiteSpace(i)))
+    {
+        <div class="mt-4 rounded border border-blue-200 bg-blue-50 p-3">
+            <p class="font-ptsans mb-2 text-xs font-bold text-blue-800">Vorschau:</p>
+            <div class="mx-5">
+                <ul class="list-disc">
+                    @foreach (var item in _items.Where(i => !string.IsNullOrWhiteSpace(i)))
+                    {
+                        <li class="mt-1">
+                            <p class="font-ptsans text-sm tracking-wider">@item</p>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public WissenBlock Block { get; set; } = null!;
+
+    private List<string> _items = new();
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(Block.ListenItemsJson))
+        {
+            try
+            {
+                _items = JsonSerializer.Deserialize<List<string>>(Block.ListenItemsJson) ?? new List<string>();
+            }
+            catch
+            {
+                _items = new List<string>();
+            }
+        }
+
+        if (_items.Count == 0)
+        {
+            _items.Add(string.Empty);
+        }
+    }
+
+    private void AddItem()
+    {
+        _items.Add(string.Empty);
+    }
+
+    private void RemoveItem(int index)
+    {
+        if (_items.Count > 1)
+        {
+            _items.RemoveAt(index);
+            SaveToBlock();
+        }
+    }
+
+    private void UpdateItem(int index, string value)
+    {
+        _items[index] = value;
+        SaveToBlock();
+    }
+
+    private void SaveToBlock()
+    {
+        Block.ListenItemsJson = JsonSerializer.Serialize(_items.Where(i => !string.IsNullOrWhiteSpace(i)).ToList());
+    }
+}

@@ -49,14 +49,14 @@
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, $"Fehler beim zählen eines Besuchers, Aufruf aus {pageName}");
+                    Logger.LogWarning(ex, $"Fehler beim zählen eines Besuchers, Aufruf aus {pageName}");
                 }
             });
             return Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Fehler beim Initialisieren des MainLayout (VisitorCounter HttpContext?)");
+            Logger.LogWarning(ex, "Fehler beim Initialisieren des MainLayout (VisitorCounter HttpContext?)");
             return Task.CompletedTask;
         }
     }

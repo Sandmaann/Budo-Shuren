@@ -1,0 +1,118 @@
+@using BudoShurenWebsite.Models
+@using Syncfusion.Blazor.Inputs
+@using System.Text.Json
+@inject BudoShurenWebsite.Services.ImageService ImageService
+
+<div class="rounded border border-gray-300 p-4">
+    <h5 class="font-ptsans mb-3 text-sm font-bold">Einzelbild (zentriert)</h5>
+
+    <div class="mb-3">
+        <label class="font-ptsans mb-1 block text-xs font-bold">Bild hochladen</label>
+        @if (Block.BildId.HasValue)
+        {
+            <div class="mb-2 flex items-center gap-3">
+                <img src="/Account/Member/Filesave/GetImage/@Block.BildId" class="h-20 w-auto rounded border" alt="Vorschau" />
+                <button type="button" @onclick="RemoveBild" class="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50">
+                    Bild entfernen
+                </button>
+            </div>
+        }
+        else
+        {
+            <SfUploader ID="UploadFiles"
+                        AllowedExtensions=".png, .jpg, .jpeg, .webp"
+                        MaxFileSize="5242880"
+                        AutoUpload="true">
+                <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save"
+                                       RemoveUrl="Account/Member/Filesave/Remove" />
+                <UploaderEvents Success="SuccessHandler" OnFailure="FailureHandler" />
+            </SfUploader>
+        }
+        @if (!string.IsNullOrEmpty(_uploadError))
+        {
+            <p class="mt-1 text-xs text-red-600">@_uploadError</p>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="font-ptsans mb-1 block text-xs font-bold">Alt-Text (Barrierefreiheit)</label>
+        <input type="text"
+               @bind="Block.AltText"
+               class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+               placeholder="Kurze Bildbeschreibung für Screenreader" />
+    </div>
+
+    @if (Block.BildId.HasValue)
+    {
+        <div class="mt-3 rounded border border-blue-200 bg-blue-50 p-3">
+            <p class="font-ptsans mb-2 text-xs font-bold text-blue-800">Vorschau:</p>
+            <div class="flex justify-center">
+                <img class="max-w-full md:max-w-72 rounded" src="/Account/Member/Filesave/GetImage/@Block.BildId" alt="@Block.AltText" />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public WissenBlock Block { get; set; } = null!;
+
+    private string _uploadError = string.Empty;
+
+    private async void SuccessHandler(SuccessEventArgs args)
+    {
+        try
+        {
+            if (args.Operation == "upload")
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var response = JsonSerializer.Deserialize<UploadResponse>(args.Response.ResponseText, options);
+                if (response?.Success == true && response.Files.FirstOrDefault() is { } uploaded)
+                {
+                    Block.BildId = uploaded.Id;
+                    _uploadError = string.Empty;
+                    StateHasChanged();
+                }
+                else
+                {
+                    _uploadError = $"Server-Antwort ungültig: {args.Response.ResponseText}";
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _uploadError = $"Fehler beim Verarbeiten des Uploads: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void FailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(args.Response.ResponseText);
+            _uploadError = doc.RootElement.TryGetProperty("message", out var msg)
+                ? msg.GetString() ?? "Upload fehlgeschlagen."
+                : $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        catch
+        {
+            _uploadError = $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
+        }
+        StateHasChanged();
+    }
+
+    private async Task RemoveBild()
+    {
+        if (Block.BildId.HasValue)
+        {
+            await ImageService.RemoveImageAsync(Block.BildId.Value);
+            Block.BildId = null;
+        }
+        _uploadError = string.Empty;
+    }
+
+    private record UploadResponse(bool Success, List<UploadedFile> Files);
+    private record UploadedFile(string FileName, int Id);
+}

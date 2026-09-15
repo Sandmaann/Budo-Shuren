@@ -1,0 +1,77 @@
+@using BudoShurenWebsite.Models
+@using Markdig
+
+<div class="rounded border border-gray-300 p-4">
+    <h5 class="font-ptsans mb-3 text-sm font-bold">Textabsatz</h5>
+
+    <div class="mb-2 flex gap-2">
+        <button type="button" @onclick="InsertBold" class="rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-100">
+            <strong>Fett</strong>
+        </button>
+        <button type="button" @onclick="InsertItalic" class="rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-100">
+            <em>Kursiv</em>
+        </button>
+        <button type="button" @onclick="InsertLink" class="rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-100">
+            🔗 Link
+        </button>
+    </div>
+
+    <textarea @bind="Block.TextInhalt" 
+              @bind:event="oninput"
+              class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+              rows="6"
+              placeholder="Text hier eingeben... Nutze **fett**, *kursiv*, [Link](url)"></textarea>
+
+    @if (ShowPreview && !string.IsNullOrWhiteSpace(Block.TextInhalt))
+    {
+        <div class="mt-3 rounded border border-blue-200 bg-blue-50 p-3">
+            <p class="font-ptsans mb-1 text-xs font-bold text-blue-800">Vorschau:</p>
+            <div class="font-ptsans text-sm tracking-wider">
+                @((MarkupString)RenderMarkdown(Block.TextInhalt))
+            </div>
+        </div>
+    }
+
+    <div class="mt-2">
+        <label class="flex items-center gap-2">
+            <input type="checkbox" @bind="ShowPreview" />
+            <span class="font-ptsans text-xs">Live-Vorschau anzeigen</span>
+        </label>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public WissenBlock Block { get; set; } = null!;
+
+    private bool ShowPreview { get; set; } = true;
+
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
+        .DisableHtml()
+        .UseEmphasisExtras()
+        .UseAutoLinks()
+        .Build();
+
+    private string RenderMarkdown(string? markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+            return string.Empty;
+
+        return Markdown.ToHtml(markdown, MarkdownPipeline);
+    }
+
+    private void InsertBold()
+    {
+        Block.TextInhalt += "**fetter Text**";
+    }
+
+    private void InsertItalic()
+    {
+        Block.TextInhalt += "*kursiver Text*";
+    }
+
+    private void InsertLink()
+    {
+        Block.TextInhalt += "[Linktext](https://beispiel.de)";
+    }
+}

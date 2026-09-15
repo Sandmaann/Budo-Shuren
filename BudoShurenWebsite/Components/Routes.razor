@@ -1,13 +1,7 @@
-﻿@* <Router AppAssembly="typeof(Program).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router> *@
-
+﻿
 @using BudoShurenWebsite.Components.Account.Shared
 
-<Router AppAssembly="typeof(Program).Assembly">
+@* <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
@@ -15,5 +9,32 @@
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router> *@
+
+ToDo: NLog + Betterstack wirklich einrichten
+
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <LoggingErrorBoundary>
+            <ChildContent>
+                <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                    <NotAuthorized>
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="routeData" Selector="h1" />
+            </ChildContent>
+            <ErrorContent Context="exception">
+                <LayoutView Layout="typeof(Layout.MainLayout)">
+                    <div class="container mx-auto max-w-screen-md mt-24 px-4">
+                        <div class="rounded border border-red-300 bg-red-50 p-6">
+                            <h1 class="text-xl font-bold mb-2">Etwas ist schiefgelaufen</h1>
+                            <p>Der Fehler wurde protokolliert. Bitte lade die Seite neu.</p>
+                        </div>
+                    </div>
+                </LayoutView>
+            </ErrorContent>
+        </LoggingErrorBoundary>
     </Found>
 </Router>

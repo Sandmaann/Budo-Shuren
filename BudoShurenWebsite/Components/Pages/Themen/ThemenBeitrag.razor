@@ -1,0 +1,92 @@
+@page "/themen/{Slug}"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Services
+
+@inject WissenService WissenService
+@inject NavigationManager NavigationManager
+
+@if (_beitrag == null && !_isLoading)
+{
+    <PageTitle>Nicht gefunden | Budo Shuren Dojo</PageTitle>
+    <div class="container mx-auto max-w-screen-md">
+        <div class="mx-10 mt-20">
+            <Standardtext Text="Dieser Beitrag wurde nicht gefunden oder ist nicht mehr verfügbar." />
+            <div class="mt-6">
+                <a href="/themen" class="font-ptsans text-sm tracking-wider underline underline-offset-4 hover:no-underline">
+                    ← Zurück zur Themenübersicht
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else if (_isLoading)
+{
+    <PageTitle>Laden... | Budo Shuren Dojo</PageTitle>
+    <div class="container mx-auto max-w-screen-md">
+        <div class="mx-10 mt-20 text-center">
+            <Standardtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
+        </div>
+    </div>
+}
+else if (_beitrag != null)
+{
+    <PageTitle>@_beitrag.MetaTitel | Budo Shuren Dojo</PageTitle>
+    <HeadContent>
+        <meta name="description" content="@_beitrag.MetaBeschreibung">
+    </HeadContent>
+
+    <div>
+        <Headline Titel="@_beitrag.HeadlineTitel"
+                  Untertitel="@_beitrag.Titel"
+                  Anekdote="@(!string.IsNullOrWhiteSpace(_beitrag.HeadlineAnekdote) ? _beitrag.HeadlineAnekdote : _beitrag.Kategorie?.Name ?? "")" />
+    </div>
+
+    <div class="container mx-auto max-w-screen-md">
+        <div class="mx-10">
+            <div class="mt-4">
+                <a href="/themen" class="font-ptsans text-xs tracking-wider text-gray-500 underline underline-offset-4 hover:text-black">
+                    ← Alle Themen
+                </a>
+                @if (_beitrag.Kategorie != null)
+                {
+                    <span class="font-ptsans mx-2 text-xs text-gray-400">/</span>
+                    <span class="font-ptsans text-xs tracking-wider text-gray-500">@_beitrag.Kategorie.Name</span>
+                }
+            </div>
+
+            @foreach (var block in _beitrag.Bloecke.OrderBy(b => b.Sortierung))
+            {
+                <WissenBlockRenderer Block="block" />
+            }
+
+            <div class="mb-20 mt-16 border-t border-gray-200 pt-8">
+                <a href="/themen" class="font-ptsans text-sm tracking-wider underline underline-offset-4 hover:no-underline">
+                    ← Zurück zur Themenübersicht
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private WissenBeitrag? _beitrag;
+    private bool _isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _beitrag = null;
+
+        if (!string.IsNullOrWhiteSpace(Slug))
+        {
+            _beitrag = await WissenService.GetBeitragBySlugAsync(Slug, nurVeroeffentlichte: true);
+        }
+
+        _isLoading = false;
+    }
+}

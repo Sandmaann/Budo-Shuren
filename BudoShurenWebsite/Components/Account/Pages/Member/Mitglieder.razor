@@ -20,7 +20,7 @@
 @using Syncfusion.Blazor.Data
 @using Syncfusion.Blazor
 
-<div class="container mx-auto max-w-screen-md">
+<div class="container mx-auto max-w-screen-lg">
     <div class="mx-10">
         <SectionBanner Titel="Mitglieder verwalten" />
 
@@ -63,17 +63,6 @@
                         <EditTemplate>
                         </EditTemplate>
                     </GridColumn>
-
-@*                     <GridColumn Visible="IsAdmin" Field=@nameof(UserWithRoles.Verified) HeaderText="Aktiv" AllowSearching="true" Width="75" EditType="EditType.DropDownEdit">
-                        <EditTemplate>
-                            <SfDropDownList ID="Verified" TValue="string" TItem="string"
-                                            Placeholder="Aktiver Zugang"
-                                            FloatLabelType="FloatLabelType.Always"
-                                            DataSource="@AktiviertAuswahl" @bind-Value="@((context as UserWithRoles)!.Verified)">
-                                <DropDownListFieldSettings Value="Verified"></DropDownListFieldSettings>
-                            </SfDropDownList>
-                        </EditTemplate>
-                    </GridColumn> *@
 
                     <GridColumn Field=@nameof(UserWithRoles.Vorname) HeaderText="Vorname" AllowSearching="true" Width="120"></GridColumn>
                     <GridColumn Field=@nameof(UserWithRoles.Name) HeaderText="Nachname" AllowSearching="true" Width="150"></GridColumn>

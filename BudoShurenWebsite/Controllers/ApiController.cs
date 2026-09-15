@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting.Internal;
 
 namespace BudoShurenWebsite.Controllers
 {
-    [AllowAnonymous]
+    [Authorize(Policy = "AdminOnly")]
     [Route("Custom/[controller]")]
     [ApiController]
     public class ApiController : Controller
@@ -30,7 +30,7 @@ namespace BudoShurenWebsite.Controllers
         [HttpGet("StopApp")]
         public async Task<IActionResult> StopApp()
         {
-            logger.Log(LogLevel.Information, "Stoppe API (Admin)");
+            logger.LogWarning("Anwendung wird über den Admin-Endpunkt StopApp beendet.");
             try
             {
                 await visitorCounterService.AddVisitorAsync("API", "Stop");

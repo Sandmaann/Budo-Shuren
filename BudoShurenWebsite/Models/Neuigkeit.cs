@@ -23,6 +23,9 @@ namespace BudoShurenWebsite.Models
         public int? DbImageId { get; set; }
         public DbImage? DbImage { get; set; }
 
+        public DateTime? Ablaufdatum { get; set; }
+        public bool IstStandardneuigkeit { get; set; } = false;
+
         [NotMapped]
         public bool IsLoading { get; set; } = true;
         [NotMapped]

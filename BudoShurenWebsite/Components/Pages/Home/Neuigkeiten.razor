@@ -3,52 +3,115 @@
 @using Syncfusion.Blazor.Navigations
 @using Syncfusion.Blazor.Buttons
 
-@inject IHostEnvironment Environment
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
 <div class="-mx-10 md:-mx-20">
-    @if (IsLoading)
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <Spinner Text="Einen Moment, wir suche die neuesten Informationen zusammen." />
+        <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
+    }
+    else if (!_interactiveReady)
+    {
+        @if (NeuigkeitenData.Any())
+        {
+            @foreach (var neuigkeit in NeuigkeitenData)
+            {
+                <article class="mx-10 mb-10 md:mx-20">
+                    <div class="headline mb-4 flex flex-col md:mb-8 md:flex-row">
+                        <h2 class="font-yuji text-justify text-3xl font-normal tracking-widest text-black">
+                            @neuigkeit.Titel
+                        </h2>
+
+                        <div class="min-w-0 md:flex-1 md:min-w-44">
+                            @if (!string.IsNullOrWhiteSpace(neuigkeit.Ort))
+                            {
+                                <div class="font-ptsans text-right text-sm tracking-wider text-black">
+                                    <span class="font-bold">Ort:</span> @neuigkeit.Ort
+                                </div>
+                            }
+
+                            @if (neuigkeit.Datum != null)
+                            {
+                                <div class="font-ptsans text-right text-sm tracking-wider text-black">
+                                    <span class="font-bold">Zeit:</span> @(neuigkeit.Datum?.ToString("ddd. dd. MMM yyyy"))
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div>
+                        <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
+                             src="@GetImageUrl(neuigkeit.DbImageId)"
+                             loading="lazy"
+                             alt="@neuigkeit.Titel"
+                             title="@neuigkeit.Quellenangabe"
+                             onerror="this.onerror=null;this.src='/images/missingimage.jpg';" />
+
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                            @neuigkeit.Beschreibung
+                        </p>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(neuigkeit.Link))
+                    {
+                        <div class="mt-5">
+                            <Weiterleitung Link="@neuigkeit.Link" Text="@("→ " + neuigkeit.Linktext)" NewWindow="true" />
+                        </div>
+                    }
+                </article>
+            }
+        }
+        else
+        {
+            <div class="mx-10 mb-10 md:mx-20">
+                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                    Im Moment gibt es keine Neuigkeiten.
+                </p>
+            </div>
+        }
     }
     else
     {
-        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-        {
-            <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
-        }
-        else
+        @if (NeuigkeitenData.Any())
         {
             <SfCarousel ShowIndicators="true" AutoPlay="true">
                 <ChildContent>
                     @foreach (var neuigkeit in NeuigkeitenData)
                     {
                         <CarouselItem>
-                            <div class="mx-10 mb-10 md:mx-20">
+                            <article class="mx-10 mb-10 md:mx-20">
                                 <div class="headline mb-4 flex flex-col md:mb-8 md:flex-row">
-                                    <div class="font-yuji text-justify text-3xl font-normal tracking-widest text-black">@neuigkeit.Titel</div>
+                                    <div class="font-yuji text-justify text-3xl font-normal tracking-widest text-black">
+                                        @neuigkeit.Titel
+                                    </div>
                                     <div class="min-w-0 md:flex-1 md:min-w-44">
                                         @if (!string.IsNullOrWhiteSpace(neuigkeit.Ort))
                                         {
-                                            <div class="font-ptsans text-right text-sm tracking-wider text-black"><span class="font-bold">Ort:</span> @neuigkeit.Ort</div>
+                                            <div class="font-ptsans text-right text-sm tracking-wider text-black">
+                                                <span class="font-bold">Ort:</span> @neuigkeit.Ort
+                                            </div>
                                         }
+
                                         @if (neuigkeit.Datum != null)
                                         {
-                                            <div class="font-ptsans text-right text-sm tracking-wider text-black"><span class="font-bold">Zeit: </span>@(neuigkeit.Datum?.ToString("ddd. dd. MMM yyyy"))</div>
+                                            <div class="font-ptsans text-right text-sm tracking-wider text-black">
+                                                <span class="font-bold">Zeit:</span> @(neuigkeit.Datum?.ToString("ddd. dd. MMM yyyy"))
+                                            </div>
                                         }
                                     </div>
                                 </div>
+
                                 <div>
-                                    @* <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112" src="@neuigkeit.DisplayPath" alt="@neuigkeit.Titel" /> *@
                                     @if (neuigkeit.IsLoading)
                                     {
                                         <Spinner />
                                     }
+
                                     <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
-                                         src="@GetImageUrl(neuigkeit?.DbImageId)"
+                                         src="@GetImageUrl(neuigkeit.DbImageId)"
                                          loading="lazy"
-                                         alt="@neuigkeit?.Titel"
-                                         title="@neuigkeit?.Quellenangabe"
+                                         alt="@neuigkeit.Titel"
+                                         title="@neuigkeit.Quellenangabe"
                                          @onload="neuigkeit.OnImageLoaded"
                                          @onerror="neuigkeit.OnImageError" />
 
@@ -56,29 +119,31 @@
                                     {
                                         <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
                                              src="/images/missingimage.jpg"
-                                             alt="@neuigkeit?.Titel"/>
+                                             alt="@neuigkeit.Titel" />
                                     }
 
-
-                                    <Standardtext Text="@neuigkeit?.Beschreibung" />
+                                    <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                                        @neuigkeit.Beschreibung
+                                    </p>
                                 </div>
-                                @if (!string.IsNullOrWhiteSpace(neuigkeit?.Link))
+
+                                @if (!string.IsNullOrWhiteSpace(neuigkeit.Link))
                                 {
                                     <div class="mt-5">
                                         <Weiterleitung Link="@neuigkeit.Link" Text="@("→ " + neuigkeit.Linktext)" NewWindow="true" />
                                     </div>
                                 }
-                            </div>
+                            </article>
                         </CarouselItem>
                     }
                 </ChildContent>
+
                 <IndicatorsTemplate>
-                    @{
-                        <div class="indicator">
-                            <div class="fs-6"></div>
-                        </div>
-                    }
+                    <div class="indicator">
+                        <div class="fs-6"></div>
+                    </div>
                 </IndicatorsTemplate>
+
                 <PreviousButtonTemplate>
                     <SfButton CssClass="e-flat e-outline nav-btn" title="Previous">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
@@ -86,6 +151,7 @@
                         </svg>
                     </SfButton>
                 </PreviousButtonTemplate>
+
                 <NextButtonTemplate>
                     <SfButton CssClass="e-flat e-outline nav-btn" title="Next">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
@@ -94,6 +160,14 @@
                     </SfButton>
                 </NextButtonTemplate>
             </SfCarousel>
+        }
+        else
+        {
+            <div class="mx-10 mb-10 md:mx-20">
+                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                    Im Moment gibt es keine Neuigkeiten.
+                </p>
+            </div>
         }
     }
 </div>
@@ -145,12 +219,13 @@
         background-color: #2A6749;
         color: #fff;
     }
-
 </style>
 
-
 @code {
-    private bool IsLoading { get; set; } = false;
+    private const int Schwellenwert = 5;
+    private static readonly Random _random = new Random();
+
+    private bool _interactiveReady;
     private string ErrorMessage { get; set; } = string.Empty;
     private IEnumerable<Neuigkeit> NeuigkeitenData { get; set; } = new List<Neuigkeit>();
 
@@ -158,44 +233,70 @@
     {
         return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}" : "/images/missingimage.jpg";
     }
-    protected override void OnAfterRender(bool firstRender)
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnAfterRender(firstRender);
+        await LoadNeuigkeiten();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
         if (firstRender)
         {
-            _ = LoadNeuigkeiten();
+            _interactiveReady = true;
+            StateHasChanged();
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task LoadNeuigkeiten()
     {
         using var context = DbContextFactory.CreateDbContext();
 
-        if (IsLoading)
-            return;
         try
         {
-            IsLoading = true;
-            StateHasChanged();
+            var now = DateTime.Now;
 
-            var data = await context.Neuigkeiten.OrderBy(x => x.Sortierung).ToListAsync();
-            foreach(var item in data)
+            var all = await context.Neuigkeiten
+                .AsNoTracking()
+                .OrderBy(x => x.Sortierung)
+                .ToListAsync();
+
+            var echte = all
+                .Where(x => !x.IstStandardneuigkeit && (x.Ablaufdatum == null || x.Ablaufdatum > now))
+                .ToList();
+
+            var fehlende = Math.Max(0, Schwellenwert - echte.Count);
+
+            var standards = all
+                .Where(x => x.IstStandardneuigkeit)
+                .Take(fehlende)
+                .ToList();
+
+            var data = echte
+.Concat(standards)
+.GroupBy(x => x.Sortierung)
+.SelectMany(group => group.OrderBy(_ => _random.Next()))
+.ToList();
+
+            // var data = echte
+            //     .Concat(standards)
+            //     .OrderBy(x => x.Sortierung)
+            //     .ToList();
+
+            foreach (var item in data)
             {
-                item.StateHasChanged = () => StateHasChanged();
+                item.StateHasChanged = StateHasChanged;
             }
-            // foreach (var item in data)
-            //     item.EnvironmentPath = Environment.ContentRootPath;
+
             NeuigkeitenData = data;
+            ErrorMessage = string.Empty;
         }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
-            IsLoading = false;
-        }
-        finally
-        {
-            IsLoading = false;
-            StateHasChanged();
+            NeuigkeitenData = new List<Neuigkeit>();
         }
     }
 }

@@ -1,0 +1,137 @@
+@page "/Account/Member/Themen"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Services
+@using BudoShurenWebsite.Data
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Data
+
+@inject WissenService WissenService
+@inject NavigationManager NavigationManager
+@inject UserService UserService
+
+<div class="container mx-auto max-w-screen-lg">
+    <div class="mx-10">
+        <SectionBanner Titel="Themen verwalten" />
+
+        <div class="mb-6">
+            <button @onclick="NeuenBeitragErstellen"
+                    class="font-ptsans rounded border border-black px-4 py-2 text-sm tracking-wider hover:bg-gray-100">
+                + Neuen Beitrag erstellen
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <StatusMessage ShowAsError="true" Message="@_errorMessage" />
+        }
+
+        <div class="-mx-8 md:mx-0">
+            <SfGrid TValue="WissenBeitrag"
+                    AllowSorting="true"
+                    AllowPaging="false"
+                    Toolbar="@(new List<string>() { "Delete", "Search" })"
+                    Height="100%"
+                    Width="100%">
+                <SfDataManager AdaptorInstance="@typeof(WissenBeitragAdaptor)" Adaptor="Adaptors.CustomAdaptor" />
+                <GridEvents TValue="WissenBeitrag"
+                            OnActionFailure="OnActionFailure"
+                            OnLoad="OnLoad"
+                            DataBound="DataBound" />
+                <GridTemplates>
+                    <EmptyRecordTemplate>
+                        @if (_isLoading)
+                        {
+                            <Standardtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
+                        }
+                        else
+                        {
+                            <Standardtext Text="Es wurden noch keine Themen-Beiträge angelegt." />
+                        }
+                    </EmptyRecordTemplate>
+                </GridTemplates>
+                <GridEditSettings AllowDeleting="true"
+                                  ShowDeleteConfirmDialog="true" />
+                <GridColumns>
+                    <GridColumn Field=@nameof(WissenBeitrag.Id)
+                                HeaderText="ID"
+                                IsPrimaryKey="true"
+                                Width="40"
+                                Visible="false" />
+                    <GridColumn Field=@nameof(WissenBeitrag.Titel)
+                                HeaderText="Titel"
+                                Width="200" />
+                    <GridColumn Field=@nameof(WissenBeitrag.Slug)
+                                HeaderText="URL-Slug"
+                                Width="130" />
+                    <GridColumn HeaderText="Kategorie"
+                                Width="120"
+                                AllowEditing="false">
+                        <Template>
+                            @{
+                                var beitrag = context as WissenBeitrag;
+                            }
+                            <span class="font-ptsans text-sm">@(beitrag?.Kategorie?.Name ?? "—")</span>
+                        </Template>
+                    </GridColumn>
+                    <GridColumn Field=@nameof(WissenBeitrag.Veroeffentlicht)
+                                HeaderText="Öffentlicht"
+                                Width="80"
+                                DisplayAsCheckBox="true" />
+                    <GridColumn HeaderText="Aktionen"
+                                Width="160"
+                                AllowEditing="false"
+                                AllowSorting="false">
+                        <Template>
+                            @{
+                                var beitrag = context as WissenBeitrag;
+                            }
+                            <div class="flex gap-2">
+                                <button @onclick="() => BeitragBearbeiten(beitrag!.Id)"
+                                        class="font-ptsans rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100">
+                                    Bearbeiten
+                                </button>
+                                <a href="/themen/preview/@beitrag!.Id"
+                                   target="_blank"
+                                   class="font-ptsans rounded border border-blue-300 px-2 py-1 text-xs text-blue-700 hover:bg-blue-50">
+                                    Vorschau
+                                </a>
+                            </div>
+                        </Template>
+                    </GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _errorMessage = string.Empty;
+    private bool _isLoading = true;
+
+    private void NeuenBeitragErstellen()
+    {
+        NavigationManager.NavigateTo("/Account/Member/Themen/Editor");
+    }
+
+    private void BeitragBearbeiten(int id)
+    {
+        NavigationManager.NavigateTo($"/Account/Member/Themen/Editor/{id}");
+    }
+
+    private void OnActionFailure(Syncfusion.Blazor.Grids.FailureEventArgs args)
+    {
+        _errorMessage = $"Fehler: {args.Error?.Message}";
+    }
+
+    private void OnLoad()
+    {
+        _isLoading = true;
+    }
+
+    private void DataBound()
+    {
+        _isLoading = false;
+    }
+}

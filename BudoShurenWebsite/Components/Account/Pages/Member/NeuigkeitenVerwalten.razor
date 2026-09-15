@@ -1,10 +1,12 @@
 ﻿@page "/Account/Member/Neuigkeiten"
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 
 @inject ImageService ImageService
 @inject UserService UserService
 @inject IdentityUserAccessor UserAccessor
 @inject ILogger<Neuigkeit> Logger
+@inject IJSRuntime JSRuntime
 
 @using BudoShurenWebsite.Data
 @using Microsoft.AspNetCore.Identity
@@ -17,7 +19,7 @@
 @using Syncfusion.Blazor
 @using Syncfusion.Blazor.Calendars
 
-<div class="container mx-auto max-w-screen-md">
+<div class="container mx-auto max-w-screen-lg">
     <div class="mx-10">
         <SectionBanner Titel="Neuigkeiten verwalten" />
         <div class="mb-10">
@@ -29,8 +31,13 @@
             {
                 <StatusMessage ShowAsError="true" Message="@errorMessage" />
             }
-
-            <SfGrid TValue="Neuigkeit" AllowSorting="true" AllowPaging="false" Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Search" })" Height="100%" Width="100%">
+            <SfGrid @ref="grid"
+                    TValue="Neuigkeit"
+                    AllowSorting="true"
+                    AllowPaging="false"
+                    Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Search" })"
+                    Height="100%"
+                    Width="100%">
                 <SfDataManager AdaptorInstance="@typeof(NeuigkeitenAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
                 <GridEvents TValue="Neuigkeit" OnActionFailure="OnActionFailureHandler" OnActionBegin="OnActionBeginHandler" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"></GridEvents>
                 <GridTemplates>
@@ -55,6 +62,13 @@
                         @{
                             var neuigkeit = context as Neuigkeit;
                         }
+                        <!-- Hinweisbanner nur auf Mobile (md breakpoint) -->
+                        <div class="md:hidden mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                            <p class="text-sm text-yellow-700 font-ptsans">
+                                Achtung: Bei wechsel aus dem Tab heraus geht die Bearbeitung verloren.
+                            </p>
+                        </div>
+
                         <div>
                             <SfTextBox Placeholder="Titel"
                                        FloatLabelType="FloatLabelType.Always"
@@ -74,15 +88,15 @@
                                            @bind-Value="@neuigkeit.Ort"></SfTextBox>
                             </div>
                             <div>
+                                <SfTextBox Placeholder="Linktext (Anzeigetext)"
+                                           FloatLabelType="FloatLabelType.Always"
+                                           @bind-Value="@neuigkeit.Linktext"></SfTextBox>
+                            </div>
+                            <div>
                                 <SfTextBox Placeholder="Link"
                                            FloatLabelType="FloatLabelType.Always"
                                            @bind-Value="@neuigkeit.Link"></SfTextBox>
                             </div>
-                            <div>
-                                <SfTextBox Placeholder="Linktext (Anzeigetext)"
-                                           FloatLabelType="FloatLabelType.Always"
-                                           @bind-Value="@neuigkeit.Linktext"></SfTextBox>
-                            </div> 
                             <div>
                                 <SfTextBox Placeholder="Quellenangabe (Bild)"
                                            FloatLabelType="FloatLabelType.Always"
@@ -99,12 +113,35 @@
                                                   TValue="int"
                                                   @bind-Value="@neuigkeit.Sortierung"></SfNumericTextBox>
                             </div>
+                            <div class="my-2">
+                                <label class="font-ptsans tracking-[0.375rem] flex items-center text-sm font-normal leading-tight text-black">
+                                    <InputCheckbox @bind-Value="neuigkeit.IstStandardneuigkeit" class="h-5 w-5" />
+                                    <span class="ml-2">Standardneuigkeit (kein Ablaufdatum)</span>
+                                </label>
+                            </div>
+                            @if (!neuigkeit.IstStandardneuigkeit)
+                            {
+                                <div>
+                                    <SfDateTimePicker Placeholder="Ablaufdatum (optional)"
+                                                      FloatLabelType="FloatLabelType.Always"
+                                                      @bind-Value="@neuigkeit.Ablaufdatum"></SfDateTimePicker>
+                                </div>
+                            }
                             @if (IsAddNew)
                             {
                                 <div class="mt-10">
-                                    <SfUploader @ref="sfUploader" ID="UploadFiles" AllowedExtensions=".png, .jpg, .jpeg, .webp" MaxFileSize=5242880 AllowMultiple=false>
+                                    <SfUploader @key="uploaderRenderKey"
+                                                @ref="sfUploader"
+                                                ID="UploadFiles"
+                                                AllowedExtensions=".png, .jpg, .jpeg, .webp"
+                                                MaxFileSize="5242880"
+                                                AllowMultiple="false">
                                         <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
-                                        <UploaderEvents FileSelected="SelectHandler" Success="SuccessHandler" OnFailure="@OnFailureHandler" OnActionComplete="@OnActionCompleteHandler" BeforeUpload="@BeforeUploadHandler"></UploaderEvents>
+                                        <UploaderEvents FileSelected="SelectHandler"
+                                                        Success="SuccessHandler"
+                                                        OnFailure="OnFailureHandler"
+                                                        OnActionComplete="OnActionCompleteHandler"
+                                                        BeforeUpload="BeforeUploadHandler"></UploaderEvents>
                                     </SfUploader>
                                 </div>
                             }
@@ -125,10 +162,12 @@
                             }
                         </Template>
                     </GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Titel) HeaderText="Titel" AllowSearching="true" Width="120" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules{ Required= true })"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules{ Required= true })"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Titel) HeaderText="Titel" AllowSearching="true" Width="120" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules { Required = true })"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules { Required = true })"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Ort) HeaderText="Ort" AllowSearching="true" Width="100"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Datum) HeaderText="Datum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="true" Width="85"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.Ablaufdatum) HeaderText="Ablaufdatum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="false" Width="95"></GridColumn>
+                    <GridColumn Field=@nameof(Neuigkeit.IstStandardneuigkeit) HeaderText="Standard" DisplayAsCheckBox="true" AllowSearching="false" Width="70"></GridColumn>
                     <GridColumn Field=@nameof(Neuigkeit.Sortierung) HeaderText="Sort" AllowSearching="true" Width="55"></GridColumn>
                 </GridColumns>
             </SfGrid>
@@ -140,11 +179,18 @@
     [AllowNull]
     private SfUploader sfUploader { get; set; }
 
+    [AllowNull]
+    private SfGrid<Neuigkeit> grid { get; set; }
+
+    private DotNetObjectReference<NeuigkeitenVerwalten>? dotNetReference;
+    private int uploaderRenderKey = 0;
+    private bool isClosingDialogFromLifecycle = false;
+
+
     private UserWithRoles? user = default!;
 
     private bool AllowEditing { get; set; } = false;
     private bool AllowDeletion { get; set; } = false;
-    // private FileInfo? UploadedImage { get; set; }
     private UploadedFile? _uploadedFile { get; set; }
     private string errorMessage { get; set; } = string.Empty;
     private bool IsLoading { get; set; } = false;
@@ -153,12 +199,32 @@
 
     public bool IsAddNew { get; set; } = false;
 
-    // private bool isUploading = false;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            dotNetReference = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("neuigkeitenDialogLifecycle.register", dotNetReference);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("neuigkeitenDialogLifecycle.unregister");
+        }
+        catch
+        {
+        }
+
+        dotNetReference?.Dispose();
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        // if (userPrincipal != null && userPrincipal?.Identity?.IsAuthenticated == true)
-
         await base.OnInitializedAsync();
         try
         {
@@ -198,36 +264,48 @@
     public void OnActionFailureHandler(Syncfusion.Blazor.Grids.FailureEventArgs args)
     {
         errorMessage = args.Error?.Message ?? "Unbekannter Fehler";
-        // var s = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(args.Error));  //get details
     }
 
-    private async void OnActionBeginHandler(Syncfusion.Blazor.Grids.ActionEventArgs<Neuigkeit> args)
+    private async Task OnActionBeginHandler(Syncfusion.Blazor.Grids.ActionEventArgs<Neuigkeit> args)
     {
-        //Das muss passieren, bevor IsAddNew gesetz wird, damit ich weiß ob es vorher ein Add war. Erst danach IsAddNew aktualisieren.
         if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
         {
-            if (IsAddNew)
+            if (IsAddNew && sfUploader != null)
             {
-                //wenn eine Datei hochgeladen wurde, diese löschen.
                 var files = await sfUploader.GetFilesDataAsync();
-                await sfUploader.RemoveAsync(files.ToArray());
+                if (files.Any())
+                {
+                    await sfUploader.RemoveAsync(files.ToArray());
+                }
             }
+
+            IsAddNew = false;
+            SelectedEditNeuigkeit = null;
+            return;
         }
 
-        IsAddNew = args.RequestType == Syncfusion.Blazor.Grids.Action.Add;
-        if (IsAddNew)
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
         {
+            IsAddNew = true;
+            uploaderRenderKey++;
+
             if (sfUploader != null)
             {
                 await sfUploader.ClearAllAsync();
             }
-            SelectedEditNeuigkeit = args.Data;
-        }
-        else if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
-        {
 
+            _uploadedFile = null;
+            SelectedEditNeuigkeit = args.Data;
+            return;
+        }
+
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+        {
+            IsAddNew = false;
         }
     }
+
+  
     public void DataBoundHandler()
     {
         IsLoading = false;
@@ -258,7 +336,8 @@
         }
         this.errorMessage = string.Empty;
     }
-    public async void SuccessHandler(SuccessEventArgs args)
+
+    public async Task SuccessHandler(SuccessEventArgs args)
     {
         try
         {
@@ -266,44 +345,40 @@
             {
                 var jsonResponse = args.Response.ResponseText;
                 var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    };
+                {
+                    PropertyNameCaseInsensitive = true
+                };
                 var uploadResponse = JsonSerializer.Deserialize<UploadResponse>(jsonResponse, options);
 
                 if (uploadResponse != null && uploadResponse.Success)
                 {
                     foreach (var file in uploadResponse.Files)
                     {
-                        // Hier kannst du auf die hochgeladenen Dateien zugreifen
-                        // Console.WriteLine($"Datei hochgeladen: {file.FileName}, ID: {file.Id}");
                         if (uploadResponse.Files.FirstOrDefault(x => x.FileName == args.File.Name) is UploadedFile uploadedFile)
                         {
-                            //Hat es Id?
                             _uploadedFile = uploadedFile;
                         }
                         else
                         {
-                            Logger.LogWarning($"Die Datei {args.File.Name} wurde nicht in der Liste der hochgeladenen Dateien gefunden!");
+                            Logger.LogWarning("Die Datei {FileName} wurde nicht in der Liste der hochgeladenen Dateien gefunden!", args.File.Name);
                         }
                     }
                 }
                 else
                 {
                     errorMessage = "Der Upload war nicht erfolgreich.";
-                    Console.WriteLine("Upload war nicht erfolgreich.");
                 }
             }
             else if (args.Operation == "remove")
             {
-                //Datei wurde gelöscht - aus der Liste entfernen?
                 if (_uploadedFile?.Id > 0)
                 {
-                    //Image löschen
                     await ImageService.RemoveImageAsync(_uploadedFile.Id);
                     _uploadedFile = null;
                     if (SelectedEditNeuigkeit != null)
+                    {
                         SelectedEditNeuigkeit.DbImageId = null;
+                    }
                 }
             }
             else
@@ -316,8 +391,8 @@
             Logger.LogError(ex, "Fehler beim Speichern des Bildes im SfUploader");
             errorMessage = ex.Message;
         }
-        // UploadedImage = args.File;
     }
+
     private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
     {
         try
@@ -338,27 +413,56 @@
             errorMessage = "Ein unbekannter Fehler ist aufgetreten.";
         }
     }
-    private async void OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
+
+    private async Task OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
     {
-        if (SelectedEditNeuigkeit != null)
+        if (SelectedEditNeuigkeit != null && sfUploader != null)
         {
             var files = await sfUploader.GetFilesDataAsync();
             var file = files.FirstOrDefault();
             if (file != null && _uploadedFile?.Id > 0 && _uploadedFile.FileName == file.Name)
             {
                 SelectedEditNeuigkeit.DbImageId = _uploadedFile.Id;
-                // var tempPath = FileService.GetTempFilePath(file);
-                // SelectedEditNeuigkeit.TempFilePath = tempPath;
             }
         }
+
         StateHasChanged();
     }
+
     private void BeforeUploadHandler(BeforeUploadEventArgs args)
     {
         // You can prevent uploading by setting "args.Cancel" to true.
-        // isUploading = true;
     }
 
+   
+
+    #endregion
+
+    #region Lifestyle Callback
+
+    [JSInvokable]
+    public async Task HandlePageHiddenAsync()
+    {
+        if (isClosingDialogFromLifecycle || !IsAddNew || grid == null)
+        {
+            return;
+        }
+
+        isClosingDialogFromLifecycle = true;
+
+        try
+        {
+            await grid.CloseEditAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Edit-Dialog konnte beim Verlassen des Tabs nicht geschlossen werden.");
+        }
+        finally
+        {
+            isClosingDialogFromLifecycle = false;
+        }
+    }
 
     #endregion
 }

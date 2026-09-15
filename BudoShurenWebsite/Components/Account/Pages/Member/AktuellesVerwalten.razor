@@ -1,0 +1,141 @@
+@page "/Account/Member/Aktuelles"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Services
+@using BudoShurenWebsite.Data
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Data
+
+@inject NavigationManager NavigationManager
+@inject UserService UserService
+
+<div class="container mx-auto max-w-screen-lg">
+    <div class="mx-10">
+        <SectionBanner Titel="Aktuelles verwalten" />
+
+        <div class="mb-6">
+            <button @onclick="NeuenBeitragErstellen"
+                    class="font-ptsans rounded border border-black px-4 py-2 text-sm tracking-wider hover:bg-gray-100">
+                + Neuen Beitrag erstellen
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <StatusMessage ShowAsError="true" Message="@_errorMessage" />
+        }
+
+        <div class="-mx-8 md:mx-0">
+            <SfGrid TValue="AktuellesBeitrag"
+                    AllowSorting="true"
+                    AllowPaging="false"
+                    Toolbar="@(new List<string>() { "Delete", "Search" })"
+                    Height="100%"
+                    Width="100%">
+                <SfDataManager AdaptorInstance="@typeof(AktuellesBeitragAdaptor)" Adaptor="Adaptors.CustomAdaptor" />
+                <GridEvents TValue="AktuellesBeitrag"
+                            OnActionFailure="OnActionFailure"
+                            OnLoad="OnLoad"
+                            DataBound="DataBound" />
+                <GridTemplates>
+                    <EmptyRecordTemplate>
+                        @if (_isLoading)
+                        {
+                            <Standardtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
+                        }
+                        else
+                        {
+                            <Standardtext Text="Es wurden noch keine Aktuelles-Beiträge angelegt." />
+                        }
+                    </EmptyRecordTemplate>
+                </GridTemplates>
+                <GridEditSettings AllowDeleting="true"
+                                  ShowDeleteConfirmDialog="true" />
+                <GridColumns>
+                    <GridColumn Field=@nameof(AktuellesBeitrag.Id)
+                                HeaderText="ID"
+                                IsPrimaryKey="true"
+                                Width="40"
+                                Visible="false" />
+                    <GridColumn Field=@nameof(AktuellesBeitrag.Titel)
+                                HeaderText="Titel"
+                                Width="220" />
+                    <GridColumn Field=@nameof(AktuellesBeitrag.Slug)
+                                HeaderText="URL-Slug"
+                                Width="150" />
+                    <GridColumn HeaderText="Abteilung"
+                                Width="110"
+                                AllowEditing="false">
+                        <Template>
+                            @{
+                                var beitrag = context as AktuellesBeitrag;
+                            }
+                            <span class="font-ptsans text-sm">@(beitrag?.Abteilung?.Name ?? "—")</span>
+                        </Template>
+                    </GridColumn>
+                    <GridColumn Field=@nameof(AktuellesBeitrag.Datum)
+                                HeaderText="Datum"
+                                Type="Syncfusion.Blazor.Grids.ColumnType.Date"
+                                Format="dd.MM.yyyy"
+                                Width="100" />
+                    <GridColumn Field=@nameof(AktuellesBeitrag.Veroeffentlicht)
+                                HeaderText="Öffentlich"
+                                Width="80"
+                                DisplayAsCheckBox="true" />
+                    <GridColumn HeaderText="Aktionen"
+                                Width="160"
+                                AllowEditing="false"
+                                AllowSorting="false">
+                        <Template>
+                            @{
+                                var beitrag = context as AktuellesBeitrag;
+                            }
+                            <div class="flex gap-2">
+                                <button @onclick="() => BeitragBearbeiten(beitrag!.Id)"
+                                        class="font-ptsans rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100">
+                                    Bearbeiten
+                                </button>
+                                <a href="/aktuelles/@beitrag!.Slug"
+                                   target="_blank"
+                                   class="font-ptsans rounded border border-blue-300 px-2 py-1 text-xs text-blue-700 hover:bg-blue-50">
+                                    Ansehen
+                                </a>
+                            </div>
+                        </Template>
+                    </GridColumn>
+                </GridColumns>
+            </SfGrid>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _errorMessage = string.Empty;
+    private bool _isLoading = true;
+
+    private void NeuenBeitragErstellen()
+    {
+        NavigationManager.NavigateTo("/Account/Member/Aktuelles/Editor");
+    }
+
+    private void BeitragBearbeiten(int id)
+    {
+        NavigationManager.NavigateTo($"/Account/Member/Aktuelles/Editor/{id}");
+    }
+
+    private void OnActionFailure(Syncfusion.Blazor.Grids.FailureEventArgs args)
+    {
+        _errorMessage = $"Fehler: {args.Error?.Message}";
+    }
+
+    private void OnLoad()
+    {
+        _isLoading = true;
+    }
+
+    private void DataBound()
+    {
+        _isLoading = false;
+    }
+}

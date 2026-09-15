@@ -1,0 +1,101 @@
+@page "/aktuelles/{Slug}"
+@rendermode InteractiveServer
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Services
+@inject IAktuellesService AktuellesService
+@inject NavigationManager NavigationManager
+
+@if (beitrag == null && !isLoading)
+{
+    <PageTitle>Beitrag nicht gefunden | Budo Shuren Dojo</PageTitle>
+    <div class="container mx-auto max-w-screen-md px-4 py-8">
+        <h1 class="font-yuji text-3xl font-bold">Beitrag nicht gefunden</h1>
+        <p class="my-4 text-gray-600">Der gesuchte Beitrag existiert nicht oder wurde entfernt.</p>
+        <a href="/aktuelles" class="text-blue-600 hover:underline">← Zurück zur Übersicht</a>
+    </div>
+}
+else if (beitrag != null)
+{
+    <PageTitle>@beitrag.MetaTitel</PageTitle>
+    <HeadContent>
+        <meta name="description" content="@beitrag.MetaBeschreibung">
+        <meta property="og:title" content="@beitrag.MetaTitel">
+        <meta property="og:description" content="@beitrag.MetaBeschreibung">
+        <meta property="og:url" content="@($"https://budo-shuren.de/aktuelles/{beitrag.Slug}")">
+        <meta property="og:type" content="article">
+        <link rel="canonical" href="@($"https://budo-shuren.de/aktuelles/{beitrag.Slug}")">
+    </HeadContent>
+
+    <div class="container mx-auto max-w-screen-md px-4 py-8">
+        <div class="mb-4">
+            <a href="/aktuelles" class="text-sm text-blue-600 hover:underline">← Zurück zur Übersicht</a>
+        </div>
+
+        <article>
+            <div class="mb-4 flex items-center gap-2">
+                <span class="text-sm text-gray-500">@beitrag.Datum.ToString("dd.MM.yyyy")</span>
+                @if (!string.IsNullOrWhiteSpace(beitrag.Abteilung?.Name))
+                {
+                    <span class="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
+                        @beitrag.Abteilung.Name
+                    </span>
+                }
+            </div>
+
+            <Headline Titel="@beitrag.Titel" Untertitel="" Anekdote="" />
+
+            <div class="mt-6">
+                @if (beitrag.Bloecke != null && beitrag.Bloecke.Any())
+                {
+                    @foreach (var block in beitrag.Bloecke.OrderBy(b => b.Sortierung))
+                    {
+                        <AktuellesBlockRenderer Block="block" />
+                    }
+                }
+                else
+                {
+                    <p class="text-gray-600 italic">Dieser Beitrag hat noch keinen Inhalt.</p>
+                }
+            </div>
+
+            <div class="mt-8">
+                <a href="/aktuelles" class="text-sm text-blue-600 hover:underline">← Zurück zur Übersicht</a>
+            </div>
+        </article>
+    </div>
+}
+else if (isLoading)
+{
+    <div class="container mx-auto max-w-screen-md px-4 py-8">
+        <p class="text-center text-gray-600">Beitrag wird geladen...</p>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private AktuellesBeitrag? beitrag;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await BeitragLaden();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await BeitragLaden();
+    }
+
+    private async Task BeitragLaden()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        beitrag = await AktuellesService.GetBeitragBySlug(Slug);
+
+        isLoading = false;
+        StateHasChanged();
+    }
+}

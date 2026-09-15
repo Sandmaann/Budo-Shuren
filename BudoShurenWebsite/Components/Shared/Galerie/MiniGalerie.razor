@@ -1,0 +1,195 @@
+﻿@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models;
+@using Microsoft.EntityFrameworkCore;
+@using BudoShurenWebsite.Data
+
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject ILogger<MiniGalerie> Logger
+
+<div class="z-10 mx-10 mt-5">
+    <div>
+        <Virtualize Items="Gruppen">
+            <ItemContent>
+                <ImageGroup @key="context.ID" Gruppe="@context" SmallLayout="true" OnImageClicked="OpenImagePopup" />
+            </ItemContent>
+            <Placeholder>
+                <div class="flex justify-center">
+                    <span class="m text-gray-400">Das ist ein Platzhalter.</span>
+                </div>
+            </Placeholder>
+            <EmptyContent>
+                <div class="flex justify-center">
+                    @if (IsLoading)
+                    {
+                        <Spinner Text="Einen Moment, die Bilder werden geladen ..." />
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
+                        }
+                        else
+                        {
+                            <span class="m text-gray-400">Keine Einträge gefunden.</span>
+                        }
+                    }
+                </div>
+            </EmptyContent>
+        </Virtualize>
+    </div>
+</div>
+
+<!-- Bild Popup/Overlay -->
+<div @onclick="CloseImagePopup"
+     class="@(ShowImagePopup ? "visible opacity-100" : "invisible opacity-0") fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 transition-opacity duration-300"
+     style="cursor: pointer;">
+
+    <div @onclick:stopPropagation
+         class="relative flex max-h-[95vh] w-auto max-w-[95vw] flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+         style="cursor: default;">
+
+        <!-- Schließen Button -->
+        <button @onclick="CloseImagePopup"
+                class="absolute right-4 top-4 z-10 rounded-full bg-gray-900 text-white transition duration-150 hover:bg-gray-700"
+                aria-label="Schließen"
+                title="Popup schließen">
+            <span class="material-symbols-outlined m-2">close</span>
+        </button>
+
+        @if (SelectedImage != null)
+        {
+            <!-- Bildbereich -->
+            <div class="flex min-h-0 flex-1 items-center justify-center p-4 pt-16">
+                <img src="@GetImageUrl(SelectedImage.DbImageId)"
+                     alt="@SelectedImage.Untertitel"
+                     class="block max-h-[calc(95vh-11rem)] max-w-[95vw] h-auto w-auto object-contain"
+                     loading="lazy" />
+            </div>
+
+            <!-- Bildinfo -->
+            <div class="shrink-0 border-t border-gray-200 p-4 font-ptsans">
+                <h3 class="font-yuji">@SelectedImage.Titel</h3>
+
+                @if (!string.IsNullOrWhiteSpace(SelectedImage.Untertitel))
+                {
+                    <p class="text-sm">@SelectedImage.Untertitel</p>
+                }
+
+                @if (SelectedImage.ImageDate.HasValue)
+                {
+                    <p class="text-xs">@SelectedImage.ImageDate.Value.ToLocalTime().ToString("dd. MMMM yyyy")</p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public GalerieTyp Typ { get; set; } = GalerieTyp.None;
+
+    private bool IsLoading { get; set; } = false;
+    private ICollection<GalerieGruppe> Gruppen { get; set; } = new List<GalerieGruppe>();
+    private string ErrorMessage { get; set; } = string.Empty;
+    private bool paramsSet = false;
+    private bool isScrolling { get; set; } = false;
+
+    // Popup-Zustand
+    private bool ShowImagePopup { get; set; } = false;
+    private GalerieEintrag? SelectedImage { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            await LoadData();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        paramsSet = true;
+        await base.OnParametersSetAsync();
+    }
+
+    private async Task LoadData()
+    {
+        if (IsLoading || paramsSet == false)
+            return;
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+
+            StateHasChanged();
+
+            using var context = DbContextFactory.CreateDbContext();
+
+            var einträge = await context.Galerie
+            .Where(x => x.Öffentlich)
+            .OrderByDescending(x => x.ImageDate)
+            .AsNoTracking()
+            .ToListAsync();
+
+            einträge = einträge.Where(x => x.Typ.HasFlag(Typ)).ToList();
+            var groups = einträge.GroupBy(eintrag =>
+                new { eintrag.Titel, Datum = eintrag.ImageDate?.Date });
+
+            var gruppen = new List<GalerieGruppe>();
+            foreach (var group in groups.OrderByDescending(x => x.Key.Datum))
+            {
+                var items = group.ToList();
+                items.ForEach(x => x.DisableSelection = true);
+                items.ForEach(x => x.DisableHover = true);
+
+                var neueGruppe = new GalerieGruppe
+                {
+                    Datum = group.Key.Datum ?? DateTime.MinValue,
+                    Titel = group.Key.Titel,
+                    Items = items,
+                    DisableSelection = true,
+                    DisableHover = true
+                };
+                gruppen.Add(neueGruppe);
+            }
+
+            Gruppen = gruppen;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            IsLoading = false;
+            Logger.LogError(ex, "Fehler beim Laden des Karousells");
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenImagePopup(GalerieEintrag image)
+    {
+        SelectedImage = image;
+        ShowImagePopup = true;
+    }
+
+    private void CloseImagePopup()
+    {
+        ShowImagePopup = false;
+        SelectedImage = null;
+    }
+
+    private string GetImageUrl(int? dbImageId)
+    {
+        if (dbImageId.HasValue)
+        {
+            return $"/Account/Member/Filesave/GetImage/{dbImageId.Value}";
+        }
+        return "/images/missingimage.jpg";
+    }
+}

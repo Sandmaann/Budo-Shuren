@@ -1,0 +1,176 @@
+@page "/aktuelles"
+@rendermode InteractiveServer
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Services
+@using BudoShurenWebsite.Data
+@using Microsoft.EntityFrameworkCore
+@inject IAktuellesService AktuellesService
+@inject NavigationManager NavigationManager
+@inject ApplicationDbContext DbContext
+
+<PageTitle>Aktuelles | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="description" content="Aktuelle Berichte, Trainingseinblicke und Neuigkeiten aus dem Budo Shuren Dojo. Erfahren Sie mehr über unsere Kampfkünste Aikido, Bujinkan und Genbukan.">
+</HeadContent>
+
+<div>
+    <Headline Titel="武道"
+              Untertitel="Aktuelles"
+              Anekdote="" />
+</div>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+
+        <!-- Filter -->
+        <div class="my-6 rounded border border-gray-200 p-4">
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="font-ptsans mb-1 block text-xs font-bold">Suche</label>
+                    <input type="text"
+                           class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm"
+                           placeholder="Titel durchsuchen..."
+                           @bind="suchtext"
+                           @bind:event="oninput"
+                           @onkeyup="FilterAendern" />
+                </div>
+                <div>
+                    <label class="font-ptsans mb-1 block text-xs font-bold">Abteilung</label>
+                    <select class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm" value="@selectedAbteilungId" @onchange="AbteilungGeaendert">
+                        <option value="">Alle</option>
+                        @foreach (var abt in abteilungen)
+                        {
+                            <option value="@abt.ID">@abt.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        @if (isLoading && !beitraege.Any())
+        {
+            <div class="mt-20 text-center">
+                <Standardtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
+            </div>
+        }
+        else if (!beitraege.Any())
+        {
+            <div class="mt-20">
+                <Standardtext Text="Aktuell sind keine Beiträge vorhanden." />
+            </div>
+        }
+        else
+        {
+            @foreach (var beitrag in beitraege)
+            {
+                <article class="my-12">
+                    <div class="mb-2 flex items-center gap-2">
+                        <span class="font-ptsans text-sm text-gray-500">@beitrag.Datum.ToString("dd.MM.yyyy")</span>
+                        @if (!string.IsNullOrWhiteSpace(beitrag.Abteilung?.Name))
+                        {
+                            <span class="font-ptsans rounded bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">
+                                @beitrag.Abteilung.Name
+                            </span>
+                        }
+                    </div>
+
+                    <h2 class="font-yuji mb-6 text-2xl font-bold">
+                        <a href="/aktuelles/@beitrag.Slug" class="hover:underline">@beitrag.Titel</a>
+                    </h2>
+
+                    @if (beitrag.Bloecke != null && beitrag.Bloecke.Any())
+                    {
+                        @foreach (var block in beitrag.Bloecke.OrderBy(b => b.Sortierung))
+                        {
+                            <AktuellesBlockRenderer Block="block" />
+                        }
+                    }
+                    else
+                    {
+                        <Standardtext Text="Dieser Beitrag hat noch keinen Inhalt." />
+                    }
+
+                    <hr class="my-10 border-t border-gray-200" />
+                </article>
+            }
+
+            @if (hatWeitere)
+            {
+                <div class="my-8 text-center">
+                    <button class="font-ptsans rounded border border-black px-6 py-2 text-sm tracking-wider hover:bg-gray-100 disabled:opacity-50"
+                            @onclick="MehrLaden"
+                            disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <text>Lädt...</text>
+                        }
+                        else
+                        {
+                            <text>Weitere Beiträge laden</text>
+                        }
+                    </button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<AktuellesBeitrag> beitraege = new();
+    private List<Abteilung> abteilungen = new();
+    private int geladeneAnzahl = 0;
+    private int gesamt = 0;
+    private bool hatWeitere => geladeneAnzahl < gesamt;
+    private bool isLoading = false;
+
+    private string suchtext = string.Empty;
+    private string selectedAbteilungId = string.Empty;
+
+    private const int PageSize = 5;
+
+    protected override async Task OnInitializedAsync()
+    {
+        abteilungen = await DbContext.Abteilungen.OrderBy(a => a.Name).ToListAsync();
+        await BeitraegeLaden();
+    }
+
+    private async Task BeitraegeLaden()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        var (items, total) = await AktuellesService.GetBeitraege(
+            skip: geladeneAnzahl, 
+            take: PageSize, 
+            suchtext: string.IsNullOrWhiteSpace(suchtext) ? null : suchtext, 
+            abteilungId: string.IsNullOrWhiteSpace(selectedAbteilungId) ? null : selectedAbteilungId);
+
+        beitraege.AddRange(items);
+        geladeneAnzahl = beitraege.Count;
+        gesamt = total;
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task MehrLaden()
+    {
+        await BeitraegeLaden();
+    }
+
+    private async Task AbteilungGeaendert(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+    {
+        selectedAbteilungId = e.Value?.ToString() ?? string.Empty;
+        await FilterAendern();
+    }
+
+    private async Task FilterAendern()
+    {
+        // Liste zurücksetzen
+        beitraege.Clear();
+        geladeneAnzahl = 0;
+        gesamt = 0;
+
+        await BeitraegeLaden();
+    }
+}

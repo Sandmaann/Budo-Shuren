@@ -61,6 +61,89 @@ namespace BudoShurenWebsite.Data
             builder.Entity<Visit>().HasKey(u => u.ID);
             builder.Entity<Visit>().ToTable("Visit");
             builder.Entity<Visit>().HasIndex(u => u.ID).IsUnique();
+
+            // WissenKategorie configuration
+            builder.Entity<WissenKategorie>().HasKey(k => k.Id);
+            builder.Entity<WissenKategorie>().ToTable("WissenKategorien");
+            builder.Entity<WissenKategorie>().HasIndex(k => k.Id).IsUnique();
+            builder.Entity<WissenKategorie>()
+                .HasOne(k => k.Abteilung)
+                .WithMany()
+                .HasForeignKey(k => k.AbteilungId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // WissenBeitrag configuration
+            builder.Entity<WissenBeitrag>().HasKey(b => b.Id);
+            builder.Entity<WissenBeitrag>().ToTable("WissenBeitraege");
+            builder.Entity<WissenBeitrag>().HasIndex(b => b.Id).IsUnique();
+            builder.Entity<WissenBeitrag>().HasIndex(b => b.Slug).IsUnique();
+            builder.Entity<WissenBeitrag>()
+                .HasOne(b => b.Kategorie)
+                .WithMany(k => k.Beitraege)
+                .HasForeignKey(b => b.KategorieId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // WissenBlock configuration
+            builder.Entity<WissenBlock>().HasKey(bl => bl.Id);
+            builder.Entity<WissenBlock>().ToTable("WissenBloecke");
+            builder.Entity<WissenBlock>().HasIndex(bl => bl.Id).IsUnique();
+            builder.Entity<WissenBlock>()
+                .HasOne(bl => bl.Beitrag)
+                .WithMany(b => b.Bloecke)
+                .HasForeignKey(bl => bl.BeitragId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<WissenBlock>()
+                .HasOne(bl => bl.Bild)
+                .WithMany()
+                .HasForeignKey(bl => bl.BildId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Seed-Data: Allgemein-Kategorie
+            builder.Entity<WissenKategorie>().HasData(
+                new WissenKategorie
+                {
+                    Id = 1,
+                    Name = "Allgemein",
+                    Slug = "allgemein",
+                    SortOrder = 0
+                }
+            );
+
+            // AktuellesBeitrag configuration
+            builder.Entity<AktuellesBeitrag>().HasKey(b => b.Id);
+            builder.Entity<AktuellesBeitrag>().ToTable("AktuellesBeitraege");
+            builder.Entity<AktuellesBeitrag>().HasIndex(b => b.Id).IsUnique();
+            builder.Entity<AktuellesBeitrag>().HasIndex(b => b.Slug).IsUnique();
+            builder.Entity<AktuellesBeitrag>()
+                .HasOne(b => b.Abteilung)
+                .WithMany()
+                .HasForeignKey(b => b.AbteilungId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // AktuellesBlock configuration
+            builder.Entity<AktuellesBlock>().HasKey(bl => bl.Id);
+            builder.Entity<AktuellesBlock>().ToTable("AktuellesBloecke");
+            builder.Entity<AktuellesBlock>().HasIndex(bl => bl.Id).IsUnique();
+            builder.Entity<AktuellesBlock>()
+                .HasOne(bl => bl.Beitrag)
+                .WithMany(b => b.Bloecke)
+                .HasForeignKey(bl => bl.BeitragId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // AktuellesBild configuration
+            builder.Entity<AktuellesBild>().HasKey(bi => bi.Id);
+            builder.Entity<AktuellesBild>().ToTable("AktuellesBilder");
+            builder.Entity<AktuellesBild>().HasIndex(bi => bi.Id).IsUnique();
+            builder.Entity<AktuellesBild>()
+                .HasOne(bi => bi.Block)
+                .WithMany(bl => bl.Bilder)
+                .HasForeignKey(bi => bi.BlockId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<AktuellesBild>()
+                .HasOne(bi => bi.Bild)
+                .WithMany()
+                .HasForeignKey(bi => bi.BildId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<GalerieEintrag> Galerie { get; set; }
@@ -69,8 +152,13 @@ namespace BudoShurenWebsite.Data
         public DbSet<EmailSetting> EmailSettings { get; set; }
         public DbSet<Abteilung> Abteilungen { get; set; }
         public DbSet<Visit> Visits { get; set; }
-
         public DbSet<DbImage> Images { get; set; }
+        public DbSet<WissenKategorie> WissenKategorien { get; set; }
+        public DbSet<WissenBeitrag> WissenBeitraege { get; set; }
+        public DbSet<WissenBlock> WissenBloecke { get; set; }
+        public DbSet<AktuellesBeitrag> AktuellesBeitraege { get; set; }
+        public DbSet<AktuellesBlock> AktuellesBloecke { get; set; }
+        public DbSet<AktuellesBild> AktuellesBilder { get; set; }
         public override int SaveChanges()
         {
             Validate();

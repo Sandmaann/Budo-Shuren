@@ -1,0 +1,51 @@
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Models.Enums
+@using Markdig
+
+@if (Block == null)
+{
+    <p>Block konnte nicht geladen werden.</p>
+    return;
+}
+
+@if (Block.Typ == AktuellesBlockTyp.MarkdownText)
+{
+    <div class="markdown-content my-4">
+        @((MarkupString)Markdig.Markdown.ToHtml(Block.MarkdownInhalt ?? string.Empty))
+    </div>
+}
+else if (Block.Typ == AktuellesBlockTyp.BilderGalerie)
+{
+    <div class="my-6">
+        @if (Block.Bilder != null && Block.Bilder.Any())
+        {
+            <div class="grid gap-2" style="--cols: @Block.BilderProReihe; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); max-width: 100%;">
+                @foreach (var bild in Block.Bilder.OrderBy(b => b.Sortierung))
+                {
+                    @if (bild.Bild?.ImageData != null)
+                    {
+                        <div class="overflow-hidden rounded">
+                            <img src="data:@bild.Bild.ContentType;base64,@Convert.ToBase64String(bild.Bild.ImageData)" 
+                                 alt="@bild.Bild.Title"
+                                 class="h-full w-full object-cover" />
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Block.BildUnterschrift))
+            {
+                <p class="mt-2 text-sm text-gray-600 italic">@Block.BildUnterschrift</p>
+            }
+        }
+        else
+        {
+            <p class="text-gray-500 italic">Keine Bilder vorhanden.</p>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public AktuellesBlock? Block { get; set; }
+}

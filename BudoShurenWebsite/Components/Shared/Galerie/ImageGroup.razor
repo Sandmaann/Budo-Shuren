@@ -1,7 +1,6 @@
 ﻿
-
 <div>
-    <button class="flex flex-row items-center" @onclick="SelectAll" aria-label="Alle auswählen">
+    <button class="flex flex-row items-center" @onclick="SelectAll" aria-label="Alle auswählen" disabled="@Gruppe.DisableHover">
         <div class="m-2 ml-0 flex items-center overflow-hidden rounded-full bg-gray-600 transition-all duration-500 @(HasSelectedItems ? "w-auto opacity-100 mr-5" : "w-0 opacity-0")">
             <span class="material-symbols-outlined m-0.5 text-white">done</span>
         </div>
@@ -10,12 +9,30 @@
         </div>
     </button>
 
-    <div class="columns-3 gap-4 space-y-4 py-8 lg:columns-4 xl:columns-5 2xl:columns-6 3xl:columns-7 4xl:columns-8 5xl:columns-9">
-        @foreach (var eintrag in Gruppe.Items)
-        {
-            <ImageCard Eintrag="@eintrag" OnSelectionChanged="SelectionChanged" IsScrolling="IsScrolling" />
-        }
-    </div>
+    @if (SmallLayout)
+    {
+        <div id="imhere" class="columns-1 s:grid-columns-2 lg:grid-columns-3 gap-4 space-y-4 py-8">
+            @foreach (var eintrag in Gruppe.Items)
+            {
+                <ImageCard Eintrag="@eintrag"
+                           OnSelectionChanged="SelectionChanged"
+                           OnImageClicked="OnImageClicked"
+                           IsScrolling="IsScrolling" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="columns-2 gap-4 space-y-4 py-8 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 3xl:columns-7 4xl:columns-8 5xl:columns-9">
+            @foreach (var eintrag in Gruppe.Items)
+            {
+                <ImageCard Eintrag="@eintrag"
+                           OnSelectionChanged="SelectionChanged"
+                           OnImageClicked="OnImageClicked"
+                           IsScrolling="IsScrolling" />
+            }
+        </div>
+    }
 </div>
 
 @code {
@@ -26,7 +43,15 @@
     public EventCallback OnSelectionChanged { get; set; }
 
     [Parameter]
+    public EventCallback<GalerieEintrag> OnImageClicked { get; set; }
+
+    [Parameter]
     public bool IsScrolling { get; set; }
+
+    [Parameter]
+    public bool SmallLayout { get; set; } = false;
+    // Beim "SmallLayout" hat die Ansicht weniger Spalten - z.B. für das Mini.Carousel
+    // -> weniger horizontaler Platz zur Verfügung
 
 
     public bool HasSelectedItems { get; set; } = false;
@@ -35,6 +60,9 @@
 
     private async void SelectionChanged()
     {
+        if (Gruppe.DisableSelection == true)
+            return;
+
         if (!skipSelection)
         {
             HasSelectedItems = Gruppe.Items.Any(e => e.IsSelected);
@@ -44,11 +72,14 @@
 
     private void SelectAll()
     {
+        if (Gruppe.DisableSelection == true)
+            return;
+
         skipSelection = true;
 
         if (Gruppe.Items.Any(x => x.IsSelected == false) == false)
         {
-            foreach (var eintrag in Gruppe.Items)
+            foreach (var eintrag in Gruppe.Items.Where(x => x?.DisableSelection == false))
             {
                 eintrag.IsSelected = false;
             }
@@ -60,7 +91,7 @@
         }
         else
         {
-            foreach (var eintrag in Gruppe.Items)
+            foreach (var eintrag in Gruppe.Items.Where(x => x?.DisableSelection == false))
             {
                 eintrag.IsSelected = true;
             }

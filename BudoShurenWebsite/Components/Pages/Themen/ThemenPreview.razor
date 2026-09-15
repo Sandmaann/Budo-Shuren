@@ -1,0 +1,95 @@
+@page "/themen/preview/{Id:int}"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models
+@using BudoShurenWebsite.Services
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@inject WissenService WissenService
+
+@if (_isLoading)
+{
+    <PageTitle>Vorschau laden... | Budo Shuren Dojo</PageTitle>
+    <div class="container mx-auto max-w-screen-md">
+        <div class="mx-10 mt-20 text-center">
+            <Standardtext Text="Vorschau wird geladen..." />
+        </div>
+    </div>
+}
+else if (_beitrag == null)
+{
+    <PageTitle>Beitrag nicht gefunden | Budo Shuren Dojo</PageTitle>
+    <div class="container mx-auto max-w-screen-md">
+        <div class="mx-10 mt-20">
+            <Standardtext Text="Dieser Beitrag wurde nicht gefunden." />
+        </div>
+    </div>
+}
+else
+{
+    <PageTitle>[VORSCHAU] @_beitrag.MetaTitel | Budo Shuren Dojo</PageTitle>
+
+    <div class="sticky top-16 z-40 w-full bg-yellow-100 border-b border-yellow-400 px-4 py-3">
+        <div class="container mx-auto flex items-center justify-between max-w-screen-md">
+            <div class="flex items-center gap-3">
+                <span class="font-ptsans text-xs font-bold text-yellow-800">⚠ VORSCHAU</span>
+                <span class="font-ptsans text-xs text-yellow-700">
+                    Dieser Beitrag ist @(_beitrag.Veroeffentlicht ? "veröffentlicht" : "noch nicht veröffentlicht") und nur für eingeloggte Mitglieder sichtbar.
+                </span>
+            </div>
+            <a href="/Account/Member/Themen/Editor/@_beitrag.Id"
+               class="font-ptsans rounded border border-yellow-600 px-3 py-1 text-xs text-yellow-800 hover:bg-yellow-200">
+                ← Zurück zum Editor
+            </a>
+        </div>
+    </div>
+
+    <div>
+        <Headline Titel="@_beitrag.HeadlineTitel"
+                  Untertitel="@_beitrag.Titel"
+                  Anekdote="@(!string.IsNullOrWhiteSpace(_beitrag.HeadlineAnekdote) ? _beitrag.HeadlineAnekdote : _beitrag.Kategorie?.Name ?? "")" />
+    </div>
+
+    <div class="container mx-auto max-w-screen-md">
+        <div class="mx-10">
+            <div class="mt-4">
+                <a href="/themen" class="font-ptsans text-xs tracking-wider text-gray-500 underline underline-offset-4 hover:text-black">
+                    ← Alle Themen
+                </a>
+                @if (_beitrag.Kategorie != null)
+                {
+                    <span class="font-ptsans mx-2 text-xs text-gray-400">/</span>
+                    <span class="font-ptsans text-xs tracking-wider text-gray-500">@_beitrag.Kategorie.Name</span>
+                }
+            </div>
+
+            @foreach (var block in _beitrag.Bloecke.OrderBy(b => b.Sortierung))
+            {
+                <WissenBlockRenderer Block="block" />
+            }
+
+            <div class="mb-20 mt-16 border-t border-gray-200 pt-8">
+                <a href="/Account/Member/Themen" class="font-ptsans text-sm tracking-wider underline underline-offset-4 hover:no-underline">
+                    ← Zurück zur Verwaltung
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private WissenBeitrag? _beitrag;
+    private bool _isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _beitrag = await WissenService.GetBeitragByIdAsync(Id);
+        _isLoading = false;
+    }
+}

@@ -28,19 +28,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Yuji+Syuku&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <HeadOutlet />
     @* syncfusion *@
     <link href="_content/Syncfusion.Blazor.Themes/bootstrap5.css" rel="stylesheet" />
-
-    <HeadOutlet />
 </head>
 
 <body onclick="bodyClick(event)">
     <Routes />
+     
     <script src="_framework/blazor.web.js"></script>
-    <script src="_content/Syncfusion.Blazor.Core/scripts/syncfusion-blazor.min.js" type="text/javascript"></script>
-    @* <script src="script.js" defer></script> *@
     <script src="js/script.js" defer></script>
 
+        <script src="_content/Syncfusion.Blazor.Core/scripts/syncfusion-blazor.min.js" type="text/javascript"></script>
+    <script src="_content/Syncfusion.Blazor.SfPdfViewer/scripts/syncfusion-blazor-sfpdfviewer.min.js" type="text/javascript"></script>
 
     @* Blazor Bug - scrollt nicht korrekt nach oben bei Navigation in .NET 8 - das hier ist ein workaround *@
     @* Eigentlich sollte "<FocusOnNavigate RouteData="routeData" Selector="h1" />" in Routes.razor das machen! *@

@@ -1,28 +1,21 @@
 using BudoShurenWebsite.Components;
 using BudoShurenWebsite.Components.Account;
-using BudoShurenWebsite.Services;
 using BudoShurenWebsite.Data;
-
+using BudoShurenWebsite.Global;
+using BudoShurenWebsite.Middleware;
+using BudoShurenWebsite.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
-
-using Syncfusion.Blazor;
-using Microsoft.Extensions.Hosting;
-using System;
-using System.Globalization;
-
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using BudoShurenWebsite.Global;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
-using NLog.Web;
 using NLog;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.DataProtection;
+using NLog.Web;
+using Syncfusion.Blazor;
+using System.Diagnostics;
+using System.Globalization;
+using System.Security.Claims;
 
 namespace BudoShurenWebsite
 {
@@ -30,15 +23,25 @@ namespace BudoShurenWebsite
     {
         public static void Main(string[] args)
         {
-            var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+            var stopwatch = Stopwatch.StartNew();
+            var logger = NLog.LogManager.Setup()
+                .LoadConfigurationFromFile("nlog.config")
+                .GetCurrentClassLogger();
+
+
+            //var logger = NLog.LogManager.Setup()
+            //.LoadConfigurationFromAppSettings().GetCurrentClassLogger();
             try
             {
                 // Registrieren des Ereignishandlers für unbeobachtete Task-Ausnahmen
                 TaskScheduler.UnobservedTaskException += (sender, e) =>
                 {
-                    logger.Log(NLog.LogLevel.Error, e.Exception, "Ein unbehandelter Fehler in einem Task wurde festgestellt.");
+                    logger.Log(NLog.LogLevel.Error,
+                        e.Exception,
+                        "Ein unbehandelter Fehler in einem Task wurde festgestellt.");
                     e.SetObserved(); // Verhindert den Prozessabbruch
                 };
+                logger.Log(NLog.LogLevel.Info, "Starting BudoShuren");
 
                 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +60,7 @@ namespace BudoShurenWebsite
 
                 builder.Services.AddControllers();
                 builder.Services.AddHttpClient();
+                builder.Services.AddMemoryCache();
 
                 //Authentifizierung
                 builder.Services.AddCascadingAuthenticationState();
@@ -73,12 +77,17 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<ImageService>();
                 //builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
                 builder.Services.AddScoped<VisitorCounterService>();
+                builder.Services.AddScoped<WissenService>();
+                builder.Services.AddScoped<SlugService>();
+                builder.Services.AddScoped<IAktuellesService, AktuellesService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
                 builder.Services.AddScoped<NeueMitgliederAdaptor>();
                 builder.Services.AddScoped<NeuigkeitenAdaptor>();
                 builder.Services.AddScoped<AppointmentAdaptor>();
+                builder.Services.AddScoped<WissenBeitragAdaptor>();
+                builder.Services.AddScoped<AktuellesBeitragAdaptor>();
 
                 builder.Services.AddAuthentication(options =>
                 {
@@ -114,11 +123,14 @@ namespace BudoShurenWebsite
                     .AddSignInManager()
                 .AddDefaultTokenProviders();
 
+                builder.Services.AddScoped<AdminMaintenanceService>();
+
                 builder.Services.AddAuthorization(options =>
                 {
                     options.AddPolicy("Aktiviert", policy => policy.Requirements.Add(new VerifiedUserRequirement()));
                     options.AddPolicy("NotGuest", policy => policy.RequireAssertion(context =>
                         !context.User.IsInRole(Roles.Gast) && context.User.Claims.Any(c => c.Type == ClaimTypes.Role)));
+                    options.AddPolicy("AdminOnly", policy => policy.RequireRole(Roles.Admin));
                 });
 
                 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
@@ -136,24 +148,26 @@ namespace BudoShurenWebsite
                 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("de-DE");
                 CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("de-DE");
 
-
-                // Fügen Sie NLog als Logging-Provider hinzu
+                // NLog Logging provider
                 builder.Logging.ClearProviders();
-                builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
                 builder.Host.UseNLog();
 
-                builder.Logging.AddConsole();
-                builder.Logging.AddDebug();
-                builder.Logging.AddEventLog();
+                // Debug Sachen - zu laut für prod
+                //builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+                //builder.Logging.AddConsole();
+                //builder.Logging.AddDebug();
+                //builder.Logging.AddEventLog();
 
                 builder.Services.AddDistributedMemoryCache();
 
                 var app = builder.Build();
 
+                // GANZ ZUERST: Wartungsmodus-Check, bevor irgendetwas anderes läuft
+                app.UseMiddleware<MaintenanceMiddleware>();
+
                 // Configure the HTTP request pipeline.
                 if (app.Environment.IsDevelopment())
                 {
-                    //app.UseExceptionHandler("/Error");
                     app.UseDeveloperExceptionPage();
                     app.UseMigrationsEndPoint();
                 }
@@ -171,7 +185,15 @@ namespace BudoShurenWebsite
                             if (exceptionHandlerPathFeature?.Error != null)
                             {
                                 var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-                                logger.LogError(exceptionHandlerPathFeature.Error, "Unbehandelter Fehler");
+                                logger.LogError(
+                                    exceptionHandlerPathFeature.Error,
+                                    "Unbehandelter Fehler bei {Method} {Path}. RequestId: {RequestId}",
+                                    context.Request.Method,
+                                    context.Request.Path,
+                                    context.TraceIdentifier);
+
+                                //var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                                //logger.LogError(exceptionHandlerPathFeature.Error, "Unbehandelter Fehler");
                             }
 
                             // Umleitung zur Fehlerseite
@@ -199,6 +221,9 @@ namespace BudoShurenWebsite
                 app.MapAdditionalIdentityEndpoints();
                 app.MapControllers();
                 app.Run();
+
+                stopwatch.Stop();
+                logger.Log(NLog.LogLevel.Info, "BudoShuren startet in {Milliseconds} ms", stopwatch.ElapsedMilliseconds);
             }
             catch (Exception exception)
             {
@@ -222,6 +247,7 @@ namespace BudoShurenWebsite
             try
             {
                 var watch = System.Diagnostics.Stopwatch.StartNew();
+                logger.Info("Datenbankmigration gestartet");
                 Console.WriteLine("Datenbankmigration gestartet");
                 dbContext.Database.Migrate();
                 watch.Stop();

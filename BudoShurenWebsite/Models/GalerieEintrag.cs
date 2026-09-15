@@ -101,5 +101,11 @@ namespace BudoShurenWebsite.Models
 
         [NotMapped]
         public Action? StateHasChanged { get; set; }
+
+        [NotMapped]
+        public bool DisableSelection { get; set; }
+
+        [NotMapped]
+        public bool DisableHover { get; set; }
     }
 }

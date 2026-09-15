@@ -1,0 +1,174 @@
+﻿@page "/Account/Member/Admin"
+@rendermode InteractiveServer
+@layout ManageLayout
+@using BudoShurenWebsite.Components.Account.Shared
+
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Aktiviert")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "NotGuest")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AdminMaintenanceService AdminMaintenanceService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Admin</PageTitle>
+
+<div class="container mx-auto max-w-screen-lg">
+    <div class="mx-10">
+        <SectionBanner Titel="Administration" />
+
+        @if (!string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <StatusMessage ShowAsError="@showError" Message="@statusMessage" />
+        }
+
+        <div class="mb-10 border border-black p-6">
+            <h3 class="font-yuji mb-4 text-xl">Datenbankmigration</h3>
+
+            <p class="font-ptsans mb-4 text-sm tracking-wider text-black">
+                Hier können ausstehende EF-Core-Migrationen manuell ausgeführt werden.
+            </p>
+
+            <div class="mb-4">
+                <p class="font-ptsans text-sm tracking-wider text-black">
+                    Ausstehende Migrationen: <strong>@pendingMigrations.Count</strong>
+                </p>
+
+                @if (pendingMigrations.Count > 0)
+                {
+                    <ul class="mt-2 list-disc pl-6">
+                        @foreach (var migration in pendingMigrations)
+                        {
+                            <li class="font-ptsans text-sm tracking-wider text-black">@migration</li>
+                        }
+                    </ul>
+                }
+            </div>
+
+            <button @onclick="RunMigrationAsync"
+                    disabled="@isBusy"
+                    class="font-yuji h-10 transform bg-primary px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90 disabled:opacity-50">
+                Migration ausführen
+            </button>
+        </div>
+
+        <div class="border border-black p-6">
+            <h3 class="font-yuji mb-4 text-xl">Anwendung stoppen</h3>
+
+            <p class="font-ptsans mb-4 text-sm tracking-wider text-black">
+                Stoppt die laufende Anwendung kontrolliert. Nur für Administratoren.
+            </p>
+
+            <button @onclick="StopApplicationAsync"
+                    disabled="@isBusy"
+                    class="font-yuji h-10 transform bg-error px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90 disabled:opacity-50">
+                App stoppen
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isBusy;
+    private bool showError;
+    private string? statusMessage;
+    private List<string> pendingMigrations = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPendingMigrationsAsync();
+    }
+
+    private async Task LoadPendingMigrationsAsync()
+    {
+        pendingMigrations = (await AdminMaintenanceService.GetPendingMigrationsAsync()).ToList();
+    }
+
+    private async Task RunMigrationAsync()
+    {
+        if (!await EnsureAdminAsync())
+        {
+            return;
+        }
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm",
+            "Sollen die ausstehenden Datenbankmigrationen jetzt ausgeführt werden?");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        isBusy = true;
+        statusMessage = null;
+        showError = false;
+
+        try
+        {
+            var initiatedBy = await GetCurrentUserNameAsync();
+            var result = await AdminMaintenanceService.ApplyMigrationsAsync(initiatedBy);
+
+            showError = !result.Success;
+            statusMessage = result.Message;
+
+            await LoadPendingMigrationsAsync();
+        }
+        catch (Exception ex)
+        {
+            showError = true;
+            statusMessage = $"Fehler beim Ausführen der Migration: {ex.GetBaseException().Message}";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task StopApplicationAsync()
+    {
+        if (!await EnsureAdminAsync())
+        {
+            return;
+        }
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm",
+            "Die Anwendung wird sofort beendet. Wirklich fortfahren?");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        isBusy = true;
+        showError = false;
+        statusMessage = "Anwendung wird beendet ...";
+        StateHasChanged();
+
+        await Task.Delay(250);
+
+        var initiatedBy = await GetCurrentUserNameAsync();
+        await AdminMaintenanceService.StopApplicationAsync(initiatedBy);
+    }
+
+    private async Task<bool> EnsureAdminAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true || !user.IsInRole(Roles.Admin))
+        {
+            showError = true;
+            statusMessage = "Keine Berechtigung für diese Admin-Aktion.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task<string> GetCurrentUserNameAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User.Identity?.Name ?? "Unbekannt";
+    }
+}

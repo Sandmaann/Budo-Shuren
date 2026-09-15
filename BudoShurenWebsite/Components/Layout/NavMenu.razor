@@ -56,7 +56,7 @@
             //Geteilte Werte
             var basis = "transition-height ease-in-out duration-500 overflow-hidden";
             //Expanded-Werte, Höhe muss angegeben werden ansonsten greift die Transition nicht
-            var expanded = "h-[300px] " + basis;
+            var expanded = "h-[400px] " + basis;
             //Collapsed-Werte mit MediaQuery für Desktop
             var collapsed = "h-0 md:h-auto " + basis;
             //Sichtbarkeit der Nav-Bar je nach Button-Klick
@@ -113,8 +113,18 @@
                         </NavLink>
                     </li>
                     <li class="nav-item px-3 py-1">
+                        <NavLink href="/aktuelles" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Aktuelles
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
                         <NavLink href="/Galerie" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
                             Galerie
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3 py-1">
+                        <NavLink href="/themen" class="nav-link underline-offset-4 hover:underline" aria-current="page" Match="NavLinkMatch.All">
+                            Weitere Themen
                         </NavLink>
                     </li>
                     <AuthorizeView>
@@ -138,6 +148,14 @@
     }
 
     #genbukan-menu:hover #dropdown {
+        display: block;
+    }
+
+    #themen-dropdown {
+        display: none;
+    }
+
+    #themen-menu:hover #themen-dropdown {
         display: block;
     }
 
@@ -178,35 +196,54 @@
         {
             case "":
                 Title = "Home"; break;
+            case "aikido":
             case "Aikido":
                 Title = "Aikido"; break;
+            case "genbukan":
             case "Genbukan":
                 Title = "Genbukan"; break;
+            case "iaido":
             case "Iaido":
+            case "iaidô":
             case "Iaidô":
                 Title = "Iaidô"; break;
+            case "jodo":
             case "Jodo":
+            case "jôdô":
             case "Jôdô":
                 Title = "Jôdô"; break;
+            case "nujinkan":
             case "Bujinkan":
                 Title = "Bujinkan"; break;
             case "wie-fange-ich-an":
                 Title = "Wie fange ich an?"; break;
+            case "neu-im-Dojo":
             case "Neu-im-Dojo":
+            case "neu-im-Dôjô":
             case "Neu-im-Dôjô":
                 Title = "Neu im Dojo"; break;
             case "Verein":
                 Title = "Verein"; break;
+            case "kontakt":
             case "Kontakt":
-                Title = "Kontakt"; break;    
-                case "Galerie":
+                Title = "Kontakt"; break;
+            case "galerie":
+            case "Galerie":
                 Title = "Galerie"; break;
+            case "themen":
+            case "Themen":
+                Title = "Themen"; break;
+            case "aktuelles":
+            case "Aktuelles":
+                Title = "Aktuelles"; break;
             case "Account/Member":
+            case "account/member":
                 Title = "Mitgliederbereich"; break;
+            case "account/login":
             case "Account/Login":
                 Title = "Mitgliederbereich"; break;
             default:
-                if (currentUrl?.Contains("Account/Member/") == true)
+                if (currentUrl?.Contains("Account/Member/", StringComparison.InvariantCultureIgnoreCase) == true)
                     Title = "Mitgliederbereich";
                 break;
         }

@@ -34,15 +34,34 @@
     protected override void OnInitialized()
     {
         RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
-        Logger.LogError($"/Error-Page on RequestID: {RequestId}");
 
-        if(HttpContext != null)
+        if (HttpContext == null)
         {
-            var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
-            if (exceptionHandlerPathFeature?.Error != null)
-            {
-                Logger.LogError(exceptionHandlerPathFeature.Error, "Unbehandelter Fehler");
-            }
+            return;
+        }
+
+        var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+        if (exceptionHandlerPathFeature?.Error != null)
+        {
+            Logger.LogError(
+                exceptionHandlerPathFeature.Error,
+                "Unbehandelter Fehler. RequestId: {RequestId}",
+                RequestId);
         }
     }
+
+    // protected override void OnInitialized()
+    // {
+    //     RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+    //     Logger.LogError($"/Error-Page on RequestID: {RequestId}");
+
+    //     if(HttpContext != null)
+    //     {
+    //         var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+    //         if (exceptionHandlerPathFeature?.Error != null)
+    //         {
+    //             Logger.LogError(exceptionHandlerPathFeature.Error, "Unbehandelter Fehler");
+    //         }
+    //     }
+    // }
 }

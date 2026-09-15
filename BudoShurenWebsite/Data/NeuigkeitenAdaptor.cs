@@ -97,6 +97,8 @@ namespace BudoShurenWebsite.Data
                                 neuigkeit.Linktext = obj.Linktext;
                                 neuigkeit.Quellenangabe = obj.Quellenangabe;
                                 neuigkeit.Datum = obj.Datum;
+                                neuigkeit.Ablaufdatum = obj.IstStandardneuigkeit ? null : obj.Ablaufdatum;
+                                neuigkeit.IstStandardneuigkeit = obj.IstStandardneuigkeit;
                                 neuigkeit.LastChange = DateTime.Now;
                                 neuigkeit.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
                             }
@@ -109,6 +111,8 @@ namespace BudoShurenWebsite.Data
                             if (obj.DbImageId == null)
                                 throw new Exception("Kein Bild ausgewählt!");
 
+                            if (obj.IstStandardneuigkeit)
+                                obj.Ablaufdatum = null;
                             obj.Created = DateTime.Now;
                             obj.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
                             obj.LastChange = DateTime.Now;
@@ -160,6 +164,8 @@ namespace BudoShurenWebsite.Data
                             neuigkeit.Linktext = obj.Linktext;
                             neuigkeit.Quellenangabe = obj.Quellenangabe;
                             neuigkeit.Datum = obj.Datum;
+                            neuigkeit.Ablaufdatum = obj.IstStandardneuigkeit ? null : obj.Ablaufdatum;
+                            neuigkeit.IstStandardneuigkeit = obj.IstStandardneuigkeit;
                             neuigkeit.LastChange = DateTime.Now;
                             neuigkeit.LastChangedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
 
