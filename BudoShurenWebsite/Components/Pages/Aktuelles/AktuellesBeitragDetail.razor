@@ -26,12 +26,14 @@ else if (beitrag != null)
         <link rel="canonical" href="@($"https://budo-shuren.de/aktuelles/{beitrag.Slug}")">
     </HeadContent>
 
-    <div class="container mx-auto max-w-screen-md px-4 py-8">
+    <div class="container mx-auto max-w-screen-md">
         <div class="mb-4">
             <a href="/aktuelles" class="text-sm text-blue-600 hover:underline">← Zurück zur Übersicht</a>
         </div>
+    </div>
 
-        <article>
+    <article>
+        <div class="container mx-auto max-w-screen-md">
             <div class="mb-4 flex items-center gap-2">
                 <span class="text-sm text-gray-500">@beitrag.Datum.ToString("dd.MM.yyyy")</span>
                 @if (!string.IsNullOrWhiteSpace(beitrag.Abteilung?.Name))
@@ -41,9 +43,11 @@ else if (beitrag != null)
                     </span>
                 }
             </div>
+        </div>
 
-            <Headline Titel="@beitrag.Titel" Untertitel="" Anekdote="" />
+        <Headline Titel="@beitrag.Titel" Untertitel="" Anekdote="" />
 
+        <div class="container mx-auto max-w-screen-md">
             <div class="mt-6">
                 @if (beitrag.Bloecke != null && beitrag.Bloecke.Any())
                 {
@@ -61,8 +65,8 @@ else if (beitrag != null)
             <div class="mt-8">
                 <a href="/aktuelles" class="text-sm text-blue-600 hover:underline">← Zurück zur Übersicht</a>
             </div>
-        </article>
-    </div>
+        </div>
+    </article>
 }
 else if (isLoading)
 {
