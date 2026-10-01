@@ -24,5 +24,30 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         public static string InfoAbmeldenUrl(string basisUrl, string token) => $"{basisUrl}{InfoAbmelden}/{token}";
 
         public static string BenachrichtigungAbmeldenUrl(string basisUrl, string token) => $"{basisUrl}{BenachrichtigungAbmelden}/{token}";
+
+        /// <summary>Ersetzt das Token in einem Pfad durch "***", damit es nicht in Logs landet.</summary>
+        public static string OhneToken(string? pfad)
+        {
+            if (string.IsNullOrEmpty(pfad))
+                return string.Empty;
+
+            foreach (var praefix in PfadeMitToken)
+            {
+                var start = pfad.IndexOf(praefix + "/", StringComparison.OrdinalIgnoreCase);
+                if (start >= 0)
+                    return pfad[..(start + praefix.Length + 1)] + "***";
+            }
+            return pfad;
+        }
+
+        /// <summary>Für Token-Seiten: kein Referrer an fremde Seiten, nicht cachen, nicht indexieren.</summary>
+        public static void SicherheitsHeaderSetzen(HttpResponse antwort)
+        {
+            if (antwort.HasStarted)
+                return;
+            antwort.Headers["Referrer-Policy"] = "no-referrer";
+            antwort.Headers.CacheControl = "no-store";
+            antwort.Headers["X-Robots-Tag"] = "noindex, nofollow";
+        }
     }
 }

@@ -70,6 +70,14 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
   - Rules without DB access live in static classes (`KapazitaetsRechner`, `AnmeldungStatusUebergaenge`, `VeranstaltungAenderungsRegeln`, `VeroeffentlichungsPruefung`, `VeranstaltungRechte`, `KalenderEintragFabrik`). Services use them and check rights themselves: Admins manage everything, Abteilungsleiter only their own Abteilung. `ApplicationUser.Abteilung` may hold the Abteilung's Id or Name.
   - Published public events write one `AppointmentData` per day, linked via `VeranstaltungsTagId`. These entries are read-only in the calendar, and `AppointmentAdaptorComponent` rejects edits to them.
   - Times: domain dates and deadlines are local time (Europe/Berlin, see `Global/Ortszeit`); technical timestamps end in `Utc`.
+  - Public pages (`Components/Pages/Veranstaltungen/`) are static SSR, so don't add `@rendermode` to them:
+    - Forms post via `[SupplyParameterFromForm]` and antiforgery.
+    - `[EnableRateLimiting(VeranstaltungRateLimit.Formulare)]` limits POSTs per IP.
+    - `FormularSchutz` provides a honeypot plus a minimum fill time.
+  - Links in mails carry a token. Only its SHA-256 hash is stored (`AnmeldeToken`).
+    - Opening a link (GET) must never change anything, because mail scanners open them. Actions run only on a POST from a button on the page.
+    - Token pages call `VeranstaltungLinks.SicherheitsHeaderSetzen`. Logged paths go through `VeranstaltungLinks.OhneToken`.
+  - Render user-facing Markdown with `MarkdownText.SicherZuHtml` (raw HTML disabled), and HTML-encode values in mail templates.
 - **Images** are stored in the database (`DbImage`, `ImageService` with ImageSharp) and rendered as base64 data URIs, not as files in `wwwroot`.
 - **Block-based content systems** — two parallel ones with the same shape (Beitrag → ordered Blocks, typed by an enum, rendered by a `*BlockRenderer.razor`, edited with per-type editors in `Shared/*/BlockEditor/`, slug URLs via `SlugService`):
   - **Wissen / "Themen"**: models `WissenKategorie/WissenBeitrag/WissenBlock`, `WissenService`, public routes `/themen`, `/themen/{Slug}`, editor `ThemenVerwalten`/`ThemenBeitragEditor`. `WissenBlockTyp` values 0–5 are legacy (kept for DB compatibility, not selectable in the editor); new layout types start at 10.

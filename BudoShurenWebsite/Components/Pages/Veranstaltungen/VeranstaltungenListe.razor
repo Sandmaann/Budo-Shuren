@@ -1,0 +1,72 @@
+@page "/veranstaltungen"
+@* Statisches Rendern (kein @rendermode): öffentliche Seite ohne SignalR-Verbindung *@
+
+@using BudoShurenWebsite.Services.Veranstaltungen
+
+@inject IVeranstaltungAnzeigeService Anzeige
+@inject IOptions<VeranstaltungenOptionen> Optionen
+
+<PageTitle>Veranstaltungen | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="description" content="Seminare, Lehrgänge und weitere Veranstaltungen des Budo Shuren Dojo mit Online-Anmeldung.">
+</HeadContent>
+
+<div>
+    <Headline Titel="武道" Untertitel="Veranstaltungen" Anekdote="" />
+</div>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10 my-6">
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Diese Seite gibt es nicht." />
+        }
+        else if (_eintraege.Count == 0)
+        {
+            <Standardtext Text="Zurzeit sind keine Veranstaltungen geplant." />
+        }
+        else
+        {
+            <ul class="space-y-4">
+                @foreach (var e in _eintraege)
+                {
+                    <li class="rounded border border-gray-200 p-4 hover:bg-gray-50">
+                        <a href="@($"/veranstaltungen/{Uri.EscapeDataString(e.Slug)}")" class="block">
+                            <p class="font-ptsans text-xs uppercase tracking-wider text-gray-600">
+                                @Zeitraum(e)@(e.Ort is null ? "" : $" · {e.Ort}")@(e.Abteilung is null ? "" : $" · {e.Abteilung}")
+                            </p>
+                            <h3 class="font-ptsans mt-1 text-lg font-bold">@e.Titel</h3>
+                            @if (!string.IsNullOrWhiteSpace(e.Kurzbeschreibung))
+                            {
+                                <p class="font-ptsans mt-1 text-sm">@e.Kurzbeschreibung</p>
+                            }
+                            <span class="font-ptsans mt-2 inline-block text-sm underline">Details und Anmeldung</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private IReadOnlyList<VeranstaltungKurz> _eintraege = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Optionen.Value.Aktiviert)
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        _eintraege = await Anzeige.KommendeAsync();
+    }
+
+    private static string Zeitraum(VeranstaltungKurz e) =>
+        e.ErsterTag == e.LetzterTag ? $"{e.ErsterTag:dd.MM.yyyy}" : $"{e.ErsterTag:dd.MM.} – {e.LetzterTag:dd.MM.yyyy}";
+}

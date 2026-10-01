@@ -107,6 +107,15 @@ public class AnmeldeValidierungTests
     }
 
     [Fact]
+    public void Fehlende_Tagesliste_aus_dem_Formular_ist_ein_Feldfehler_keine_Exception()
+    {
+        var eingabe = Gueltig();
+        eingabe.TagIds = null!;
+
+        Pruefen(eingabe, Veranstaltung(Teilnahmemodus.EinzelneTage)).Fehler.ShouldContainKey(nameof(AnmeldeEingabe.TagIds));
+    }
+
+    [Fact]
     public void Info_Adressen_nur_fuer_Begleitpersonen_und_ohne_eigene_Adresse()
     {
         var eingabe = Gueltig();

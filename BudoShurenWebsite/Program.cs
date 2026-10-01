@@ -105,6 +105,9 @@ namespace BudoShurenWebsite
                 builder.Services.Configure<VeranstaltungenOptionen>(builder.Configuration.GetSection(VeranstaltungenOptionen.Abschnitt));
                 builder.Services.AddScoped<IVeranstaltungVerwaltungService, VeranstaltungVerwaltungService>();
                 builder.Services.AddScoped<IAnmeldungService, AnmeldungService>();
+                builder.Services.AddScoped<IVeranstaltungAnzeigeService, VeranstaltungAnzeigeService>();
+                builder.Services.AddSingleton<FormularSchutz>();
+                builder.Services.AddRateLimiter(VeranstaltungRateLimit.Konfigurieren);
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
@@ -214,7 +217,8 @@ namespace BudoShurenWebsite
                                     exceptionHandlerPathFeature.Error,
                                     "Unbehandelter Fehler bei {Method} {Path}. RequestId: {RequestId}",
                                     context.Request.Method,
-                                    context.Request.Path,
+                                    // Tokens aus Links (Anmeldung verwalten usw.) nicht ins Log schreiben
+                                    VeranstaltungLinks.OhneToken(context.Request.Path),
                                     context.TraceIdentifier);
 
                                 //var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
@@ -236,6 +240,7 @@ namespace BudoShurenWebsite
 
                 app.UseHttpsRedirection();
                 app.UseStaticFiles();
+                app.UseRateLimiter();
                 app.UseAntiforgery();
                 app.UseSession();
 

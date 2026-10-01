@@ -1,0 +1,343 @@
+@page "/veranstaltungen/{Slug}"
+@* Statisches Rendern (kein @rendermode): Formular per POST, Rate-Limit greift, keine SignalR-Verbindung für Gäste *@
+
+@using BudoShurenWebsite.Models.Enums
+@using BudoShurenWebsite.Services.Veranstaltungen
+@using Microsoft.AspNetCore.RateLimiting
+
+@attribute [EnableRateLimiting(VeranstaltungRateLimit.Formulare)]
+
+@inject IVeranstaltungAnzeigeService Anzeige
+@inject IAnmeldungService Anmeldung
+@inject FormularSchutz Schutz
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(_v?.Titel ?? "Veranstaltung") | Budo Shuren Dojo</PageTitle>
+@if (_v?.Kurzbeschreibung is { } beschreibung)
+{
+    <HeadContent>
+        <meta name="description" content="@beschreibung">
+    </HeadContent>
+}
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10 my-6">
+        @if (_v is null)
+        {
+            <Standardtext Text="Diese Veranstaltung gibt es nicht (mehr)." />
+            <a href="/veranstaltungen" class="font-ptsans text-sm underline">Alle Veranstaltungen</a>
+        }
+        else
+        {
+            <a href="/veranstaltungen" class="font-ptsans text-sm hover:underline">← Alle Veranstaltungen</a>
+
+            <h1 class="font-ptsans mt-4 text-2xl font-bold">@_v.Titel</h1>
+            @if (_v.Abteilung is not null)
+            {
+                <p class="font-ptsans text-sm text-gray-600">@_v.Abteilung</p>
+            }
+
+            @if (_v.Status == VeranstaltungStatus.Abgesagt)
+            {
+                <p class="font-ptsans my-4 rounded border border-red-700 bg-red-50 p-3 text-sm font-bold">Diese Veranstaltung wurde abgesagt.</p>
+            }
+
+            <!-- Termine und Ort -->
+            <section class="font-ptsans my-6 rounded border border-gray-200 p-4 text-sm">
+                <ul class="space-y-1">
+                    @foreach (var tag in _v.Tage)
+                    {
+                        <li class="@(tag.Abgesagt ? "text-gray-400 line-through" : "")">
+                            @TagText(tag)
+                            @if (tag.Abgesagt)
+                            {
+                                <span class="ml-1 no-underline">(abgesagt)</span>
+                            }
+                            else if (tag.FreiePlaetze == 0)
+                            {
+                                <span class="ml-1 font-bold">– ausgebucht</span>
+                            }
+                            else if (tag.FreiePlaetze is { } frei && frei <= 10)
+                            {
+                                <span class="ml-1 text-gray-600">– noch @frei @(frei == 1 ? "Platz" : "Plätze")</span>
+                            }
+                        </li>
+                    }
+                </ul>
+                @if (_v.Ort is not null)
+                {
+                    <p class="mt-3">
+                        <strong>Ort:</strong> @_v.Ort@(_v.Adresse is null ? "" : $", {_v.Adresse}")
+                        @if (_v.KartenLink is not null)
+                        {
+                            <a href="@_v.KartenLink" target="_blank" rel="noopener noreferrer" class="ml-1 underline">Karte</a>
+                        }
+                    </p>
+                }
+                @if (_v.KontaktEmail is not null)
+                {
+                    <p class="mt-1"><strong>Kontakt:</strong> @(_v.KontaktName ?? "") <a href="mailto:@_v.KontaktEmail" class="underline">@_v.KontaktEmail</a></p>
+                }
+            </section>
+
+            <div class="font-ptsans prose prose-sm max-w-none">
+                @((MarkupString)_v.BeschreibungHtml)
+            </div>
+
+            <!-- Anmeldung -->
+            <section id="anmeldung" class="my-8 rounded border border-gray-300 p-5">
+                <h2 class="font-ptsans mb-4 text-lg font-bold">Anmeldung</h2>
+
+                @if (_erfolgFuer is not null)
+                {
+                    <div class="font-ptsans rounded border border-green-700 bg-green-50 p-4 text-sm">
+                        @if (_v.DoubleOptIn)
+                        {
+                            <p class="font-bold">Fast geschafft!</p>
+                            <p class="mt-1">Wir haben dir eine E-Mail an <strong>@_erfolgFuer</strong> geschickt. Bitte bestätige deine Anmeldung über den Link darin. Erst dann ist sie gültig.</p>
+                        }
+                        else
+                        {
+                            <p class="font-bold">Danke!</p>
+                            <p class="mt-1">Wir haben dir eine E-Mail an <strong>@_erfolgFuer</strong> mit allen Details und einem Link zum Ändern deiner Anmeldung geschickt.</p>
+                        }
+                        <p class="mt-2 text-xs text-gray-600">Keine E-Mail bekommen? Bitte schau auch im Spam-Ordner nach.</p>
+                    </div>
+                }
+                else if (_v.Status != VeranstaltungStatus.Veroeffentlicht || _v.Anmeldung == AnmeldeZustand.Geschlossen)
+                {
+                    <Standardtext Text="Eine Anmeldung ist nicht mehr möglich." />
+                }
+                else if (_v.Anmeldung == AnmeldeZustand.NochNichtOffen)
+                {
+                    <Standardtext Text="@($"Die Anmeldung ist ab {_v.AnmeldungAb:dd.MM.yyyy, HH:mm} Uhr möglich.")" />
+                }
+                else if (_v.Ausgebucht)
+                {
+                    <Standardtext Text="Die Veranstaltung ist leider ausgebucht." />
+                }
+                else
+                {
+                    @if (_meldung is not null)
+                    {
+                        <p class="font-ptsans mb-4 rounded border border-red-700 bg-red-50 p-3 text-sm">@_meldung</p>
+                    }
+                    @if (_v.AnmeldungBis is { } bis)
+                    {
+                        <p class="font-ptsans mb-4 text-xs text-gray-600">Anmeldeschluss: @bis.ToString("dd.MM.yyyy, HH:mm") Uhr</p>
+                    }
+
+                    <EditForm Model="Formular" FormName="anmeldung" OnSubmit="AbsendenAsync" Enhance>
+                        <div class="font-ptsans space-y-4 text-sm">
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="@Label" for="vorname">Vorname *</label>
+                                    <InputText id="vorname" @bind-Value="Formular.Eingabe.Vorname" class="@Feld" autocomplete="given-name" />
+                                    @FehlerText(nameof(AnmeldeEingabe.Vorname))
+                                </div>
+                                <div>
+                                    <label class="@Label" for="nachname">Nachname *</label>
+                                    <InputText id="nachname" @bind-Value="Formular.Eingabe.Nachname" class="@Feld" autocomplete="family-name" />
+                                    @FehlerText(nameof(AnmeldeEingabe.Nachname))
+                                </div>
+                            </div>
+                            <div>
+                                <label class="@Label" for="email">E-Mail *</label>
+                                <InputText id="email" type="email" @bind-Value="Formular.Eingabe.Email" class="@Feld" autocomplete="email" />
+                                @FehlerText(nameof(AnmeldeEingabe.Email))
+                            </div>
+
+                            @if (_v.TelefonFeld != FormularFeldModus.Aus)
+                            {
+                                <div>
+                                    <label class="@Label" for="telefon">Telefon@(Stern(_v.TelefonFeld))</label>
+                                    <InputText id="telefon" type="tel" @bind-Value="Formular.Eingabe.Telefon" class="@Feld" autocomplete="tel" />
+                                    @FehlerText(nameof(AnmeldeEingabe.Telefon))
+                                </div>
+                            }
+                            @if (_v.VereinFeld != FormularFeldModus.Aus)
+                            {
+                                <div>
+                                    <label class="@Label" for="verein">Verein / Dojo@(Stern(_v.VereinFeld))</label>
+                                    <InputText id="verein" @bind-Value="Formular.Eingabe.Verein" class="@Feld" />
+                                    @FehlerText(nameof(AnmeldeEingabe.Verein))
+                                </div>
+                            }
+                            @if (_v.GraduierungFeld != FormularFeldModus.Aus)
+                            {
+                                <div>
+                                    <label class="@Label" for="graduierung">Graduierung@(Stern(_v.GraduierungFeld))</label>
+                                    <InputText id="graduierung" @bind-Value="Formular.Eingabe.Graduierung" class="@Feld" />
+                                    @FehlerText(nameof(AnmeldeEingabe.Graduierung))
+                                </div>
+                            }
+
+                            @if (_v.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
+                            {
+                                <fieldset>
+                                    <legend class="@Label">An welchen Tagen bist du dabei? *</legend>
+                                    @for (var i = 0; i < Formular.Tage.Count; i++)
+                                    {
+                                        var index = i;
+                                        var tag = _v.Tage.Single(t => t.Id == Formular.Tage[index].Id);
+                                        <input type="hidden" name="Formular.Tage[@index].Id" value="@tag.Id" />
+                                        <label class="mt-1 flex items-center gap-2 @(tag.FreiePlaetze == 0 ? "text-gray-400" : "")">
+                                            <InputCheckbox @bind-Value="Formular.Tage[index].Gewaehlt" disabled="@(tag.FreiePlaetze == 0)" />
+                                            @TagText(tag)@(tag.FreiePlaetze == 0 ? " – ausgebucht" : "")
+                                        </label>
+                                    }
+                                    @if (_v.MinTageBeiTeilanmeldung > 1)
+                                    {
+                                        <p class="mt-1 text-xs text-gray-600">Mindestens @_v.MinTageBeiTeilanmeldung Tage.</p>
+                                    }
+                                    @FehlerText(nameof(AnmeldeEingabe.TagIds))
+                                </fieldset>
+                            }
+
+                            @if (_v.MaxBegleitpersonen > 0)
+                            {
+                                <div>
+                                    <label class="@Label" for="begleitung">Ich bringe weitere Personen mit (Anzahl)</label>
+                                    <InputNumber id="begleitung" @bind-Value="Formular.Eingabe.AnzahlBegleitpersonen" min="0" max="@_v.MaxBegleitpersonen" class="@($"{Feld} md:w-32")" />
+                                    <p class="mt-1 text-xs text-gray-600">Für Begleitpersonen brauchen wir keine Daten. Höchstens @_v.MaxBegleitpersonen.</p>
+                                    @FehlerText(nameof(AnmeldeEingabe.AnzahlBegleitpersonen))
+                                </div>
+                                <div>
+                                    <label class="@Label" for="infoemails">Weitere E-Mail-Adressen für Infos (optional)</label>
+                                    <InputTextArea id="infoemails" @bind-Value="Formular.Eingabe.InfoEmails" rows="2" class="@Feld" placeholder="eine Adresse pro Zeile" />
+                                    <p class="mt-1 text-xs text-gray-600">Zum Beispiel für deine Begleitpersonen: Sie bekommen Infos zur Veranstaltung und können sich jederzeit abmelden. Höchstens eine Adresse je Begleitperson.</p>
+                                    @FehlerText(nameof(AnmeldeEingabe.InfoEmails))
+                                </div>
+                            }
+
+                            @if (_v.BemerkungFeld != FormularFeldModus.Aus)
+                            {
+                                <div>
+                                    <label class="@Label" for="bemerkung">Bemerkung@(Stern(_v.BemerkungFeld))</label>
+                                    <InputTextArea id="bemerkung" @bind-Value="Formular.Eingabe.Bemerkung" rows="3" class="@Feld" />
+                                    @FehlerText(nameof(AnmeldeEingabe.Bemerkung))
+                                </div>
+                            }
+
+                            @* Honeypot: für Menschen unsichtbar und nicht per Tastatur erreichbar *@
+                            <div class="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
+                                <label for="website">Website</label>
+                                <InputText id="website" @bind-Value="Formular.Website" tabindex="-1" autocomplete="off" />
+                            </div>
+                            <InputText type="hidden" @bind-Value="Formular.Zeitstempel" />
+
+                            <div>
+                                <label class="flex items-start gap-2">
+                                    <InputCheckbox @bind-Value="Formular.Eingabe.DatenschutzAkzeptiert" class="mt-1" />
+                                    <span>
+                                        Ich bin einverstanden, dass meine Angaben zur Organisation dieser Veranstaltung gespeichert und verarbeitet werden.
+                                        Details in der <a href="/impressum" target="_blank" class="underline">Datenschutzerklärung</a>. *
+                                    </span>
+                                </label>
+                                @FehlerText(nameof(AnmeldeEingabe.DatenschutzAkzeptiert))
+                            </div>
+
+                            <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                                Anmelden
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+            </section>
+        }
+    </div>
+</div>
+
+@code {
+    private const string Label = "mb-1 block text-xs font-bold";
+    private const string Feld = "w-full rounded border border-gray-300 p-2 text-sm";
+
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "anmeldung")]
+    private AnmeldeFormular? Formular { get; set; }
+
+    private VeranstaltungAnzeige? _v;
+    private IReadOnlyDictionary<string, string> _fehler = new Dictionary<string, string>();
+    private string? _meldung;
+    private string? _erfolgFuer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Beim Absenden setzt die Formularbindung das Modell bzw. nicht übermittelte Listen auf null
+        Formular ??= new();
+        Formular.Eingabe ??= new();
+        Formular.Tage ??= [];
+
+        if (Optionen.Value.Aktiviert)
+            _v = await Anzeige.LadenAsync(Slug);
+
+        if (_v is null)
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        // Tagesauswahl: beim ersten Laden alle aktiven Tage (nicht angehakt); nach dem Absenden bleibt die Auswahl
+        if (Formular.Tage.Count == 0)
+            Formular.Tage = _v.AktiveTage.Select(t => new TagWahl { Id = t.Id }).ToList();
+        // Nur bekannte, aktive Tage annehmen (das Formular kann manipuliert sein)
+        Formular.Tage = Formular.Tage.Where(w => _v.AktiveTage.Any(t => t.Id == w.Id)).ToList();
+
+        if (HttpContext is null || !HttpMethods.IsPost(HttpContext.Request.Method))
+            Formular.Zeitstempel = Schutz.Zeitstempel();
+    }
+
+    private async Task AbsendenAsync()
+    {
+        var email = Formular.Eingabe.Email?.Trim();
+
+        // Bots bekommen dieselbe Erfolgsmeldung, es wird aber nichts gespeichert oder versendet
+        if (Schutz.IstVerdaechtig(Formular.Website, Formular.Zeitstempel))
+        {
+            _erfolgFuer = email;
+            return;
+        }
+
+        Formular.Eingabe.TagIds = Formular.Tage.Where(t => t.Gewaehlt).Select(t => t.Id).ToList();
+        var ergebnis = await Anmeldung.AnmeldenAsync(Slug, Formular.Eingabe, NavigationManager.BaseUri);
+
+        switch (ergebnis.Art)
+        {
+            case AnmeldeErgebnisArt.EmailVersendet:
+                _erfolgFuer = email;
+                break;
+            case AnmeldeErgebnisArt.Ungueltig:
+                _fehler = ergebnis.Fehler;
+                _meldung = "Bitte prüfe deine Angaben.";
+                break;
+            case AnmeldeErgebnisArt.Ausgebucht:
+                _meldung = ergebnis.VolleTage.Count == 0
+                    ? "Leider ist kein Platz mehr frei."
+                    : $"Leider ist kein Platz mehr frei am {string.Join(", ", ergebnis.VolleTage.Select(d => d.ToString("dd.MM.yyyy")))}.";
+                _v = await Anzeige.LadenAsync(Slug);
+                break;
+            default:
+                _meldung = "Eine Anmeldung ist gerade nicht möglich.";
+                _v = await Anzeige.LadenAsync(Slug);
+                break;
+        }
+    }
+
+    private RenderFragment? FehlerText(string feld) =>
+        _fehler.TryGetValue(feld, out var text)
+            ? @<p class="font-ptsans mt-1 text-xs text-red-700">@text</p>
+            : null;
+
+    private static string Stern(FormularFeldModus modus) => modus == FormularFeldModus.Pflicht ? " *" : "";
+
+    private static string TagText(TagAnzeige tag) =>
+        $"{tag.Datum.ToString("dddd, dd.MM.yyyy", System.Globalization.CultureInfo.GetCultureInfo("de-DE"))}, {tag.Beginn:HH\\:mm}–{tag.Ende:HH\\:mm} Uhr" +
+        (string.IsNullOrWhiteSpace(tag.Titel) ? "" : $" ({tag.Titel})");
+}

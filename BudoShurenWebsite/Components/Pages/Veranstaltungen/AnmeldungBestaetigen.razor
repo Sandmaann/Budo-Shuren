@@ -1,0 +1,100 @@
+@page "/veranstaltungen/bestaetigen/{Token}"
+@* Öffnen des Links (GET) ändert nichts: Mail-Scanner rufen Links vorab auf. Bestätigt wird erst per Klick (POST). *@
+
+@using BudoShurenWebsite.Services.Veranstaltungen
+@using Microsoft.AspNetCore.RateLimiting
+
+@attribute [EnableRateLimiting(VeranstaltungRateLimit.Formulare)]
+
+@inject IAnmeldungService Anmeldung
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<PageTitle>Anmeldung bestätigen | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow">
+</HeadContent>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="font-ptsans mx-10 my-12 text-sm">
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Diese Seite gibt es nicht." />
+        }
+        else if (_ergebnis == BestaetigungsErgebnis.Bestaetigt)
+        {
+            <h1 class="mb-3 text-xl font-bold">Anmeldung bestätigt</h1>
+            <p>Danke, deine Anmeldung ist jetzt gültig. Du bekommst gleich eine E-Mail mit allen Details und einem Link, über den du deine Anmeldung ansehen und ändern kannst.</p>
+        }
+        else if (_ergebnis == BestaetigungsErgebnis.Ausgebucht)
+        {
+            <h1 class="mb-3 text-xl font-bold">Leider ausgebucht</h1>
+            <p>Deine Anmeldung war zu lange unbestätigt, und inzwischen sind alle Plätze vergeben.</p>
+        }
+        else if (_ergebnis == BestaetigungsErgebnis.Geschlossen)
+        {
+            <h1 class="mb-3 text-xl font-bold">Anmeldung nicht mehr möglich</h1>
+            <p>Für diese Veranstaltung ist keine Anmeldung mehr möglich.</p>
+        }
+        else if (_titel is null)
+        {
+            <h1 class="mb-3 text-xl font-bold">Link ungültig</h1>
+            <p>Dieser Link ist ungültig oder wurde bereits verwendet. Wenn du deine Anmeldung schon bestätigt hast, findest du den Link zum Verwalten in der Bestätigungs-E-Mail.</p>
+            <a href="/veranstaltungen" class="mt-3 inline-block underline">Alle Veranstaltungen</a>
+        }
+        else
+        {
+            <h1 class="mb-3 text-xl font-bold">Anmeldung bestätigen</h1>
+            <p class="mb-4">Bitte bestätige deine Anmeldung zu <strong>@_titel</strong>.</p>
+            <EditForm Model="Formular" FormName="bestaetigen" OnSubmit="BestaetigenAsync" Enhance>
+                <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                    Anmeldung bestätigen
+                </button>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Token { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "bestaetigen")]
+    private BestaetigenFormular? Formular { get; set; }
+
+    private string? _titel;
+    private BestaetigungsErgebnis? _ergebnis;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Ohne übermittelte Felder setzt die Formularbindung das Modell beim Absenden auf null
+        Formular ??= new();
+
+        if (HttpContext is not null)
+            VeranstaltungLinks.SicherheitsHeaderSetzen(HttpContext.Response);
+
+        if (!Optionen.Value.Aktiviert)
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        _titel = await Anmeldung.BestaetigungslinkPruefenAsync(Token);
+    }
+
+    private async Task BestaetigenAsync()
+    {
+        if (!Optionen.Value.Aktiviert)
+            return;
+        _ergebnis = await Anmeldung.BestaetigenAsync(Token, NavigationManager.BaseUri);
+    }
+
+    private sealed class BestaetigenFormular
+    {
+        public string? Bestaetigen { get; set; }
+    }
+}

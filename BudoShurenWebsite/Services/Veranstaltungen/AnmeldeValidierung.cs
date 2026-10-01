@@ -113,14 +113,15 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             return bereinigt;
         }
 
-        private static IReadOnlyList<int> PruefeTage(Veranstaltung veranstaltung, IReadOnlyCollection<VeranstaltungsTag> tage, List<int> gewaehlt, Dictionary<string, string> fehler)
+        private static IReadOnlyList<int> PruefeTage(Veranstaltung veranstaltung, IReadOnlyCollection<VeranstaltungsTag> tage, List<int>? gewaehlt, Dictionary<string, string> fehler)
         {
             // Bei NurGesamt gilt die Anmeldung für alle Tage; es werden keine Tage gespeichert
             if (veranstaltung.Teilnahmemodus == Teilnahmemodus.NurGesamt)
                 return [];
 
             var aktiveTagIds = tage.Where(t => !t.Abgesagt).Select(t => t.Id).ToHashSet();
-            var auswahl = gewaehlt.Distinct().ToList();
+            // Aus einem Formular gebunden kann die Liste fehlen
+            var auswahl = (gewaehlt ?? []).Distinct().ToList();
             var mindestens = Math.Clamp(veranstaltung.MinTageBeiTeilanmeldung, 1, Math.Max(1, aktiveTagIds.Count));
 
             if (auswahl.Any(id => !aktiveTagIds.Contains(id)))
