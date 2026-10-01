@@ -1,0 +1,29 @@
+@using BudoShurenWebsite.Models.Enums
+
+@* Auswahl, ob ein optionales Feld im Anmeldeformular erscheint und ob es Pflicht ist. *@
+
+<div>
+    <label class="font-ptsans mb-1 block text-xs font-bold">@Bezeichnung</label>
+    <select value="@Modus" @onchange="AendernAsync" class="font-ptsans w-full rounded border border-gray-300 p-2 text-sm">
+        @foreach (var modus in Enum.GetValues<FormularFeldModus>())
+        {
+            <option value="@modus">@modus.Beschreibung()</option>
+        }
+    </select>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Bezeichnung { get; set; } = string.Empty;
+
+    [Parameter]
+    public FormularFeldModus Modus { get; set; }
+
+    [Parameter]
+    public EventCallback<FormularFeldModus> ModusChanged { get; set; }
+
+    private Task AendernAsync(Microsoft.AspNetCore.Components.ChangeEventArgs args) =>
+        Enum.TryParse<FormularFeldModus>(args.Value?.ToString(), out var modus)
+            ? ModusChanged.InvokeAsync(modus)
+            : Task.CompletedTask;
+}

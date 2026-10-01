@@ -76,6 +76,16 @@ public class VeroeffentlichungsPruefungTests
     }
 
     [Fact]
+    public void Beim_Speichern_einer_laufenden_Veranstaltung_zaehlt_der_Beginn_nicht()
+    {
+        var tag = Tag(14);
+        tag.Datum = new DateOnly(2026, 10, 1);
+        tag.Beginn = new TimeOnly(11, 0);
+
+        VeroeffentlichungsPruefung.PruefenOhneBeginn(GueltigeVeranstaltung(), [tag]).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Fristen_muessen_vor_dem_Beginn_liegen_und_zueinander_passen()
     {
         var veranstaltung = GueltigeVeranstaltung();

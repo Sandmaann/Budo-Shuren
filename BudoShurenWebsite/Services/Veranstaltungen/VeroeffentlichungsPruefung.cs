@@ -11,6 +11,21 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         /// <param name="jetztOrtszeit">Aktuelle Ortszeit (Global.Ortszeit.Jetzt).</param>
         public static IReadOnlyList<string> Pruefen(Veranstaltung veranstaltung, IReadOnlyCollection<VeranstaltungsTag> tage, DateTime jetztOrtszeit)
         {
+            var fehler = PruefenOhneBeginn(veranstaltung, tage).ToList();
+
+            var ersterTag = tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum).ThenBy(t => t.Beginn).FirstOrDefault();
+            if (ersterTag is not null && ersterTag.Datum.ToDateTime(ersterTag.Beginn) <= jetztOrtszeit)
+                fehler.Add("Die Veranstaltung hat bereits begonnen.");
+
+            return fehler;
+        }
+
+        /// <summary>
+        /// Wie Pruefen, aber ohne "hat bereits begonnen": für das Speichern einer bereits veröffentlichten
+        /// Veranstaltung, die auch während oder nach der Veranstaltung noch korrigiert werden darf.
+        /// </summary>
+        public static IReadOnlyList<string> PruefenOhneBeginn(Veranstaltung veranstaltung, IReadOnlyCollection<VeranstaltungsTag> tage)
+        {
             var fehler = new List<string>();
 
             if (string.IsNullOrWhiteSpace(veranstaltung.Titel))
@@ -37,8 +52,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 fehler.Add($"Die Kapazität am {tag.Datum:dd.MM.yyyy} muss größer als 0 sein (oder leer für unbegrenzt).");
 
             var beginn = aktiveTage[0].Datum.ToDateTime(aktiveTage[0].Beginn);
-            if (beginn <= jetztOrtszeit)
-                fehler.Add("Die Veranstaltung hat bereits begonnen.");
 
             if (veranstaltung.AnmeldungBis is { } bis && bis > beginn)
                 fehler.Add("Der Anmeldeschluss liegt nach dem Beginn der Veranstaltung.");

@@ -5,6 +5,7 @@ using BudoShurenWebsite.Global;
 using BudoShurenWebsite.Middleware;
 using BudoShurenWebsite.Services;
 using BudoShurenWebsite.Services.Mail;
+using BudoShurenWebsite.Services.Veranstaltungen;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -99,6 +100,10 @@ namespace BudoShurenWebsite
                 builder.Services.AddSingleton<IEmailWarteschlange, EmailWarteschlange>();
                 builder.Services.AddSingleton<EmailVersandJob>();
                 builder.Services.AddHostedService<EmailVersandHostedService>();
+
+                //Modul Veranstaltungen (siehe Services/Veranstaltungen); Feature-Schalter Veranstaltungen:Aktiviert
+                builder.Services.Configure<VeranstaltungenOptionen>(builder.Configuration.GetSection(VeranstaltungenOptionen.Abschnitt));
+                builder.Services.AddScoped<IVeranstaltungVerwaltungService, VeranstaltungVerwaltungService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();

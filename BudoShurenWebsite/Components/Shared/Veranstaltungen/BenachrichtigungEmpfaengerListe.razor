@@ -1,0 +1,189 @@
+@using BudoShurenWebsite.Models.Enums
+@using BudoShurenWebsite.Services.Veranstaltungen
+
+@inject IVeranstaltungVerwaltungService Verwaltung
+
+@* Empfänger der Organisator-Benachrichtigungen einer gespeicherten Veranstaltung. Änderungen werden sofort gespeichert. *@
+
+@if (!string.IsNullOrWhiteSpace(_fehler))
+{
+    <StatusMessage ShowAsError="true" Message="@_fehler" />
+}
+
+@if (_empfaenger is null)
+{
+    <Standardtext Text="Laden..." />
+}
+else
+{
+    @if (!_empfaenger.Any(IstAktiv))
+    {
+        <p class="font-ptsans mb-3 rounded border border-amber-400 bg-amber-50 p-2 text-sm">
+            Niemand bekommt Benachrichtigungen über An- und Abmeldungen.
+        </p>
+    }
+
+    <ul class="space-y-3">
+        @foreach (var e in _empfaenger)
+        {
+            <li class="rounded border border-gray-200 p-3">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="font-ptsans text-sm">
+                        <span class="font-bold">@e.Anzeigename</span>
+                        @if (e.Email is not null && e.Email != e.Anzeigename)
+                        {
+                            <span class="text-gray-500">(@e.Email)</span>
+                        }
+                        <span class="ml-1 text-xs text-gray-500">
+                            @(e.IstErsteller ? "Ersteller" : e.IstBenutzer ? "Website-Benutzer" : "externe Adresse")
+                        </span>
+                        @if (e.Abgemeldet)
+                        {
+                            <span class="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-xs">hat sich abgemeldet</span>
+                        }
+                    </div>
+                    <button type="button" @onclick="() => EntfernenAsync(e)"
+                            class="font-ptsans rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100">
+                        Entfernen
+                    </button>
+                </div>
+
+                <div class="font-ptsans mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                    @foreach (var ereignis in EinzelneEreignisse)
+                    {
+                        <label class="flex cursor-pointer items-center gap-1">
+                            <input type="checkbox" checked="@e.Ereignisse.HasFlag(ereignis)"
+                                   @onchange="args => EreignisUmschaltenAsync(e, ereignis, args.Value is true)" />
+                            @ereignis.Beschreibung()
+                        </label>
+                    }
+                    <select value="@e.Modus" @onchange="args => ModusAendernAsync(e, args.Value)"
+                            class="rounded border border-gray-300 p-1 text-xs">
+                        @foreach (var modus in Enum.GetValues<BenachrichtigungModus>())
+                        {
+                            <option value="@modus">@modus.Beschreibung()</option>
+                        }
+                    </select>
+                </div>
+            </li>
+        }
+    </ul>
+
+    <div class="mt-4 space-y-3 rounded border border-dashed border-gray-300 p-3">
+        <div class="flex flex-wrap items-center gap-2">
+            <select @bind="_neuerBenutzer" class="font-ptsans flex-1 rounded border border-gray-300 p-2 text-sm">
+                <option value="">Website-Benutzer auswählen...</option>
+                @foreach (var b in _benutzerAuswahl.Where(b => _empfaenger.All(e => e.UserId != b.UserId)))
+                {
+                    <option value="@b.UserId">@b.Anzeigename (@b.Email)</option>
+                }
+            </select>
+            <button type="button" @onclick="BenutzerHinzufuegenAsync" disabled="@string.IsNullOrEmpty(_neuerBenutzer)"
+                    class="font-ptsans rounded border border-gray-400 px-3 py-2 text-xs hover:bg-gray-100 disabled:opacity-50">
+                + Benutzer
+            </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <input type="email" @bind="_neueAdresse" placeholder="E-Mail-Adresse, z. B. kasse@@verein.de"
+                   class="font-ptsans flex-1 rounded border border-gray-300 p-2 text-sm" />
+            <input type="text" @bind="_neuerName" placeholder="Name (optional)"
+                   class="font-ptsans w-40 rounded border border-gray-300 p-2 text-sm" />
+            <button type="button" @onclick="AdresseHinzufuegenAsync" disabled="@string.IsNullOrWhiteSpace(_neueAdresse)"
+                    class="font-ptsans rounded border border-gray-400 px-3 py-2 text-xs hover:bg-gray-100 disabled:opacity-50">
+                + E-Mail-Adresse
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(AbteilungEmail) && _empfaenger.All(e => !string.Equals(e.Email, AbteilungEmail, StringComparison.OrdinalIgnoreCase)))
+        {
+            <button type="button" @onclick="AbteilungsAdresseHinzufuegenAsync"
+                    class="font-ptsans rounded border border-gray-400 px-3 py-2 text-xs hover:bg-gray-100">
+                + Abteilungs-Adresse (@AbteilungEmail)
+            </button>
+        }
+
+        <p class="font-ptsans text-xs text-gray-500">
+            Externe Adressen bekommen nur eine Zusammenfassung (Name, Personen, Tage) ohne Telefon oder Notizen
+            und können sich über einen Link selbst abmelden.
+        </p>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int VeranstaltungId { get; set; }
+
+    [Parameter, EditorRequired]
+    public VerwaltungsBenutzer Benutzer { get; set; } = default!;
+
+    /// <summary>Adresse der Abteilung der Veranstaltung, für "Abteilungs-Adresse hinzufügen".</summary>
+    [Parameter]
+    public string? AbteilungEmail { get; set; }
+
+    private static readonly BenachrichtigungEreignisse[] EinzelneEreignisse =
+        Enum.GetValues<BenachrichtigungEreignisse>()
+            .Where(e => e != BenachrichtigungEreignisse.Keine && e != BenachrichtigungEreignisse.Alle)
+            .ToArray();
+
+    private IReadOnlyList<EmpfaengerAnzeige>? _empfaenger;
+    private IReadOnlyList<BenutzerAuswahl> _benutzerAuswahl = [];
+    private string? _fehler;
+    private string? _neuerBenutzer;
+    private string? _neueAdresse;
+    private string? _neuerName;
+
+    private int? _geladeneVeranstaltungId;
+
+    // Nur beim ersten Mal bzw. bei anderer Veranstaltung laden, nicht bei jedem Neuzeichnen der Seite
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_geladeneVeranstaltungId == VeranstaltungId)
+            return;
+
+        _geladeneVeranstaltungId = VeranstaltungId;
+        _benutzerAuswahl = await Verwaltung.MoeglicheEmpfaengerAsync();
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync() => _empfaenger = await Verwaltung.EmpfaengerAsync(VeranstaltungId, Benutzer);
+
+    private static bool IstAktiv(EmpfaengerAnzeige e) =>
+        !e.Abgemeldet && e.Modus != BenachrichtigungModus.Pausiert && e.Ereignisse != BenachrichtigungEreignisse.Keine;
+
+    private async Task AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion)
+    {
+        var ergebnis = await aktion();
+        _fehler = ergebnis.Erfolgreich ? null : string.Join(" ", ergebnis.Fehler);
+        await LadenAsync();
+    }
+
+    private Task EreignisUmschaltenAsync(EmpfaengerAnzeige e, BenachrichtigungEreignisse ereignis, bool an) =>
+        AusfuehrenAsync(() => Verwaltung.EmpfaengerAendernAsync(
+            VeranstaltungId, e.Id, an ? e.Ereignisse | ereignis : e.Ereignisse & ~ereignis, e.Modus, Benutzer));
+
+    private Task ModusAendernAsync(EmpfaengerAnzeige e, object? wert) =>
+        Enum.TryParse<BenachrichtigungModus>(wert?.ToString(), out var modus)
+            ? AusfuehrenAsync(() => Verwaltung.EmpfaengerAendernAsync(VeranstaltungId, e.Id, e.Ereignisse, modus, Benutzer))
+            : Task.CompletedTask;
+
+    private Task EntfernenAsync(EmpfaengerAnzeige e) =>
+        AusfuehrenAsync(() => Verwaltung.EmpfaengerEntfernenAsync(VeranstaltungId, e.Id, Benutzer));
+
+    private async Task BenutzerHinzufuegenAsync()
+    {
+        await AusfuehrenAsync(() => Verwaltung.EmpfaengerHinzufuegenAsync(VeranstaltungId, _neuerBenutzer, null, null, Benutzer));
+        if (_fehler is null)
+            _neuerBenutzer = null;
+    }
+
+    private async Task AdresseHinzufuegenAsync()
+    {
+        await AusfuehrenAsync(() => Verwaltung.EmpfaengerHinzufuegenAsync(VeranstaltungId, null, _neueAdresse, _neuerName, Benutzer));
+        if (_fehler is null)
+            (_neueAdresse, _neuerName) = (null, null);
+    }
+
+    private Task AbteilungsAdresseHinzufuegenAsync() =>
+        AusfuehrenAsync(() => Verwaltung.EmpfaengerHinzufuegenAsync(VeranstaltungId, null, AbteilungEmail, "Abteilung", Benutzer));
+}

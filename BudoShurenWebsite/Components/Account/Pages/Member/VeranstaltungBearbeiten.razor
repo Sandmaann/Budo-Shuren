@@ -1,0 +1,451 @@
+@page "/Account/Member/Veranstaltungen/Bearbeiten"
+@page "/Account/Member/Veranstaltungen/Bearbeiten/{Id:int}"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models.Enums
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Abteilungsleiter}")]
+
+@inject IVeranstaltungVerwaltungService Verwaltung
+@inject UserService UserService
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="mx-10">
+        <SectionBanner Titel="@(Id.HasValue ? "Veranstaltung bearbeiten" : "Neue Veranstaltung")" />
+
+        <a href="/Account/Member/Veranstaltungen" class="font-ptsans mb-4 inline-block text-sm hover:underline">← Zur Übersicht</a>
+
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Das Modul Veranstaltungen ist nicht aktiviert." />
+        }
+        else if (_ladeFehler is not null)
+        {
+            <StatusMessage ShowAsError="true" Message="@_ladeFehler" />
+        }
+        else if (_eingabe is null || _benutzer is null)
+        {
+            <Standardtext Text="Laden..." />
+        }
+        else
+        {
+            <div class="font-ptsans mb-4 text-sm">
+                Status: <span class="font-bold">@_eingabe.Status.Beschreibung()</span>
+            </div>
+
+            @if (_meldungen.Count > 0)
+            {
+                <div class="mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">
+                    <ul class="font-ptsans list-inside list-disc">
+                        @foreach (var meldung in _meldungen)
+                        {
+                            <li>@meldung</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <EditForm Model="_eingabe" OnValidSubmit="SpeichernAsync" FormName="veranstaltung-bearbeiten">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="font-ptsans mb-4 text-sm text-red-700" />
+
+                <div class="space-y-6">
+                    <!-- 1. Grunddaten -->
+                    <section class="rounded border border-gray-200 p-5">
+                        <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">Grunddaten</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="@Label">Titel *</label>
+                                <InputText @bind-Value="_eingabe.Titel" class="@Feld" />
+                            </div>
+                            <div>
+                                <label class="@Label">
+                                    Adresse (Slug)
+                                    <span class="ml-1 font-normal text-gray-500">/veranstaltungen/<em>slug</em> – leer = aus dem Titel</span>
+                                </label>
+                                <InputText @bind-Value="_eingabe.Slug" class="@Feld" disabled="@_eingabe.WarVeroeffentlicht" />
+                                @if (_eingabe.WarVeroeffentlicht)
+                                {
+                                    <p class="@Hinweis">Nach der ersten Veröffentlichung nicht mehr änderbar, damit verschickte Links gültig bleiben.</p>
+                                }
+                            </div>
+                            <div>
+                                <label class="@Label">Kurzbeschreibung <span class="ml-1 font-normal text-gray-500">(Liste, Kalender)</span></label>
+                                <InputTextArea @bind-Value="_eingabe.Kurzbeschreibung" rows="2" class="@Feld" />
+                            </div>
+                            <div>
+                                <label class="@Label">Beschreibung <span class="ml-1 font-normal text-gray-500">(Markdown)</span></label>
+                                <InputTextArea @bind-Value="_eingabe.Beschreibung" rows="8" class="@Feld" />
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="@Label">Ort</label>
+                                    <InputText @bind-Value="_eingabe.Ort" class="@Feld" />
+                                </div>
+                                <div>
+                                    <label class="@Label">Adresse</label>
+                                    <InputText @bind-Value="_eingabe.Adresse" class="@Feld" />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="@Label">Link zur Karte</label>
+                                <InputText @bind-Value="_eingabe.KartenLink" class="@Feld" placeholder="https://..." />
+                            </div>
+                            <div>
+                                <label class="@Label">Abteilung</label>
+                                <InputSelect @bind-Value="_eingabe.AbteilungId" class="@Feld" disabled="@(!_benutzer.IstAdmin)">
+                                    @if (_benutzer.IstAdmin)
+                                    {
+                                        <option value="">Gesamtverein</option>
+                                    }
+                                    @foreach (var a in _abteilungen)
+                                    {
+                                        <option value="@a.Id">@a.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="@Label">Kontaktperson</label>
+                                    <InputText @bind-Value="_eingabe.KontaktName" class="@Feld" />
+                                </div>
+                                <div>
+                                    <label class="@Label">Kontakt-E-Mail *</label>
+                                    <InputText @bind-Value="_eingabe.KontaktEmail" type="email" class="@Feld" />
+                                    <p class="@Hinweis">Antwortadresse in allen Mails an Teilnehmer. Pflicht vor dem Veröffentlichen.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 2. Termine -->
+                    <section class="rounded border border-gray-200 p-5">
+                        <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">Termine</h4>
+                        @if (_eingabe.Tage.Count == 0)
+                        {
+                            <p class="@Hinweis mb-3">Noch kein Tag angelegt.</p>
+                        }
+                        <div class="space-y-3">
+                            @foreach (var tag in _eingabe.Tage)
+                            {
+                                <div class="rounded border border-gray-200 p-3 @(tag.Abgesagt ? "bg-gray-100 opacity-70" : "")">
+                                    <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
+                                        <div>
+                                            <label class="@Label">Datum</label>
+                                            <InputDate @bind-Value="tag.Datum" class="@Feld" disabled="@tag.Abgesagt" />
+                                        </div>
+                                        <div>
+                                            <label class="@Label">Beginn</label>
+                                            <InputDate Type="InputDateType.Time" @bind-Value="tag.Beginn" class="@Feld" disabled="@tag.Abgesagt" />
+                                        </div>
+                                        <div>
+                                            <label class="@Label">Ende</label>
+                                            <InputDate Type="InputDateType.Time" @bind-Value="tag.Ende" class="@Feld" disabled="@tag.Abgesagt" />
+                                        </div>
+                                        <div>
+                                            <label class="@Label">Plätze</label>
+                                            <InputNumber @bind-Value="tag.MaxTeilnehmer" class="@Feld" placeholder="unbegrenzt" disabled="@tag.Abgesagt" />
+                                        </div>
+                                        <div class="flex items-end">
+                                            @if (tag.Abgesagt)
+                                            {
+                                                <span class="font-ptsans text-xs font-bold">abgesagt</span>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" @onclick="() => _eingabe.Tage.Remove(tag)"
+                                                        class="font-ptsans rounded border border-gray-400 px-2 py-2 text-xs hover:bg-gray-100">
+                                                    Entfernen
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <InputText @bind-Value="tag.Titel" class="@Feld" placeholder="Programm des Tages (optional)" disabled="@tag.Abgesagt" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <button type="button" @onclick="TagHinzufuegen"
+                                class="font-ptsans mt-3 rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-100">
+                            + Tag hinzufügen
+                        </button>
+                    </section>
+
+                    <!-- 3. Anmeldung -->
+                    <section class="rounded border border-gray-200 p-5">
+                        <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">Anmeldung</h4>
+                        <div class="space-y-4">
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="@Label">Sichtbarkeit</label>
+                                    <InputSelect @bind-Value="_eingabe.Sichtbarkeit" class="@Feld">
+                                        @foreach (var s in Enum.GetValues<VeranstaltungSichtbarkeit>())
+                                        {
+                                            <option value="@s">@s.Beschreibung()</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div>
+                                    <label class="@Label">Teilnahme</label>
+                                    <InputSelect @bind-Value="_eingabe.Teilnahmemodus" class="@Feld">
+                                        @foreach (var m in Enum.GetValues<Teilnahmemodus>())
+                                        {
+                                            <option value="@m">@m.Beschreibung()</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-3">
+                                @if (_eingabe.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
+                                {
+                                    <div>
+                                        <label class="@Label">Mindestens Tage</label>
+                                        <InputNumber @bind-Value="_eingabe.MinTageBeiTeilanmeldung" class="@Feld" />
+                                    </div>
+                                }
+                                <div>
+                                    <label class="@Label">Plätze pro Tag (Vorgabe)</label>
+                                    <InputNumber @bind-Value="_eingabe.MaxTeilnehmerVorgabe" class="@Feld" placeholder="unbegrenzt" />
+                                </div>
+                                <div>
+                                    <label class="@Label">Max. Begleitpersonen</label>
+                                    <InputNumber @bind-Value="_eingabe.MaxBegleitpersonen" class="@Feld" />
+                                </div>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-3">
+                                <div>
+                                    <label class="@Label">Anmeldung ab</label>
+                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="_eingabe.AnmeldungAb" class="@Feld" />
+                                </div>
+                                <div>
+                                    <label class="@Label">Anmeldeschluss</label>
+                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="_eingabe.AnmeldungBis" class="@Feld" />
+                                </div>
+                                <div>
+                                    <label class="@Label">Änderungen bis</label>
+                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="_eingabe.AenderungenBis" class="@Feld" />
+                                </div>
+                            </div>
+                            <p class="@Hinweis">Leere Fristen: Anmeldung ab Veröffentlichung bzw. bis zum Beginn. Kapazität zählt Personen inkl. Begleitung.</p>
+                        </div>
+                    </section>
+
+                    <!-- 4. Formularfelder -->
+                    <section class="rounded border border-gray-200 p-5">
+                        <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">Formularfelder</h4>
+                        <p class="@Hinweis mb-3">Vorname, Nachname und E-Mail werden immer abgefragt.</p>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <FeldModusAuswahl Bezeichnung="Telefon" @bind-Modus="_eingabe.TelefonFeld" />
+                            <FeldModusAuswahl Bezeichnung="Verein / Dojo" @bind-Modus="_eingabe.VereinFeld" />
+                            <FeldModusAuswahl Bezeichnung="Graduierung" @bind-Modus="_eingabe.GraduierungFeld" />
+                            <FeldModusAuswahl Bezeichnung="Bemerkung" @bind-Modus="_eingabe.BemerkungFeld" />
+                        </div>
+                    </section>
+
+                    <!-- 5. Benachrichtigungen -->
+                    <section class="rounded border border-gray-200 p-5">
+                        <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">Benachrichtigungen an Organisatoren</h4>
+                        @if (Id is { } veranstaltungId)
+                        {
+                            <BenachrichtigungEmpfaengerListe VeranstaltungId="veranstaltungId"
+                                                             Benutzer="_benutzer"
+                                                             AbteilungEmail="@_abteilungen.FirstOrDefault(a => a.Id == _eingabe.AbteilungId)?.Email" />
+                        }
+                        else
+                        {
+                            <p class="@Hinweis">Nach dem ersten Speichern bist du automatisch eingetragen und kannst weitere Empfänger hinzufügen.</p>
+                        }
+                    </section>
+
+                    <!-- 6. Erweitert -->
+                    <details class="rounded border border-gray-200 p-5">
+                        <summary class="font-ptsans cursor-pointer text-sm font-bold tracking-wider">Erweitert</summary>
+                        <div class="mt-4 space-y-4">
+                            <label class="font-ptsans flex cursor-pointer items-center gap-2 text-sm">
+                                <InputCheckbox @bind-Value="_eingabe.DoubleOptIn" />
+                                Anmeldung erst nach Bestätigung der E-Mail-Adresse gültig (empfohlen)
+                            </label>
+                            <div>
+                                <label class="@Label">Uhrzeit der täglichen Zusammenfassung</label>
+                                <InputDate Type="InputDateType.Time" @bind-Value="_eingabe.ZusammenfassungUhrzeit" class="@($"{Feld} md:w-40")" />
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Aktionen -->
+                    <div class="flex flex-wrap gap-3">
+                        <button type="submit" disabled="@_beschaeftigt"
+                                class="font-ptsans rounded border border-black px-4 py-2 text-sm tracking-wider hover:bg-gray-100 disabled:opacity-50">
+                            Speichern
+                        </button>
+                        @* Erst nach dem ersten Speichern: sonst entstünde bei fehlgeschlagener Veröffentlichung eine zweite Veranstaltung *@
+                        @if (Id.HasValue && _eingabe.Status == VeranstaltungStatus.Entwurf)
+                        {
+                            <button type="button" @onclick="SpeichernUndVeroeffentlichenAsync" disabled="@_beschaeftigt"
+                                    class="font-ptsans rounded border border-green-800 bg-green-800 px-4 py-2 text-sm tracking-wider text-white hover:bg-green-700 disabled:opacity-50">
+                                Speichern und veröffentlichen
+                            </button>
+                        }
+                        @if (Id.HasValue && _eingabe.Status != VeranstaltungStatus.Archiviert)
+                        {
+                            <button type="button" @onclick="ArchivierenAsync" disabled="@_beschaeftigt"
+                                    class="font-ptsans rounded border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50">
+                                Archivieren
+                            </button>
+                        }
+                        @if (Id.HasValue && _eingabe.Status == VeranstaltungStatus.Entwurf && !_eingabe.WarVeroeffentlicht)
+                        {
+                            @if (_loeschenBestaetigen)
+                            {
+                                <button type="button" @onclick="LoeschenAsync" disabled="@_beschaeftigt"
+                                        class="font-ptsans rounded border border-red-800 bg-red-800 px-4 py-2 text-sm text-white hover:bg-red-700">
+                                    Wirklich löschen
+                                </button>
+                                <button type="button" @onclick="() => _loeschenBestaetigen = false"
+                                        class="font-ptsans rounded border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100">
+                                    Abbrechen
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" @onclick="() => _loeschenBestaetigen = true"
+                                        class="font-ptsans rounded border border-red-800 px-4 py-2 text-sm text-red-800 hover:bg-red-50">
+                                    Entwurf löschen
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    private const string Label = "font-ptsans mb-1 block text-xs font-bold";
+    private const string Feld = "font-ptsans w-full rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100";
+    private const string Hinweis = "font-ptsans mt-1 text-xs text-gray-500";
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    private VerwaltungsBenutzer? _benutzer;
+    private VeranstaltungEingabe? _eingabe;
+    private IReadOnlyList<AbteilungAuswahl> _abteilungen = [];
+    private string? _ladeFehler;
+    private List<string> _meldungen = [];
+    private bool _istFehler;
+    private bool _beschaeftigt;
+    private bool _loeschenBestaetigen;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Optionen.Value.Aktiviert)
+            return;
+
+        await UserService.InitializeAsync();
+        _benutzer = VerwaltungsBenutzer.Aus(UserService.CurrentUser);
+        if (_benutzer is null)
+        {
+            _ladeFehler = "Bitte erneut anmelden.";
+            return;
+        }
+
+        _abteilungen = await Verwaltung.AbteilungenAsync(_benutzer);
+        await EingabeLadenAsync();
+    }
+
+    private async Task EingabeLadenAsync()
+    {
+        if (Id is { } id)
+        {
+            _eingabe = await Verwaltung.EingabeLadenAsync(id, _benutzer!);
+            _ladeFehler = _eingabe is null ? "Die Veranstaltung wurde nicht gefunden oder du darfst sie nicht verwalten." : null;
+        }
+        else
+        {
+            _eingabe = await Verwaltung.NeueEingabeAsync(_benutzer!);
+        }
+    }
+
+    private void TagHinzufuegen()
+    {
+        var letzter = _eingabe!.Tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum).LastOrDefault();
+        _eingabe.Tage.Add(new TagEingabe
+        {
+            Datum = letzter?.Datum.AddDays(1) ?? DateOnly.FromDateTime(DateTime.Today.AddDays(14)),
+            Beginn = letzter?.Beginn ?? new TimeOnly(10, 0),
+            Ende = letzter?.Ende ?? new TimeOnly(16, 0),
+            MaxTeilnehmer = _eingabe.MaxTeilnehmerVorgabe
+        });
+    }
+
+    private async Task<VerwaltungsErgebnis> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung)
+    {
+        _beschaeftigt = true;
+        try
+        {
+            var ergebnis = await aktion();
+            _istFehler = !ergebnis.Erfolgreich;
+            _meldungen = ergebnis.Erfolgreich ? [erfolgsMeldung] : ergebnis.Fehler.ToList();
+            return ergebnis;
+        }
+        finally
+        {
+            _beschaeftigt = false;
+        }
+    }
+
+    private async Task SpeichernAsync()
+    {
+        var ergebnis = await AusfuehrenAsync(() => Verwaltung.SpeichernAsync(_eingabe!, _benutzer!), "Gespeichert.");
+        await NachSpeichernAsync(ergebnis);
+    }
+
+    /// <summary>Nur für bereits gespeicherte Entwürfe (der Button erscheint erst dann).</summary>
+    private async Task SpeichernUndVeroeffentlichenAsync()
+    {
+        var ergebnis = await AusfuehrenAsync(() => Verwaltung.SpeichernAsync(_eingabe!, _benutzer!), "Gespeichert.");
+        if (ergebnis.Erfolgreich)
+        {
+            // Neu laden, damit die Veröffentlichung den gespeicherten Stand sieht und Fehler sich darauf beziehen
+            await EingabeLadenAsync();
+            ergebnis = await AusfuehrenAsync(() => Verwaltung.VeroeffentlichenAsync(Id!.Value, _benutzer!), "Veröffentlicht.");
+        }
+        await NachSpeichernAsync(ergebnis);
+    }
+
+    /// <summary>
+    /// Neue Veranstaltung: auf ihre Bearbeiten-Adresse wechseln. Sonst nach Erfolg neu laden
+    /// (RowVersion, Ids neuer Tage, Status); nach Fehlern bleiben die Eingaben stehen.
+    /// </summary>
+    private async Task NachSpeichernAsync(VerwaltungsErgebnis ergebnis)
+    {
+        if (!ergebnis.Erfolgreich)
+            return;
+
+        if (Id is null)
+            NavigationManager.NavigateTo($"/Account/Member/Veranstaltungen/Bearbeiten/{ergebnis.Id}");
+        else
+            await EingabeLadenAsync();
+    }
+
+    private async Task ArchivierenAsync()
+    {
+        var ergebnis = await AusfuehrenAsync(() => Verwaltung.ArchivierenAsync(Id!.Value, _benutzer!), "Archiviert.");
+        if (ergebnis.Erfolgreich)
+            await EingabeLadenAsync();
+    }
+
+    private async Task LoeschenAsync()
+    {
+        var ergebnis = await AusfuehrenAsync(() => Verwaltung.LoeschenAsync(Id!.Value, _benutzer!), "Gelöscht.");
+        _loeschenBestaetigen = false;
+        if (ergebnis.Erfolgreich)
+            NavigationManager.NavigateTo("/Account/Member/Veranstaltungen");
+    }
+}

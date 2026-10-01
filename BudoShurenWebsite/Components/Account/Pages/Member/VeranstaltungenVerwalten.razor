@@ -1,0 +1,124 @@
+@page "/Account/Member/Veranstaltungen"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Models.Enums
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Abteilungsleiter}")]
+
+@inject IVeranstaltungVerwaltungService Verwaltung
+@inject UserService UserService
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<div class="container mx-auto max-w-screen-lg">
+    <div class="mx-10">
+        <SectionBanner Titel="Veranstaltungen verwalten" />
+
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Das Modul Veranstaltungen ist nicht aktiviert." />
+        }
+        else
+        {
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <button @onclick="NeueVeranstaltung"
+                        class="font-ptsans rounded border border-black px-4 py-2 text-sm tracking-wider hover:bg-gray-100">
+                    + Neue Veranstaltung
+                </button>
+                <label class="font-ptsans flex cursor-pointer items-center gap-2 text-sm">
+                    <input type="checkbox" checked="@_mitArchivierten" @onchange="ArchivierteUmschalten" />
+                    Archivierte anzeigen
+                </label>
+            </div>
+
+            @if (_eintraege is null)
+            {
+                <Standardtext Text="Laden..." />
+            }
+            else if (_eintraege.Count == 0)
+            {
+                <Standardtext Text="Es gibt noch keine Veranstaltungen." />
+            }
+            else
+            {
+                <div class="-mx-8 overflow-x-auto md:mx-0">
+                    <table class="font-ptsans w-full text-left text-sm">
+                        <thead class="border-b border-gray-300 text-xs uppercase tracking-wider text-gray-600">
+                            <tr>
+                                <th class="px-2 py-2">Veranstaltung</th>
+                                <th class="px-2 py-2">Termin</th>
+                                <th class="px-2 py-2">Status</th>
+                                <th class="px-2 py-2 text-right" title="Aktive Anmeldungen / bestätigte Personen inkl. Begleitung">Anmeldungen</th>
+                                <th class="px-2 py-2"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var e in _eintraege)
+                            {
+                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                    <td class="px-2 py-2">
+                                        <a href="@BearbeitenLink(e.Id)" class="font-bold hover:underline">@e.Titel</a>
+                                        <div class="text-xs text-gray-500">@(e.Abteilung ?? "Gesamtverein")</div>
+                                    </td>
+                                    <td class="whitespace-nowrap px-2 py-2">@Zeitraum(e)</td>
+                                    <td class="px-2 py-2">@e.Status.Beschreibung()</td>
+                                    <td class="whitespace-nowrap px-2 py-2 text-right">
+                                        @e.AktiveAnmeldungen / @e.BestaetigtePersonen
+                                        @if (e.UngeseheneAenderungen > 0)
+                                        {
+                                            <span class="ml-1 rounded bg-red-700 px-1.5 py-0.5 text-xs text-white"
+                                                  title="Anmeldungen mit ungesehenen Änderungen">@e.UngeseheneAenderungen neu</span>
+                                        }
+                                    </td>
+                                    <td class="px-2 py-2 text-right">
+                                        <a href="@BearbeitenLink(e.Id)"
+                                           class="rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100">Bearbeiten</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private IReadOnlyList<VeranstaltungListenEintrag>? _eintraege;
+    private bool _mitArchivierten;
+    private VerwaltungsBenutzer? _benutzer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Optionen.Value.Aktiviert)
+            return;
+
+        await UserService.InitializeAsync();
+        _benutzer = VerwaltungsBenutzer.Aus(UserService.CurrentUser);
+        await LadenAsync();
+    }
+
+    private async Task LadenAsync()
+    {
+        _eintraege = _benutzer is null ? [] : await Verwaltung.ListeAsync(_benutzer, _mitArchivierten);
+    }
+
+    private async Task ArchivierteUmschalten(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        _mitArchivierten = args.Value is true;
+        await LadenAsync();
+    }
+
+    private void NeueVeranstaltung() => NavigationManager.NavigateTo("/Account/Member/Veranstaltungen/Bearbeiten");
+
+    private static string BearbeitenLink(int id) => $"/Account/Member/Veranstaltungen/Bearbeiten/{id}";
+
+    private static string Zeitraum(VeranstaltungListenEintrag e) => (e.ErsterTag, e.LetzterTag) switch
+    {
+        (null, _) => "noch kein Termin",
+        ({ } von, { } bis) when von != bis => $"{von:dd.MM.yyyy} – {bis:dd.MM.yyyy}",
+        ({ } von, _) => $"{von:dd.MM.yyyy}"
+    };
+}

@@ -118,6 +118,8 @@
                     }
                     else
                     {
+                        // Veranstaltungstermine entstehen nur über die Veranstaltung, nie über den Kalender
+                        obj.VeranstaltungsTagId = null;
                         obj.Created = DateTime.Now;
                         obj.EntryCreatedBy = UserService.CurrentUser?.UserName ?? "unbekannt";
                         obj.LastChange = DateTime.Now;
@@ -155,6 +157,7 @@
                     var appointment = await context.Appointments.FindAsync(obj.Id);
                     if (appointment != null)
                     {
+                        PruefeNichtVonVeranstaltung(appointment);
                         appointment.CopyPropertiesFrom(obj);
 
                         appointment.LastChange = DateTime.Now;
@@ -190,6 +193,7 @@
                     var appointment = await context.Appointments.FindAsync(obj.Id);
                     if (appointment != null)
                     {
+                        PruefeNichtVonVeranstaltung(appointment);
                         context.Appointments.Remove(appointment);
                         await context.SaveChangesAsync();
                     }
@@ -207,6 +211,7 @@
                     var appointment = await context.Appointments.FindAsync(objID);
                     if (appointment != null)
                     {
+                        PruefeNichtVonVeranstaltung(appointment);
                         context.Appointments.Remove(appointment);
                         await context.SaveChangesAsync();
                     }
@@ -222,6 +227,13 @@
             throw new Exception("Fehler beim Löschen des Kalendereintrags: " + ex.Message);
         }
     }
+    // Termine einer Veranstaltung werden nur über die Veranstaltung gepflegt (Veranstaltungen verwalten)
+    private static void PruefeNichtVonVeranstaltung(AppointmentData appointment)
+    {
+        if (appointment.VeranstaltungsTagId != null)
+            throw new InvalidOperationException("Dieser Termin gehört zu einer Veranstaltung und kann nur dort geändert werden.");
+    }
+
     public override async Task<object> BatchUpdateAsync(DataManager dataManager, object changedRecords, object addedRecords, object deletedRecords, string primaryColumnName, string key, int? dropIndex)
     {
         try

@@ -1,7 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using BudoShurenWebsite.Data
 
+@using BudoShurenWebsite.Services.Veranstaltungen
+
 @inject SignInManager<ApplicationUser> SignInManager
+@inject IOptions<VeranstaltungenOptionen> VeranstaltungenOptionen
 <div class="relative">
     @* <div class="z-10 font-yuji absolute start-0 top-12 w-full bg-white md:top-0"> *@
     <div class="font-yuji absolute start-0 top-12 w-full bg-white md:top-0">
@@ -34,6 +37,12 @@
                         <li class="nav-item px-3 py-1">
                             <NavLink class="nav-link underline-offset-4 hover:underline" href="Account/Member/NeueMitglieder" Match="NavLinkMatch.All">Neue Mitglieder</NavLink>
                         </li>
+                        @if (VeranstaltungenOptionen.Value.Aktiviert)
+                        {
+                            <li class="nav-item px-3 py-1">
+                                <NavLink class="nav-link underline-offset-4 hover:underline" href="Account/Member/Veranstaltungen" Match="NavLinkMatch.Prefix">Veranstaltungen</NavLink>
+                            </li>
+                        }
                     </Authorized>
                     <NotAuthorized>
 

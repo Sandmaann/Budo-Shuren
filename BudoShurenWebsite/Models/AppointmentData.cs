@@ -38,6 +38,16 @@ namespace BudoShurenWebsite.Models
         public string LastChangedBy { get; set; } = string.Empty;
         public DateTime? LastChange { get; set; }
 
+        /// <summary>
+        /// Gesetzt, wenn der Eintrag zu einem Veranstaltungstag gehört. Er wird dann nur über die
+        /// Veranstaltung gepflegt (KalenderEintragFabrik) und ist im Kalender schreibgeschützt.
+        /// </summary>
+        public int? VeranstaltungsTagId { get; set; }
+
+        /// <summary>Wird von SfSchedule über den Standard-Feldnamen "IsReadonly" ausgewertet.</summary>
+        [NotMapped]
+        public bool IsReadonly => VeranstaltungsTagId != null;
+
         [NotMapped]
         public string PrimaryColor
         {

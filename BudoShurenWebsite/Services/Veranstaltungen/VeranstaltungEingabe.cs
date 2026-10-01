@@ -1,0 +1,106 @@
+using BudoShurenWebsite.Data;
+using BudoShurenWebsite.Models.Enums;
+using System.ComponentModel.DataAnnotations;
+
+namespace BudoShurenWebsite.Services.Veranstaltungen
+{
+    /// <summary>Formularmodell der Bearbeiten-Seite. Fachliche Regeln prüft der VeranstaltungVerwaltungService.</summary>
+    public sealed class VeranstaltungEingabe
+    {
+        public int? Id { get; set; }
+
+        [Required(ErrorMessage = "Bitte einen Titel angeben.")]
+        [MaxLength(200, ErrorMessage = "Der Titel darf höchstens 200 Zeichen lang sein.")]
+        public string Titel { get; set; } = string.Empty;
+
+        /// <summary>Leer = wird aus dem Titel erzeugt.</summary>
+        [MaxLength(250)]
+        public string? Slug { get; set; }
+
+        [MaxLength(500, ErrorMessage = "Die Kurzbeschreibung darf höchstens 500 Zeichen lang sein.")]
+        public string? Kurzbeschreibung { get; set; }
+
+        public string Beschreibung { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        public string? Ort { get; set; }
+
+        [MaxLength(300)]
+        public string? Adresse { get; set; }
+
+        [MaxLength(500)]
+        [Url(ErrorMessage = "Bitte einen vollständigen Link angeben (https://...).")]
+        public string? KartenLink { get; set; }
+
+        public string? AbteilungId { get; set; }
+
+        [MaxLength(200)]
+        public string? KontaktName { get; set; }
+
+        [MaxLength(320)]
+        [EmailAddress(ErrorMessage = Messages.EmailFormatErrorMessage)]
+        public string? KontaktEmail { get; set; }
+
+        public VeranstaltungSichtbarkeit Sichtbarkeit { get; set; } = VeranstaltungSichtbarkeit.Oeffentlich;
+
+        public DateTime? AnmeldungAb { get; set; }
+
+        public DateTime? AnmeldungBis { get; set; }
+
+        public DateTime? AenderungenBis { get; set; }
+
+        public Teilnahmemodus Teilnahmemodus { get; set; } = Teilnahmemodus.NurGesamt;
+
+        [Range(1, 30, ErrorMessage = "Mindestens 1 Tag.")]
+        public int MinTageBeiTeilanmeldung { get; set; } = 1;
+
+        [Range(1, 10000, ErrorMessage = "Die Kapazität muss mindestens 1 sein (leer = unbegrenzt).")]
+        public int? MaxTeilnehmerVorgabe { get; set; }
+
+        [Range(0, 20, ErrorMessage = "Zwischen 0 und 20 Begleitpersonen.")]
+        public int MaxBegleitpersonen { get; set; } = 2;
+
+        public bool DoubleOptIn { get; set; } = true;
+
+        public FormularFeldModus TelefonFeld { get; set; } = FormularFeldModus.Optional;
+
+        public FormularFeldModus VereinFeld { get; set; } = FormularFeldModus.Optional;
+
+        public FormularFeldModus GraduierungFeld { get; set; } = FormularFeldModus.Optional;
+
+        public FormularFeldModus BemerkungFeld { get; set; } = FormularFeldModus.Optional;
+
+        public TimeOnly ZusammenfassungUhrzeit { get; set; } = new(7, 0);
+
+        public List<TagEingabe> Tage { get; set; } = [];
+
+        /// <summary>Stand beim Laden; erkennt gleichzeitige Bearbeitung.</summary>
+        public byte[]? RowVersion { get; set; }
+
+        // Nur zur Anzeige
+        public VeranstaltungStatus Status { get; set; } = VeranstaltungStatus.Entwurf;
+
+        public bool WarVeroeffentlicht { get; set; }
+    }
+
+    public sealed class TagEingabe
+    {
+        /// <summary>Leer = neuer Tag.</summary>
+        public int? Id { get; set; }
+
+        public DateOnly Datum { get; set; }
+
+        public TimeOnly Beginn { get; set; } = new(10, 0);
+
+        public TimeOnly Ende { get; set; } = new(16, 0);
+
+        [MaxLength(200)]
+        public string? Titel { get; set; }
+
+        [Range(1, 10000, ErrorMessage = "Die Kapazität muss mindestens 1 sein (leer = unbegrenzt).")]
+        public int? MaxTeilnehmer { get; set; }
+
+        // Nur zur Anzeige: abgesagte Tage werden über "Tag absagen" verwaltet, nicht im Formular
+        public bool Abgesagt { get; set; }
+    }
+}

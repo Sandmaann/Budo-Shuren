@@ -240,6 +240,14 @@ namespace BudoShurenWebsite.Data
                 .WithMany()
                 .HasForeignKey(b => b.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Kalendereinträge, die zu einem Veranstaltungstag gehören (höchstens einer je Tag)
+            builder.Entity<AppointmentData>().HasIndex(a => a.VeranstaltungsTagId).IsUnique();
+            builder.Entity<AppointmentData>()
+                .HasOne<VeranstaltungsTag>()
+                .WithMany()
+                .HasForeignKey(a => a.VeranstaltungsTagId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<GalerieEintrag> Galerie { get; set; }
