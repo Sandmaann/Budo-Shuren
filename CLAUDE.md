@@ -65,7 +65,7 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
   - `IEmailWarteschlange` is an outbox for new features. `Hinzufuegen` adds an `EmailAusgang` row to the caller's DbContext, so the mail is only sent if the caller's `SaveChanges` succeeds. Call `VersandAnstossen()` after saving.
   - `EmailVersandHostedService` (thin shell around `EmailVersandJob`) sends due mails in batches over one connection, retries with backoff, and deletes old rows.
   - Options are in the appsettings section `EmailVersand` (all optional, validated on start). `Aktiviert=false` in tests. Use `TimeProvider` for time, never `DateTime.Now`, in new services.
-- **Veranstaltungen** (events with sign-up; module in progress, see `Models/Veranstaltungen/`, `Services/Veranstaltungen/`):
+- **Veranstaltungen** (events with sign-up since 2.1, see `Models/Veranstaltungen/`, `Services/Veranstaltungen/`; Phase 2/3 open, see `README.md`):
   - Feature switch `Veranstaltungen:Aktiviert` in appsettings (default `false`; `true` in Development). It hides the menu entry and pages.
   - Rules without DB access live in static classes (`KapazitaetsRechner`, `AnmeldungStatusUebergaenge`, `VeranstaltungAenderungsRegeln`, `VeroeffentlichungsPruefung`, `VeranstaltungRechte`, `KalenderEintragFabrik`). Services use them and check rights themselves: Admins manage everything, Abteilungsleiter only their own Abteilung. `ApplicationUser.Abteilung` may hold the Abteilung's Id or Name.
   - Published public events write one `AppointmentData` per day, linked via `VeranstaltungsTagId`. These entries are read-only in the calendar, and `AppointmentAdaptorComponent` rejects edits to them.

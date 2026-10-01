@@ -22,16 +22,26 @@ Lokal nach dem Merge aufräumen: `git switch main`, `git pull` und `git fetch --
 
 Aktuelle ToDos:
 
-- E-Mail Benachrichtigungen einbauen (Sammelemails, Benachrichtigungen zu Events, "Newsletter abonieren" o.ä.)
+- E-Mail Benachrichtigungen: "Newsletter abonieren" o.ä. (Rundmails und Benachrichtigungen zu Veranstaltungen gibt es seit 2.1)
 - Teil für (interne) Termine - wie Seminare usw.
-- - Noch besser: Möglichkeit eine Registrierung für Teilnahme zu Events aufzubauen (Event definieren, News Emails, Registrierung, SelfService Verwaltung usw)
 - Update durchführen
+- Veranstaltungen Phase 2: Warteliste, Rundmail-Filter, Kalenderdatei (ICS) und Erinnerungen, Druckliste, Bezahlstatus, Duplizieren, Anonymisierung
 
 Allgemeine ToDos:
 
 - Animationen einbauen (Buttons, Umleitungen, Scrollen, Wischen usw) -> sieht hübscher aus + besseres feeling
 - mögliche Optimierungen ermitteln (Performance)
 - "Wissens"-Beiträge schreiben (verbessert auch SEO)
+
+Version 2.1.0.0 (Oktober 2026): Modul "Veranstaltungen"
+
+- Veranstaltungen (ein- und mehrtägig) anlegen, veröffentlichen, absagen; Eintrag im Kalender
+- Anmeldung ohne Benutzerkonto nur per E-Mail (mit Bestätigungslink), Begleitpersonen, Info-Adressen, Anmeldung für einzelne Tage einstellbar
+- Selbstverwaltung über einen persönlichen Link: Daten ändern, umbuchen, abmelden
+- Übersicht für Organisatoren: Teilnehmerliste mit Änderungen, ablehnen, manuell anmelden, CSV, Rundmails, Tag absagen
+- Benachrichtigungen an Organisatoren und weitere Adressen (sofort oder als Tageszusammenfassung)
+- Admins verwalten alle Veranstaltungen, Abteilungsleiter die ihrer Abteilung
+- Eingeschaltet wird das Modul auf dem Server mit `Veranstaltungen:Aktiviert = true` in der `appsettings.json` (Standard: aus)
 
 Letzte Änderungen 20.08.2026
 
