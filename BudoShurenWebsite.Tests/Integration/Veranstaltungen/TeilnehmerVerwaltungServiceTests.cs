@@ -211,7 +211,7 @@ public class TeilnehmerVerwaltungServiceTests(SqlServerFixture datenbank) : Date
         a.Vorname.ShouldBe("Maximilian");
         a.Ereignisse.Where(e => e.Akteur == EreignisAkteur.Admin).Select(e => e.Art)
             .ShouldBe([AnmeldungEreignisArt.DatenGeaendert, AnmeldungEreignisArt.EmailGeaendert], ignoreOrder: true);
-        a.AdminGesehenUtc.ShouldBe(Start.UtcDateTime);
+        a.AdminGesehenUtc.ShouldBeNull("Organisator-Aktionen setzen nichts auf gesehen, sie zählen nur nicht als neu");
         (await MailsAsync()).ShouldHaveSingleItem().An.ShouldBe("max.muster@example.org");
     }
 

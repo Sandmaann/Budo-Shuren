@@ -241,6 +241,14 @@ namespace BudoShurenWebsite.Data
                 .HasForeignKey(b => b.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<VeranstaltungNachricht>().ToTable("VeranstaltungNachrichten");
+            builder.Entity<VeranstaltungNachricht>().HasIndex(n => new { n.VeranstaltungId, n.GesendetUtc });
+            builder.Entity<VeranstaltungNachricht>()
+                .HasOne(n => n.Veranstaltung)
+                .WithMany()
+                .HasForeignKey(n => n.VeranstaltungId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Kalendereinträge, die zu einem Veranstaltungstag gehören (höchstens einer je Tag)
             builder.Entity<AppointmentData>().HasIndex(a => a.VeranstaltungsTagId).IsUnique();
             builder.Entity<AppointmentData>()
@@ -271,6 +279,7 @@ namespace BudoShurenWebsite.Data
         public DbSet<AnmeldungInfoEmail> AnmeldungInfoEmails { get; set; }
         public DbSet<AnmeldungEreignis> AnmeldungEreignisse { get; set; }
         public DbSet<BenachrichtigungEmpfaenger> BenachrichtigungEmpfaenger { get; set; }
+        public DbSet<VeranstaltungNachricht> VeranstaltungNachrichten { get; set; }
         public override int SaveChanges()
         {
             Validate();

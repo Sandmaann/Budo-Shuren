@@ -123,6 +123,29 @@ public class VeranstaltungMailVorlagenTests
     }
 
     [Fact]
+    public void Nachricht_mit_Anrede_Inhalt_Kontakt_und_Fuss()
+    {
+        var teilnehmer = VeranstaltungMailVorlagen.Nachricht(Veranstaltung(), "Treffpunkt", "<p>Halle 2</p>", "<b>Max</b>",
+            VeranstaltungMailVorlagen.FussTeilnehmer("https://x.de/veranstaltungen/link-anfordern"));
+        var info = VeranstaltungMailVorlagen.Nachricht(Veranstaltung(), "Treffpunkt", "<p>Halle 2</p>", null,
+            VeranstaltungMailVorlagen.FussInfo("https://x.de/veranstaltungen/info-abmelden/abc"));
+
+        teilnehmer.Betreff.ShouldBe("Treffpunkt");
+        teilnehmer.Html.ShouldContain("Hallo &lt;b&gt;Max&lt;/b&gt;,");
+        teilnehmer.Html.ShouldContain("<p>Halle 2</p>");
+        teilnehmer.Html.ShouldContain("href=\"https://x.de/veranstaltungen/link-anfordern\"");
+        info.Html.ShouldContain("<p>Hallo,</p>");
+        info.Html.ShouldContain("href=\"https://x.de/veranstaltungen/info-abmelden/abc\"");
+    }
+
+    [Fact]
+    public void Absage_eines_Tages_nennt_den_Termin()
+    {
+        VeranstaltungMailVorlagen.TagAbgesagtInhalt(Tage[1], "<p>Zusatz</p>")
+            .ShouldBe("<p><strong>Der Termin am Sonntag, 15.11.2026, 09:30–12:00 Uhr (Prüfung) wurde abgesagt.</strong> Die übrigen Termine finden wie geplant statt.</p><p>Zusatz</p>");
+    }
+
+    [Fact]
     public void Ablehnung_ist_neutral_und_nennt_den_Kontakt()
     {
         var mail = VeranstaltungMailVorlagen.AnmeldungNichtMoeglich(Veranstaltung());

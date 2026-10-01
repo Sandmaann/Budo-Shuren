@@ -250,7 +250,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             AnmeldungDaten.StatusSetzen(a, AnmeldungStatus.Abgelehnt, EreignisAkteur.Admin, bereinigt);
             a.ReserviertBisUtc = null;
             a.GeaendertUtc = jetzt;
-            a.AdminGesehenUtc = jetzt;
             AnmeldungDaten.EreignisHinzufuegen(a, AnmeldungEreignisArt.Abgelehnt, EreignisAkteur.Admin, jetzt, EreignisDiff.Grund(bereinigt), benutzer.UserId);
             if (benachrichtigen)
                 _mails.AnTeilnehmer(kontext, v, a, VeranstaltungMailVorlagen.AbgelehntDurchOrganisator(v, a, bereinigt));
@@ -275,7 +274,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var jetzt = JetztUtc;
             AnmeldungDaten.StatusSetzen(a, AnmeldungStatus.Angemeldet, EreignisAkteur.Admin);
             a.GeaendertUtc = jetzt;
-            a.AdminGesehenUtc = jetzt;
             var link = AnmeldeToken.Erzeugen();
             AnmeldungDaten.TokenSetzen(a, link, jetzt);
             AnmeldungDaten.EreignisHinzufuegen(a, AnmeldungEreignisArt.AblehnungZurueckgenommen, EreignisAkteur.Admin, jetzt, akteurUserId: benutzer.UserId);
@@ -315,7 +313,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             anmeldung.Quelle = AnmeldungQuelle.Admin;
             anmeldung.DatenschutzAkzeptiertUtc = jetzt;
             anmeldung.ReserviertBisUtc = null;
-            anmeldung.AdminGesehenUtc = jetzt;
             AnmeldungDaten.StatusSetzen(anmeldung, AnmeldungStatus.Angemeldet, EreignisAkteur.Admin);
             var link = AnmeldeToken.Erzeugen();
             AnmeldungDaten.TokenSetzen(anmeldung, link, jetzt);
@@ -374,8 +371,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             if (aenderungen.Count == 0)
                 return VerwaltungsErgebnis.Ok(a.Id);
 
-            // Vom Organisator selbst: gilt als gesehen, taucht also nicht als "neu" auf
-            a.AdminGesehenUtc = jetzt;
             foreach (var aenderung in aenderungen)
                 AnmeldungDaten.EreignisHinzufuegen(a, aenderung.Art, EreignisAkteur.Admin, jetzt, aenderung.DetailsJson, benutzer.UserId);
 
@@ -422,7 +417,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var link = AnmeldeToken.Erzeugen();
             AnmeldungDaten.TokenSetzen(a, link, jetzt);
             AnmeldungDaten.EreignisHinzufuegen(a, AnmeldungEreignisArt.LinkVersendet, EreignisAkteur.Admin, jetzt, akteurUserId: benutzer.UserId);
-            a.AdminGesehenUtc = jetzt;
             var unbestaetigt = a.Status == AnmeldungStatus.Unbestaetigt;
             var url = unbestaetigt ? VeranstaltungLinks.BestaetigenUrl(basisUrl, link.Klartext) : VeranstaltungLinks.MeineAnmeldungUrl(basisUrl, link.Klartext);
             _mails.AnTeilnehmer(kontext, v, a, VeranstaltungMailVorlagen.LinkErneut(v, a, url, unbestaetigt));
@@ -452,8 +446,15 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         // ---------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// "Neu" sind Änderungen von Teilnehmern bzw. dem System nach dem letzten "als gesehen markieren".
+        /// Aktionen der Organisatoren selbst gelten nie als neu; so verdecken sie auch keine ungesehenen Änderungen.
+        /// </summary>
+        private static bool IstNeu(Anmeldung a, AnmeldungEreignis e) =>
+            e.Akteur != EreignisAkteur.Admin && (a.AdminGesehenUtc is null || e.ZeitpunktUtc > a.AdminGesehenUtc);
+
         private static bool IstUngesehen(Anmeldung a, IEnumerable<AnmeldungEreignis> ereignisse) =>
-            ereignisse.Any(e => a.AdminGesehenUtc is null || e.ZeitpunktUtc > a.AdminGesehenUtc);
+            ereignisse.Any(e => IstNeu(a, e));
 
         private static EreignisAnzeige Anzeige(Anmeldung a, AnmeldungEreignis e, IReadOnlyDictionary<string, string> namen) => new(
             a.Id,
@@ -463,7 +464,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             e.AkteurUserId is { } id && namen.TryGetValue(id, out var name) ? name : null,
             e.Art,
             EreignisText.Beschreiben(e.Art, e.DetailsJson),
-            a.AdminGesehenUtc is null || e.ZeitpunktUtc > a.AdminGesehenUtc);
+            IstNeu(a, e));
 
         private static async Task<IReadOnlyDictionary<string, string>> AkteurNamenAsync(ApplicationDbContext kontext, IEnumerable<AnmeldungEreignis> ereignisse, CancellationToken abbruch)
         {

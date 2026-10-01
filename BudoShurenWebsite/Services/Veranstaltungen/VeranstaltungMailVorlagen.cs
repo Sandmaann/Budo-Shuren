@@ -116,6 +116,37 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 Button(verwaltungUrl, "Meine Anmeldung") +
                 "<p style=\"font-size:12px;color:#555;\">Ältere Links gelten nicht mehr. Bitte gib diesen Link nicht weiter.</p>"));
 
+        /// <summary>
+        /// Nachricht der Organisatoren (Rundmail, Absage). inhaltHtml ist bereits sicher gerendert (MarkdownText.SicherZuHtml
+        /// bzw. eigene Bausteine); fussHtml unterscheidet Teilnehmer und Info-Adressen.
+        /// </summary>
+        /// <param name="vorname">Für die Anrede; null bei Info-Adressen ("Hallo,").</param>
+        public static MailInhalt Nachricht(Veranstaltung v, string betreff, string inhaltHtml, string? vorname, string fussHtml) => new(
+            betreff,
+            Layout(
+                (vorname is null ? "<p>Hallo,</p>" : $"<p>Hallo {E(vorname)},</p>") +
+                $"<p>eine Nachricht zu <strong>{E(v.Titel)}</strong>:</p>" +
+                $"<div style=\"margin:16px 0;\">{inhaltHtml}</div>" +
+                Kontakt(v) +
+                fussHtml));
+
+        public static string FussTeilnehmer(string linkAnfordernUrl) =>
+            "<p style=\"font-size:12px;color:#555;\">Deine Anmeldung kannst du über den Link aus deiner Bestätigungs-E-Mail ansehen und ändern. " +
+            $"Link verloren? <a href=\"{E(linkAnfordernUrl)}\" style=\"color:#555;\">Neuen Link anfordern</a>.</p>";
+
+        public static string FussInfo(string abmeldenUrl) =>
+            "<p style=\"font-size:12px;color:#555;\">Du bekommst diese Nachricht, weil dich jemand bei der Anmeldung angegeben hat. " +
+            $"<a href=\"{E(abmeldenUrl)}\" style=\"color:#555;\">Keine Infos mehr zu dieser Veranstaltung</a>.</p>";
+
+        /// <param name="zusatzHtml">Optionaler Text der Organisatoren, bereits sicher gerendert.</param>
+        public static string TagAbgesagtInhalt(VeranstaltungsTag tag, string? zusatzHtml) =>
+            $"<p><strong>Der Termin am {E(TagText(tag))} wurde abgesagt.</strong> Die übrigen Termine finden wie geplant statt.</p>" +
+            (zusatzHtml ?? "");
+
+        public static string AbgesagtInhalt(string? zusatzHtml) =>
+            "<p><strong>Die Veranstaltung wurde abgesagt.</strong> Deine Anmeldung ist damit hinfällig, du musst nichts weiter tun.</p>" +
+            (zusatzHtml ?? "");
+
         /// <summary>Organisator lehnt eine Anmeldung ab; der Grund ist optional.</summary>
         public static MailInhalt AbgelehntDurchOrganisator(Veranstaltung v, Anmeldung a, string? grund) => new(
             $"Deine Anmeldung: {v.Titel}",

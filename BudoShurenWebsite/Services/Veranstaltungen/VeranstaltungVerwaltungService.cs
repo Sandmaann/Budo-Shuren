@@ -143,7 +143,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     v.Abteilung != null ? v.Abteilung.Name : null,
                     v.Anmeldungen.Count(a => a.Status == AnmeldungStatus.Unbestaetigt || a.Status == AnmeldungStatus.Angemeldet || a.Status == AnmeldungStatus.Warteliste),
                     v.Anmeldungen.Where(a => a.Status == AnmeldungStatus.Angemeldet).Sum(a => 1 + a.AnzahlBegleitpersonen),
-                    v.Anmeldungen.Count(a => a.Ereignisse.Any(e => a.AdminGesehenUtc == null || e.ZeitpunktUtc > a.AdminGesehenUtc))))
+                    v.Anmeldungen.Count(a => a.Ereignisse.Any(e => e.Akteur != EreignisAkteur.Admin && (a.AdminGesehenUtc == null || e.ZeitpunktUtc > a.AdminGesehenUtc)))))
                 .ToListAsync(abbruch);
 
             // Entwürfe ohne Termin zuerst, dann chronologisch
@@ -666,7 +666,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 await kontext.SaveChangesAsync(abbruch);
 
                 await kontext.Entry(v).Reference(x => x.Abteilung).LoadAsync(abbruch);
-                await KalenderAbgleichenAsync(kontext, v, abbruch);
+                await KalenderAbgleich.AbgleichenAsync(kontext, v, Ortszeit.Jetzt(_zeit), abbruch);
                 await kontext.SaveChangesAsync(abbruch);
 
                 await transaktion.CommitAsync(abbruch);
@@ -680,33 +680,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             {
                 // Z. B. eindeutiger Index (Datum, Slug) bei gleichzeitigem Speichern oder beim Tauschen zweier Tage
                 return VerwaltungsErgebnis.MitFehler("Die Änderungen konnten nicht gespeichert werden (Datum oder Adresse bereits vergeben). Bitte prüfen und erneut speichern.");
-            }
-        }
-
-        private async Task KalenderAbgleichenAsync(ApplicationDbContext kontext, Veranstaltung v, CancellationToken abbruch)
-        {
-            var tagIds = v.Tage.Select(t => t.Id).ToList();
-            var eintraege = await kontext.Appointments
-                .Where(a => a.VeranstaltungsTagId != null && tagIds.Contains(a.VeranstaltungsTagId.Value))
-                .ToListAsync(abbruch);
-            var jetzt = Ortszeit.Jetzt(_zeit);
-
-            foreach (var tag in v.Tage)
-            {
-                var eintrag = eintraege.SingleOrDefault(e => e.VeranstaltungsTagId == tag.Id);
-                if (KalenderEintragFabrik.GehoertInDenKalender(v, tag))
-                {
-                    if (eintrag is null)
-                    {
-                        eintrag = new AppointmentData();
-                        kontext.Appointments.Add(eintrag);
-                    }
-                    KalenderEintragFabrik.Uebernehmen(eintrag, v, tag, jetzt);
-                }
-                else if (eintrag is not null)
-                {
-                    kontext.Appointments.Remove(eintrag);
-                }
             }
         }
     }
