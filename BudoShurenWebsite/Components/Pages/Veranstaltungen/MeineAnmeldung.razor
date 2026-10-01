@@ -1,0 +1,256 @@
+@page "/veranstaltungen/meine-anmeldung/{Token}"
+@* Statisch gerendert, hinter dem Verwaltungslink. Öffnen ändert nichts; Ändern und Abmelden nur per POST. *@
+
+@using BudoShurenWebsite.Models.Enums
+@using BudoShurenWebsite.Services.Veranstaltungen
+@using Microsoft.AspNetCore.RateLimiting
+
+@attribute [EnableRateLimiting(VeranstaltungRateLimit.Formulare)]
+
+@inject ISelbstverwaltungService Selbstverwaltung
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<PageTitle>Meine Anmeldung | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow">
+</HeadContent>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="font-ptsans mx-10 my-8 text-sm">
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Diese Seite gibt es nicht." />
+        }
+        else if (_ansicht is null)
+        {
+            <h1 class="mb-3 text-xl font-bold">Link ungültig</h1>
+            <p>Dieser Link ist ungültig oder nicht mehr aktuell, zum Beispiel weil inzwischen ein neuer Link verschickt wurde.</p>
+            <a href="/veranstaltungen/link-anfordern" class="mt-3 inline-block underline">Neuen Link anfordern</a>
+        }
+        else
+        {
+            <p class="text-xs uppercase tracking-wider text-gray-600">Meine Anmeldung</p>
+            <h1 class="mb-1 text-xl font-bold">
+                <a href="@($"/veranstaltungen/{Uri.EscapeDataString(_ansicht.Slug)}")" class="hover:underline">@_ansicht.Titel</a>
+            </h1>
+
+            @if (_meldung is not null)
+            {
+                <p class="my-4 rounded border p-3 @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">@_meldung</p>
+            }
+
+            @if (_ansicht.VeranstaltungStatus == VeranstaltungStatus.Abgesagt)
+            {
+                <p class="my-4 rounded border border-red-700 bg-red-50 p-3 font-bold">Diese Veranstaltung wurde abgesagt.</p>
+            }
+
+            @switch (_ansicht.Status)
+            {
+                case AnmeldungStatus.Unbestaetigt:
+                    <p class="my-4">Deine Anmeldung ist noch nicht bestätigt.</p>
+                    <a href="@($"/veranstaltungen/bestaetigen/{Token}")" class="inline-block rounded border border-black bg-black px-6 py-2 text-white hover:bg-gray-800">Jetzt bestätigen</a>
+                    break;
+
+                case AnmeldungStatus.Storniert:
+                    <p class="my-4">Du hast dich von dieser Veranstaltung abgemeldet.</p>
+                    <a href="@($"/veranstaltungen/{Uri.EscapeDataString(_ansicht.Slug)}")" class="underline">Zur Veranstaltung (erneut anmelden, solange Plätze frei sind)</a>
+                    break;
+
+                case AnmeldungStatus.Abgelehnt:
+                    <p class="my-4">Eine Teilnahme ist leider nicht möglich.</p>
+                    @Kontakt
+                    break;
+
+                default:
+                    @AngemeldetAnsicht
+                    break;
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Token { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "aendern")]
+    private AenderungsFormular? Aenderung { get; set; }
+
+    [SupplyParameterFromForm(FormName = "abmelden")]
+    private AbmeldeFormular? Abmeldung { get; set; }
+
+    private MeineAnmeldungAnsicht? _ansicht;
+    private IReadOnlyDictionary<string, string> _fehler = new Dictionary<string, string>();
+    private string? _meldung;
+    private bool _istFehler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Beim Absenden setzt die Formularbindung das Modell bzw. nicht übermittelte Listen auf null
+        Aenderung ??= new();
+        Aenderung.Eingabe ??= new();
+        Aenderung.Tage ??= [];
+        Abmeldung ??= new();
+
+        if (HttpContext is not null)
+            VeranstaltungLinks.SicherheitsHeaderSetzen(HttpContext.Response);
+
+        if (!Optionen.Value.Aktiviert)
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        _ansicht = await Selbstverwaltung.LadenAsync(Token);
+
+        // Abgeschickte Änderungen bleiben im Formular stehen (z. B. bei Fehlern); sonst mit den gespeicherten Daten vorbelegen
+        var aenderungAbgeschickt = HttpContext is not null
+            && HttpMethods.IsPost(HttpContext.Request.Method)
+            && HttpContext.Request.HasFormContentType
+            && HttpContext.Request.Form["_handler"] == "aendern";
+        if (_ansicht is not null)
+        {
+            if (aenderungAbgeschickt)
+                Aenderung.Tage = Aenderung.Tage.Where(w => _ansicht.Tage.Any(t => t.Id == w.Id && !t.Abgesagt)).ToList();
+            else
+                Vorbelegen(_ansicht);
+        }
+    }
+
+    private void Vorbelegen(MeineAnmeldungAnsicht ansicht)
+    {
+        Aenderung!.Eingabe = ansicht.Daten;
+        Aenderung.Tage = VeranstaltungTexte.TagAuswahl(ansicht.Tage, ansicht.Daten.TagIds);
+    }
+
+    private async Task SpeichernAsync()
+    {
+        Aenderung!.Eingabe.TagIds = Aenderung.Tage.Where(t => t.Gewaehlt).Select(t => t.Id).ToList();
+        var ergebnis = await Selbstverwaltung.AendernAsync(Token, Aenderung.Eingabe, NavigationManager.BaseUri);
+
+        _istFehler = ergebnis.Art is not (SelbstverwaltungErgebnisArt.Gespeichert or SelbstverwaltungErgebnisArt.KeineAenderung);
+        _meldung = ergebnis.Art switch
+        {
+            SelbstverwaltungErgebnisArt.Gespeichert when ergebnis.EmailWechselAngefordert =>
+                "Gespeichert. Bitte bestätige deine neue E-Mail-Adresse über den Link, den wir dorthin geschickt haben. Bis dahin gilt die bisherige Adresse.",
+            SelbstverwaltungErgebnisArt.Gespeichert => "Deine Änderungen sind gespeichert. Du bekommst eine Bestätigung per E-Mail.",
+            SelbstverwaltungErgebnisArt.KeineAenderung => "Es gab nichts zu ändern.",
+            SelbstverwaltungErgebnisArt.Ungueltig => "Bitte prüfe deine Angaben.",
+            SelbstverwaltungErgebnisArt.Ausgebucht => ergebnis.VolleTage.Count == 0
+                ? "Für diese Änderung ist leider kein Platz mehr frei."
+                : $"Für diese Änderung ist leider kein Platz mehr frei am {string.Join(", ", ergebnis.VolleTage.Select(d => d.ToString("dd.MM.yyyy")))}.",
+            _ => "Änderungen sind nicht mehr möglich."
+        };
+        _fehler = ergebnis.Fehler;
+
+        // Nach dem Speichern (oder wenn sich der Stand geändert hat) den aktuellen Stand zeigen
+        if (ergebnis.Art is not (SelbstverwaltungErgebnisArt.Ungueltig or SelbstverwaltungErgebnisArt.Ausgebucht))
+        {
+            _ansicht = await Selbstverwaltung.LadenAsync(Token);
+            if (_ansicht is not null)
+                Vorbelegen(_ansicht);
+        }
+    }
+
+    private async Task AbmeldenAsync()
+    {
+        if (!Abmeldung!.Bestaetigt)
+        {
+            _istFehler = true;
+            _meldung = "Bitte setze den Haken, wenn du dich wirklich abmelden möchtest.";
+            return;
+        }
+
+        var ergebnis = await Selbstverwaltung.AbmeldenAsync(Token, NavigationManager.BaseUri);
+        _istFehler = ergebnis.Art != SelbstverwaltungErgebnisArt.Abgemeldet;
+        _meldung = _istFehler
+            ? "Eine Abmeldung ist nicht mehr möglich. Bitte melde dich bei den Organisatoren."
+            : "Du bist abgemeldet. Wir haben dir eine Bestätigung per E-Mail geschickt.";
+        _ansicht = await Selbstverwaltung.LadenAsync(Token);
+    }
+
+    private RenderFragment Kontakt => @<p>
+        @if (_ansicht?.KontaktEmail is { } kontakt)
+        {
+            <span>Bei Fragen: @(_ansicht.KontaktName ?? "") <a href="mailto:@kontakt" class="underline">@kontakt</a></span>
+        }
+    </p>;
+
+    private RenderFragment AngemeldetAnsicht => @<div>
+        @{
+            var ansicht = _ansicht!;
+            var gebuchteTage = ansicht.Teilnahmemodus == Teilnahmemodus.NurGesamt
+                ? ansicht.Tage.Where(t => !t.Abgesagt).ToList()
+                : ansicht.Tage.Where(t => ansicht.Daten.TagIds.Contains(t.Id)).ToList();
+        }
+
+        <section class="my-4 rounded border border-gray-200 p-4">
+            <p class="mb-2 font-bold">Du bist angemeldet für:</p>
+            <ul class="space-y-1">
+                @foreach (var tag in gebuchteTage)
+                {
+                    <li class="@(tag.Abgesagt ? "text-gray-400 line-through" : "")">@VeranstaltungTexte.Tag(tag)@(tag.Abgesagt ? " (abgesagt)" : "")</li>
+                }
+            </ul>
+            <p class="mt-2">
+                @(ansicht.Daten.AnzahlBegleitpersonen == 0 ? "1 Person" : $"{1 + ansicht.Daten.AnzahlBegleitpersonen} Personen (du und {ansicht.Daten.AnzahlBegleitpersonen} Begleitperson{(ansicht.Daten.AnzahlBegleitpersonen == 1 ? "" : "en")})")
+            </p>
+            @if (ansicht.NeueEmailAusstehend is { } neueEmail)
+            {
+                <p class="mt-2 text-xs text-gray-600">Neue E-Mail-Adresse <strong>@neueEmail</strong> wartet auf Bestätigung. Bis dahin gilt @ansicht.Email.</p>
+            }
+        </section>
+
+        @if (ansicht.AenderungenMoeglich)
+        {
+            <section class="my-6 rounded border border-gray-300 p-5">
+                <h2 class="mb-4 text-lg font-bold">Anmeldung ändern</h2>
+                <EditForm Model="Aenderung" FormName="aendern" OnSubmit="SpeichernAsync" Enhance>
+                    <div class="space-y-4">
+                        <AnmeldeFelder Praefix="Aenderung"
+                                       Eingabe="Aenderung!.Eingabe"
+                                       Tage="Aenderung.Tage"
+                                       TagInfos="ansicht.Tage"
+                                       Einstellungen="ansicht.Formular"
+                                       Fehler="_fehler"
+                                       EmailHinweis="Eine neue Adresse gilt erst, wenn du sie über den Link bestätigst, den wir dorthin schicken." />
+                        @if (ansicht.AbgemeldeteInfoEmails.Count > 0)
+                        {
+                            <p class="text-xs text-gray-600">Abgemeldet und ohne weitere Infos: @string.Join(", ", ansicht.AbgemeldeteInfoEmails)</p>
+                        }
+                        <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                            Änderungen speichern
+                        </button>
+                    </div>
+                </EditForm>
+            </section>
+        }
+        else if (ansicht.VeranstaltungStatus == VeranstaltungStatus.Veroeffentlicht)
+        {
+            <p class="my-4 text-gray-600">Änderungen sind nicht mehr möglich. Bitte wende dich bei Bedarf an die Organisatoren.</p>
+            @Kontakt
+        }
+
+        @if (ansicht.AbmeldenMoeglich)
+        {
+            <section class="my-6 rounded border border-gray-300 p-5">
+                <h2 class="mb-2 text-lg font-bold">Abmelden</h2>
+                <p class="mb-3">Du kannst nicht teilnehmen? Dann melde dich bitte ab, damit dein Platz frei wird.</p>
+                <EditForm Model="Abmeldung" FormName="abmelden" OnSubmit="AbmeldenAsync" Enhance>
+                    <label class="mb-3 flex items-center gap-2">
+                        <InputCheckbox @bind-Value="Abmeldung!.Bestaetigt" />
+                        Ja, ich möchte mich abmelden.
+                    </label>
+                    <button type="submit" class="rounded border border-red-800 px-6 py-2 text-red-800 hover:bg-red-50">
+                        Abmelden
+                    </button>
+                </EditForm>
+            </section>
+        }
+    </div>;
+}

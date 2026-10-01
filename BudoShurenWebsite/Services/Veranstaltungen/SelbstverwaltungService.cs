@@ -32,7 +32,11 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         string Email,
         string? NeueEmailAusstehend,
         AnmeldeEingabe Daten,
-        IReadOnlyList<string> AbgemeldeteInfoEmails);
+        IReadOnlyList<string> AbgemeldeteInfoEmails)
+    {
+        public AnmeldeFormularEinstellungen Formular => new(
+            Teilnahmemodus, MinTageBeiTeilanmeldung, MaxBegleitpersonen, TelefonFeld, VereinFeld, GraduierungFeld, BemerkungFeld);
+    }
 
     public enum SelbstverwaltungErgebnisArt
     {

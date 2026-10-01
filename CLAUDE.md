@@ -32,10 +32,10 @@ Tailwind (standalone CLI, not npm; the binary lives in a gitignored `Tailwind/` 
 
 `wwwroot/budo-shuren.css` is generated — edit `Styles/budo-shuren.css` or `tailwind.config.js` (custom colors `primary`/`error`, fonts `yuji`/`ptsans`, extra screens like `xs`, `3xl`–`5xl`), then rebuild CSS. New Tailwind classes in `.razor` files only appear after the CLI regenerates the output.
 
-The connection string in `appsettings.json` points to a local named SQL Server instance; startup throws if `DefaultConnection` is missing. On a machine without that instance, use SQL Server Express LocalDB and override the connection string via user secrets (never edit `appsettings.json` for this):
+The connection string in `appsettings.json` points to a local named SQL Server instance; startup throws if `DefaultConnection` is missing. On a machine without that instance, use a local SQL Server (e.g. SQL Express or LocalDB) and override the connection string via user secrets (never edit `appsettings.json` for this):
 
 ```sh
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=(localdb)\MSSQLLocalDB;Database=BudoShurenDev;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost\SQLEXPRESS;Database=BudoShurenDev;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
 ```
 
 ## Tests
@@ -48,7 +48,7 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
 ```
 
 - Categories via `[Trait("Category", …)]`: `Unit` (no DB), `Integration` (real SQL Server, incl. HTTP tests), later `Komponente` (bUnit).
-- Database tests derive from `Infrastruktur/DatenbankTest` and use `[DatenbankFact]`. The DB comes from env var `BUDO_TEST_SQL` (e.g. LocalDB; the database name must contain "Test" because Respawn wipes it) or else from a SQL Server container if Docker is available. Without either, these tests are skipped, not failed.
+- Database tests derive from `Infrastruktur/DatenbankTest` and use `[DatenbankFact]`. The DB comes from env var `BUDO_TEST_SQL`, e.g. `Server=localhost\SQLEXPRESS;Database=BudoShurenTests;Trusted_Connection=True;TrustServerCertificate=True` (the database name must contain "Test" because Respawn wipes it; never point it at `master` or a real DB) or else from a SQL Server container if Docker is available. Without either, these tests are skipped, not failed.
 - No SQLite/InMemory: locking (`sp_getapplock`), `rowversion`, filtered indexes and collation must behave like production.
 - With `ASPNETCORE_ENVIRONMENT=Test`, `Program.cs` configures NLog in code (warnings to the console) instead of loading `nlog.config`, so tests and `dotnet ef` never log to BetterStack. Don't switch this to a config file: if the file is missing, NLog silently falls back to `nlog.config`.
 - GitHub Actions (`.github/workflows/tests.yml`) runs all tests including integration tests on every PR and push to `main`.

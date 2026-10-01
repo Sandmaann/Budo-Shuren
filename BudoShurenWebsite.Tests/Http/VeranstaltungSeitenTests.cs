@@ -47,21 +47,6 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         return v;
     }
 
-    /// <summary>Versteckte Felder (inkl. Antiforgery und _handler) des Formulars mit dem angegebenen FormName.</summary>
-    private static Dictionary<string, string> VersteckteFelder(string html, string formName)
-    {
-        var formular = Regex.Matches(html, "<form\\b.*?</form>", RegexOptions.Singleline)
-            .Select(m => m.Value)
-            .Single(f => f.Contains($"name=\"_handler\" value=\"{formName}\""));
-
-        return Regex.Matches(formular, "<input\\b[^>]*>")
-            .Select(m => m.Value)
-            .Where(tag => tag.Contains("type=\"hidden\""))
-            .Select(tag => (Name: Regex.Match(tag, "name=\"([^\"]*)\"").Groups[1].Value, Wert: Regex.Match(tag, "value=\"([^\"]*)\"").Groups[1].Value))
-            .Where(f => f.Name.Length > 0)
-            .ToDictionary(f => WebUtility.HtmlDecode(f.Name), f => WebUtility.HtmlDecode(f.Wert));
-    }
-
     private static Dictionary<string, string> MitAnmeldedaten(Dictionary<string, string> felder, string vorname = "Max")
     {
         felder["Formular.Eingabe.Vorname"] = vorname;
@@ -76,7 +61,7 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
     private async Task<(HttpStatusCode Status, string Html)> AnmeldenUeberFormularAsync(HttpClient client, TimeSpan wartezeit, Action<Dictionary<string, string>>? aendern = null)
     {
         var seite = await client.GetStringAsync("/veranstaltungen/herbstseminar", Abbruch);
-        var felder = MitAnmeldedaten(VersteckteFelder(seite, "anmeldung"));
+        var felder = MitAnmeldedaten(HtmlFormular.VersteckteFelder(seite, "anmeldung"));
         aendern?.Invoke(felder);
         _zeit.Advance(wartezeit);
 
@@ -227,7 +212,7 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         await using (var kontext = Datenbank.NeuerKontext())
             (await kontext.Anmeldungen.SingleAsync(Abbruch)).Status.ShouldBe(AnmeldungStatus.Unbestaetigt, "ein GET (z. B. Mail-Scanner) darf nichts ändern");
 
-        var antwort = await client.PostAsync(url, new FormUrlEncodedContent(VersteckteFelder(html, "bestaetigen")), Abbruch);
+        var antwort = await client.PostAsync(url, new FormUrlEncodedContent(HtmlFormular.VersteckteFelder(html, "bestaetigen")), Abbruch);
 
         (await antwort.Content.ReadAsStringAsync(Abbruch)).ShouldContain("Anmeldung bestätigt");
         await using (var kontext = Datenbank.NeuerKontext())

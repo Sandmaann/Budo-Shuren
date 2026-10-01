@@ -1,0 +1,87 @@
+@page "/veranstaltungen/link-anfordern"
+@* Antwortet immer gleich, damit sich nicht herausfinden lässt, welche Adressen angemeldet sind. *@
+
+@using BudoShurenWebsite.Services.Veranstaltungen
+@using Microsoft.AspNetCore.RateLimiting
+
+@attribute [EnableRateLimiting(VeranstaltungRateLimit.Formulare)]
+
+@inject ISelbstverwaltungService Selbstverwaltung
+@inject FormularSchutz Schutz
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<PageTitle>Link zur Anmeldung anfordern | Budo Shuren Dojo</PageTitle>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="font-ptsans mx-10 my-12 text-sm">
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Diese Seite gibt es nicht." />
+        }
+        else if (_abgeschickt)
+        {
+            <h1 class="mb-3 text-xl font-bold">Schau in dein Postfach</h1>
+            <p>Wenn es zu dieser Adresse Anmeldungen gibt, haben wir dir eine E-Mail mit den Links geschickt. Ältere Links gelten dann nicht mehr.</p>
+            <p class="mt-2 text-xs text-gray-600">Keine E-Mail bekommen? Bitte schau auch im Spam-Ordner nach.</p>
+        }
+        else
+        {
+            <h1 class="mb-3 text-xl font-bold">Link zu deiner Anmeldung</h1>
+            <p class="mb-4">Du findest den Link zu deiner Anmeldung nicht mehr? Gib die Adresse ein, mit der du dich angemeldet hast. Wir schicken dir die Links zu allen deinen Anmeldungen.</p>
+            <EditForm Model="Formular" FormName="link-anfordern" OnSubmit="AnfordernAsync" Enhance>
+                <div class="space-y-3">
+                    <div>
+                        <label class="mb-1 block text-xs font-bold" for="email">E-Mail</label>
+                        <InputText id="email" type="email" @bind-Value="Formular!.Email" class="w-full rounded border border-gray-300 p-2 text-sm md:w-96" autocomplete="email" />
+                    </div>
+                    @* Honeypot: für Menschen unsichtbar und nicht per Tastatur erreichbar *@
+                    <div class="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
+                        <label for="website">Website</label>
+                        <InputText id="website" @bind-Value="Formular.Website" tabindex="-1" autocomplete="off" />
+                    </div>
+                    <InputText type="hidden" @bind-Value="Formular.Zeitstempel" />
+                    <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                        Link schicken
+                    </button>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "link-anfordern")]
+    private LinkAnfordernFormular? Formular { get; set; }
+
+    private bool _abgeschickt;
+
+    protected override void OnInitialized()
+    {
+        Formular ??= new();
+
+        if (!Optionen.Value.Aktiviert)
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        if (HttpContext is null || !HttpMethods.IsPost(HttpContext.Request.Method))
+            Formular.Zeitstempel = Schutz.Zeitstempel();
+    }
+
+    private async Task AnfordernAsync()
+    {
+        if (!Optionen.Value.Aktiviert)
+            return;
+
+        // Bots und echte Anfragen bekommen dieselbe Antwort
+        if (!Schutz.IstVerdaechtig(Formular!.Website, Formular.Zeitstempel))
+            await Selbstverwaltung.LinksAnfordernAsync(Formular.Email, NavigationManager.BaseUri);
+        _abgeschickt = true;
+    }
+}

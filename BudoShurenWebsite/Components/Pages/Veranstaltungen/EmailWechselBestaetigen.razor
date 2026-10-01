@@ -1,0 +1,87 @@
+@page "/veranstaltungen/email-bestaetigen/{Token}"
+@* Öffnen ändert nichts (Mail-Scanner); die neue Adresse wird erst per Klick (POST) übernommen. *@
+
+@using BudoShurenWebsite.Services.Veranstaltungen
+@using Microsoft.AspNetCore.RateLimiting
+
+@attribute [EnableRateLimiting(VeranstaltungRateLimit.Formulare)]
+
+@inject ISelbstverwaltungService Selbstverwaltung
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<PageTitle>E-Mail-Adresse bestätigen | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow">
+</HeadContent>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="font-ptsans mx-10 my-12 text-sm">
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Diese Seite gibt es nicht." />
+        }
+        else if (_ergebnis == EmailWechselErgebnis.Bestaetigt)
+        {
+            <h1 class="mb-3 text-xl font-bold">Neue Adresse bestätigt</h1>
+            <p>Ab jetzt gehen alle Infos an deine neue Adresse. Dorthin haben wir dir auch einen neuen Link zu deiner Anmeldung geschickt.</p>
+        }
+        else if (_ergebnis == EmailWechselErgebnis.AdresseVergeben)
+        {
+            <h1 class="mb-3 text-xl font-bold">Adresse bereits angemeldet</h1>
+            <p>Mit dieser Adresse gibt es für die Veranstaltung schon eine andere Anmeldung. Die Adresse wurde deshalb nicht geändert.</p>
+        }
+        else if (_neueEmail is null)
+        {
+            <h1 class="mb-3 text-xl font-bold">Link ungültig</h1>
+            <p>Dieser Link ist ungültig oder wurde bereits verwendet.</p>
+        }
+        else
+        {
+            <h1 class="mb-3 text-xl font-bold">Neue E-Mail-Adresse bestätigen</h1>
+            <p class="mb-4">Soll <strong>@_neueEmail</strong> die Adresse für deine Anmeldung werden?</p>
+            <EditForm Model="Formular" FormName="email-bestaetigen" OnSubmit="BestaetigenAsync" Enhance>
+                <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                    Adresse bestätigen
+                </button>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Token { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "email-bestaetigen")]
+    private KnopfFormular? Formular { get; set; }
+
+    private string? _neueEmail;
+    private EmailWechselErgebnis? _ergebnis;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Formular ??= new();
+
+        if (HttpContext is not null)
+            VeranstaltungLinks.SicherheitsHeaderSetzen(HttpContext.Response);
+
+        if (!Optionen.Value.Aktiviert)
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        _neueEmail = await Selbstverwaltung.EmailWechselPruefenAsync(Token);
+    }
+
+    private async Task BestaetigenAsync()
+    {
+        if (Optionen.Value.Aktiviert)
+            _ergebnis = await Selbstverwaltung.EmailWechselBestaetigenAsync(Token, NavigationManager.BaseUri);
+    }
+}

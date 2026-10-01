@@ -26,4 +26,37 @@ namespace BudoShurenWebsite.Components.Pages.Veranstaltungen
 
         public bool Gewaehlt { get; set; }
     }
+
+    /// <summary>Änderungsformular auf "Meine Anmeldung" (über den Verwaltungslink, daher ohne Honeypot).</summary>
+    public sealed class AenderungsFormular
+    {
+        public AnmeldeEingabe Eingabe { get; set; } = new();
+
+        public List<TagWahl> Tage { get; set; } = [];
+    }
+
+    /// <summary>Abmelden mit ausdrücklicher Bestätigung (Haken).</summary>
+    public sealed class AbmeldeFormular
+    {
+        public bool Bestaetigt { get; set; }
+    }
+
+    /// <summary>
+    /// Für Seiten hinter einem Link, auf denen nur ein Knopf etwas auslöst (Bestätigen, Info abmelden usw.):
+    /// das Öffnen des Links (GET) ändert nichts, erst das Absenden (POST).
+    /// </summary>
+    public sealed class KnopfFormular
+    {
+        public string? Knopf { get; set; }
+    }
+
+    /// <summary>Link anfordern: nur die Adresse, dazu Honeypot und Zeitstempel (FormularSchutz).</summary>
+    public sealed class LinkAnfordernFormular
+    {
+        public string? Email { get; set; }
+
+        public string? Website { get; set; }
+
+        public string? Zeitstempel { get; set; }
+    }
 }

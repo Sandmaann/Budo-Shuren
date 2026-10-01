@@ -14,6 +14,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         public const string EmailBestaetigen = "veranstaltungen/email-bestaetigen";
         public const string LinkAnfordern = "veranstaltungen/link-anfordern";
 
+        /// <summary>Slugs, die mit festen Seiten unter /veranstaltungen/ kollidieren würden.</summary>
+        public static readonly IReadOnlySet<string> ReservierteSlugs = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "link-anfordern" };
+
         /// <summary>Pfade, deren letztes Segment ein geheimes Token ist.</summary>
         public static readonly string[] PfadeMitToken = [Bestaetigen, MeineAnmeldung, InfoAbmelden, BenachrichtigungAbmelden, EmailBestaetigen];
 

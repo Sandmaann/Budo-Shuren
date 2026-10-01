@@ -37,6 +37,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
     {
         public IEnumerable<TagAnzeige> AktiveTage => Tage.Where(t => !t.Abgesagt);
 
+        public AnmeldeFormularEinstellungen Formular => new(
+            Teilnahmemodus, MinTageBeiTeilanmeldung, MaxBegleitpersonen, TelefonFeld, VereinFeld, GraduierungFeld, BemerkungFeld);
+
         /// <summary>Bei Anmeldung für die gesamte Veranstaltung reicht ein voller Tag, sonst müssen alle Tage voll sein.</summary>
         public bool Ausgebucht => Teilnahmemodus == Teilnahmemodus.NurGesamt
             ? AktiveTage.Any(t => t.FreiePlaetze == 0)

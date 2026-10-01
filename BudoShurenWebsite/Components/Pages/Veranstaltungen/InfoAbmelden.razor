@@ -1,0 +1,81 @@
+@page "/veranstaltungen/info-abmelden/{Token}"
+@* Für Info-Adressen (z. B. Begleitpersonen). Öffnen ändert nichts; abgemeldet wird per Klick (POST). *@
+
+@using BudoShurenWebsite.Services.Veranstaltungen
+@using Microsoft.AspNetCore.RateLimiting
+
+@attribute [EnableRateLimiting(VeranstaltungRateLimit.Formulare)]
+
+@inject ISelbstverwaltungService Selbstverwaltung
+@inject IOptions<VeranstaltungenOptionen> Optionen
+
+<PageTitle>Keine Infos mehr | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow">
+</HeadContent>
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="font-ptsans mx-10 my-12 text-sm">
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Diese Seite gibt es nicht." />
+        }
+        else if (_abgemeldet)
+        {
+            <h1 class="mb-3 text-xl font-bold">Abgemeldet</h1>
+            <p>Du bekommst keine Infos mehr zu dieser Veranstaltung.</p>
+        }
+        else if (_titel is null)
+        {
+            <h1 class="mb-3 text-xl font-bold">Link ungültig</h1>
+            <p>Dieser Link ist ungültig, oder du bist bereits abgemeldet.</p>
+        }
+        else
+        {
+            <h1 class="mb-3 text-xl font-bold">Keine Infos mehr bekommen</h1>
+            <p class="mb-4">Du bekommst Infos zu <strong>@_titel</strong>, weil dich jemand bei der Anmeldung angegeben hat. Möchtest du keine Infos mehr bekommen?</p>
+            <EditForm Model="Formular" FormName="info-abmelden" OnSubmit="AbmeldenAsync" Enhance>
+                <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                    Keine Infos mehr
+                </button>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Token { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "info-abmelden")]
+    private KnopfFormular? Formular { get; set; }
+
+    private string? _titel;
+    private bool _abgemeldet;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Formular ??= new();
+
+        if (HttpContext is not null)
+            VeranstaltungLinks.SicherheitsHeaderSetzen(HttpContext.Response);
+
+        if (!Optionen.Value.Aktiviert)
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        _titel = await Selbstverwaltung.InfoAbmeldungPruefenAsync(Token);
+    }
+
+    private async Task AbmeldenAsync()
+    {
+        if (Optionen.Value.Aktiviert)
+            _abgemeldet = await Selbstverwaltung.InfoAbmeldenAsync(Token);
+    }
+}

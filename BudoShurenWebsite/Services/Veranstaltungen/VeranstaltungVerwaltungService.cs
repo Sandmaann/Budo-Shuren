@@ -545,8 +545,12 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 return basis;
 
             var slug = basis;
-            for (var nummer = 2; await kontext.Veranstaltungen.AnyAsync(x => x.Slug == slug && x.Id != v.Id, abbruch); nummer++)
+            for (var nummer = 2;
+                 VeranstaltungLinks.ReservierteSlugs.Contains(slug) || await kontext.Veranstaltungen.AnyAsync(x => x.Slug == slug && x.Id != v.Id, abbruch);
+                 nummer++)
+            {
                 slug = $"{basis}-{nummer}";
+            }
             return slug;
         }
 

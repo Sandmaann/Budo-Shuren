@@ -143,6 +143,14 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
     }
 
     [DatenbankFact]
+    public async Task Slugs_fester_Seiten_sind_reserviert()
+    {
+        var id = await AnlegenAsync(Eingabe("Link anfordern"));
+
+        (await Service.EingabeLadenAsync(id, _admin, Abbruch))!.Slug.ShouldBe("link-anfordern-2");
+    }
+
+    [DatenbankFact]
     public async Task Abteilungsleiter_nur_fuer_die_eigene_Abteilung()
     {
         (await Service.SpeichernAsync(Eingabe(abteilung: "Bujinkan"), _aikidoLeiter, Abbruch)).Erfolgreich.ShouldBeFalse();

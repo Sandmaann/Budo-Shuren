@@ -49,7 +49,7 @@
                     @foreach (var tag in _v.Tage)
                     {
                         <li class="@(tag.Abgesagt ? "text-gray-400 line-through" : "")">
-                            @TagText(tag)
+                            @VeranstaltungTexte.Tag(tag)
                             @if (tag.Abgesagt)
                             {
                                 <span class="ml-1 no-underline">(abgesagt)</span>
@@ -87,7 +87,11 @@
 
             <!-- Anmeldung -->
             <section id="anmeldung" class="my-8 rounded border border-gray-300 p-5">
-                <h2 class="font-ptsans mb-4 text-lg font-bold">Anmeldung</h2>
+                <h2 class="font-ptsans mb-1 text-lg font-bold">Anmeldung</h2>
+                <p class="font-ptsans mb-4 text-xs text-gray-600">
+                    Schon angemeldet? Über den Link aus deiner Bestätigungs-E-Mail kannst du deine Anmeldung ändern.
+                    <a href="/veranstaltungen/link-anfordern" class="underline">Link verloren?</a>
+                </p>
 
                 @if (_erfolgFuer is not null)
                 {
@@ -130,95 +134,12 @@
 
                     <EditForm Model="Formular" FormName="anmeldung" OnSubmit="AbsendenAsync" Enhance>
                         <div class="font-ptsans space-y-4 text-sm">
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label class="@Label" for="vorname">Vorname *</label>
-                                    <InputText id="vorname" @bind-Value="Formular.Eingabe.Vorname" class="@Feld" autocomplete="given-name" />
-                                    @FehlerText(nameof(AnmeldeEingabe.Vorname))
-                                </div>
-                                <div>
-                                    <label class="@Label" for="nachname">Nachname *</label>
-                                    <InputText id="nachname" @bind-Value="Formular.Eingabe.Nachname" class="@Feld" autocomplete="family-name" />
-                                    @FehlerText(nameof(AnmeldeEingabe.Nachname))
-                                </div>
-                            </div>
-                            <div>
-                                <label class="@Label" for="email">E-Mail *</label>
-                                <InputText id="email" type="email" @bind-Value="Formular.Eingabe.Email" class="@Feld" autocomplete="email" />
-                                @FehlerText(nameof(AnmeldeEingabe.Email))
-                            </div>
-
-                            @if (_v.TelefonFeld != FormularFeldModus.Aus)
-                            {
-                                <div>
-                                    <label class="@Label" for="telefon">Telefon@(Stern(_v.TelefonFeld))</label>
-                                    <InputText id="telefon" type="tel" @bind-Value="Formular.Eingabe.Telefon" class="@Feld" autocomplete="tel" />
-                                    @FehlerText(nameof(AnmeldeEingabe.Telefon))
-                                </div>
-                            }
-                            @if (_v.VereinFeld != FormularFeldModus.Aus)
-                            {
-                                <div>
-                                    <label class="@Label" for="verein">Verein / Dojo@(Stern(_v.VereinFeld))</label>
-                                    <InputText id="verein" @bind-Value="Formular.Eingabe.Verein" class="@Feld" />
-                                    @FehlerText(nameof(AnmeldeEingabe.Verein))
-                                </div>
-                            }
-                            @if (_v.GraduierungFeld != FormularFeldModus.Aus)
-                            {
-                                <div>
-                                    <label class="@Label" for="graduierung">Graduierung@(Stern(_v.GraduierungFeld))</label>
-                                    <InputText id="graduierung" @bind-Value="Formular.Eingabe.Graduierung" class="@Feld" />
-                                    @FehlerText(nameof(AnmeldeEingabe.Graduierung))
-                                </div>
-                            }
-
-                            @if (_v.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
-                            {
-                                <fieldset>
-                                    <legend class="@Label">An welchen Tagen bist du dabei? *</legend>
-                                    @for (var i = 0; i < Formular.Tage.Count; i++)
-                                    {
-                                        var index = i;
-                                        var tag = _v.Tage.Single(t => t.Id == Formular.Tage[index].Id);
-                                        <input type="hidden" name="Formular.Tage[@index].Id" value="@tag.Id" />
-                                        <label class="mt-1 flex items-center gap-2 @(tag.FreiePlaetze == 0 ? "text-gray-400" : "")">
-                                            <InputCheckbox @bind-Value="Formular.Tage[index].Gewaehlt" disabled="@(tag.FreiePlaetze == 0)" />
-                                            @TagText(tag)@(tag.FreiePlaetze == 0 ? " – ausgebucht" : "")
-                                        </label>
-                                    }
-                                    @if (_v.MinTageBeiTeilanmeldung > 1)
-                                    {
-                                        <p class="mt-1 text-xs text-gray-600">Mindestens @_v.MinTageBeiTeilanmeldung Tage.</p>
-                                    }
-                                    @FehlerText(nameof(AnmeldeEingabe.TagIds))
-                                </fieldset>
-                            }
-
-                            @if (_v.MaxBegleitpersonen > 0)
-                            {
-                                <div>
-                                    <label class="@Label" for="begleitung">Ich bringe weitere Personen mit (Anzahl)</label>
-                                    <InputNumber id="begleitung" @bind-Value="Formular.Eingabe.AnzahlBegleitpersonen" min="0" max="@_v.MaxBegleitpersonen" class="@($"{Feld} md:w-32")" />
-                                    <p class="mt-1 text-xs text-gray-600">Für Begleitpersonen brauchen wir keine Daten. Höchstens @_v.MaxBegleitpersonen.</p>
-                                    @FehlerText(nameof(AnmeldeEingabe.AnzahlBegleitpersonen))
-                                </div>
-                                <div>
-                                    <label class="@Label" for="infoemails">Weitere E-Mail-Adressen für Infos (optional)</label>
-                                    <InputTextArea id="infoemails" @bind-Value="Formular.Eingabe.InfoEmails" rows="2" class="@Feld" placeholder="eine Adresse pro Zeile" />
-                                    <p class="mt-1 text-xs text-gray-600">Zum Beispiel für deine Begleitpersonen: Sie bekommen Infos zur Veranstaltung und können sich jederzeit abmelden. Höchstens eine Adresse je Begleitperson.</p>
-                                    @FehlerText(nameof(AnmeldeEingabe.InfoEmails))
-                                </div>
-                            }
-
-                            @if (_v.BemerkungFeld != FormularFeldModus.Aus)
-                            {
-                                <div>
-                                    <label class="@Label" for="bemerkung">Bemerkung@(Stern(_v.BemerkungFeld))</label>
-                                    <InputTextArea id="bemerkung" @bind-Value="Formular.Eingabe.Bemerkung" rows="3" class="@Feld" />
-                                    @FehlerText(nameof(AnmeldeEingabe.Bemerkung))
-                                </div>
-                            }
+                            <AnmeldeFelder Praefix="Formular"
+                                           Eingabe="Formular.Eingabe"
+                                           Tage="Formular.Tage"
+                                           TagInfos="_v.Tage"
+                                           Einstellungen="_v.Formular"
+                                           Fehler="_fehler" />
 
                             @* Honeypot: für Menschen unsichtbar und nicht per Tastatur erreichbar *@
                             <div class="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
@@ -250,9 +171,6 @@
 </div>
 
 @code {
-    private const string Label = "mb-1 block text-xs font-bold";
-    private const string Feld = "w-full rounded border border-gray-300 p-2 text-sm";
-
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
@@ -286,7 +204,7 @@
 
         // Tagesauswahl: beim ersten Laden alle aktiven Tage (nicht angehakt); nach dem Absenden bleibt die Auswahl
         if (Formular.Tage.Count == 0)
-            Formular.Tage = _v.AktiveTage.Select(t => new TagWahl { Id = t.Id }).ToList();
+            Formular.Tage = VeranstaltungTexte.TagAuswahl(_v.Tage, []);
         // Nur bekannte, aktive Tage annehmen (das Formular kann manipuliert sein)
         Formular.Tage = Formular.Tage.Where(w => _v.AktiveTage.Any(t => t.Id == w.Id)).ToList();
 
@@ -334,10 +252,4 @@
         _fehler.TryGetValue(feld, out var text)
             ? @<p class="font-ptsans mt-1 text-xs text-red-700">@text</p>
             : null;
-
-    private static string Stern(FormularFeldModus modus) => modus == FormularFeldModus.Pflicht ? " *" : "";
-
-    private static string TagText(TagAnzeige tag) =>
-        $"{tag.Datum.ToString("dddd, dd.MM.yyyy", System.Globalization.CultureInfo.GetCultureInfo("de-DE"))}, {tag.Beginn:HH\\:mm}–{tag.Ende:HH\\:mm} Uhr" +
-        (string.IsNullOrWhiteSpace(tag.Titel) ? "" : $" ({tag.Titel})");
 }
