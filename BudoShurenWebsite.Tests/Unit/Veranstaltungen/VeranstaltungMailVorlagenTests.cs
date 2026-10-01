@@ -112,6 +112,17 @@ public class VeranstaltungMailVorlagenTests
     }
 
     [Fact]
+    public void Ablehnung_durch_Organisator_mit_kodiertem_Grund()
+    {
+        var mit = VeranstaltungMailVorlagen.AbgelehntDurchOrganisator(Veranstaltung(), Anmeldung(), "Nur <b>Mitglieder</b>");
+        var ohne = VeranstaltungMailVorlagen.AbgelehntDurchOrganisator(Veranstaltung(), Anmeldung(), null);
+
+        mit.Html.ShouldContain("Nur &lt;b&gt;Mitglieder&lt;/b&gt;");
+        ohne.Html.ShouldNotContain("border-left:3px solid #ccc;padding-left:12px;\">");
+        ohne.Html.ShouldContain("mailto:seminar@example.org");
+    }
+
+    [Fact]
     public void Ablehnung_ist_neutral_und_nennt_den_Kontakt()
     {
         var mail = VeranstaltungMailVorlagen.AnmeldungNichtMoeglich(Veranstaltung());

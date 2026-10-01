@@ -107,6 +107,7 @@ namespace BudoShurenWebsite
                 builder.Services.AddSingleton<AnmeldungMailVersand>();
                 builder.Services.AddScoped<IAnmeldungService, AnmeldungService>();
                 builder.Services.AddScoped<ISelbstverwaltungService, SelbstverwaltungService>();
+                builder.Services.AddScoped<ITeilnehmerVerwaltungService, TeilnehmerVerwaltungService>();
                 builder.Services.AddScoped<IVeranstaltungAnzeigeService, VeranstaltungAnzeigeService>();
                 builder.Services.AddSingleton<FormularSchutz>();
                 builder.Services.AddRateLimiter(VeranstaltungRateLimit.Konfigurieren);

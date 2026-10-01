@@ -80,6 +80,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         /// <summary>Für einen einzelnen Wert, z. B. die E-Mail-Adresse.</summary>
         public static string Wert(string? alt, string? neu) => JsonSerializer.Serialize(new WertAenderung(alt, neu), Json);
 
+        /// <summary>Begründung einer Organisator-Aktion (z. B. Ablehnung).</summary>
+        public static string Grund(string? grund) => JsonSerializer.Serialize(new { Grund = grund }, Json);
+
         private static void Vergleiche(Dictionary<string, WertAenderung> daten, string feld, string? alt, string? neu)
         {
             if (!string.Equals(alt ?? "", neu ?? "", StringComparison.Ordinal))

@@ -116,6 +116,15 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 Button(verwaltungUrl, "Meine Anmeldung") +
                 "<p style=\"font-size:12px;color:#555;\">Ältere Links gelten nicht mehr. Bitte gib diesen Link nicht weiter.</p>"));
 
+        /// <summary>Organisator lehnt eine Anmeldung ab; der Grund ist optional.</summary>
+        public static MailInhalt AbgelehntDurchOrganisator(Veranstaltung v, Anmeldung a, string? grund) => new(
+            $"Deine Anmeldung: {v.Titel}",
+            Layout(
+                $"<p>Hallo {E(a.Vorname)},</p>" +
+                $"<p>leider können wir deine Anmeldung zu <strong>{E(v.Titel)}</strong> nicht annehmen.</p>" +
+                (string.IsNullOrWhiteSpace(grund) ? "" : $"<p style=\"border-left:3px solid #ccc;padding-left:12px;\">{E(grund)}</p>") +
+                Kontakt(v)));
+
         /// <summary>Ein Eintrag für die Mail "Link anfordern".</summary>
         public sealed record AngeforderterLink(string Titel, string Termin, string Url, bool NochUnbestaetigt);
 
