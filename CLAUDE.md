@@ -24,7 +24,7 @@ dotnet ef migrations add <Name>           # dotnet-ef is a local tool (.config/d
 
 `dotnet ef` runs `Program.Main` at design time. Prefix it with `ASPNETCORE_ENVIRONMENT=Test` so NLog loads the test config and nothing is sent to BetterStack. Keep `dotnet-ef` and the explicit `Microsoft.EntityFrameworkCore.Design` reference on the same version as EF Core.
 
-Tailwind (standalone CLI, not npm; the binary lives in a gitignored `Tailwind/` folder next to the solution):
+Tailwind v3.4.3 (standalone CLI, not npm; `tailwindcss-windows-x64.exe` from the GitHub release, saved as `Tailwind/tailwindcss.exe` in the gitignored folder next to the solution — don't use v4, the config is v3 style):
 
 ```sh
 ./../Tailwind/tailwindcss.exe -i ./Styles/budo-shuren.css -o ./wwwroot/budo-shuren.css --watch
