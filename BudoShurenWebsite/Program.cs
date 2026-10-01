@@ -24,8 +24,12 @@ namespace BudoShurenWebsite
         public static void Main(string[] args)
         {
             var stopwatch = Stopwatch.StartNew();
+            // In der Testumgebung eigene NLog-Konfiguration ohne BetterStack (nlog.test.config aus dem Testprojekt)
+            var nlogKonfiguration = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test"
+                ? "nlog.test.config"
+                : "nlog.config";
             var logger = NLog.LogManager.Setup()
-                .LoadConfigurationFromFile("nlog.config")
+                .LoadConfigurationFromFile(nlogKonfiguration)
                 .GetCurrentClassLogger();
 
 

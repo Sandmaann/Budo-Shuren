@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Website for the Budo Shuren Dojo Augsburg: Blazor (.NET 10, Interactive Server render mode) + TailwindCSS, SQL Server via EF Core, ASP.NET Identity. UI text, domain names and code comments are German — keep it that way.
 
-`BudoShuren.sln` contains only `BudoShurenWebsite/` (the app). Stopping the app and applying migrations manually is done from the admin page (`/Account/Member/Admin`) via `AdminMaintenanceService`. `_BudoShurenWebsite/` and `BlazorTestApp/` are old/experimental copies, not part of the solution — don't edit them. There are no test projects.
+`BudoShuren.sln` contains `BudoShurenWebsite/` (the app) and `BudoShurenWebsite.Tests/` (tests, see below). Stopping the app and applying migrations manually is done from the admin page (`/Account/Member/Admin`) via `AdminMaintenanceService`. `_BudoShurenWebsite/` and `BlazorTestApp/` are old/experimental copies, not part of the solution — don't edit them.
 
 ## Git workflow
 
@@ -30,7 +30,28 @@ Tailwind (standalone CLI, not npm; the binary lives in a gitignored `Tailwind/` 
 
 `wwwroot/budo-shuren.css` is generated — edit `Styles/budo-shuren.css` or `tailwind.config.js` (custom colors `primary`/`error`, fonts `yuji`/`ptsans`, extra screens like `xs`, `3xl`–`5xl`), then rebuild CSS. New Tailwind classes in `.razor` files only appear after the CLI regenerates the output.
 
-The connection string in `appsettings.json` points to a local named SQL Server instance; startup throws if `DefaultConnection` is missing.
+The connection string in `appsettings.json` points to a local named SQL Server instance; startup throws if `DefaultConnection` is missing. On a machine without that instance, use SQL Server Express LocalDB and override the connection string via user secrets (never edit `appsettings.json` for this):
+
+```sh
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=(localdb)\MSSQLLocalDB;Database=BudoShurenDev;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+```
+
+## Tests
+
+`BudoShurenWebsite.Tests/` uses xUnit v3 on Microsoft.Testing.Platform (opted in via `global.json`), Shouldly for assertions, `WebApplicationFactory` for HTTP tests, Testcontainers/Respawn for the database. Run from the repository root:
+
+```sh
+dotnet test --solution BudoShuren.sln                                            # all tests
+dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration"  # fast, no database needed
+```
+
+- Categories via `[Trait("Category", …)]`: `Unit` (no DB), `Integration` (real SQL Server, incl. HTTP tests), later `Komponente` (bUnit).
+- Database tests derive from `Infrastruktur/DatenbankTest` and use `[DatenbankFact]`. The DB comes from env var `BUDO_TEST_SQL` (e.g. LocalDB; the database name must contain "Test" because Respawn wipes it) or else from a SQL Server container if Docker is available. Without either, these tests are skipped, not failed.
+- No SQLite/InMemory: locking (`sp_getapplock`), `rowversion`, filtered indexes and collation must behave like production.
+- With `ASPNETCORE_ENVIRONMENT=Test`, `Program.cs` loads `nlog.test.config` (console only) instead of `nlog.config`, so tests never log to BetterStack.
+- GitHub Actions (`.github/workflows/tests.yml`) runs all tests including integration tests on every PR and push to `main`.
+- `ModellTests` fails if the EF model changed without a migration.
+- `DataProtectionKeyContext` has no migrations; the test fixture creates the `DataProtectionKeys` table itself.
 
 ## Architecture
 
