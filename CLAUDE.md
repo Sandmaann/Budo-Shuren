@@ -8,6 +8,10 @@ Website for the Budo Shuren Dojo Augsburg: Blazor (.NET 10, Interactive Server r
 
 `BudoShuren.sln` contains only `BudoShurenWebsite/` (the app). Stopping the app and applying migrations manually is done from the admin page (`/Account/Member/Admin`) via `AdminMaintenanceService`. `_BudoShurenWebsite/` and `BlazorTestApp/` are old/experimental copies, not part of the solution — don't edit them. There are no test projects.
 
+## Git workflow
+
+GitHub Flow, see "Branches & Releases" in `README.md`: `main` is the only long-lived branch. Work happens on `feature/…`, `fix/…` or `chore/…` branches off `main`, merged via PR (squash only; branches auto-delete). Releases are annotated tags `vX.Y.Z.W` matching `AssemblyVersion` in the `.csproj` — no `develop`/`release` branches. Commit messages and PR texts are German.
+
 ## Commands
 
 Run from `BudoShurenWebsite/BudoShurenWebsite/`:
