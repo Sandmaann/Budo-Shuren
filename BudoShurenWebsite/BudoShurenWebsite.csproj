@@ -22,6 +22,11 @@
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.8" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.8" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.8" />
+		<!-- Ausdrücklich in passender Version: EF.Tools 10 verlangt Design nur ab 8.0.0, sonst schlägt "dotnet ef" fehl -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.8">
 			<PrivateAssets>all</PrivateAssets>
@@ -72,6 +77,11 @@
 
 	<ItemGroup>
 		<None Update="nlog.config" CopyToOutputDirectory="Always" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Tests dürfen interne Klassen wie EmailSender verwenden -->
+		<InternalsVisibleTo Include="BudoShurenWebsite.Tests" />
 	</ItemGroup>
 
 </Project>

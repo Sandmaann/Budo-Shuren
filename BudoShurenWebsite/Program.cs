@@ -4,6 +4,7 @@ using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Global;
 using BudoShurenWebsite.Middleware;
 using BudoShurenWebsite.Services;
+using BudoShurenWebsite.Services.Mail;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -84,6 +85,18 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<WissenService>();
                 builder.Services.AddScoped<SlugService>();
                 builder.Services.AddScoped<IAktuellesService, AktuellesService>();
+
+                //Mailversand: SMTP-Transport, Warteschlange und Hintergrundversand (siehe Services/Mail)
+                builder.Services.AddSingleton(TimeProvider.System);
+                builder.Services.AddOptions<EmailVersandOptionen>()
+                    .Bind(builder.Configuration.GetSection(EmailVersandOptionen.Abschnitt))
+                    .Validate(o => o.IstGueltig(), $"Ungültige Einstellungen im Abschnitt {EmailVersandOptionen.Abschnitt}")
+                    .ValidateOnStart();
+                builder.Services.AddSingleton<IMailTransport, MailKitTransport>();
+                builder.Services.AddSingleton<EmailVersandSignal>();
+                builder.Services.AddSingleton<IEmailWarteschlange, EmailWarteschlange>();
+                builder.Services.AddSingleton<EmailVersandJob>();
+                builder.Services.AddHostedService<EmailVersandHostedService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();

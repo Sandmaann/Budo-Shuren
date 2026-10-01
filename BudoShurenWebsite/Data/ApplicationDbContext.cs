@@ -144,6 +144,12 @@ namespace BudoShurenWebsite.Data
                 .WithMany()
                 .HasForeignKey(bi => bi.BildId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // EmailAusgang configuration (Mail-Warteschlange, siehe Services/Mail)
+            builder.Entity<EmailAusgang>().HasKey(m => m.Id);
+            builder.Entity<EmailAusgang>().ToTable("EmailAusgang");
+            // Abfrage des Versand-Jobs: wartende, fällige Mails nach Priorität
+            builder.Entity<EmailAusgang>().HasIndex(m => new { m.Status, m.Prioritaet, m.FaelligAbUtc });
         }
 
         public DbSet<GalerieEintrag> Galerie { get; set; }
@@ -159,6 +165,7 @@ namespace BudoShurenWebsite.Data
         public DbSet<AktuellesBeitrag> AktuellesBeitraege { get; set; }
         public DbSet<AktuellesBlock> AktuellesBloecke { get; set; }
         public DbSet<AktuellesBild> AktuellesBilder { get; set; }
+        public DbSet<EmailAusgang> EmailAusgang { get; set; }
         public override int SaveChanges()
         {
             Validate();

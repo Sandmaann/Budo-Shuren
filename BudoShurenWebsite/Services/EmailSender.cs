@@ -1,12 +1,9 @@
 ﻿using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Models;
-using MailKit.Net.Smtp;
-using MailKit.Security;
+using BudoShurenWebsite.Services.Mail;
 using Microsoft.AspNetCore.Hosting.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using MimeKit;
 using System.Threading.Tasks;
 
@@ -16,30 +13,11 @@ namespace BudoShurenWebsite.Services
     internal sealed class EmailSender : IEmailSender<ApplicationUser>
     {
         private readonly IEmailSender emailSender = new NoOpEmailSender();
-        private readonly IDbContextFactory<ApplicationDbContext> dbFactory;
+        private readonly IMailTransport _transport;
 
-        public EmailSender(IDbContextFactory<ApplicationDbContext> factory)
+        public EmailSender(IMailTransport transport)
         {
-            this.dbFactory = factory;
-        }
-
-        private async Task<EmailSetting> GetEmailSettings()
-        {
-            using var context = dbFactory.CreateDbContext();
-            var settings = await context.EmailSettings.FirstOrDefaultAsync(x => x.IsMain);
-            if (settings == null)
-            {
-                settings = await context.EmailSettings.FirstOrDefaultAsync(x => x.IsMain);
-            }
-            if (settings == null)
-                throw new NullReferenceException("No email settings found in database.");
-
-            if (string.IsNullOrWhiteSpace(settings.SmtpServer))
-                throw new NullReferenceException("No SMTP server found in email settings.");
-            if (string.IsNullOrWhiteSpace(settings.SmtpUser))
-                throw new NullReferenceException("No SMTP user found in email settings.");
-
-            return settings;
+            _transport = transport;
         }
 
         public async Task SendPlainTextEmailAsync(string email, string subject, string htmlMessage)
@@ -51,19 +29,7 @@ namespace BudoShurenWebsite.Services
             if (string.IsNullOrWhiteSpace(htmlMessage))
                 throw new NullReferenceException("No message provided.");
 
-            var settings = await GetEmailSettings();
-
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Budo Shuren Dojo", settings.SmtpUser));
-            message.To.Add(new MailboxAddress("", email));
-            message.Subject = subject;
-            message.Body = new TextPart("plain") { Text = htmlMessage };
-
-            using var client = new SmtpClient();
-            await client.ConnectAsync(settings.SmtpServer, settings.SmtpPort, SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync(settings.SmtpUser, settings.SmtpPassword);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            await SendenAsync(email, subject, new TextPart("plain") { Text = htmlMessage });
         }
 
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
@@ -75,19 +41,19 @@ namespace BudoShurenWebsite.Services
             if (string.IsNullOrWhiteSpace(htmlMessage))
                 throw new NullReferenceException("No message provided.");
 
-            var settings = await GetEmailSettings();
+            await SendenAsync(email, subject, new TextPart("html") { Text = htmlMessage });
+        }
 
+        // Direktversand (ohne Warteschlange); Absender setzt der Transport (System-Adresse aus EmailSettings)
+        private async Task SendenAsync(string email, string subject, MimeEntity body)
+        {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Budo Shuren Dojo", settings.SmtpUser));
             message.To.Add(new MailboxAddress("", email));
             message.Subject = subject;
-            message.Body = new TextPart("html") { Text = htmlMessage };
+            message.Body = body;
 
-            using var client = new SmtpClient();
-            await client.ConnectAsync(settings.SmtpServer, settings.SmtpPort, SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync(settings.SmtpUser, settings.SmtpPassword);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            await using var verbindung = await _transport.VerbindenAsync(CancellationToken.None);
+            await verbindung.SendenAsync(message, CancellationToken.None);
         }
 
         public async Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
