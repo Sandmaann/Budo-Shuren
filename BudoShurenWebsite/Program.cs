@@ -104,6 +104,7 @@ namespace BudoShurenWebsite
                 //Modul Veranstaltungen (siehe Services/Veranstaltungen); Feature-Schalter Veranstaltungen:Aktiviert
                 builder.Services.Configure<VeranstaltungenOptionen>(builder.Configuration.GetSection(VeranstaltungenOptionen.Abschnitt));
                 builder.Services.AddScoped<IVeranstaltungVerwaltungService, VeranstaltungVerwaltungService>();
+                builder.Services.AddScoped<IAnmeldungService, AnmeldungService>();
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();

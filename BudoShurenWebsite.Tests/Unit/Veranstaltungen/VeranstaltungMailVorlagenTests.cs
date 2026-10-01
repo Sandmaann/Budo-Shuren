@@ -1,0 +1,90 @@
+using BudoShurenWebsite.Models.Veranstaltungen;
+using BudoShurenWebsite.Services.Veranstaltungen;
+
+namespace BudoShurenWebsite.Tests.Unit.Veranstaltungen;
+
+[Trait("Category", "Unit")]
+public class VeranstaltungMailVorlagenTests
+{
+    private static readonly VeranstaltungsTag[] Tage =
+    [
+        new() { Id = 1, Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(10, 0), Ende = new TimeOnly(16, 0) },
+        new() { Id = 2, Datum = new DateOnly(2026, 11, 15), Beginn = new TimeOnly(9, 30), Ende = new TimeOnly(12, 0), Titel = "Prüfung" }
+    ];
+
+    private static Veranstaltung Veranstaltung() => new()
+    {
+        Titel = "Herbstseminar <Aikido>",
+        Slug = "herbstseminar",
+        Ort = "Dojo Göggingen",
+        KontaktEmail = "seminar@example.org"
+    };
+
+    private static Anmeldung Anmeldung() => new()
+    {
+        Vorname = "<script>alert(1)</script>",
+        Nachname = "Müller",
+        Email = "max@example.org",
+        AnzahlBegleitpersonen = 2,
+        Telefon = "0821 999",
+        Bemerkung = "Kaufen Sie günstige Uhren!"
+    };
+
+    [Fact]
+    public void Eingaben_werden_HTML_kodiert_Umlaute_bleiben_lesbar()
+    {
+        var mail = VeranstaltungMailVorlagen.OptIn(Veranstaltung(), Tage, Anmeldung(), "https://x.de/veranstaltungen/bestaetigen/abc", 24);
+
+        mail.Html.ShouldNotContain("<script>");
+        mail.Html.ShouldContain("&lt;script&gt;");
+        mail.Html.ShouldContain("Herbstseminar &lt;Aikido&gt;");
+        mail.Html.ShouldContain("Müller");
+        mail.Html.ShouldContain("Göggingen");
+        mail.Betreff.ShouldBe("Bitte bestätige deine Anmeldung: Herbstseminar <Aikido>");
+    }
+
+    [Fact]
+    public void OptIn_enthaelt_Link_Reservierung_und_Zusammenfassung()
+    {
+        var mail = VeranstaltungMailVorlagen.OptIn(Veranstaltung(), Tage, Anmeldung(), "https://x.de/veranstaltungen/bestaetigen/abc", 24);
+
+        mail.Html.ShouldContain("href=\"https://x.de/veranstaltungen/bestaetigen/abc\"");
+        mail.Html.ShouldContain("24 Stunden");
+        mail.Html.ShouldContain("Samstag, 14.11.2026, 10:00–16:00 Uhr");
+        mail.Html.ShouldContain("Sonntag, 15.11.2026, 09:30–12:00 Uhr (Prüfung)");
+        mail.Html.ShouldContain("3 Personen (du und 2 Begleitpersonen)");
+    }
+
+    [Fact]
+    public void Bei_Teilanmeldung_nur_die_gebuchten_Tage()
+    {
+        var anmeldung = Anmeldung();
+        anmeldung.Tage.Add(new AnmeldungTag { VeranstaltungsTagId = 2 });
+
+        var mail = VeranstaltungMailVorlagen.Bestaetigung(Veranstaltung(), Tage, anmeldung, "https://x.de/veranstaltungen/meine-anmeldung/abc");
+
+        mail.Html.ShouldContain("15.11.2026");
+        mail.Html.ShouldNotContain("14.11.2026");
+        mail.Html.ShouldContain("href=\"https://x.de/veranstaltungen/meine-anmeldung/abc\"");
+    }
+
+    [Fact]
+    public void Info_Mail_enthaelt_keine_freien_Texte_oder_Kontaktdaten_des_Anmelders()
+    {
+        var mail = VeranstaltungMailVorlagen.InfoAnBegleitung(Veranstaltung(), Tage, Anmeldung(), "https://x.de/veranstaltungen/herbstseminar", "https://x.de/veranstaltungen/info-abmelden/xyz");
+
+        mail.Html.ShouldNotContain("Uhren");
+        mail.Html.ShouldNotContain("0821");
+        mail.Html.ShouldNotContain("max@example.org");
+        mail.Html.ShouldContain("href=\"https://x.de/veranstaltungen/info-abmelden/xyz\"");
+    }
+
+    [Fact]
+    public void Ablehnung_ist_neutral_und_nennt_den_Kontakt()
+    {
+        var mail = VeranstaltungMailVorlagen.AnmeldungNichtMoeglich(Veranstaltung());
+
+        mail.Html.ShouldContain("mailto:seminar@example.org");
+        mail.Html.ShouldNotContain("abgelehnt", Case.Insensitive);
+    }
+}

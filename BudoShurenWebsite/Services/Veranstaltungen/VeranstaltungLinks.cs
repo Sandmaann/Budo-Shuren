@@ -1,0 +1,28 @@
+namespace BudoShurenWebsite.Services.Veranstaltungen
+{
+    /// <summary>
+    /// Öffentliche Adressen des Moduls an einer Stelle (Seiten, Mails, Maskierung in Logs).
+    /// Die Basis-URL kommt aus der Anfrage (NavigationManager.BaseUri) und endet auf "/".
+    /// </summary>
+    public static class VeranstaltungLinks
+    {
+        public const string Basis = "veranstaltungen";
+        public const string Bestaetigen = "veranstaltungen/bestaetigen";
+        public const string MeineAnmeldung = "veranstaltungen/meine-anmeldung";
+        public const string InfoAbmelden = "veranstaltungen/info-abmelden";
+        public const string BenachrichtigungAbmelden = "veranstaltungen/benachrichtigung-abmelden";
+
+        /// <summary>Pfade, deren letztes Segment ein geheimes Token ist.</summary>
+        public static readonly string[] PfadeMitToken = [Bestaetigen, MeineAnmeldung, InfoAbmelden, BenachrichtigungAbmelden];
+
+        public static string Veranstaltung(string basisUrl, string slug) => $"{basisUrl}{Basis}/{Uri.EscapeDataString(slug)}";
+
+        public static string BestaetigenUrl(string basisUrl, string token) => $"{basisUrl}{Bestaetigen}/{token}";
+
+        public static string MeineAnmeldungUrl(string basisUrl, string token) => $"{basisUrl}{MeineAnmeldung}/{token}";
+
+        public static string InfoAbmeldenUrl(string basisUrl, string token) => $"{basisUrl}{InfoAbmelden}/{token}";
+
+        public static string BenachrichtigungAbmeldenUrl(string basisUrl, string token) => $"{basisUrl}{BenachrichtigungAbmelden}/{token}";
+    }
+}
