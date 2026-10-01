@@ -6,7 +6,6 @@
 @inject IdentityUserAccessor UserAccessor
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject ILogger<Mitglieder> Logger
-@inject VisitorCounterService VisitorCounter
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @inject EmailSender EmailSender
@@ -92,37 +91,6 @@
             </SfGrid>
         </div>
     </div>
-    <div class="mx-10 mt-10">
-        <SectionBanner Titel="Besucherzahlen der letzten 30 Tage" />
-        <div class="-mx-8 flex flex-col md:mx-0">
-            <div>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">Anzahl der Aufrufe: <span>@NumberOfCalls</span></p>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">Einzigartige Besucher: <span>@UniqueVisitors</span></p>
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">Anzahl der Aufrufe pro Seite:</p>
-            </div>
-            <div class="overflow-x-auto sm:overflow-x-visible">
-                <table class="min-w-[450px] border border-gray-200 bg-white">
-                    <thead>
-                        <tr>
-                            <th class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">Seitenname</th>
-                            <th class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">Einzigartige Besucher</th>
-                            <th class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">Gesamtanzahl der Aufrufe</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var entry in VisitorsPerPage)
-                        {
-                            <tr>
-                                <td class="font-ptsans max-w-screen-md text-wrap border-b px-4 py-2 text-sm font-normal tracking-wider text-black">@entry.Key</td>
-                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@entry.Value.UniqueVisitors</td>
-                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@entry.Value.TotalVisits</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
 
 @code {
@@ -142,9 +110,7 @@
     private bool IsLoading { get; set; } = false;
     private string errorMessage { get; set; } = string.Empty;
 
-    private int NumberOfCalls { get; set; } = 0;
-    private int UniqueVisitors { get; set; } = 0;
-    private Dictionary<string, (int UniqueVisitors, int TotalVisits)> VisitorsPerPage = new Dictionary<string, (int UniqueVisitors, int TotalVisits)>();
+
 
 
     private async void userDeaktivierenClick(Microsoft.AspNetCore.Components.Web.MouseEventArgs args, UserWithRoles userWithRoles)
@@ -248,19 +214,6 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Fehler beim Laden der Abteilungen");
-        }
-
-        try
-        {
-            NumberOfCalls = await VisitorCounter.GetNumberOfCallsLast30Days();
-            UniqueVisitors = await VisitorCounter.GetUniqueVisitorsLast30Days();
-            VisitorsPerPage = await VisitorCounter.GetUniqueVisitorsPerPageLast30Days();
-        }
-        catch (Exception ex)
-        {
-            NumberOfCalls = -2;
-            UniqueVisitors = -2;
-            Logger.LogError(ex, "Fehler beim Laden der Besucherzahlen");
         }
     }
 

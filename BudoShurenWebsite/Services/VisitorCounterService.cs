@@ -52,7 +52,7 @@ namespace BudoShurenWebsite.Services
                     });
                 }
             }
-            catch(InvalidOperationException ex)
+            catch (InvalidOperationException ex)
             {
                 _logger.LogWarning(ex, "Failed to add visit to database 1");
             }
@@ -110,70 +110,162 @@ namespace BudoShurenWebsite.Services
             }
         }
 
-        public async Task<int> GetNumberOfCallsLast30Days()
+        // Helper method to get visitor metrics for a specific time period
+        private async Task<VisitorMetrics> GetVisitorMetricsAsync(DateTime startDate)
         {
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
                 var now = DateTime.UtcNow;
-                var startOfLast30Days = now.AddDays(-30);
-                return await context.Visits.CountAsync(v => v.Timestamp >= startOfLast30Days);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to add visit to database");
 
-                // Log or handle the exception as needed
-                return -1;
-            }
+                var visitsInPeriod = await context.Visits
+                    .Where(v => v.Timestamp >= startDate && v.Timestamp <= now)
+                    .ToListAsync();
 
-        }
-        public async Task<int> GetUniqueVisitorsLast30Days()
-        {
-            try
-            {
-                using var context = _dbContextFactory.CreateDbContext();
-                var now = DateTime.UtcNow;
-                var startOfLast30Days = now.AddDays(-30);
-                return await context.Visits
-                    .Where(v => v.Timestamp >= startOfLast30Days)
-                    .Select(v => v.VisitorID)
-                    .Distinct()
-                    .CountAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to calculate unique visits for the last 30 days");
-                return -1;
-            }
-        }
+                if (!visitsInPeriod.Any())
+                {
+                    return new VisitorMetrics();
+                }
 
-        public async Task<Dictionary<string, (int UniqueVisitors, int TotalVisits)>> GetUniqueVisitorsPerPageLast30Days()
-        {
-            try
-            {
-                using var context = _dbContextFactory.CreateDbContext();
-                var now = DateTime.UtcNow;
-                var startOfLast30Days = now.AddDays(-30);
+                var uniqueVisitors = visitsInPeriod.Select(v => v.VisitorID).Distinct().Count();
+                var totalVisits = visitsInPeriod.Count;
 
-                var result = await context.Visits
-                    .Where(v => v.Timestamp >= startOfLast30Days)
-                    .GroupBy(v => v.PageName)
-                    .Select(g => new
+                // Gruppiere nach VisitorID
+                var visitorGroups = visitsInPeriod.GroupBy(v => v.VisitorID).ToList();
+
+                // Berechne Visits pro Visitor
+                var visitsPerVisitor = visitorGroups.Select(g => g.Count()).OrderBy(x => x).ToList();
+
+                var repeatVisitors = visitorGroups.Count(g => g.Count() > 1);
+                var avgPagesPerVisitor = visitorGroups.Any() ? Math.Round((double)totalVisits / uniqueVisitors, 2) : 0;
+
+                // Median berechnen
+                double medianPagesPerVisitor = 0;
+                if (visitsPerVisitor.Any())
+                {
+                    int count = visitsPerVisitor.Count;
+                    if (count % 2 == 0)
                     {
-                        PageName = g.Key,
-                        UniqueVisitors = g.Select(v => v.VisitorID).Distinct().Count(),
-                        TotalVisits = g.Count()
-                    })
-                    .ToDictionaryAsync(x => x.PageName, x => (x.UniqueVisitors, x.TotalVisits));
+                        // Gerade Anzahl: Durchschnitt der zwei mittleren Werte
+                        medianPagesPerVisitor = Math.Round((visitsPerVisitor[count / 2 - 1] + visitsPerVisitor[count / 2]) / 2.0, 2);
+                    }
+                    else
+                    {
+                        // Ungerade Anzahl: der mittlere Wert
+                        medianPagesPerVisitor = visitsPerVisitor[count / 2];
+                    }
+                }
+
+                // Bounce Rate (nur 1 Seite besucht)
+                var bounceVisitors = visitorGroups.Count(g => g.Count() == 1);
+                var bounceRate = uniqueVisitors > 0 ? Math.Round((double)bounceVisitors / uniqueVisitors * 100, 2) : 0;
+
+                return new VisitorMetrics
+                {
+                    TotalVisits = totalVisits,
+                    UniqueVisitors = uniqueVisitors,
+                    RepeatVisitors = repeatVisitors,
+                    AvgPagesPerVisitor = avgPagesPerVisitor,
+                    MedianPagesPerVisitor = medianPagesPerVisitor,
+                    BounceRate = bounceRate
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to calculate visitor metrics");
+                return new VisitorMetrics { TotalVisits = -1, UniqueVisitors = -1 };
+            }
+        }
+
+        public async Task<VisitorMetrics> GetMetricsForTodayAsync()
+        {
+            var todayStart = DateTime.UtcNow.Date;
+            return await GetVisitorMetricsAsync(todayStart);
+        }
+
+        public async Task<VisitorMetrics> GetMetricsForLast7DaysAsync()
+        {
+            var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+            return await GetVisitorMetricsAsync(sevenDaysAgo);
+        }
+
+        public async Task<VisitorMetrics> GetMetricsForLast30DaysAsync()
+        {
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+            return await GetVisitorMetricsAsync(thirtyDaysAgo);
+        }
+
+        public async Task<Dictionary<string, VisitorMetricsPerPage>> GetPageMetricsForTodayAsync()
+        {
+            return await GetPageMetricsAsync(DateTime.UtcNow.Date);
+        }
+
+        public async Task<Dictionary<string, VisitorMetricsPerPage>> GetPageMetricsForLast7DaysAsync()
+        {
+            return await GetPageMetricsAsync(DateTime.UtcNow.AddDays(-7));
+        }
+
+        public async Task<Dictionary<string, VisitorMetricsPerPage>> GetPageMetricsForLast30DaysAsync()
+        {
+            return await GetPageMetricsAsync(DateTime.UtcNow.AddDays(-30));
+        }
+
+        private async Task<Dictionary<string, VisitorMetricsPerPage>> GetPageMetricsAsync(DateTime startDate)
+        {
+            try
+            {
+                using var context = _dbContextFactory.CreateDbContext();
+                var now = DateTime.UtcNow;
+
+                var visitsInPeriod = await context.Visits
+                    .Where(v => v.Timestamp >= startDate && v.Timestamp <= now)
+                    .ToListAsync();
+
+                if (!visitsInPeriod.Any())
+                {
+                    return new Dictionary<string, VisitorMetricsPerPage>();
+                }
+
+                var result = visitsInPeriod
+                    .GroupBy(v => v.PageName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => new VisitorMetricsPerPage
+                        {
+                            UniqueVisitors = g.Select(v => v.VisitorID).Distinct().Count(),
+                            TotalVisits = g.Count()
+                        }
+                    );
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to calculate unique visitors and total visits per page for the last 30 days");
-                return new Dictionary<string, (int UniqueVisitors, int TotalVisits)>();
+                _logger.LogError(ex, "Failed to calculate page metrics");
+                return new Dictionary<string, VisitorMetricsPerPage>();
             }
+        }
+
+        // Legacy methods for backward compatibility
+        public async Task<int> GetNumberOfCallsLast30Days()
+        {
+            var metrics = await GetMetricsForLast30DaysAsync();
+            return metrics.TotalVisits;
+        }
+
+        public async Task<int> GetUniqueVisitorsLast30Days()
+        {
+            var metrics = await GetMetricsForLast30DaysAsync();
+            return metrics.UniqueVisitors;
+        }
+
+        public async Task<Dictionary<string, (int UniqueVisitors, int TotalVisits)>> GetUniqueVisitorsPerPageLast30Days()
+        {
+            var metrics = await GetPageMetricsForLast30DaysAsync();
+            return metrics.ToDictionary(
+                kvp => kvp.Key,
+                kvp => (kvp.Value.UniqueVisitors, kvp.Value.TotalVisits)
+            );
         }
 
         private bool CheckForBot()
@@ -185,55 +277,34 @@ namespace BudoShurenWebsite.Services
             }
 
             var userAgent = context.Request.Headers["User-Agent"].ToString();
+
             if (string.IsNullOrEmpty(userAgent))
             {
                 return false;
             }
 
-            // Check against known bots list
-            foreach (var bot in _knownBots)
-            {
-                if (userAgent.Contains(bot, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            // Check against bot regex
-            if (_botRegex.IsMatch(userAgent))
+            if (_knownBots.Any(bot => userAgent.Contains(bot, StringComparison.OrdinalIgnoreCase)))
             {
                 return true;
             }
 
-            return false;
+            return _botRegex.IsMatch(userAgent);
         }
+    }
 
+    public class VisitorMetrics
+    {
+        public int TotalVisits { get; set; } = 0;
+        public int UniqueVisitors { get; set; } = 0;
+        public int RepeatVisitors { get; set; } = 0;
+        public double AvgPagesPerVisitor { get; set; } = 0;
+        public double MedianPagesPerVisitor { get; set; } = 0;
+        public double BounceRate { get; set; } = 0;
+    }
 
-        //public async Task<Dictionary<string, int>> GetUniqueVisitorsPerPageLast30Days()
-        //{
-        //    try
-        //    {
-        //        using var context = _dbContextFactory.CreateDbContext();
-        //        var now = DateTime.UtcNow;
-        //        var startOfLast30Days = now.AddDays(-30);
-
-        //        var result = await context.Visits
-        //            .Where(v => v.Timestamp >= startOfLast30Days)
-        //            .GroupBy(v => v.PageName)
-        //            .Select(g => new
-        //            {
-        //                PageName = g.Key,
-        //                UniqueVisitors = g.Select(v => v.VisitorID).Distinct().Count()
-        //            })
-        //            .ToDictionaryAsync(x => x.PageName, x => x.UniqueVisitors);
-
-        //        return result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Log or handle the exception as needed
-        //        return new Dictionary<string, int>();
-        //    }
-        //}
+    public class VisitorMetricsPerPage
+    {
+        public int UniqueVisitors { get; set; } = 0;
+        public int TotalVisits { get; set; } = 0;
     }
 }

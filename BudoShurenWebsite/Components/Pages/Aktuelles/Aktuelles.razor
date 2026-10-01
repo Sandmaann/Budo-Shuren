@@ -32,7 +32,7 @@
                            placeholder="Titel durchsuchen..."
                            @bind="suchtext"
                            @bind:event="oninput"
-                           @onkeyup="FilterAendern" />
+                           @onkeyup="OnFilterInput" />
                 </div>
                 <div>
                     <label class="font-ptsans mb-1 block text-xs font-bold">Abteilung</label>
@@ -127,6 +127,8 @@
     private string selectedAbteilungId = string.Empty;
 
     private const int PageSize = 5;
+    private const int DebounceDelayMs = 250; // 500ms Verzögerung
+    private CancellationTokenSource? _debounceCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -140,9 +142,9 @@
         StateHasChanged();
 
         var (items, total) = await AktuellesService.GetBeitraege(
-            skip: geladeneAnzahl, 
-            take: PageSize, 
-            suchtext: string.IsNullOrWhiteSpace(suchtext) ? null : suchtext, 
+            skip: geladeneAnzahl,
+            take: PageSize,
+            suchtext: string.IsNullOrWhiteSpace(suchtext) ? null : suchtext,
             abteilungId: string.IsNullOrWhiteSpace(selectedAbteilungId) ? null : selectedAbteilungId);
 
         beitraege.AddRange(items);
@@ -162,6 +164,24 @@
     {
         selectedAbteilungId = e.Value?.ToString() ?? string.Empty;
         await FilterAendern();
+    }
+
+    private async Task OnFilterInput()
+    {
+        // Vorherigen Debounce abbrechen
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+
+        try
+        {
+            // Warten vor Filterausführung
+            await Task.Delay(DebounceDelayMs, _debounceCts.Token);
+            await FilterAendern();
+        }
+        catch (OperationCanceledException)
+        {
+            // Debounce wurde abgebrochen, kein Problem
+        }
     }
 
     private async Task FilterAendern()

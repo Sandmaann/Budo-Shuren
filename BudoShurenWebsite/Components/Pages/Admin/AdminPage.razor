@@ -2,15 +2,18 @@
 @rendermode InteractiveServer
 @layout ManageLayout
 @using BudoShurenWebsite.Components.Account.Shared
+@using BudoShurenWebsite.Services
 
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Aktiviert")]
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "NotGuest")]
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
 
+@inject ILogger<AdminPage> Logger
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject AdminMaintenanceService AdminMaintenanceService
 @inject IJSRuntime JSRuntime
+@inject VisitorCounterService VisitorCounter
 
 <PageTitle>Admin</PageTitle>
 
@@ -67,6 +70,103 @@
             </button>
         </div>
     </div>
+
+    <div class="mx-10 mt-10">
+        <SectionBanner Titel="Besucherzahlen" />
+
+        <!-- Overview Metrics -->
+        <div class="-mx-8 flex flex-col gap-6 md:mx-0">
+            <div class="border border-black p-6">
+                <h4 class="font-yuji mb-4 text-lg">Übersicht nach Zeitraum</h4>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <!-- Heute -->
+                    <div class="border border-gray-300 p-4">
+                        <h5 class="font-yuji mb-2 text-base">Heute</h5>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Aufrufe: <span class="font-bold">@MetricsToday.TotalVisits</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Besucher: <span class="font-bold">@MetricsToday.UniqueVisitors</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Ø Seiten/Besucher: <span class="font-bold">@MetricsToday.AvgPagesPerVisitor</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Median Seiten/Besucher: <span class="font-bold">@MetricsToday.MedianPagesPerVisitor</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Bounce Rate: <span class="font-bold">@MetricsToday.BounceRate%</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Wiederkehrende Besucher: <span class="font-bold">@MetricsToday.RepeatVisitors</span></p>
+                    </div>
+
+                    <!-- Letzte 7 Tage -->
+                    <div class="border border-gray-300 p-4">
+                        <h5 class="font-yuji mb-2 text-base">Letzte 7 Tage</h5>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Aufrufe: <span class="font-bold">@MetricsLast7Days.TotalVisits</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Besucher: <span class="font-bold">@MetricsLast7Days.UniqueVisitors</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Ø Seiten/Besucher: <span class="font-bold">@MetricsLast7Days.AvgPagesPerVisitor</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Median Seiten/Besucher: <span class="font-bold">@MetricsLast7Days.MedianPagesPerVisitor</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Bounce Rate: <span class="font-bold">@MetricsLast7Days.BounceRate%</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Wiederkehrende Besucher: <span class="font-bold">@MetricsLast7Days.RepeatVisitors</span></p>
+                    </div>
+
+                    <!-- Letzte 30 Tage -->
+                    <div class="border border-gray-300 p-4">
+                        <h5 class="font-yuji mb-2 text-base">Letzte 30 Tage</h5>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Aufrufe: <span class="font-bold">@MetricsLast30Days.TotalVisits</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Besucher: <span class="font-bold">@MetricsLast30Days.UniqueVisitors</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Ø Seiten/Besucher: <span class="font-bold">@MetricsLast30Days.AvgPagesPerVisitor</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Median Seiten/Besucher: <span class="font-bold">@MetricsLast30Days.MedianPagesPerVisitor</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Bounce Rate: <span class="font-bold">@MetricsLast30Days.BounceRate%</span></p>
+                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">Wiederkehrende Besucher: <span class="font-bold">@MetricsLast30Days.RepeatVisitors</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per Page Metrics -->
+            <div class="border border-black p-6">
+                <h4 class="font-yuji mb-4 text-lg">Aufrufe pro Seite</h4>
+
+                <!-- Tabs for time periods -->
+                <div class="mb-4 flex gap-2 border-b border-gray-300">
+                    <button @onclick="() => SelectedTimePeriod = TimePeriod.Today"
+                            class="@GetTabClass(TimePeriod.Today) font-ptsans px-4 py-2 text-sm tracking-wider">
+                        Heute
+                    </button>
+                    <button @onclick="() => SelectedTimePeriod = TimePeriod.Last7Days"
+                            class="@GetTabClass(TimePeriod.Last7Days) font-ptsans px-4 py-2 text-sm tracking-wider">
+                        Letzte 7 Tage
+                    </button>
+                    <button @onclick="() => SelectedTimePeriod = TimePeriod.Last30Days"
+                            class="@GetTabClass(TimePeriod.Last30Days) font-ptsans px-4 py-2 text-sm tracking-wider">
+                        Letzte 30 Tage
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto sm:overflow-x-visible">
+                    <table class="min-w-[450px] border border-gray-200 bg-white">
+                        <thead>
+                            <tr>
+                                <th class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">Seitenname</th>
+                                <th class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Einzigartige Besucher</th>
+                                <th class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Gesamtanzahl der Aufrufe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (CurrentPageMetrics != null && CurrentPageMetrics.Any())
+                            {
+                                @foreach (var entry in CurrentPageMetrics.OrderByDescending(x => x.Value.TotalVisits))
+                                {
+                                    <tr>
+                                        <td class="font-ptsans max-w-screen-md text-wrap border-b px-4 py-2 text-sm font-normal tracking-wider text-black">@entry.Key</td>
+                                        <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@entry.Value.UniqueVisitors</td>
+                                        <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@entry.Value.TotalVisits</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Keine Daten verfügbar</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @code {
@@ -75,9 +175,53 @@
     private string? statusMessage;
     private List<string> pendingMigrations = [];
 
+    // Metrics for different time periods
+    private VisitorMetrics MetricsToday = new();
+    private VisitorMetrics MetricsLast7Days = new();
+    private VisitorMetrics MetricsLast30Days = new();
+
+    // Page metrics for different time periods
+    private Dictionary<string, VisitorMetricsPerPage> PageMetricsToday = [];
+    private Dictionary<string, VisitorMetricsPerPage> PageMetricsLast7Days = [];
+    private Dictionary<string, VisitorMetricsPerPage> PageMetricsLast30Days = [];
+
+    // UI State
+    private enum TimePeriod { Today, Last7Days, Last30Days }
+    private TimePeriod SelectedTimePeriod = TimePeriod.Last30Days;
+
+    private Dictionary<string, VisitorMetricsPerPage>? CurrentPageMetrics
+    {
+        get => SelectedTimePeriod switch
+        {
+            TimePeriod.Today => PageMetricsToday,
+            TimePeriod.Last7Days => PageMetricsLast7Days,
+            TimePeriod.Last30Days => PageMetricsLast30Days,
+            _ => PageMetricsLast30Days
+        };
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadPendingMigrationsAsync();
+        await LoadVisitorCountsAsync();
+    }
+
+    private async Task LoadVisitorCountsAsync()
+    {
+        try
+        {
+            MetricsToday = await VisitorCounter.GetMetricsForTodayAsync();
+            MetricsLast7Days = await VisitorCounter.GetMetricsForLast7DaysAsync();
+            MetricsLast30Days = await VisitorCounter.GetMetricsForLast30DaysAsync();
+
+            PageMetricsToday = await VisitorCounter.GetPageMetricsForTodayAsync();
+            PageMetricsLast7Days = await VisitorCounter.GetPageMetricsForLast7DaysAsync();
+            PageMetricsLast30Days = await VisitorCounter.GetPageMetricsForLast30DaysAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Laden der Besucherzahlen");
+        }
     }
 
     private async Task LoadPendingMigrationsAsync()
@@ -170,5 +314,12 @@
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         return authState.User.Identity?.Name ?? "Unbekannt";
+    }
+
+    private string GetTabClass(TimePeriod period)
+    {
+        return SelectedTimePeriod == period
+            ? "border-b-2 border-primary font-bold text-black"
+            : "text-gray-600 hover:text-black";
     }
 }
