@@ -99,6 +99,12 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         /// <summary>true, wenn der Link gültig war (auch wenn die Adresse schon abgemeldet war).</summary>
         Task<bool> InfoAbmeldenAsync(string token, CancellationToken abbruch = default);
+
+        /// <summary>Nur lesend: Titel der Veranstaltung, wenn der Link zu einem noch nicht abgemeldeten externen Benachrichtigungs-Empfänger gehört.</summary>
+        Task<string?> BenachrichtigungAbmeldungPruefenAsync(string token, CancellationToken abbruch = default);
+
+        /// <summary>Externer Empfänger von Organisator-Benachrichtigungen meldet sich ab; true, wenn der Link gültig war.</summary>
+        Task<bool> BenachrichtigungAbmeldenAsync(string token, CancellationToken abbruch = default);
     }
 
     /// <summary>
@@ -395,6 +401,34 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             info.AbgemeldetUtc = jetzt;
             // Die Info-Adresse handelt selbst, nicht der Anmelder
             AnmeldungDaten.EreignisHinzufuegen(info.Anmeldung!, AnmeldungEreignisArt.InfoEmailsGeaendert, EreignisAkteur.System, jetzt, EreignisDiff.Wert(info.Email, null));
+            await kontext.SaveChangesAsync(abbruch);
+            return true;
+        }
+
+        public async Task<string?> BenachrichtigungAbmeldungPruefenAsync(string token, CancellationToken abbruch = default)
+        {
+            if (AnmeldeToken.Hash(token) is not { } hash)
+                return null;
+
+            await using var kontext = await _dbFactory.CreateDbContextAsync(abbruch);
+            return await kontext.BenachrichtigungEmpfaenger.AsNoTracking()
+                .Where(e => e.AbmeldeTokenHash == hash && e.AbgemeldetUtc == null)
+                .Select(e => e.Veranstaltung!.Titel)
+                .SingleOrDefaultAsync(abbruch);
+        }
+
+        public async Task<bool> BenachrichtigungAbmeldenAsync(string token, CancellationToken abbruch = default)
+        {
+            if (AnmeldeToken.Hash(token) is not { } hash)
+                return false;
+
+            await using var kontext = await _dbFactory.CreateDbContextAsync(abbruch);
+            var empfaenger = await kontext.BenachrichtigungEmpfaenger.SingleOrDefaultAsync(e => e.AbmeldeTokenHash == hash, abbruch);
+            if (empfaenger is null)
+                return false;
+
+            // Der Eintrag bleibt stehen, damit die Organisatoren sehen, dass sich die Adresse abgemeldet hat
+            empfaenger.AbgemeldetUtc ??= JetztUtc;
             await kontext.SaveChangesAsync(abbruch);
             return true;
         }

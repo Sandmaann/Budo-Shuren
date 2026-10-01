@@ -30,6 +30,8 @@ public sealed class TestWebAppFactory : WebApplicationFactory<Program>
         // Kein Hintergrundversand: Tests rufen EmailVersandJob bei Bedarf direkt auf
         Environment.SetEnvironmentVariable("EmailVersand__Aktiviert", "false");
         Environment.SetEnvironmentVariable("Veranstaltungen__Aktiviert", veranstaltungenAktiviert ? "true" : "false");
+        // Benachrichtigungs- und Wartungs-Job ebenso: Tests rufen sie direkt auf
+        Environment.SetEnvironmentVariable("Veranstaltungen__HintergrundJobsAktiviert", "false");
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

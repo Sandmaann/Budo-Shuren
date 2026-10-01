@@ -219,4 +219,39 @@ public class SelbstverwaltungSeitenTests(SqlServerFixture datenbank) : Datenbank
         (await AbschickenAsync(client, url, HtmlFormular.VersteckteFelder(seite, "info-abmelden"))).ShouldContain("Du bekommst keine Infos mehr");
         (await AnmeldungAsync()).InfoEmails.Single().AbgemeldetUtc.ShouldNotBeNull();
     }
+
+    [DatenbankFact]
+    public async Task Externer_Benachrichtigungs_Empfaenger_abmelden_erst_per_Klick()
+    {
+        var (v, _, _) = await AngemeldetAsync();
+        var abmelden = AnmeldeToken.Erzeugen();
+        await using (var kontext = Datenbank.NeuerKontext())
+        {
+            kontext.BenachrichtigungEmpfaenger.Add(new BenachrichtigungEmpfaenger
+            {
+                VeranstaltungId = v.Id, Email = "kasse@example.org", AbmeldeTokenHash = abmelden.Hash, ErstelltUtc = Start.UtcDateTime
+            });
+            await kontext.SaveChangesAsync(Abbruch);
+        }
+        await using var app = App();
+        using var client = app.CreateClient();
+        var url = $"/veranstaltungen/benachrichtigung-abmelden/{abmelden.Klartext}";
+
+        var antwort = await client.GetAsync(url, Abbruch);
+        antwort.Headers.GetValues("Referrer-Policy").ShouldBe(["no-referrer"]);
+        var seite = await antwort.Content.ReadAsStringAsync(Abbruch);
+        seite.ShouldContain("Herbstseminar");
+        (await AbgemeldetAsync()).ShouldBeNull("Öffnen ändert nichts");
+
+        (await AbschickenAsync(client, url, HtmlFormular.VersteckteFelder(seite, "benachrichtigung-abmelden")))
+            .ShouldContain("Du bekommst keine Benachrichtigungen mehr");
+        (await AbgemeldetAsync()).ShouldNotBeNull();
+        WebUtility.HtmlDecode(await client.GetStringAsync(url, Abbruch)).ShouldContain("Link ungültig", customMessage: "schon abgemeldet");
+
+        async Task<DateTime?> AbgemeldetAsync()
+        {
+            await using var kontext = Datenbank.NeuerKontext();
+            return (await kontext.BenachrichtigungEmpfaenger.AsNoTracking().SingleAsync(Abbruch)).AbgemeldetUtc;
+        }
+    }
 }

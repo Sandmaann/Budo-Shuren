@@ -34,6 +34,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         public static string LinkAnfordernUrl(string basisUrl) => $"{basisUrl}{LinkAnfordern}";
 
+        /// <summary>Übersichtsseite der Organisatoren (Login nötig).</summary>
+        public static string UebersichtUrl(string basisUrl, int veranstaltungId) => $"{basisUrl}Account/Member/Veranstaltungen/{veranstaltungId}";
+
         /// <summary>Ersetzt das Token in einem Pfad durch "***", damit es nicht in Logs landet.</summary>
         public static string OhneToken(string? pfad)
         {

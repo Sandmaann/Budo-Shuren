@@ -12,7 +12,24 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
     {
         private const string Leer = "–";
 
-        public static string Beschreiben(AnmeldungEreignisArt art, string? detailsJson)
+        /// <summary>Felder, die nicht in Organisator-Benachrichtigungen stehen (die auch an externe Adressen gehen).</summary>
+        private static readonly HashSet<string> Vertraulich = ["Telefon", "Bemerkung"];
+
+        public static string Beschreiben(AnmeldungEreignisArt art, string? detailsJson) => Beschreiben(art, detailsJson, datensparsam: false);
+
+        /// <summary>
+        /// Für Organisator-Benachrichtigungen (Plan 2.9): ohne Telefon, Bemerkung, Ablehnungsgrund und E-Mail-Adressen,
+        /// nur die Art der Änderung bzw. Name, Personen und Tage.
+        /// </summary>
+        public static string FuerBenachrichtigung(AnmeldungEreignisArt art, string? detailsJson) => art switch
+        {
+            AnmeldungEreignisArt.EmailGeaendert => "E-Mail-Adresse geändert",
+            AnmeldungEreignisArt.InfoEmailsGeaendert => "Info-Adressen geändert",
+            AnmeldungEreignisArt.Abgelehnt => art.Beschreibung(),
+            _ => Beschreiben(art, detailsJson, datensparsam: true)
+        };
+
+        private static string Beschreiben(AnmeldungEreignisArt art, string? detailsJson, bool datensparsam)
         {
             if (string.IsNullOrWhiteSpace(detailsJson))
                 return art.Beschreibung();
@@ -23,7 +40,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 var details = dokument.RootElement;
                 var text = art switch
                 {
-                    AnmeldungEreignisArt.DatenGeaendert or AnmeldungEreignisArt.AdminBearbeitet => Felder(details),
+                    AnmeldungEreignisArt.DatenGeaendert or AnmeldungEreignisArt.AdminBearbeitet => Felder(details, datensparsam),
                     AnmeldungEreignisArt.BegleitungGeaendert => $"Begleitpersonen: {Wert(details, "Alt")} → {Wert(details, "Neu")}",
                     AnmeldungEreignisArt.TageGeaendert => $"Tage: {Liste(details, "Alt")} → {Liste(details, "Neu")}",
                     AnmeldungEreignisArt.InfoEmailsGeaendert => InfoAdressen(details),
@@ -43,11 +60,11 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         }
 
         // {"Vorname":{"Alt":"Max","Neu":"Moritz"}, ...}
-        private static string? Felder(JsonElement details) =>
+        private static string? Felder(JsonElement details, bool datensparsam) =>
             details.ValueKind != JsonValueKind.Object
                 ? null
                 : string.Join("; ", details.EnumerateObject()
-                    .Where(f => f.Value.ValueKind == JsonValueKind.Object)
+                    .Where(f => f.Value.ValueKind == JsonValueKind.Object && !(datensparsam && Vertraulich.Contains(f.Name)))
                     .Select(f => $"{f.Name}: {Wert(f.Value, "Alt")} → {Wert(f.Value, "Neu")}"));
 
         // Liste ({"Alt":[...],"Neu":[...]}) oder einzelne Abmeldung einer Info-Adresse ({"Alt":"x@y","Neu":null})

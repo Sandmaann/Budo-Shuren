@@ -4,7 +4,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 {
     /// <summary>
     /// Erlaubte Statuswechsel einer Anmeldung und wer sie auslösen darf.
-    /// Das Verwerfen abgelaufener unbestätigter Anmeldungen ist kein Statuswechsel (der Datensatz wird gelöscht).
+    /// Das Verwerfen abgelaufener unbestätigter Anmeldungen ist kein Statuswechsel (der Datensatz wird gelöscht),
+    /// außer die Anmeldung war früher schon bestätigt: dann setzt VeranstaltungWartungJob sie auf Storniert.
     /// </summary>
     public static class AnmeldungStatusUebergaenge
     {

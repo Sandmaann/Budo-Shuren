@@ -188,9 +188,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         // ------------------------------------------------------------------------------------
 
-        private static string E(string? wert) => Encoder.Encode(wert ?? string.Empty);
+        internal static string E(string? wert) => Encoder.Encode(wert ?? string.Empty);
 
-        private static string Button(string url, string text) =>
+        internal static string Button(string url, string text) =>
             $"<p style=\"margin:24px 0;\"><a href=\"{E(url)}\" style=\"display:inline-block;padding:10px 20px;background-color:#000000;color:#ffffff;text-decoration:none;\">{E(text)}</a></p>" +
             $"<p style=\"font-size:12px;color:#555;word-break:break-all;\">Falls der Button nicht funktioniert: {E(url)}</p>";
 
@@ -229,7 +229,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             $"{tag.Datum.ToString("dddd, dd.MM.yyyy", Deutsch)}, {tag.Beginn:HH\\:mm}–{tag.Ende:HH\\:mm} Uhr" +
             (string.IsNullOrWhiteSpace(tag.Titel) ? "" : $" ({tag.Titel})");
 
-        private static string Layout(string inhalt) =>
+        internal static string Layout(string inhalt) =>
             "<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head>" +
             "<body style=\"margin:0;padding:0;font-family:Arial,sans-serif;color:#000000;background-color:#ffffff;\">" +
             "<div style=\"max-width:600px;margin:0 auto;padding:20px;\">" +

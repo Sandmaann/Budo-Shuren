@@ -6,6 +6,7 @@ using BudoShurenWebsite.Models.Veranstaltungen;
 using BudoShurenWebsite.Services.Mail;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace BudoShurenWebsite.Services.Veranstaltungen
 {
@@ -98,17 +99,23 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SlugService _slugService;
         private readonly TimeProvider _zeit;
+        private readonly IEmailWarteschlange _warteschlange;
+        private readonly VeranstaltungenOptionen _optionen;
 
         public VeranstaltungVerwaltungService(
             IDbContextFactory<ApplicationDbContext> dbFactory,
             UserManager<ApplicationUser> userManager,
             SlugService slugService,
-            TimeProvider zeit)
+            TimeProvider zeit,
+            IEmailWarteschlange warteschlange,
+            IOptions<VeranstaltungenOptionen> optionen)
         {
             _dbFactory = dbFactory;
             _userManager = userManager;
             _slugService = slugService;
             _zeit = zeit;
+            _warteschlange = warteschlange;
+            _optionen = optionen.Value;
         }
 
         private DateTime JetztUtc => _zeit.GetUtcNow().UtcDateTime;
@@ -437,10 +444,24 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 if (v.BenachrichtigungEmpfaenger.Any(e => e.Email == adresse))
                     return VerwaltungsErgebnis.MitFehler("Diese E-Mail-Adresse ist bereits eingetragen.");
                 empfaenger.Email = adresse;
+
+                // Freie Adressen erfahren, wer sie eingetragen hat, und können sich abmelden (Plan 2.9)
+                var token = AnmeldeToken.Erzeugen();
+                empfaenger.AbmeldeTokenHash = token.Hash;
+                var inhalt = BenachrichtigungMailVorlagen.Eingetragen(v, benutzer.Anzeigename, empfaenger.Ereignisse, empfaenger.Modus,
+                    VeranstaltungLinks.BenachrichtigungAbmeldenUrl(_optionen.BasisUrl, token.Klartext));
+                _warteschlange.Hinzufuegen(kontext, new AusgehendeEmail(adresse, inhalt.Betreff, inhalt.Html)
+                {
+                    AntwortAn = v.KontaktEmail,
+                    Prioritaet = EmailPrioritaet.Normal,
+                    BezugTyp = BenachrichtigungJob.BezugTyp
+                });
             }
 
             kontext.BenachrichtigungEmpfaenger.Add(empfaenger);
             await kontext.SaveChangesAsync(abbruch);
+            if (empfaenger.Email is not null)
+                _warteschlange.VersandAnstossen();
             return VerwaltungsErgebnis.Ok(empfaenger.Id);
         }
 

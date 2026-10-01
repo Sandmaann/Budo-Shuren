@@ -47,7 +47,7 @@ dotnet test --solution BudoShuren.sln                                           
 dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration"  # fast, no database needed
 ```
 
-- Categories via `[Trait("Category", …)]`: `Unit` (no DB), `Integration` (real SQL Server, incl. HTTP tests), later `Komponente` (bUnit).
+- Categories via `[Trait("Category", …)]`: `Unit` (no DB), `Integration` (real SQL Server, incl. HTTP tests; `Infrastruktur/TestAnmeldung` logs in via the `X-Test-Benutzer` header), `Komponente` (bUnit, services faked with NSubstitute).
 - Database tests derive from `Infrastruktur/DatenbankTest` and use `[DatenbankFact]`. The DB comes from env var `BUDO_TEST_SQL`, e.g. `Server=localhost\SQLEXPRESS;Database=BudoShurenTests;Trusted_Connection=True;TrustServerCertificate=True` (the database name must contain "Test" because Respawn wipes it; never point it at `master` or a real DB) or else from a SQL Server container if Docker is available. Without either, these tests are skipped, not failed.
 - No SQLite/InMemory: locking (`sp_getapplock`), `rowversion`, filtered indexes and collation must behave like production.
 - With `ASPNETCORE_ENVIRONMENT=Test`, `Program.cs` configures NLog in code (warnings to the console) instead of loading `nlog.config`, so tests and `dotnet ef` never log to BetterStack. Don't switch this to a config file: if the file is missing, NLog silently falls back to `nlog.config`.
@@ -78,6 +78,10 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
     - Opening a link (GET) must never change anything, because mail scanners open them. Actions run only on a POST from a button on the page.
     - Token pages call `VeranstaltungLinks.SicherheitsHeaderSetzen`. Logged paths go through `VeranstaltungLinks.OhneToken`.
   - Render user-facing Markdown with `MarkdownText.SicherZuHtml` (raw HTML disabled), and HTML-encode values in mail templates.
+  - Background jobs: `VeranstaltungJobsHostedService` runs `BenachrichtigungJob` every minute and `VeranstaltungWartungJob` hourly. It only runs when `Veranstaltungen:Aktiviert` and `Veranstaltungen:HintergrundJobsAktiviert` (default `true`, `false` in tests) are both on.
+    - Organizer notifications: `BenachrichtigungsAuswertung` (no DB) decides per recipient. The job sends events after `BenachrichtigtBisUtc`, either 5 minutes after the last change or as a daily digest.
+    - Notification mails go to external addresses too, so they contain no phone, remark or note (`EreignisText.FuerBenachrichtigung`).
+    - Links in mails created without a request use `Veranstaltungen:WebsiteUrl` (default production URL; Development: localhost).
 - **Images** are stored in the database (`DbImage`, `ImageService` with ImageSharp) and rendered as base64 data URIs, not as files in `wwwroot`.
 - **Block-based content systems** — two parallel ones with the same shape (Beitrag → ordered Blocks, typed by an enum, rendered by a `*BlockRenderer.razor`, edited with per-type editors in `Shared/*/BlockEditor/`, slug URLs via `SlugService`):
   - **Wissen / "Themen"**: models `WissenKategorie/WissenBeitrag/WissenBlock`, `WissenService`, public routes `/themen`, `/themen/{Slug}`, editor `ThemenVerwalten`/`ThemenBeitragEditor`. `WissenBlockTyp` values 0–5 are legacy (kept for DB compatibility, not selectable in the editor); new layout types start at 10.

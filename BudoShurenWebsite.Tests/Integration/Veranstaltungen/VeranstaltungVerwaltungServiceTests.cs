@@ -5,11 +5,13 @@ using BudoShurenWebsite.Models;
 using BudoShurenWebsite.Models.Enums;
 using BudoShurenWebsite.Models.Veranstaltungen;
 using BudoShurenWebsite.Services;
+using BudoShurenWebsite.Services.Mail;
 using BudoShurenWebsite.Services.Veranstaltungen;
 using BudoShurenWebsite.Tests.Infrastruktur;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 
 namespace BudoShurenWebsite.Tests.Integration.Veranstaltungen;
@@ -60,7 +62,9 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         new TestKontextFabrik(Datenbank),
         _scope!.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>(),
         new SlugService(),
-        _zeit);
+        _zeit,
+        new EmailWarteschlange(_zeit, new EmailVersandSignal()),
+        Options.Create(new VeranstaltungenOptionen { WebsiteUrl = "https://test.example/" }));
 
     private async Task<VerwaltungsBenutzer> BenutzerAnlegenAsync(string name, string rolle, string abteilung)
     {
@@ -329,6 +333,26 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         (await Service.EmpfaengerAsync(id, _admin, Abbruch)).Count.ShouldBe(2);
 
         (await Service.EmpfaengerHinzufuegenAsync(id, null, "y@example.org", null, _aikidoLeiter, Abbruch)).Erfolgreich.ShouldBeFalse("Gesamtverein: nur Admins");
+    }
+
+    [DatenbankFact]
+    public async Task Freie_Adresse_bekommt_Mail_mit_Abmeldelink_Benutzer_nicht()
+    {
+        var id = await AnlegenAsync(Eingabe());
+
+        (await Service.EmpfaengerHinzufuegenAsync(id, null, "kasse@example.org", "Kassenwart", _admin, Abbruch)).Fehler.ShouldBeEmpty();
+        (await Service.EmpfaengerHinzufuegenAsync(id, _aikidoLeiter.UserId, null, null, _admin, Abbruch)).Fehler.ShouldBeEmpty();
+
+        await using var kontext = Datenbank.NeuerKontext();
+        var mail = (await kontext.EmailAusgang.AsNoTracking().ToListAsync(Abbruch)).ShouldHaveSingleItem();
+        mail.An.ShouldBe("kasse@example.org");
+        mail.AntwortAn.ShouldBe("seminar@example.org");
+        mail.Html.ShouldContain("admin hat diese Adresse");
+
+        var token = System.Text.RegularExpressions.Regex.Match(mail.Html, "benachrichtigung-abmelden/([A-Za-z0-9_-]+)").Groups[1].Value;
+        mail.Html.ShouldContain("https://test.example/veranstaltungen/benachrichtigung-abmelden/");
+        var kasse = await kontext.BenachrichtigungEmpfaenger.AsNoTracking().SingleAsync(e => e.Email == "kasse@example.org", Abbruch);
+        kasse.AbmeldeTokenHash.ShouldBe(AnmeldeToken.Hash(token));
     }
 
     [DatenbankFact]

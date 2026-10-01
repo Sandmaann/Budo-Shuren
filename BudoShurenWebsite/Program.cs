@@ -102,7 +102,10 @@ namespace BudoShurenWebsite
                 builder.Services.AddHostedService<EmailVersandHostedService>();
 
                 //Modul Veranstaltungen (siehe Services/Veranstaltungen); Feature-Schalter Veranstaltungen:Aktiviert
-                builder.Services.Configure<VeranstaltungenOptionen>(builder.Configuration.GetSection(VeranstaltungenOptionen.Abschnitt));
+                builder.Services.AddOptions<VeranstaltungenOptionen>()
+                    .Bind(builder.Configuration.GetSection(VeranstaltungenOptionen.Abschnitt))
+                    .Validate(o => o.IstGueltig(), $"Ungültige Einstellungen im Abschnitt {VeranstaltungenOptionen.Abschnitt}")
+                    .ValidateOnStart();
                 builder.Services.AddScoped<IVeranstaltungVerwaltungService, VeranstaltungVerwaltungService>();
                 builder.Services.AddSingleton<AnmeldungMailVersand>();
                 builder.Services.AddScoped<IAnmeldungService, AnmeldungService>();
@@ -111,6 +114,9 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<IVeranstaltungKommunikationService, VeranstaltungKommunikationService>();
                 builder.Services.AddScoped<IVeranstaltungAnzeigeService, VeranstaltungAnzeigeService>();
                 builder.Services.AddSingleton<FormularSchutz>();
+                builder.Services.AddSingleton<BenachrichtigungJob>();
+                builder.Services.AddSingleton<VeranstaltungWartungJob>();
+                builder.Services.AddHostedService<VeranstaltungJobsHostedService>();
                 builder.Services.AddRateLimiter(VeranstaltungRateLimit.Konfigurieren);
 
                 //Adapter für SfGrid & SfScheduler

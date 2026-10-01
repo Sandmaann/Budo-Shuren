@@ -1,3 +1,4 @@
+using BudoShurenWebsite.Global;
 using BudoShurenWebsite.Models.Enums;
 using BudoShurenWebsite.Services.Veranstaltungen;
 
@@ -51,5 +52,34 @@ public class EreignisTextTests
     public void Ohne_brauchbare_Details_der_Name_der_Art(string? details)
     {
         EreignisText.Beschreiben(AnmeldungEreignisArt.Abgelehnt, details).ShouldBe("Abgelehnt");
+    }
+
+    [Fact]
+    public void Fuer_Benachrichtigungen_ohne_Telefon_Bemerkung_und_Adressen()
+    {
+        var alt = new AnmeldungStand("Max", "Muster", "0170 1", null, null, "alt", 0, [], ["a@example.org"]);
+        var neu = new AnmeldungStand("Moritz", "Muster", "0170 2", null, null, "neu", 0, [], ["b@example.org"]);
+        var aenderungen = EreignisDiff.Erstellen(alt, neu);
+
+        aenderungen.Select(a => EreignisText.FuerBenachrichtigung(a.Art, a.DetailsJson)).ShouldBe(["Vorname: Max → Moritz", "Info-Adressen geändert"]);
+    }
+
+    [Fact]
+    public void Fuer_Benachrichtigungen_nur_vertrauliche_Felder_geaendert()
+    {
+        var aenderung = EreignisDiff.Erstellen(
+            new AnmeldungStand("Max", "Muster", "0170 1", null, null, null, 0, [], []),
+            new AnmeldungStand("Max", "Muster", "0170 2", null, null, "Komme später", 0, [], [])).Single();
+
+        EreignisText.FuerBenachrichtigung(aenderung.Art, aenderung.DetailsJson).ShouldBe(aenderung.Art.Beschreibung());
+        EreignisText.Beschreiben(aenderung.Art, aenderung.DetailsJson).ShouldContain("0170 2", customMessage: "in der Übersicht weiter sichtbar");
+    }
+
+    [Fact]
+    public void Fuer_Benachrichtigungen_ohne_EMail_und_Ablehnungsgrund()
+    {
+        EreignisText.FuerBenachrichtigung(AnmeldungEreignisArt.EmailGeaendert, "{\"Alt\":\"a@example.org\",\"Neu\":\"b@example.org\"}")
+            .ShouldBe("E-Mail-Adresse geändert");
+        EreignisText.FuerBenachrichtigung(AnmeldungEreignisArt.Abgelehnt, "{\"Grund\":\"intern\"}").ShouldBe("Abgelehnt");
     }
 }
