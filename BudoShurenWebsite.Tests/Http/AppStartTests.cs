@@ -25,7 +25,7 @@ public class AppStartTests(SqlServerFixture datenbank) : DatenbankTest(datenbank
 
         var ziele = NLog.LogManager.Configuration?.AllTargets ?? [];
 
-        ziele.ShouldNotBeEmpty("nlog.test.config wurde nicht geladen");
+        ziele.ShouldNotBeEmpty("die NLog-Konfiguration für die Umgebung Test wurde nicht geladen");
         ziele.ShouldNotContain(ziel => ziel.GetType().FullName!.Contains("BetterStack"));
     }
 }

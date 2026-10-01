@@ -25,13 +25,15 @@ namespace BudoShurenWebsite
         public static void Main(string[] args)
         {
             var stopwatch = Stopwatch.StartNew();
-            // In der Testumgebung eigene NLog-Konfiguration ohne BetterStack (nlog.test.config aus dem Testprojekt)
-            var nlogKonfiguration = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test"
-                ? "nlog.test.config"
-                : "nlog.config";
-            var logger = NLog.LogManager.Setup()
-                .LoadConfigurationFromFile(nlogKonfiguration)
-                .GetCurrentClassLogger();
+            // In der Umgebung "Test" (Tests, "dotnet ef") nur Warnungen auf die Konsole, nie an BetterStack.
+            // Bewusst ohne Datei: fehlt eine Konfigurationsdatei, lädt NLog sonst still die nlog.config.
+            var logger = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test"
+                ? NLog.LogManager.Setup()
+                    .LoadConfiguration(c => c.ForLogger().FilterMinLevel(NLog.LogLevel.Warn).WriteToConsole())
+                    .GetCurrentClassLogger()
+                : NLog.LogManager.Setup()
+                    .LoadConfigurationFromFile("nlog.config")
+                    .GetCurrentClassLogger();
 
 
             //var logger = NLog.LogManager.Setup()
@@ -241,6 +243,11 @@ namespace BudoShurenWebsite
 
                 stopwatch.Stop();
                 logger.Log(NLog.LogLevel.Info, "BudoShuren startet in {Milliseconds} ms", stopwatch.ElapsedMilliseconds);
+            }
+            catch (HostAbortedException)
+            {
+                // Normal bei "dotnet ef": die Tools brechen den Start nach dem Aufbau des Hosts ab, kein Fehler
+                throw;
             }
             catch (Exception exception)
             {

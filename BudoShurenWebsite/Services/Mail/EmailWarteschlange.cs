@@ -1,7 +1,6 @@
 using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Models;
 using BudoShurenWebsite.Models.Enums;
-using MimeKit;
 
 namespace BudoShurenWebsite.Services.Mail
 {
@@ -59,13 +58,8 @@ namespace BudoShurenWebsite.Services.Mail
 
         private static void PruefeAdresse(string adresse, string feld)
         {
-            // Nur eine reine Adresse ist erlaubt, kein "Name <adresse>"
-            if (!MailboxAddress.TryParse((adresse ?? string.Empty).Trim(), out var postfach)
-                || !string.IsNullOrEmpty(postfach.Name)
-                || !postfach.Address.Contains('@'))
-            {
+            if (!EmailAdresse.IstGueltig(adresse))
                 throw new ArgumentException($"Ungültige E-Mail-Adresse: \"{adresse}\".", feld);
-            }
         }
     }
 }

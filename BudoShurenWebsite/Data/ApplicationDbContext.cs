@@ -1,4 +1,5 @@
 ﻿using BudoShurenWebsite.Models;
+using BudoShurenWebsite.Models.Veranstaltungen;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Emit;
@@ -150,6 +151,95 @@ namespace BudoShurenWebsite.Data
             builder.Entity<EmailAusgang>().ToTable("EmailAusgang");
             // Abfrage des Versand-Jobs: wartende, fällige Mails nach Priorität
             builder.Entity<EmailAusgang>().HasIndex(m => new { m.Status, m.Prioritaet, m.FaelligAbUtc });
+
+            KonfiguriereVeranstaltungen(builder);
+        }
+
+        // Modul Veranstaltungen (Models/Veranstaltungen)
+        private static void KonfiguriereVeranstaltungen(ModelBuilder builder)
+        {
+            builder.Entity<Veranstaltung>().ToTable("Veranstaltungen");
+            builder.Entity<Veranstaltung>().HasIndex(v => v.Slug).IsUnique();
+            builder.Entity<Veranstaltung>()
+                .HasOne(v => v.Abteilung)
+                .WithMany()
+                .HasForeignKey(v => v.AbteilungId)
+                .OnDelete(DeleteBehavior.SetNull);
+            builder.Entity<Veranstaltung>()
+                .HasOne(v => v.Bild)
+                .WithMany()
+                .HasForeignKey(v => v.BildId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<VeranstaltungsTag>().ToTable("VeranstaltungsTage");
+            // Ein Eintrag pro Kalendertag: die Kapazität wird pro Tag gezählt
+            builder.Entity<VeranstaltungsTag>().HasIndex(t => new { t.VeranstaltungId, t.Datum }).IsUnique();
+            builder.Entity<VeranstaltungsTag>()
+                .HasOne(t => t.Veranstaltung)
+                .WithMany(v => v.Tage)
+                .HasForeignKey(t => t.VeranstaltungId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Anmeldung>().ToTable("Anmeldungen");
+            builder.Entity<Anmeldung>().HasIndex(a => new { a.VeranstaltungId, a.Email }).IsUnique();
+            builder.Entity<Anmeldung>().HasIndex(a => a.TokenHash).IsUnique();
+            builder.Entity<Anmeldung>().HasIndex(a => a.NeueEmailTokenHash).IsUnique();
+            builder.Entity<Anmeldung>()
+                .HasOne(a => a.Veranstaltung)
+                .WithMany(v => v.Anmeldungen)
+                .HasForeignKey(a => a.VeranstaltungId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<AnmeldungTag>().ToTable("AnmeldungTage");
+            builder.Entity<AnmeldungTag>().HasKey(at => new { at.AnmeldungId, at.VeranstaltungsTagId });
+            builder.Entity<AnmeldungTag>()
+                .HasOne(at => at.Anmeldung)
+                .WithMany(a => a.Tage)
+                .HasForeignKey(at => at.AnmeldungId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // Kein Cascade: SQL Server erlaubt keine zwei Löschpfade (Veranstaltung -> Anmeldung -> AnmeldungTag
+            // und Veranstaltung -> Tag -> AnmeldungTag). Tage mit Anmeldungen werden ohnehin nur abgesagt, nicht gelöscht.
+            builder.Entity<AnmeldungTag>()
+                .HasOne(at => at.VeranstaltungsTag)
+                .WithMany(t => t.AnmeldungTage)
+                .HasForeignKey(at => at.VeranstaltungsTagId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<AnmeldungInfoEmail>().ToTable("AnmeldungInfoEmails");
+            builder.Entity<AnmeldungInfoEmail>().HasIndex(i => new { i.AnmeldungId, i.Email }).IsUnique();
+            builder.Entity<AnmeldungInfoEmail>().HasIndex(i => i.AbmeldeTokenHash).IsUnique();
+            builder.Entity<AnmeldungInfoEmail>()
+                .HasOne(i => i.Anmeldung)
+                .WithMany(a => a.InfoEmails)
+                .HasForeignKey(i => i.AnmeldungId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<AnmeldungEreignis>().ToTable("AnmeldungEreignisse");
+            builder.Entity<AnmeldungEreignis>().HasIndex(e => new { e.AnmeldungId, e.ZeitpunktUtc });
+            builder.Entity<AnmeldungEreignis>()
+                .HasOne(e => e.Anmeldung)
+                .WithMany(a => a.Ereignisse)
+                .HasForeignKey(e => e.AnmeldungId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<BenachrichtigungEmpfaenger>().ToTable("BenachrichtigungEmpfaenger", t =>
+                t.HasCheckConstraint(
+                    "CK_BenachrichtigungEmpfaenger_UserIdOderEmail",
+                    "(CASE WHEN [UserId] IS NULL THEN 0 ELSE 1 END) + (CASE WHEN [Email] IS NULL THEN 0 ELSE 1 END) = 1"));
+            // EF legt für nullbare Spalten gefilterte Indizes an (nur Zeilen mit Wert)
+            builder.Entity<BenachrichtigungEmpfaenger>().HasIndex(b => new { b.VeranstaltungId, b.UserId }).IsUnique();
+            builder.Entity<BenachrichtigungEmpfaenger>().HasIndex(b => new { b.VeranstaltungId, b.Email }).IsUnique();
+            builder.Entity<BenachrichtigungEmpfaenger>().HasIndex(b => b.AbmeldeTokenHash).IsUnique();
+            builder.Entity<BenachrichtigungEmpfaenger>()
+                .HasOne(b => b.Veranstaltung)
+                .WithMany(v => v.BenachrichtigungEmpfaenger)
+                .HasForeignKey(b => b.VeranstaltungId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<BenachrichtigungEmpfaenger>()
+                .HasOne(b => b.User)
+                .WithMany()
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<GalerieEintrag> Galerie { get; set; }
@@ -166,6 +256,13 @@ namespace BudoShurenWebsite.Data
         public DbSet<AktuellesBlock> AktuellesBloecke { get; set; }
         public DbSet<AktuellesBild> AktuellesBilder { get; set; }
         public DbSet<EmailAusgang> EmailAusgang { get; set; }
+        public DbSet<Veranstaltung> Veranstaltungen { get; set; }
+        public DbSet<VeranstaltungsTag> VeranstaltungsTage { get; set; }
+        public DbSet<Anmeldung> Anmeldungen { get; set; }
+        public DbSet<AnmeldungTag> AnmeldungTage { get; set; }
+        public DbSet<AnmeldungInfoEmail> AnmeldungInfoEmails { get; set; }
+        public DbSet<AnmeldungEreignis> AnmeldungEreignisse { get; set; }
+        public DbSet<BenachrichtigungEmpfaenger> BenachrichtigungEmpfaenger { get; set; }
         public override int SaveChanges()
         {
             Validate();

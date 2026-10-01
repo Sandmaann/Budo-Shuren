@@ -50,7 +50,7 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
 - Categories via `[Trait("Category", …)]`: `Unit` (no DB), `Integration` (real SQL Server, incl. HTTP tests), later `Komponente` (bUnit).
 - Database tests derive from `Infrastruktur/DatenbankTest` and use `[DatenbankFact]`. The DB comes from env var `BUDO_TEST_SQL` (e.g. LocalDB; the database name must contain "Test" because Respawn wipes it) or else from a SQL Server container if Docker is available. Without either, these tests are skipped, not failed.
 - No SQLite/InMemory: locking (`sp_getapplock`), `rowversion`, filtered indexes and collation must behave like production.
-- With `ASPNETCORE_ENVIRONMENT=Test`, `Program.cs` loads `nlog.test.config` (console only) instead of `nlog.config`, so tests never log to BetterStack.
+- With `ASPNETCORE_ENVIRONMENT=Test`, `Program.cs` configures NLog in code (warnings to the console) instead of loading `nlog.config`, so tests and `dotnet ef` never log to BetterStack. Don't switch this to a config file: if the file is missing, NLog silently falls back to `nlog.config`.
 - GitHub Actions (`.github/workflows/tests.yml`) runs all tests including integration tests on every PR and push to `main`.
 - `ModellTests` fails if the EF model changed without a migration.
 - `DataProtectionKeyContext` has no migrations; the test fixture creates the `DataProtectionKeys` table itself.
