@@ -9,7 +9,11 @@ using Microsoft.Extensions.Options;
 namespace BudoShurenWebsite.Services.Veranstaltungen
 {
     /// <param name="Max">null = unbegrenzt.</param>
-    public sealed record TagBelegung(int Id, DateOnly Datum, TimeOnly Beginn, TimeOnly Ende, string? Titel, bool Abgesagt, int? Max, int Belegt);
+    public sealed record TagBelegung(int Id, DateOnly Datum, TimeOnly Beginn, TimeOnly Ende, string? Titel, bool Abgesagt, int? Max, int Belegt)
+    {
+        /// <summary>Für die Formularfelder (AnmeldeFelder); FreiePlaetze null = unbegrenzt.</summary>
+        public TagAnzeige AlsAnzeige() => new(Id, Datum, Beginn, Ende, Titel, Abgesagt, Max is { } max ? Math.Max(0, max - Belegt) : null);
+    }
 
     public sealed record TeilnehmerZeile(
         int Id,
@@ -36,6 +40,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         VeranstaltungSichtbarkeit Sichtbarkeit,
         Teilnahmemodus Teilnahmemodus,
         string? Abteilung,
+        string? Ort,
+        AnmeldeFormularEinstellungen Formular,
         IReadOnlyList<TagBelegung> Tage,
         IReadOnlyList<TeilnehmerZeile> Teilnehmer,
         IReadOnlyList<EreignisAnzeige> LetzteAenderungen)
@@ -161,6 +167,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 v.Sichtbarkeit,
                 v.Teilnahmemodus,
                 v.Abteilung?.Name,
+                v.Ort,
+                new AnmeldeFormularEinstellungen(v.Teilnahmemodus, v.MinTageBeiTeilanmeldung, v.MaxBegleitpersonen, v.TelefonFeld, v.VereinFeld, v.GraduierungFeld, v.BemerkungFeld),
                 tage.Select(t => new TagBelegung(t.Id, t.Datum, t.Beginn, t.Ende, t.Titel, t.Abgesagt, t.MaxTeilnehmer, belegt.GetValueOrDefault(t.Id))).ToList(),
                 anmeldungen
                     .OrderBy(a => a.Nachname).ThenBy(a => a.Vorname)

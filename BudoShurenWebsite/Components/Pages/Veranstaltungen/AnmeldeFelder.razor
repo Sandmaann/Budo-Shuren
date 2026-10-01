@@ -10,19 +10,19 @@
 
 <div class="grid gap-4 md:grid-cols-2">
     <div>
-        <label class="@Label" for="vorname">Vorname *</label>
-        <InputText id="vorname" name="@Name("Eingabe.Vorname")" @bind-Value="Eingabe.Vorname" class="@Feld" autocomplete="given-name" />
+        <label class="@Label" for="@Id("vorname")">Vorname *</label>
+        <InputText id="@Id("vorname")" name="@Name("Eingabe.Vorname")" @bind-Value="Eingabe.Vorname" class="@Feld" autocomplete="given-name" />
         @FehlerText(nameof(AnmeldeEingabe.Vorname))
     </div>
     <div>
-        <label class="@Label" for="nachname">Nachname *</label>
-        <InputText id="nachname" name="@Name("Eingabe.Nachname")" @bind-Value="Eingabe.Nachname" class="@Feld" autocomplete="family-name" />
+        <label class="@Label" for="@Id("nachname")">Nachname *</label>
+        <InputText id="@Id("nachname")" name="@Name("Eingabe.Nachname")" @bind-Value="Eingabe.Nachname" class="@Feld" autocomplete="family-name" />
         @FehlerText(nameof(AnmeldeEingabe.Nachname))
     </div>
 </div>
 <div>
-    <label class="@Label" for="email">E-Mail *</label>
-    <InputText id="email" type="email" name="@Name("Eingabe.Email")" @bind-Value="Eingabe.Email" class="@Feld" autocomplete="email" />
+    <label class="@Label" for="@Id("email")">E-Mail *</label>
+    <InputText id="@Id("email")" type="email" name="@Name("Eingabe.Email")" @bind-Value="Eingabe.Email" class="@Feld" autocomplete="email" />
     @if (EmailHinweis is not null)
     {
         <p class="mt-1 text-xs text-gray-600">@EmailHinweis</p>
@@ -33,24 +33,24 @@
 @if (Einstellungen.TelefonFeld != FormularFeldModus.Aus)
 {
     <div>
-        <label class="@Label" for="telefon">Telefon@(Stern(Einstellungen.TelefonFeld))</label>
-        <InputText id="telefon" type="tel" name="@Name("Eingabe.Telefon")" @bind-Value="Eingabe.Telefon" class="@Feld" autocomplete="tel" />
+        <label class="@Label" for="@Id("telefon")">Telefon@(Stern(Einstellungen.TelefonFeld))</label>
+        <InputText id="@Id("telefon")" type="tel" name="@Name("Eingabe.Telefon")" @bind-Value="Eingabe.Telefon" class="@Feld" autocomplete="tel" />
         @FehlerText(nameof(AnmeldeEingabe.Telefon))
     </div>
 }
 @if (Einstellungen.VereinFeld != FormularFeldModus.Aus)
 {
     <div>
-        <label class="@Label" for="verein">Verein / Dojo@(Stern(Einstellungen.VereinFeld))</label>
-        <InputText id="verein" name="@Name("Eingabe.Verein")" @bind-Value="Eingabe.Verein" class="@Feld" />
+        <label class="@Label" for="@Id("verein")">Verein / Dojo@(Stern(Einstellungen.VereinFeld))</label>
+        <InputText id="@Id("verein")" name="@Name("Eingabe.Verein")" @bind-Value="Eingabe.Verein" class="@Feld" />
         @FehlerText(nameof(AnmeldeEingabe.Verein))
     </div>
 }
 @if (Einstellungen.GraduierungFeld != FormularFeldModus.Aus)
 {
     <div>
-        <label class="@Label" for="graduierung">Graduierung@(Stern(Einstellungen.GraduierungFeld))</label>
-        <InputText id="graduierung" name="@Name("Eingabe.Graduierung")" @bind-Value="Eingabe.Graduierung" class="@Feld" />
+        <label class="@Label" for="@Id("graduierung")">Graduierung@(Stern(Einstellungen.GraduierungFeld))</label>
+        <InputText id="@Id("graduierung")" name="@Name("Eingabe.Graduierung")" @bind-Value="Eingabe.Graduierung" class="@Feld" />
         @FehlerText(nameof(AnmeldeEingabe.Graduierung))
     </div>
 }
@@ -81,14 +81,14 @@
 @if (Einstellungen.MaxBegleitpersonen > 0)
 {
     <div>
-        <label class="@Label" for="begleitung">Ich bringe weitere Personen mit (Anzahl)</label>
-        <InputNumber id="begleitung" name="@Name("Eingabe.AnzahlBegleitpersonen")" @bind-Value="Eingabe.AnzahlBegleitpersonen" min="0" max="@Einstellungen.MaxBegleitpersonen" class="@($"{Feld} md:w-32")" />
+        <label class="@Label" for="@Id("begleitung")">Ich bringe weitere Personen mit (Anzahl)</label>
+        <InputNumber id="@Id("begleitung")" name="@Name("Eingabe.AnzahlBegleitpersonen")" @bind-Value="Eingabe.AnzahlBegleitpersonen" min="0" max="@Einstellungen.MaxBegleitpersonen" class="@($"{Feld} md:w-32")" />
         <p class="mt-1 text-xs text-gray-600">Für Begleitpersonen brauchen wir keine Daten. Höchstens @Einstellungen.MaxBegleitpersonen.</p>
         @FehlerText(nameof(AnmeldeEingabe.AnzahlBegleitpersonen))
     </div>
     <div>
-        <label class="@Label" for="infoemails">Weitere E-Mail-Adressen für Infos (optional)</label>
-        <InputTextArea id="infoemails" name="@Name("Eingabe.InfoEmails")" @bind-Value="Eingabe.InfoEmails" rows="2" class="@Feld" placeholder="eine Adresse pro Zeile" />
+        <label class="@Label" for="@Id("infoemails")">Weitere E-Mail-Adressen für Infos (optional)</label>
+        <InputTextArea id="@Id("infoemails")" name="@Name("Eingabe.InfoEmails")" @bind-Value="Eingabe.InfoEmails" rows="2" class="@Feld" placeholder="eine Adresse pro Zeile" />
         <p class="mt-1 text-xs text-gray-600">Zum Beispiel für deine Begleitpersonen: Sie bekommen Infos zur Veranstaltung und können sich jederzeit abmelden. Höchstens eine Adresse je Begleitperson.</p>
         @FehlerText(nameof(AnmeldeEingabe.InfoEmails))
     </div>
@@ -97,8 +97,8 @@
 @if (Einstellungen.BemerkungFeld != FormularFeldModus.Aus)
 {
     <div>
-        <label class="@Label" for="bemerkung">Bemerkung@(Stern(Einstellungen.BemerkungFeld))</label>
-        <InputTextArea id="bemerkung" name="@Name("Eingabe.Bemerkung")" @bind-Value="Eingabe.Bemerkung" rows="3" class="@Feld" />
+        <label class="@Label" for="@Id("bemerkung")">Bemerkung@(Stern(Einstellungen.BemerkungFeld))</label>
+        <InputTextArea id="@Id("bemerkung")" name="@Name("Eingabe.Bemerkung")" @bind-Value="Eingabe.Bemerkung" rows="3" class="@Feld" />
         @FehlerText(nameof(AnmeldeEingabe.Bemerkung))
     </div>
 }
@@ -131,6 +131,9 @@
     public string? EmailHinweis { get; set; }
 
     private string Name(string feld) => $"{Praefix}.{feld}";
+
+    // Eindeutig, falls zwei Formulare auf einer Seite stehen (Übersicht: "Manuell anmelden" und Bearbeiten-Panel)
+    private string Id(string feld) => $"{Praefix.ToLowerInvariant()}-{feld}";
 
     private RenderFragment? FehlerText(string feld) =>
         Fehler?.TryGetValue(feld, out var text) == true

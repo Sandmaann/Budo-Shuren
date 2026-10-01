@@ -1,0 +1,60 @@
+@* Ereignisse von Anmeldungen (Historie im Detail-Panel, Tab "Änderungen"); ungesehene sind hervorgehoben. *@
+
+@if (Ereignisse.Count == 0)
+{
+    <p class="font-ptsans text-sm text-gray-500">@LeerText</p>
+}
+else
+{
+    <ul class="font-ptsans divide-y divide-gray-100 text-sm">
+        @foreach (var e in Ereignisse)
+        {
+            <li class="py-2 @(e.Ungesehen ? "border-l-4 border-red-700 bg-red-50 pl-2" : "")">
+                <div class="text-xs text-gray-500">
+                    @Ortszeit.AusUtc(e.ZeitpunktUtc).ToString("dd.MM.yyyy HH:mm") · @Akteur(e)
+                    @if (e.Ungesehen)
+                    {
+                        <span class="ml-1 font-bold text-red-700">neu</span>
+                    }
+                </div>
+                <div>
+                    @if (MitTeilnehmer)
+                    {
+                        @if (OnTeilnehmerKlick.HasDelegate)
+                        {
+                            <button type="button" class="font-bold hover:underline" @onclick="() => OnTeilnehmerKlick.InvokeAsync(e.AnmeldungId)">@e.Teilnehmer</button>
+                        }
+                        else
+                        {
+                            <span class="font-bold">@e.Teilnehmer</span>
+                        }
+                        <span>: </span>
+                    }
+                    <span class="whitespace-pre-line">@e.Text</span>
+                </div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<EreignisAnzeige> Ereignisse { get; set; } = [];
+
+    /// <summary>Name des Teilnehmers vor jedem Eintrag (Feed über alle Anmeldungen).</summary>
+    [Parameter]
+    public bool MitTeilnehmer { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnTeilnehmerKlick { get; set; }
+
+    [Parameter]
+    public string LeerText { get; set; } = "Keine Einträge.";
+
+    private static string Akteur(EreignisAnzeige e) => e.Akteur switch
+    {
+        EreignisAkteur.Teilnehmer => "Teilnehmer",
+        EreignisAkteur.System => "System",
+        _ => e.AkteurName ?? "Organisator"
+    };
+}

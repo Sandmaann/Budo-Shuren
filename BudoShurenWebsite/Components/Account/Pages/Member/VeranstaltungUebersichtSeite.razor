@@ -1,0 +1,351 @@
+@page "/Account/Member/Veranstaltungen/{Id:int}"
+@rendermode InteractiveServer
+
+@using BudoShurenWebsite.Components.Pages.Veranstaltungen
+@using BudoShurenWebsite.Components.Shared.Veranstaltungen
+@using BudoShurenWebsite.Models.Enums
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Abteilungsleiter}")]
+
+@inject ITeilnehmerVerwaltungService TeilnehmerVerwaltung
+@inject IVeranstaltungKommunikationService Kommunikation
+@inject UserService UserService
+@inject IOptions<VeranstaltungenOptionen> Optionen
+@inject NavigationManager NavigationManager
+
+<div class="container mx-auto max-w-screen-lg">
+    <div class="mx-10">
+        <SectionBanner Titel="@(_uebersicht?.Titel ?? "Veranstaltung")" />
+
+        <a href="/Account/Member/Veranstaltungen" class="font-ptsans mb-4 inline-block text-sm hover:underline">← Alle Veranstaltungen</a>
+
+        @if (!Optionen.Value.Aktiviert)
+        {
+            <Standardtext Text="Das Modul Veranstaltungen ist nicht aktiviert." />
+        }
+        else if (_ladeFehler is not null)
+        {
+            <StatusMessage ShowAsError="true" Message="@_ladeFehler" />
+        }
+        else if (_uebersicht is not { } v || _benutzer is null)
+        {
+            <Standardtext Text="Laden..." />
+        }
+        else
+        {
+            <!-- Kopf -->
+            <div class="font-ptsans mb-6 flex flex-wrap items-center justify-between gap-3 text-sm">
+                <div>
+                    <span class="font-bold">@v.Status.Beschreibung()</span>
+                    · @(v.Abteilung ?? "Gesamtverein")
+                    @if (!string.IsNullOrWhiteSpace(v.Ort))
+                    {
+                        <span> · @v.Ort</span>
+                    }
+                    @if (v.Sichtbarkeit == VeranstaltungSichtbarkeit.NurPerLink)
+                    {
+                        <span> · nur per Link</span>
+                    }
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="@($"/Account/Member/Veranstaltungen/Bearbeiten/{v.Id}")" class="@Knopf">Bearbeiten</a>
+                    @if (v.Status != VeranstaltungStatus.Entwurf)
+                    {
+                        <a href="@VeranstaltungLinks.Veranstaltung("/", v.Slug)" target="_blank" class="@Knopf">Öffentliche Seite ↗</a>
+                    }
+                    <a href="@($"/Account/Member/Veranstaltungen/{v.Id}/teilnehmer.csv")" target="_blank" download class="@Knopf">Teilnehmerliste (CSV)</a>
+                </div>
+            </div>
+
+            @if (_meldungen.Count > 0)
+            {
+                <div class="font-ptsans mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">
+                    @foreach (var m in _meldungen)
+                    {
+                        <div>@m</div>
+                    }
+                </div>
+            }
+
+            <!-- Kennzahlen -->
+            <div class="font-ptsans mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+                @Kennzahl(v.AktiveAnmeldungen, "aktive Anmeldungen")
+                @Kennzahl(v.BestaetigtePersonen, "bestätigte Personen (inkl. Begleitung)")
+                @Kennzahl(v.Unbestaetigt, "noch unbestätigt")
+                @Kennzahl(v.UngeseheneAenderungen, "mit neuen Änderungen")
+            </div>
+
+            <!-- Zu erledigen -->
+            @if (v.UngeseheneAenderungen > 0)
+            {
+                <div class="font-ptsans mb-6 flex flex-wrap items-center gap-3 rounded border border-red-700 bg-red-50 p-3 text-sm">
+                    <span><span class="font-bold">Zu erledigen:</span> @v.UngeseheneAenderungen @(v.UngeseheneAenderungen == 1 ? "Anmeldung hat" : "Anmeldungen haben") neue Änderungen.</span>
+                    <button type="button" class="@Knopf bg-white" @onclick="NeueAnzeigen">Anzeigen</button>
+                    <button type="button" class="@Knopf bg-white" disabled="@_beschaeftigt" @onclick="() => GesehenAsync(null)">Alle als gesehen markieren</button>
+                </div>
+            }
+
+            <!-- Tage -->
+            <section class="mb-8">
+                <h4 class="font-ptsans mb-2 text-sm font-bold tracking-wider">Termine</h4>
+                <table class="font-ptsans w-full text-left text-sm">
+                    <tbody>
+                        @foreach (var tag in v.Tage)
+                        {
+                            <tr class="border-b border-gray-100 @(tag.Abgesagt ? "text-gray-400" : "")">
+                                <td class="py-2 pr-2 @(tag.Abgesagt ? "line-through" : "")">@VeranstaltungTexte.Tag(tag.AlsAnzeige())</td>
+                                <td class="whitespace-nowrap px-2 py-2 text-right">
+                                    @if (tag.Abgesagt)
+                                    {
+                                        <span>abgesagt</span>
+                                    }
+                                    else
+                                    {
+                                        <span title="belegte Plätze inkl. Begleitung und Reservierungen">@tag.Belegt / @(tag.Max?.ToString() ?? "∞")</span>
+                                    }
+                                </td>
+                                <td class="py-2 pl-2 text-right">
+                                    @if (!tag.Abgesagt && v.Status == VeranstaltungStatus.Veroeffentlicht && v.Tage.Count(t => !t.Abgesagt) > 1)
+                                    {
+                                        <button type="button" class="text-xs text-red-700 hover:underline" @onclick="() => AbsageStarten(tag.Id)">Tag absagen...</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+
+            @if (_absage is { } absage)
+            {
+                <div class="font-ptsans mb-8 rounded border border-red-700 p-4 text-sm">
+                    <p class="font-bold">
+                        @(absage.TagId is { } tagId
+                            ? $"Tag absagen: {VeranstaltungTexte.Tag(v.Tage.Single(t => t.Id == tagId).AlsAnzeige())}"
+                            : "Die ganze Veranstaltung absagen")
+                    </p>
+                    <p class="mt-1">
+                        Alle betroffenen Teilnehmer und ihre Info-Adressen bekommen eine E-Mail; der Kalendereintrag wird entfernt.
+                        Das lässt sich nicht rückgängig machen.
+                    </p>
+                    <label class="mb-1 mt-3 block text-xs font-bold" for="absage-text">Zusätzlicher Text für die Mail (optional, Markdown)</label>
+                    <textarea id="absage-text" rows="3" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="absage.Zusatz"></textarea>
+                    <div class="mt-2 flex gap-2">
+                        <button type="button" class="rounded border border-red-700 bg-red-700 px-3 py-1.5 text-xs text-white disabled:opacity-50"
+                                disabled="@_beschaeftigt" @onclick="AbsagenAsync">Absagen und informieren</button>
+                        <button type="button" class="@Knopf" @onclick="() => _absage = null">Abbrechen</button>
+                    </div>
+                </div>
+            }
+
+            <!-- Tabs -->
+            <div class="font-ptsans mb-4 flex flex-wrap gap-1 border-b border-gray-300 text-sm">
+                @foreach (var (tab, text) in Tabs(v))
+                {
+                    <button type="button" data-tab="@tab"
+                            class="-mb-px border-b-2 px-3 py-2 @(_tab == tab ? "border-black font-bold" : "border-transparent text-gray-600 hover:text-black")"
+                            @onclick="() => _tab = tab">@text</button>
+                }
+            </div>
+
+            @switch (_tab)
+            {
+                case Tab.Teilnehmer:
+                    <TeilnehmerTabelle Teilnehmer="v.Teilnehmer" Tage="v.Tage" Teilnahmemodus="v.Teilnahmemodus"
+                                       @bind-Filter="_filter" AusgewaehltId="_offeneAnmeldung"
+                                       OnOeffnen="Oeffnen" OnAuswahlGesehen="ids => GesehenAsync(ids)" />
+                    break;
+
+                case Tab.Aenderungen:
+                    <EreignisListe Ereignisse="v.LetzteAenderungen" MitTeilnehmer="true" OnTeilnehmerKlick="Oeffnen" LeerText="Noch keine Änderungen." />
+                    break;
+
+                case Tab.Nachrichten:
+                    <RundmailBereich @key="_vorlage" VeranstaltungId="v.Id" Benutzer="_benutzer" BasisUrl="@NavigationManager.BaseUri"
+                                     AnzahlTeilnehmer="v.Teilnehmer.Count(t => t.Status == AnmeldungStatus.Angemeldet)"
+                                     EigeneEmail="@_eigeneEmail" VorlageBetreff="@_vorlage?.Betreff" VorlageText="@_vorlage?.Text" />
+                    break;
+
+                case Tab.Manuell:
+                    <p class="font-ptsans mb-4 text-sm text-gray-600">
+                        Zum Beispiel bei einer telefonischen Anmeldung. Die Anmeldung gilt sofort, ohne Bestätigung per E-Mail.
+                    </p>
+                    <EditForm Model="_manuell" OnSubmit="ManuellAnmeldenAsync" FormName="manuell-anmelden" class="font-ptsans max-w-xl space-y-4 text-sm">
+                        <AnmeldeFelder Praefix="Manuell" Eingabe="_manuell" Tage="_manuellTage" TagInfos="TagInfos(v)" Einstellungen="v.Formular" />
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" @bind="_manuellBenachrichtigen" /> Bestätigung mit Verwaltungslink per E-Mail schicken
+                        </label>
+                        <button type="submit" disabled="@_beschaeftigt"
+                                class="rounded border border-black bg-black px-4 py-2 text-xs text-white disabled:opacity-50">Anmelden</button>
+                    </EditForm>
+                    break;
+            }
+
+            @if (v.Status == VeranstaltungStatus.Veroeffentlicht && _absage is null)
+            {
+                <div class="font-ptsans mt-12 border-t border-gray-200 pt-4 text-sm">
+                    <button type="button" class="text-red-700 hover:underline" @onclick="() => AbsageStarten(null)">Veranstaltung absagen...</button>
+                </div>
+            }
+
+            @if (_offeneAnmeldung is { } anmeldungId)
+            {
+                <AnmeldungPanel VeranstaltungId="v.Id" AnmeldungId="anmeldungId" Benutzer="_benutzer" BasisUrl="@NavigationManager.BaseUri"
+                                Einstellungen="v.Formular" TagInfos="TagInfos(v)"
+                                OnGeaendert="LadenAsync" OnSchliessen="() => _offeneAnmeldung = null" />
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private const string Knopf = "font-ptsans rounded border border-gray-400 px-3 py-1.5 text-xs hover:bg-gray-100 disabled:opacity-50";
+
+    private enum Tab { Teilnehmer, Aenderungen, Nachrichten, Manuell }
+
+    /// <summary>Absage eines Tages (TagId) oder der ganzen Veranstaltung (null), mit optionalem Zusatztext.</summary>
+    private sealed class Absage(int? tagId)
+    {
+        public int? TagId { get; } = tagId;
+        public string? Zusatz { get; set; }
+    }
+
+    private sealed record Vorlage(string Betreff, string Text);
+
+    [Parameter]
+    public int Id { get; set; }
+
+    /// <summary>"termin": Rundmail-Vorlage nach einer Termin- oder Ortsänderung (Link von der Bearbeiten-Seite).</summary>
+    [SupplyParameterFromQuery(Name = "vorlage")]
+    public string? VorlageName { get; set; }
+
+    private VerwaltungsBenutzer? _benutzer;
+    private string? _eigeneEmail;
+    private VeranstaltungUebersicht? _uebersicht;
+    private string? _ladeFehler;
+    private Tab _tab = Tab.Teilnehmer;
+    private TeilnehmerFilterArt _filter = TeilnehmerFilterArt.Aktiv;
+    private int? _offeneAnmeldung;
+    private Absage? _absage;
+    private Vorlage? _vorlage;
+    private AnmeldeEingabe _manuell = new();
+    private List<TagWahl> _manuellTage = [];
+    private bool _manuellBenachrichtigen = true;
+    private bool _beschaeftigt;
+    private List<string> _meldungen = [];
+    private bool _istFehler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Optionen.Value.Aktiviert)
+            return;
+
+        await UserService.InitializeAsync();
+        _benutzer = VerwaltungsBenutzer.Aus(UserService.CurrentUser);
+        _eigeneEmail = UserService.CurrentUser?.User?.Email;
+        if (_benutzer is null)
+        {
+            _ladeFehler = "Bitte erneut anmelden.";
+            return;
+        }
+
+        await LadenAsync();
+        if (_uebersicht is null)
+            return;
+
+        ManuellZuruecksetzen();
+        if (string.Equals(VorlageName, "termin", StringComparison.OrdinalIgnoreCase))
+        {
+            var (betreff, text) = NachrichtVorlagen.Terminaenderung(_uebersicht);
+            _vorlage = new Vorlage(betreff, text);
+            _tab = Tab.Nachrichten;
+        }
+    }
+
+    private async Task LadenAsync()
+    {
+        _uebersicht = await TeilnehmerVerwaltung.UebersichtAsync(Id, _benutzer!);
+        _ladeFehler = _uebersicht is null ? "Die Veranstaltung wurde nicht gefunden oder du darfst sie nicht verwalten." : null;
+    }
+
+    private static IReadOnlyList<TagAnzeige> TagInfos(VeranstaltungUebersicht v) => v.Tage.Select(t => t.AlsAnzeige()).ToList();
+
+    private static IEnumerable<(Tab, string)> Tabs(VeranstaltungUebersicht v)
+    {
+        yield return (Tab.Teilnehmer, $"Teilnehmer ({v.AktiveAnmeldungen})");
+        yield return (Tab.Aenderungen, v.LetzteAenderungen.Any(e => e.Ungesehen) ? "Änderungen •" : "Änderungen");
+        yield return (Tab.Nachrichten, "Nachrichten");
+        yield return (Tab.Manuell, "Manuell anmelden");
+    }
+
+    private static RenderFragment Kennzahl(int wert, string text) =>
+        @<div class="rounded border border-gray-200 p-3">
+            <div class="text-2xl font-bold">@wert</div>
+            <div class="text-xs text-gray-600">@text</div>
+        </div>;
+
+    private void Oeffnen(int anmeldungId) => _offeneAnmeldung = anmeldungId;
+
+    private void NeueAnzeigen()
+    {
+        _tab = Tab.Teilnehmer;
+        _filter = TeilnehmerFilterArt.Neu;
+    }
+
+    private void AbsageStarten(int? tagId)
+    {
+        _absage = new Absage(tagId);
+        _meldungen = [];
+    }
+
+    private async Task<bool> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung)
+    {
+        _beschaeftigt = true;
+        try
+        {
+            var ergebnis = await aktion();
+            _istFehler = !ergebnis.Erfolgreich;
+            _meldungen = ergebnis.Erfolgreich ? [erfolgsMeldung] : ergebnis.Fehler.ToList();
+            if (ergebnis.Erfolgreich)
+                await LadenAsync();
+            return ergebnis.Erfolgreich;
+        }
+        finally
+        {
+            _beschaeftigt = false;
+        }
+    }
+
+    /// <param name="ids">null = alle Anmeldungen der Veranstaltung.</param>
+    private Task GesehenAsync(IReadOnlyCollection<int>? ids) =>
+        AusfuehrenAsync(() => TeilnehmerVerwaltung.AlsGesehenMarkierenAsync(Id, ids, _benutzer!), "Als gesehen markiert.");
+
+    private async Task AbsagenAsync()
+    {
+        var absage = _absage!;
+        var erfolg = absage.TagId is { } tagId
+            ? await AusfuehrenAsync(() => Kommunikation.TagAbsagenAsync(Id, tagId, absage.Zusatz, NavigationManager.BaseUri, _benutzer!),
+                "Der Tag ist abgesagt; die Betroffenen werden informiert.")
+            : await AusfuehrenAsync(() => Kommunikation.AbsagenAsync(Id, absage.Zusatz, NavigationManager.BaseUri, _benutzer!),
+                "Die Veranstaltung ist abgesagt; alle Angemeldeten werden informiert.");
+        if (erfolg)
+            _absage = null;
+    }
+
+    private async Task ManuellAnmeldenAsync()
+    {
+        _manuell.TagIds = _manuellTage.Where(t => t.Gewaehlt).Select(t => t.Id).ToList();
+        var name = $"{_manuell.Vorname} {_manuell.Nachname}".Trim();
+        if (await AusfuehrenAsync(() => TeilnehmerVerwaltung.ManuellAnmeldenAsync(Id, _manuell, _manuellBenachrichtigen, NavigationManager.BaseUri, _benutzer!),
+                $"{name} ist angemeldet."))
+            ManuellZuruecksetzen();
+    }
+
+    private void ManuellZuruecksetzen()
+    {
+        _manuell = new AnmeldeEingabe();
+        _manuellTage = VeranstaltungTexte.TagAuswahl(TagInfos(_uebersicht!), []);
+        _manuellBenachrichtigen = true;
+    }
+}

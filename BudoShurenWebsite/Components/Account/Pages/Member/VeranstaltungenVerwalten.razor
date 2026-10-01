@@ -58,7 +58,7 @@
                             {
                                 <tr class="border-b border-gray-100 hover:bg-gray-50">
                                     <td class="px-2 py-2">
-                                        <a href="@BearbeitenLink(e.Id)" class="font-bold hover:underline">@e.Titel</a>
+                                        <a href="@UebersichtLink(e.Id)" class="font-bold hover:underline">@e.Titel</a>
                                         <div class="text-xs text-gray-500">@(e.Abteilung ?? "Gesamtverein")</div>
                                     </td>
                                     <td class="whitespace-nowrap px-2 py-2">@Zeitraum(e)</td>
@@ -114,6 +114,8 @@
     private void NeueVeranstaltung() => NavigationManager.NavigateTo("/Account/Member/Veranstaltungen/Bearbeiten");
 
     private static string BearbeitenLink(int id) => $"/Account/Member/Veranstaltungen/Bearbeiten/{id}";
+
+    private static string UebersichtLink(int id) => $"/Account/Member/Veranstaltungen/{id}";
 
     private static string Zeitraum(VeranstaltungListenEintrag e) => (e.ErsterTag, e.LetzterTag) switch
     {

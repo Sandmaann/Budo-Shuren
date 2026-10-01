@@ -1,0 +1,161 @@
+@inject IVeranstaltungKommunikationService Kommunikation
+
+@* Rundmail an alle bestätigten Teilnehmer (Plan 6.4): Vorschau, Testmail an die eigene Adresse, Senden mit Rückfrage, Protokoll. *@
+
+@if (_meldungen.Count > 0)
+{
+    <div class="font-ptsans mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">
+        @foreach (var m in _meldungen)
+        {
+            <div>@m</div>
+        }
+    </div>
+}
+
+<div class="font-ptsans space-y-3 text-sm">
+    <div>
+        <label class="mb-1 block text-xs font-bold" for="rundmail-betreff">Betreff</label>
+        <input id="rundmail-betreff" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="_betreff" @bind:event="oninput" />
+    </div>
+    <div>
+        <label class="mb-1 block text-xs font-bold" for="rundmail-text">Text <span class="font-normal text-gray-500">(Markdown; die Anrede "Hallo Vorname," wird automatisch ergänzt)</span></label>
+        <textarea id="rundmail-text" rows="10" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="_text" @bind:event="oninput"></textarea>
+    </div>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" @bind="_anInfoAdressen" /> Auch an die Info-Adressen der Teilnehmer
+    </label>
+
+    @if (!string.IsNullOrWhiteSpace(_text))
+    {
+        <details class="rounded border border-gray-200 p-3">
+            <summary class="cursor-pointer text-xs font-bold">Vorschau</summary>
+            <div class="prose prose-sm mt-2 max-w-none">@((MarkupString)MarkdownText.SicherZuHtml(_text))</div>
+        </details>
+    }
+
+    <div class="flex flex-wrap gap-2">
+        <button type="button" class="@Knopf" disabled="@(_beschaeftigt || EigeneEmail is null)" @onclick="TestmailAsync"
+                title="@(EigeneEmail is null ? "Dein Konto hat keine E-Mail-Adresse" : $"an {EigeneEmail}")">Testmail an mich</button>
+        @if (!_bestaetigen)
+        {
+            <button type="button" class="@KnopfPrimaer" disabled="@(_beschaeftigt || AnzahlTeilnehmer == 0)" @onclick="() => _bestaetigen = true">Senden...</button>
+        }
+    </div>
+    @if (AnzahlTeilnehmer == 0)
+    {
+        <p class="text-xs text-gray-500">Es gibt noch keine bestätigten Teilnehmer.</p>
+    }
+
+    @if (_bestaetigen)
+    {
+        <div class="rounded border border-black p-3">
+            <p>Die Nachricht an @AnzahlTeilnehmer bestätigte Teilnehmer@(_anInfoAdressen ? " und ihre Info-Adressen" : "") senden? Das lässt sich nicht rückgängig machen.</p>
+            <div class="mt-2 flex gap-2">
+                <button type="button" class="@KnopfPrimaer" disabled="@_beschaeftigt" @onclick="SendenAsync">Jetzt senden</button>
+                <button type="button" class="@Knopf" @onclick="() => _bestaetigen = false">Abbrechen</button>
+            </div>
+        </div>
+    }
+</div>
+
+<h4 class="font-ptsans mb-2 mt-8 text-sm font-bold tracking-wider">Gesendete Nachrichten</h4>
+@if (_protokoll is null)
+{
+    <p class="font-ptsans text-sm text-gray-500">Laden...</p>
+}
+else if (_protokoll.Count == 0)
+{
+    <p class="font-ptsans text-sm text-gray-500">Noch keine.</p>
+}
+else
+{
+    <ul class="font-ptsans divide-y divide-gray-100 text-sm">
+        @foreach (var n in _protokoll)
+        {
+            <li class="py-2">
+                <div class="text-xs text-gray-500">
+                    @Ortszeit.AusUtc(n.GesendetUtc).ToString("dd.MM.yyyy HH:mm") · @n.Art.Beschreibung() · @(n.Absender ?? "unbekannt")
+                </div>
+                <div><span class="font-bold">@n.Betreff</span> – @n.AnzahlEmpfaenger Empfänger@(n.AnInfoAdressen ? " (inkl. Info-Adressen)" : "")</div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private const string Knopf = "rounded border border-gray-400 px-3 py-1.5 text-xs hover:bg-gray-100 disabled:opacity-50";
+    private const string KnopfPrimaer = "rounded border border-black bg-black px-3 py-1.5 text-xs text-white disabled:opacity-50";
+
+    [Parameter, EditorRequired]
+    public int VeranstaltungId { get; set; }
+
+    [Parameter, EditorRequired]
+    public VerwaltungsBenutzer Benutzer { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string BasisUrl { get; set; } = string.Empty;
+
+    /// <summary>Bestätigte Teilnehmer (ohne Info-Adressen), für die Rückfrage vor dem Senden.</summary>
+    [Parameter, EditorRequired]
+    public int AnzahlTeilnehmer { get; set; }
+
+    [Parameter]
+    public string? EigeneEmail { get; set; }
+
+    /// <summary>Vorbelegung (z. B. Vorlage nach einer Terminänderung); wird nur beim Start übernommen.</summary>
+    [Parameter]
+    public string? VorlageBetreff { get; set; }
+
+    [Parameter]
+    public string? VorlageText { get; set; }
+
+    private string? _betreff;
+    private string? _text;
+    private IReadOnlyList<NachrichtAnzeige>? _protokoll;
+    private bool _anInfoAdressen;
+    private bool _bestaetigen;
+    private bool _beschaeftigt;
+    private List<string> _meldungen = [];
+    private bool _istFehler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _betreff = VorlageBetreff;
+        _text = VorlageText;
+        await ProtokollLadenAsync();
+    }
+
+    private async Task ProtokollLadenAsync() => _protokoll = await Kommunikation.NachrichtenAsync(VeranstaltungId, Benutzer);
+
+    private async Task AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung, Func<Task>? danach = null)
+    {
+        _beschaeftigt = true;
+        try
+        {
+            var ergebnis = await aktion();
+            _istFehler = !ergebnis.Erfolgreich;
+            _meldungen = ergebnis.Erfolgreich ? [erfolgsMeldung] : ergebnis.Fehler.ToList();
+            if (ergebnis.Erfolgreich && danach is not null)
+                await danach();
+        }
+        finally
+        {
+            _beschaeftigt = false;
+        }
+    }
+
+    private Task TestmailAsync() =>
+        AusfuehrenAsync(() => Kommunikation.TestmailSendenAsync(VeranstaltungId, _betreff ?? "", _text ?? "", EigeneEmail!, BasisUrl, Benutzer),
+            $"Die Testmail an {EigeneEmail} ist unterwegs.");
+
+    private Task SendenAsync() =>
+        AusfuehrenAsync(() => Kommunikation.RundmailSendenAsync(VeranstaltungId, _betreff ?? "", _text ?? "", _anInfoAdressen, BasisUrl, Benutzer),
+            "Die Rundmail ist unterwegs.",
+            async () =>
+            {
+                _bestaetigen = false;
+                _betreff = null;
+                _text = null;
+                await ProtokollLadenAsync();
+            });
+}

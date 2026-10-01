@@ -81,6 +81,17 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         public VeranstaltungStatus Status { get; set; } = VeranstaltungStatus.Entwurf;
 
         public bool WarVeroeffentlicht { get; set; }
+
+        /// <summary>
+        /// Was Teilnehmer bei einer Änderung erfahren sollten (Plan 6.2): Ort, Adresse und Zeiten der stattfindenden Tage.
+        /// Zwei Stände vergleichen: ungleich = Termin oder Ort geändert.
+        /// </summary>
+        public string TerminUndOrt() =>
+            string.Join("|",
+                new[] { Ort?.Trim() ?? "", Adresse?.Trim() ?? "" }
+                    .Concat(Tage.Where(t => !t.Abgesagt)
+                        .Select(t => $"{t.Datum:yyyy-MM-dd} {t.Beginn:HH\\:mm}-{t.Ende:HH\\:mm}")
+                        .Order(StringComparer.Ordinal)));
     }
 
     public sealed class TagEingabe

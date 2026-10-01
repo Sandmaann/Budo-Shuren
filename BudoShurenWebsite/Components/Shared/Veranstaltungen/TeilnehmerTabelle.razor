@@ -1,0 +1,177 @@
+@* Teilnehmer einer Veranstaltung mit Schnellfiltern, Suche und Mehrfachauswahl. Bei Teilanmeldung eine ✓-Spalte pro Tag. *@
+
+<div class="font-ptsans mb-3 flex flex-wrap items-center gap-2 text-sm">
+    @foreach (var art in Enum.GetValues<TeilnehmerFilterArt>())
+    {
+        var aktiv = art == Filter;
+        <button type="button" data-filter="@art"
+                class="rounded-full border px-3 py-1 text-xs @(aktiv ? "border-black bg-black text-white" : "border-gray-300 hover:bg-gray-100")"
+                @onclick="() => FilterSetzenAsync(art)">
+            @art.Beschreibung() (@TeilnehmerFilter.Anzahl(Teilnehmer, art))
+        </button>
+    }
+    <input type="search" placeholder="Suchen..." value="@_suche" @oninput="SucheAendern"
+           class="ml-auto w-full rounded border border-gray-300 p-1.5 text-sm md:w-56" />
+</div>
+
+@if (_auswahl.Count > 0)
+{
+    <div class="font-ptsans mb-3 flex flex-wrap items-center gap-3 rounded bg-gray-100 p-2 text-sm">
+        <span>@_auswahl.Count ausgewählt</span>
+        <button type="button" class="rounded border border-gray-400 bg-white px-2 py-1 text-xs hover:bg-gray-50"
+                @onclick="AuswahlGesehenAsync">Als gesehen markieren</button>
+        <button type="button" class="text-xs hover:underline" @onclick="_auswahl.Clear">Auswahl aufheben</button>
+    </div>
+}
+
+@if (_sichtbar.Count == 0)
+{
+    <p class="font-ptsans text-sm text-gray-500">Keine Anmeldungen für diesen Filter.</p>
+}
+else
+{
+    <div class="-mx-8 overflow-x-auto md:mx-0">
+        <table class="font-ptsans w-full text-left text-sm">
+            <thead class="border-b border-gray-300 text-xs uppercase tracking-wider text-gray-600">
+                <tr>
+                    <th class="px-2 py-2">
+                        <input type="checkbox" title="Alle sichtbaren auswählen" checked="@AlleSichtbarenAusgewaehlt" @onchange="AlleUmschalten" />
+                    </th>
+                    <th class="px-2 py-2">Name</th>
+                    <th class="px-2 py-2">Status</th>
+                    <th class="px-2 py-2 text-right" title="Personen inkl. Begleitung">Pers.</th>
+                    @if (MitTagen)
+                    {
+                        @foreach (var tag in AktiveTage)
+                        {
+                            <th class="px-2 py-2 text-center" title="@tag.Titel">@tag.Datum.ToString("dd.MM.")</th>
+                        }
+                    }
+                    <th class="hidden px-2 py-2 md:table-cell">Verein</th>
+                    <th class="hidden px-2 py-2 md:table-cell">Angemeldet</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in _sichtbar)
+                {
+                    <tr class="cursor-pointer border-b border-gray-100 hover:bg-gray-50 @(t.HatUngeseheneAenderungen ? "bg-red-50" : "") @(t.Id == AusgewaehltId ? "outline outline-1 outline-black" : "")"
+                        data-anmeldung="@t.Id" @onclick="() => OnOeffnen.InvokeAsync(t.Id)">
+                        <td class="px-2 py-2" @onclick:stopPropagation="true">
+                            <input type="checkbox" checked="@_auswahl.Contains(t.Id)" @onchange="() => AuswahlUmschalten(t.Id)" />
+                        </td>
+                        <td class="px-2 py-2">
+                            <span class="font-bold">@t.Nachname, @t.Vorname</span>
+                            @if (t.HatUngeseheneAenderungen)
+                            {
+                                <span class="ml-1 rounded bg-red-700 px-1.5 py-0.5 text-xs text-white">neu</span>
+                            }
+                            @if (t.HatNotiz)
+                            {
+                                <span class="ml-1 text-xs text-gray-500" title="Interne Notiz vorhanden">✎</span>
+                            }
+                            <div class="text-xs text-gray-500">@t.Email</div>
+                        </td>
+                        <td class="px-2 py-2">
+                            @StatusText(t.Status)
+                            @if (t.Quelle == AnmeldungQuelle.Admin)
+                            {
+                                <div class="text-xs text-gray-500">manuell</div>
+                            }
+                        </td>
+                        <td class="px-2 py-2 text-right">@(1 + t.AnzahlBegleitpersonen)</td>
+                        @if (MitTagen)
+                        {
+                            @foreach (var tag in AktiveTage)
+                            {
+                                <td class="px-2 py-2 text-center">@(t.TagIds.Contains(tag.Id) ? "✓" : "")</td>
+                            }
+                        }
+                        <td class="hidden px-2 py-2 md:table-cell">@t.Verein</td>
+                        <td class="hidden whitespace-nowrap px-2 py-2 md:table-cell">@Ortszeit.AusUtc(t.ErstelltUtc).ToString("dd.MM.yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TeilnehmerZeile> Teilnehmer { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TagBelegung> Tage { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public Teilnahmemodus Teilnahmemodus { get; set; }
+
+    [Parameter]
+    public TeilnehmerFilterArt Filter { get; set; }
+
+    [Parameter]
+    public EventCallback<TeilnehmerFilterArt> FilterChanged { get; set; }
+
+    /// <summary>Im Detail-Panel geöffnete Anmeldung (hervorgehoben).</summary>
+    [Parameter]
+    public int? AusgewaehltId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnOeffnen { get; set; }
+
+    [Parameter]
+    public EventCallback<IReadOnlyCollection<int>> OnAuswahlGesehen { get; set; }
+
+    private readonly HashSet<int> _auswahl = [];
+    private string? _suche;
+    private IReadOnlyList<TeilnehmerZeile> _sichtbar = [];
+
+    private bool MitTagen => Teilnahmemodus == Teilnahmemodus.EinzelneTage;
+
+    private IEnumerable<TagBelegung> AktiveTage => Tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum).ThenBy(t => t.Beginn);
+
+    private bool AlleSichtbarenAusgewaehlt => _sichtbar.Count > 0 && _sichtbar.All(t => _auswahl.Contains(t.Id));
+
+    protected override void OnParametersSet()
+    {
+        // Nach dem Neuladen nur noch Anmeldungen auswählen, die es noch gibt
+        _auswahl.IntersectWith(Teilnehmer.Select(t => t.Id));
+        Aktualisieren();
+    }
+
+    private void Aktualisieren() => _sichtbar = TeilnehmerFilter.Anwenden(Teilnehmer, Filter, _suche);
+
+    private async Task FilterSetzenAsync(TeilnehmerFilterArt art)
+    {
+        Filter = art;
+        Aktualisieren();
+        await FilterChanged.InvokeAsync(art);
+    }
+
+    private void SucheAendern(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+    {
+        _suche = e.Value?.ToString();
+        Aktualisieren();
+    }
+
+    private void AuswahlUmschalten(int id)
+    {
+        if (!_auswahl.Remove(id))
+            _auswahl.Add(id);
+    }
+
+    private void AlleUmschalten()
+    {
+        if (AlleSichtbarenAusgewaehlt)
+            _auswahl.ExceptWith(_sichtbar.Select(t => t.Id));
+        else
+            _auswahl.UnionWith(_sichtbar.Select(t => t.Id));
+    }
+
+    private async Task AuswahlGesehenAsync()
+    {
+        await OnAuswahlGesehen.InvokeAsync(_auswahl.ToList());
+        _auswahl.Clear();
+    }
+
+    private static string StatusText(AnmeldungStatus status) => status == AnmeldungStatus.Unbestaetigt ? "Unbestätigt" : status.Beschreibung();
+}

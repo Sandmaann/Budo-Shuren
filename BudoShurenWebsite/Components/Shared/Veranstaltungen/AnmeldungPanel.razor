@@ -1,0 +1,304 @@
+@using BudoShurenWebsite.Components.Pages.Veranstaltungen
+
+@inject ITeilnehmerVerwaltungService Teilnehmer
+
+@*
+    Seitendialog zu einer Anmeldung: Daten, Historie und Aktionen der Organisatoren.
+    Nach dem Laden werden ungesehene Änderungen als gesehen markiert (die Historie zeigt sie in diesem Durchgang noch hervorgehoben).
+*@
+
+<div class="fixed inset-0 z-40 bg-black/30" @onclick="OnSchliessen"></div>
+<aside class="font-ptsans fixed inset-y-0 right-0 z-50 w-full max-w-lg overflow-y-auto bg-white p-5 shadow-xl" role="dialog" aria-label="Anmeldung">
+    <div class="mb-4 flex items-start justify-between gap-2">
+        <h3 class="text-lg font-bold">@(_detail is null ? "Anmeldung" : $"{_detail.Daten.Vorname} {_detail.Daten.Nachname}")</h3>
+        <button type="button" class="px-2 text-xl leading-none" title="Schließen" @onclick="OnSchliessen">×</button>
+    </div>
+
+    @if (_meldungen.Count > 0)
+    {
+        <div class="mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">
+            @foreach (var m in _meldungen)
+            {
+                <div>@m</div>
+            }
+        </div>
+    }
+
+    @if (_nichtGefunden)
+    {
+        <p class="text-sm">Die Anmeldung wurde nicht gefunden.</p>
+    }
+    else if (_detail is null)
+    {
+        <p class="text-sm text-gray-500">Laden...</p>
+    }
+    else if (_bearbeiten is not null)
+    {
+        <EditForm Model="_bearbeiten" OnSubmit="BearbeitenSpeichernAsync" FormName="anmeldung-bearbeiten" class="space-y-4">
+            <AnmeldeFelder Praefix="Bearbeiten" Eingabe="_bearbeiten" Tage="_tagWahl" TagInfos="TagInfos" Einstellungen="Einstellungen"
+                           EmailHinweis="Eine neue Adresse gilt sofort, ohne Bestätigung." />
+            <label class="flex items-center gap-2 text-sm">
+                <input type="checkbox" @bind="_benachrichtigen" /> Teilnehmer per E-Mail über die Änderung informieren
+            </label>
+            <div class="flex gap-2">
+                <button type="submit" disabled="@_beschaeftigt" class="@KnopfPrimaer">Speichern</button>
+                <button type="button" class="@Knopf" @onclick="() => _bearbeiten = null">Abbrechen</button>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <dl class="grid grid-cols-[8rem_1fr] gap-x-3 gap-y-1 text-sm">
+            <dt class="text-gray-500">Status</dt>
+            <dd>
+                @_detail.Status.Beschreibung()
+                @if (!string.IsNullOrWhiteSpace(_detail.StatusGrund))
+                {
+                    <div class="text-xs text-gray-600">Grund: @_detail.StatusGrund</div>
+                }
+            </dd>
+            <dt class="text-gray-500">E-Mail</dt>
+            <dd class="break-all">
+                <a href="mailto:@_detail.Daten.Email" class="hover:underline">@_detail.Daten.Email</a>
+                @if (_detail.NeueEmailAusstehend is { } neu)
+                {
+                    <div class="text-xs text-gray-600">Wechsel auf @neu noch nicht bestätigt</div>
+                }
+            </dd>
+            @if (!string.IsNullOrWhiteSpace(_detail.Telefon))
+            {
+                <dt class="text-gray-500">Telefon</dt>
+                <dd><a href="tel:@_detail.Telefon" class="hover:underline">@_detail.Telefon</a></dd>
+            }
+            @if (!string.IsNullOrWhiteSpace(_detail.Daten.Verein))
+            {
+                <dt class="text-gray-500">Verein / Dojo</dt>
+                <dd>@_detail.Daten.Verein</dd>
+            }
+            @if (!string.IsNullOrWhiteSpace(_detail.Daten.Graduierung))
+            {
+                <dt class="text-gray-500">Graduierung</dt>
+                <dd>@_detail.Daten.Graduierung</dd>
+            }
+            <dt class="text-gray-500">Personen</dt>
+            <dd>@(1 + _detail.Daten.AnzahlBegleitpersonen)@(_detail.Daten.AnzahlBegleitpersonen > 0 ? $" (inkl. {_detail.Daten.AnzahlBegleitpersonen} Begleitung)" : "")</dd>
+            @if (Einstellungen.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
+            {
+                <dt class="text-gray-500">Tage</dt>
+                <dd>
+                    @foreach (var tag in TagInfos.Where(t => _detail.Daten.TagIds.Contains(t.Id)))
+                    {
+                        <div class="@(tag.Abgesagt ? "line-through" : "")">@VeranstaltungTexte.Tag(tag)</div>
+                    }
+                </dd>
+            }
+            @if (_detail.InfoEmails.Count > 0 || _detail.AbgemeldeteInfoEmails.Count > 0)
+            {
+                <dt class="text-gray-500">Info-Adressen</dt>
+                <dd class="break-all">
+                    @foreach (var adresse in _detail.InfoEmails)
+                    {
+                        <div>@adresse</div>
+                    }
+                    @foreach (var adresse in _detail.AbgemeldeteInfoEmails)
+                    {
+                        <div class="text-gray-400 line-through" title="hat sich abgemeldet">@adresse</div>
+                    }
+                </dd>
+            }
+            @if (!string.IsNullOrWhiteSpace(_detail.Bemerkung))
+            {
+                <dt class="text-gray-500">Bemerkung</dt>
+                <dd class="whitespace-pre-line">@_detail.Bemerkung</dd>
+            }
+            <dt class="text-gray-500">Angemeldet</dt>
+            <dd>
+                @Ortszeit.AusUtc(_detail.ErstelltUtc).ToString("dd.MM.yyyy HH:mm")
+                @(_detail.Quelle == AnmeldungQuelle.Admin ? " (manuell)" : "")
+            </dd>
+            @if (_detail.EmailBestaetigtUtc is { } bestaetigt)
+            {
+                <dt class="text-gray-500">Bestätigt</dt>
+                <dd>@Ortszeit.AusUtc(bestaetigt).ToString("dd.MM.yyyy HH:mm")</dd>
+            }
+        </dl>
+
+        <div class="mt-5 flex flex-wrap gap-2">
+            @if (_detail.Status != AnmeldungStatus.Abgelehnt)
+            {
+                <button type="button" class="@Knopf" @onclick="BearbeitenStarten">Bearbeiten</button>
+            }
+            @if (_detail.Status is AnmeldungStatus.Angemeldet or AnmeldungStatus.Warteliste or AnmeldungStatus.Unbestaetigt)
+            {
+                <button type="button" class="@Knopf" disabled="@_beschaeftigt" @onclick="LinkSendenAsync">Link erneut senden</button>
+                <button type="button" class="@Knopf text-red-700" @onclick="() => _ablehnen = true">Ablehnen...</button>
+            }
+            @if (_detail.Status == AnmeldungStatus.Abgelehnt)
+            {
+                <button type="button" class="@Knopf" disabled="@_beschaeftigt" @onclick="ZuruecknehmenAsync">Ablehnung zurücknehmen</button>
+            }
+        </div>
+
+        @if (_ablehnen)
+        {
+            <div class="mt-4 rounded border border-red-700 p-3 text-sm">
+                <label class="mb-1 block text-xs font-bold" for="ablehnungsgrund">Begründung (optional, steht in der Mail)</label>
+                <textarea id="ablehnungsgrund" rows="2" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="_grund"></textarea>
+                <label class="mt-2 flex items-center gap-2">
+                    <input type="checkbox" @bind="_benachrichtigen" /> Teilnehmer per E-Mail informieren
+                </label>
+                <div class="mt-2 flex gap-2">
+                    <button type="button" class="@KnopfPrimaer bg-red-700" disabled="@_beschaeftigt" @onclick="AblehnenAsync">Anmeldung ablehnen</button>
+                    <button type="button" class="@Knopf" @onclick="() => _ablehnen = false">Abbrechen</button>
+                </div>
+            </div>
+        }
+
+        <div class="mt-6">
+            <label class="mb-1 block text-xs font-bold" for="notiz">Interne Notiz <span class="font-normal text-gray-500">(nur für Organisatoren)</span></label>
+            <textarea id="notiz" rows="3" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="_notiz"></textarea>
+            <button type="button" class="@Knopf mt-1" disabled="@_beschaeftigt" @onclick="NotizSpeichernAsync">Notiz speichern</button>
+        </div>
+
+        <h4 class="mb-2 mt-6 text-sm font-bold tracking-wider">Verlauf</h4>
+        <EreignisListe Ereignisse="_detail.Historie" />
+    }
+</aside>
+
+@code {
+    private const string Knopf = "rounded border border-gray-400 px-3 py-1.5 text-xs hover:bg-gray-100 disabled:opacity-50";
+    private const string KnopfPrimaer = "rounded border border-black bg-black px-3 py-1.5 text-xs text-white disabled:opacity-50";
+
+    [Parameter, EditorRequired]
+    public int VeranstaltungId { get; set; }
+
+    [Parameter, EditorRequired]
+    public int AnmeldungId { get; set; }
+
+    [Parameter, EditorRequired]
+    public VerwaltungsBenutzer Benutzer { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string BasisUrl { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public AnmeldeFormularEinstellungen Einstellungen { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TagAnzeige> TagInfos { get; set; } = [];
+
+    /// <summary>Nach jeder Änderung (auch "gesehen"), damit die Seite Liste und Kennzahlen neu lädt.</summary>
+    [Parameter]
+    public EventCallback OnGeaendert { get; set; }
+
+    [Parameter]
+    public EventCallback OnSchliessen { get; set; }
+
+    private AnmeldungDetail? _detail;
+    private bool _nichtGefunden;
+    private int? _geladeneId;
+    private AnmeldeEingabe? _bearbeiten;
+    private List<TagWahl> _tagWahl = [];
+    private bool _benachrichtigen = true;
+    private bool _ablehnen;
+    private string? _grund;
+    private string? _notiz;
+    private bool _beschaeftigt;
+    private List<string> _meldungen = [];
+    private bool _istFehler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Nur bei einer anderen Anmeldung neu laden, nicht bei jedem Neuzeichnen der Seite
+        if (_geladeneId == AnmeldungId)
+            return;
+        _geladeneId = AnmeldungId;
+        _meldungen = [];
+        _bearbeiten = null;
+        _ablehnen = false;
+        await LadenAsync();
+
+        if (_detail?.Historie.Any(e => e.Ungesehen) == true)
+        {
+            await Teilnehmer.AlsGesehenMarkierenAsync(VeranstaltungId, [AnmeldungId], Benutzer);
+            await OnGeaendert.InvokeAsync();
+        }
+    }
+
+    private async Task LadenAsync()
+    {
+        _detail = await Teilnehmer.DetailAsync(VeranstaltungId, AnmeldungId, Benutzer);
+        _nichtGefunden = _detail is null;
+        _notiz = _detail?.AdminNotiz;
+    }
+
+    private void BearbeitenStarten()
+    {
+        var d = _detail!.Daten;
+        _bearbeiten = new AnmeldeEingabe
+        {
+            Vorname = d.Vorname,
+            Nachname = d.Nachname,
+            Email = d.Email,
+            Telefon = d.Telefon,
+            Verein = d.Verein,
+            Graduierung = d.Graduierung,
+            Bemerkung = d.Bemerkung,
+            AnzahlBegleitpersonen = d.AnzahlBegleitpersonen,
+            TagIds = d.TagIds.ToList(),
+            InfoEmails = d.InfoEmails
+        };
+        _tagWahl = VeranstaltungTexte.TagAuswahl(TagInfos, d.TagIds);
+        _benachrichtigen = true;
+        _ablehnen = false;
+        _meldungen = [];
+    }
+
+    private async Task<bool> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung)
+    {
+        _beschaeftigt = true;
+        try
+        {
+            var ergebnis = await aktion();
+            _istFehler = !ergebnis.Erfolgreich;
+            _meldungen = ergebnis.Erfolgreich ? [erfolgsMeldung] : ergebnis.Fehler.ToList();
+            if (ergebnis.Erfolgreich)
+            {
+                await LadenAsync();
+                await OnGeaendert.InvokeAsync();
+            }
+            return ergebnis.Erfolgreich;
+        }
+        finally
+        {
+            _beschaeftigt = false;
+        }
+    }
+
+    private async Task BearbeitenSpeichernAsync()
+    {
+        _bearbeiten!.TagIds = _tagWahl.Where(t => t.Gewaehlt).Select(t => t.Id).ToList();
+        if (await AusfuehrenAsync(() => Teilnehmer.BearbeitenAsync(VeranstaltungId, AnmeldungId, _bearbeiten, _benachrichtigen, BasisUrl, Benutzer), "Gespeichert."))
+            _bearbeiten = null;
+    }
+
+    private async Task AblehnenAsync()
+    {
+        if (await AusfuehrenAsync(() => Teilnehmer.AblehnenAsync(VeranstaltungId, AnmeldungId, _grund, _benachrichtigen, Benutzer), "Die Anmeldung wurde abgelehnt."))
+        {
+            _ablehnen = false;
+            _grund = null;
+        }
+    }
+
+    private Task ZuruecknehmenAsync() =>
+        AusfuehrenAsync(() => Teilnehmer.AblehnungZuruecknehmenAsync(VeranstaltungId, AnmeldungId, BasisUrl, Benutzer),
+            "Die Ablehnung wurde zurückgenommen; der Teilnehmer bekommt eine Bestätigung.");
+
+    private Task LinkSendenAsync() =>
+        AusfuehrenAsync(() => Teilnehmer.LinkErneutSendenAsync(VeranstaltungId, AnmeldungId, BasisUrl, Benutzer),
+            "Ein neuer Link wurde verschickt; der bisherige gilt nicht mehr.");
+
+    private Task NotizSpeichernAsync() =>
+        AusfuehrenAsync(() => Teilnehmer.NotizSpeichernAsync(VeranstaltungId, AnmeldungId, _notiz, Benutzer), "Notiz gespeichert.");
+}

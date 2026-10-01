@@ -16,7 +16,13 @@
     <div class="mx-10">
         <SectionBanner Titel="@(Id.HasValue ? "Veranstaltung bearbeiten" : "Neue Veranstaltung")" />
 
-        <a href="/Account/Member/Veranstaltungen" class="font-ptsans mb-4 inline-block text-sm hover:underline">← Zur Übersicht</a>
+        <div class="font-ptsans mb-4 flex gap-4 text-sm">
+            <a href="/Account/Member/Veranstaltungen" class="hover:underline">← Alle Veranstaltungen</a>
+            @if (Id is { } uebersichtId)
+            {
+                <a href="@($"/Account/Member/Veranstaltungen/{uebersichtId}")" class="hover:underline">Teilnehmer und Übersicht →</a>
+            }
+        </div>
 
         @if (!Optionen.Value.Aktiviert)
         {
@@ -35,6 +41,14 @@
             <div class="font-ptsans mb-4 text-sm">
                 Status: <span class="font-bold">@_eingabe.Status.Beschreibung()</span>
             </div>
+
+            @if (_terminGeaendert)
+            {
+                <div class="font-ptsans mb-4 rounded border border-amber-500 bg-amber-50 p-3 text-sm">
+                    Termin oder Ort haben sich geändert. Teilnehmer informieren?
+                    <a href="@($"/Account/Member/Veranstaltungen/{Id}?vorlage=termin")" class="ml-1 font-bold hover:underline">Rundmail mit den neuen Angaben vorbereiten →</a>
+                </div>
+            }
 
             @if (_meldungen.Count > 0)
             {
@@ -342,6 +356,10 @@
     private bool _beschaeftigt;
     private bool _loeschenBestaetigen;
 
+    // Termin und Ort beim letzten Laden, für den Hinweis "Teilnehmer informieren?"
+    private string? _gespeicherterTermin;
+    private bool _terminGeaendert;
+
     protected override async Task OnParametersSetAsync()
     {
         if (!Optionen.Value.Aktiviert)
@@ -365,6 +383,7 @@
         {
             _eingabe = await Verwaltung.EingabeLadenAsync(id, _benutzer!);
             _ladeFehler = _eingabe is null ? "Die Veranstaltung wurde nicht gefunden oder du darfst sie nicht verwalten." : null;
+            _gespeicherterTermin = _eingabe?.TerminUndOrt();
         }
         else
         {
@@ -402,8 +421,13 @@
 
     private async Task SpeichernAsync()
     {
+        var vorher = _gespeicherterTermin;
         var ergebnis = await AusfuehrenAsync(() => Verwaltung.SpeichernAsync(_eingabe!, _benutzer!), "Gespeichert.");
         await NachSpeichernAsync(ergebnis);
+
+        // Nur wer schon Anmeldungen bekommen kann, muss informiert werden (Plan 6.2); bleibt stehen, bis die Seite verlassen wird
+        if (ergebnis.Erfolgreich && _eingabe?.Status == VeranstaltungStatus.Veroeffentlicht && vorher != _gespeicherterTermin)
+            _terminGeaendert = true;
     }
 
     /// <summary>Nur für bereits gespeicherte Entwürfe (der Button erscheint erst dann).</summary>

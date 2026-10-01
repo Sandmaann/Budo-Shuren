@@ -38,6 +38,7 @@ public sealed class TestWebAppFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(dienste =>
         {
             dienste.Replace(ServiceDescriptor.Singleton<IMailTransport>(Mails));
+            TestAnmeldung.Registrieren(dienste);
             if (_zeit is not null)
                 dienste.Replace(ServiceDescriptor.Singleton(typeof(TimeProvider), _zeit));
         });
