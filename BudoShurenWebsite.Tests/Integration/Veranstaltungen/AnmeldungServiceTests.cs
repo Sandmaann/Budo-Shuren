@@ -23,7 +23,7 @@ public class AnmeldungServiceTests(SqlServerFixture datenbank) : DatenbankTest(d
 
     private AnmeldungService Service => new(
         new TestKontextFabrik(Datenbank),
-        new EmailWarteschlange(_zeit, new EmailVersandSignal()),
+        new AnmeldungMailVersand(new EmailWarteschlange(_zeit, new EmailVersandSignal())),
         _zeit,
         Options.Create(new VeranstaltungenOptionen { ReservierungStunden = 24, MaxInfoEmails = 5 }));
 
@@ -104,7 +104,7 @@ public class AnmeldungServiceTests(SqlServerFixture datenbank) : DatenbankTest(d
         mail.An.ShouldBe("max@example.org");
         mail.AntwortAn.ShouldBe("seminar@example.org");
         mail.Prioritaet.ShouldBe(EmailPrioritaet.Hoch);
-        mail.BezugTyp.ShouldBe(AnmeldungService.BezugTyp);
+        mail.BezugTyp.ShouldBe(AnmeldungMailVersand.BezugTyp);
         mail.BezugId.ShouldBe(a.Id);
         AnmeldeToken.Hash(TokenAus(mail, VeranstaltungLinks.Bestaetigen)).ShouldBe(a.TokenHash, "in der Datenbank steht nur der Hash");
     }

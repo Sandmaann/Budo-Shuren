@@ -32,5 +32,17 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var schluss = veranstaltung.AnmeldungBis ?? beginn.Value;
             return jetztOrtszeit < schluss ? AnmeldeZustand.Offen : AnmeldeZustand.Geschlossen;
         }
+
+        /// <summary>Teilnehmer dürfen Daten, Tage und Begleitpersonen ändern: bis zur Änderungsfrist, sonst bis zum Beginn.</summary>
+        public static bool AenderungenMoeglich(Veranstaltung veranstaltung, IReadOnlyCollection<VeranstaltungsTag> tage, DateTime jetztOrtszeit) =>
+            veranstaltung.Status == VeranstaltungStatus.Veroeffentlicht
+            && Beginn(tage) is { } beginn
+            && jetztOrtszeit < (veranstaltung.AenderungenBis ?? beginn);
+
+        /// <summary>Abmelden geht immer bis zum Beginn, auch nach der Änderungsfrist.</summary>
+        public static bool AbmeldenMoeglich(Veranstaltung veranstaltung, IReadOnlyCollection<VeranstaltungsTag> tage, DateTime jetztOrtszeit) =>
+            veranstaltung.Status == VeranstaltungStatus.Veroeffentlicht
+            && Beginn(tage) is { } beginn
+            && jetztOrtszeit < beginn;
     }
 }

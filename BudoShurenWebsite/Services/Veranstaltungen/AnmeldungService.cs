@@ -2,7 +2,6 @@ using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Global;
 using BudoShurenWebsite.Models.Enums;
 using BudoShurenWebsite.Models.Veranstaltungen;
-using BudoShurenWebsite.Services.Mail;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
@@ -62,21 +61,20 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
     /// </summary>
     public sealed class AnmeldungService : IAnmeldungService
     {
-        public const string BezugTyp = "Anmeldung";
 
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        private readonly IEmailWarteschlange _warteschlange;
+        private readonly AnmeldungMailVersand _mails;
         private readonly TimeProvider _zeit;
         private readonly VeranstaltungenOptionen _optionen;
 
         public AnmeldungService(
             IDbContextFactory<ApplicationDbContext> dbFactory,
-            IEmailWarteschlange warteschlange,
+            AnmeldungMailVersand mails,
             TimeProvider zeit,
             IOptions<VeranstaltungenOptionen> optionen)
         {
             _dbFactory = dbFactory;
-            _warteschlange = warteschlange;
+            _mails = mails;
             _zeit = zeit;
             _optionen = optionen.Value;
         }
@@ -118,7 +116,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             // Abgelehnt: nichts ändern, neutrale Mail an die Adresse
             if (vorhanden is { Status: AnmeldungStatus.Abgelehnt })
             {
-                Einreihen(kontext, v, vorhanden, VeranstaltungMailVorlagen.AnmeldungNichtMoeglich(v));
+                _mails.AnTeilnehmer(kontext, v, vorhanden, VeranstaltungMailVorlagen.AnmeldungNichtMoeglich(v));
                 return await AbschliessenAsync(kontext, transaktion, abbruch);
             }
 
@@ -126,9 +124,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             if (vorhanden is { Status: AnmeldungStatus.Angemeldet or AnmeldungStatus.Warteliste })
             {
                 var neuerLink = AnmeldeToken.Erzeugen();
-                TokenSetzen(vorhanden, neuerLink, jetzt);
-                EreignisHinzufuegen(vorhanden, AnmeldungEreignisArt.LinkVersendet, jetzt);
-                Einreihen(kontext, v, vorhanden, VeranstaltungMailVorlagen.LinkErneut(v, vorhanden, VeranstaltungLinks.MeineAnmeldungUrl(basisUrl, neuerLink.Klartext), nochUnbestaetigt: false));
+                AnmeldungDaten.TokenSetzen(vorhanden, neuerLink, jetzt);
+                AnmeldungDaten.EreignisHinzufuegen(vorhanden, AnmeldungEreignisArt.LinkVersendet, EreignisAkteur.Teilnehmer, jetzt);
+                _mails.AnTeilnehmer(kontext, v, vorhanden, VeranstaltungMailVorlagen.LinkErneut(v, vorhanden, VeranstaltungLinks.MeineAnmeldungUrl(basisUrl, neuerLink.Klartext), nochUnbestaetigt: false));
                 return await AbschliessenAsync(kontext, transaktion, abbruch);
             }
 
@@ -136,7 +134,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var kapazitaet = KapazitaetsRechner.Pruefen(
                 v.Teilnahmemodus,
                 tage.Select(t => new TagKapazitaet(t.Id, t.MaxTeilnehmer, t.Abgesagt)).ToList(),
-                anmeldungen.Select(Belegung).ToList(),
+                anmeldungen.Select(AnmeldungDaten.Belegung).ToList(),
                 jetzt,
                 daten.TagIds,
                 1 + daten.AnzahlBegleitpersonen,
@@ -152,21 +150,23 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 _ => AnmeldungEreignisArt.DatenGeaendert
             };
 
-            DatenUebernehmen(anmeldung, daten, jetzt);
+            anmeldung.Email = daten.Email;
+            anmeldung.DatenschutzAkzeptiertUtc = jetzt;
+            AnmeldungDaten.Uebernehmen(anmeldung, daten, jetzt);
             var token = AnmeldeToken.Erzeugen();
-            TokenSetzen(anmeldung, token, jetzt);
+            AnmeldungDaten.TokenSetzen(anmeldung, token, jetzt);
 
             if (v.DoubleOptIn)
             {
-                StatusSetzen(anmeldung, AnmeldungStatus.Unbestaetigt);
+                AnmeldungDaten.StatusSetzen(anmeldung, AnmeldungStatus.Unbestaetigt, EreignisAkteur.Teilnehmer);
                 anmeldung.ReserviertBisUtc = jetzt.AddHours(_optionen.ReservierungStunden);
             }
             else
             {
-                StatusSetzen(anmeldung, AnmeldungStatus.Angemeldet);
+                AnmeldungDaten.StatusSetzen(anmeldung, AnmeldungStatus.Angemeldet, EreignisAkteur.Teilnehmer);
                 anmeldung.ReserviertBisUtc = null;
             }
-            EreignisHinzufuegen(anmeldung, ereignis, jetzt);
+            AnmeldungDaten.EreignisHinzufuegen(anmeldung, ereignis, EreignisAkteur.Teilnehmer, jetzt);
 
             if (vorhanden is null)
                 kontext.Anmeldungen.Add(anmeldung);
@@ -174,9 +174,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             await kontext.SaveChangesAsync(abbruch);
 
             if (v.DoubleOptIn)
-                Einreihen(kontext, v, anmeldung, VeranstaltungMailVorlagen.OptIn(v, tage, anmeldung, VeranstaltungLinks.BestaetigenUrl(basisUrl, token.Klartext), _optionen.ReservierungStunden));
+                _mails.AnTeilnehmer(kontext, v, anmeldung, VeranstaltungMailVorlagen.OptIn(v, tage, anmeldung, VeranstaltungLinks.BestaetigenUrl(basisUrl, token.Klartext), _optionen.ReservierungStunden));
             else
-                BestaetigungsMailsEinreihen(kontext, v, tage, anmeldung, token, basisUrl, jetzt);
+                BestaetigungsMailsEinreihen(kontext, v, tage, anmeldung, token, basisUrl);
 
             return await AbschliessenAsync(kontext, transaktion, abbruch);
         }
@@ -231,7 +231,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 var kapazitaet = KapazitaetsRechner.Pruefen(
                     v.Teilnahmemodus,
                     tage.Select(t => new TagKapazitaet(t.Id, t.MaxTeilnehmer, t.Abgesagt)).ToList(),
-                    anmeldungen.Select(Belegung).ToList(),
+                    anmeldungen.Select(AnmeldungDaten.Belegung).ToList(),
                     jetzt,
                     anmeldung.Tage.Select(t => t.VeranstaltungsTagId).ToList(),
                     1 + anmeldung.AnzahlBegleitpersonen,
@@ -240,112 +240,39 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     return BestaetigungsErgebnis.Ausgebucht;
             }
 
-            StatusSetzen(anmeldung, AnmeldungStatus.Angemeldet);
+            AnmeldungDaten.StatusSetzen(anmeldung, AnmeldungStatus.Angemeldet, EreignisAkteur.Teilnehmer);
             anmeldung.EmailBestaetigtUtc = jetzt;
             anmeldung.ReserviertBisUtc = null;
             anmeldung.GeaendertUtc = jetzt;
             // Der Bestätigungslink gilt nur einmal; für die Verwaltung gibt es einen neuen
             var verwaltungsLink = AnmeldeToken.Erzeugen();
-            TokenSetzen(anmeldung, verwaltungsLink, jetzt);
-            EreignisHinzufuegen(anmeldung, AnmeldungEreignisArt.Bestaetigt, jetzt);
+            AnmeldungDaten.TokenSetzen(anmeldung, verwaltungsLink, jetzt);
+            AnmeldungDaten.EreignisHinzufuegen(anmeldung, AnmeldungEreignisArt.Bestaetigt, EreignisAkteur.Teilnehmer, jetzt);
 
-            BestaetigungsMailsEinreihen(kontext, v, tage, anmeldung, verwaltungsLink, basisUrl, jetzt);
+            BestaetigungsMailsEinreihen(kontext, v, tage, anmeldung, verwaltungsLink, basisUrl);
             await kontext.SaveChangesAsync(abbruch);
             await transaktion.CommitAsync(abbruch);
-            _warteschlange.VersandAnstossen();
+            _mails.VersandAnstossen();
             return BestaetigungsErgebnis.Bestaetigt;
         }
 
         // ---------------------------------------------------------------------------------------------
 
-        private static AnmeldungBelegung Belegung(Anmeldung a) =>
-            new(a.Id, a.Status, a.ReserviertBisUtc, a.AnzahlBegleitpersonen, a.Tage.Select(t => t.VeranstaltungsTagId).ToList());
-
-        private static void StatusSetzen(Anmeldung anmeldung, AnmeldungStatus neu)
-        {
-            // Neue Anmeldungen starten als Unbestaetigt; gleicher Status ist kein Wechsel
-            if (anmeldung.Status != neu)
-                AnmeldungStatusUebergaenge.Pruefen(anmeldung.Status, neu, EreignisAkteur.Teilnehmer);
-            anmeldung.Status = neu;
-            anmeldung.StatusGrund = null;
-        }
-
-        private static void TokenSetzen(Anmeldung anmeldung, AnmeldeTokenPaar token, DateTime jetzt)
-        {
-            anmeldung.TokenHash = token.Hash;
-            anmeldung.TokenErstelltUtc = jetzt;
-        }
-
-        private static void EreignisHinzufuegen(Anmeldung anmeldung, AnmeldungEreignisArt art, DateTime jetzt) =>
-            anmeldung.Ereignisse.Add(new AnmeldungEreignis { ZeitpunktUtc = jetzt, Akteur = EreignisAkteur.Teilnehmer, Art = art });
-
-        private static void DatenUebernehmen(Anmeldung anmeldung, GepruefteAnmeldung daten, DateTime jetzt)
-        {
-            anmeldung.Email = daten.Email;
-            anmeldung.Vorname = daten.Vorname;
-            anmeldung.Nachname = daten.Nachname;
-            anmeldung.Telefon = daten.Telefon;
-            anmeldung.Verein = daten.Verein;
-            anmeldung.Graduierung = daten.Graduierung;
-            anmeldung.Bemerkung = daten.Bemerkung;
-            anmeldung.AnzahlBegleitpersonen = daten.AnzahlBegleitpersonen;
-            anmeldung.DatenschutzAkzeptiertUtc = jetzt;
-            if (anmeldung.Id != 0)
-                anmeldung.GeaendertUtc = jetzt;
-
-            // Abgleichen statt leeren und neu anlegen: sonst gäbe es denselben Schlüssel gelöscht und neu im selben SaveChanges
-            foreach (var alt in anmeldung.Tage.Where(t => !daten.TagIds.Contains(t.VeranstaltungsTagId)).ToList())
-                anmeldung.Tage.Remove(alt);
-            foreach (var tagId in daten.TagIds.Where(id => anmeldung.Tage.All(t => t.VeranstaltungsTagId != id)))
-                anmeldung.Tage.Add(new AnmeldungTag { VeranstaltungsTagId = tagId });
-
-            // Bestehende Info-Adressen behalten (inkl. Abmeldung), fehlende entfernen, neue anlegen.
-            // Das Abmeldetoken wird erst beim Versand der Info-Mail erzeugt; bis dahin ein zufälliger Platzhalter.
-            foreach (var alt in anmeldung.InfoEmails.Where(i => !daten.InfoEmails.Contains(i.Email)).ToList())
-                anmeldung.InfoEmails.Remove(alt);
-            foreach (var adresse in daten.InfoEmails.Where(a => anmeldung.InfoEmails.All(i => i.Email != a)))
-                anmeldung.InfoEmails.Add(new AnmeldungInfoEmail { Email = adresse, AbmeldeTokenHash = AnmeldeToken.Erzeugen().Hash });
-        }
-
         /// <summary>Bestätigung mit Verwaltungslink an den Anmelder, kurze Info an jede (nicht abgemeldete) Info-Adresse.</summary>
         private void BestaetigungsMailsEinreihen(
             ApplicationDbContext kontext, Veranstaltung v, IReadOnlyCollection<VeranstaltungsTag> tage, Anmeldung anmeldung,
-            AnmeldeTokenPaar verwaltungsLink, string basisUrl, DateTime jetzt)
+            AnmeldeTokenPaar verwaltungsLink, string basisUrl)
         {
-            Einreihen(kontext, v, anmeldung, VeranstaltungMailVorlagen.Bestaetigung(v, tage, anmeldung, VeranstaltungLinks.MeineAnmeldungUrl(basisUrl, verwaltungsLink.Klartext)));
-
-            foreach (var info in anmeldung.InfoEmails.Where(i => i.AbgemeldetUtc is null))
-            {
-                var abmelden = AnmeldeToken.Erzeugen();
-                info.AbmeldeTokenHash = abmelden.Hash;
-                var inhalt = VeranstaltungMailVorlagen.InfoAnBegleitung(
-                    v, tage, anmeldung, VeranstaltungLinks.Veranstaltung(basisUrl, v.Slug), VeranstaltungLinks.InfoAbmeldenUrl(basisUrl, abmelden.Klartext));
-                _warteschlange.Hinzufuegen(kontext, new AusgehendeEmail(info.Email, inhalt.Betreff, inhalt.Html)
-                {
-                    AntwortAn = v.KontaktEmail,
-                    Prioritaet = EmailPrioritaet.Normal,
-                    BezugTyp = BezugTyp,
-                    BezugId = anmeldung.Id
-                });
-            }
+            _mails.AnTeilnehmer(kontext, v, anmeldung, VeranstaltungMailVorlagen.Bestaetigung(v, tage, anmeldung, VeranstaltungLinks.MeineAnmeldungUrl(basisUrl, verwaltungsLink.Klartext)));
+            _mails.InfoMails(kontext, v, tage, anmeldung, basisUrl);
         }
-
-        /// <summary>Mail an den Anmelder, mit hoher Priorität (Links sollen sofort ankommen).</summary>
-        private void Einreihen(ApplicationDbContext kontext, Veranstaltung v, Anmeldung anmeldung, MailInhalt inhalt) =>
-            _warteschlange.Hinzufuegen(kontext, new AusgehendeEmail(anmeldung.Email, inhalt.Betreff, inhalt.Html)
-            {
-                AntwortAn = v.KontaktEmail,
-                Prioritaet = EmailPrioritaet.Hoch,
-                BezugTyp = BezugTyp,
-                BezugId = anmeldung.Id == 0 ? null : anmeldung.Id
-            });
 
         private async Task<AnmeldeErgebnis> AbschliessenAsync(
             ApplicationDbContext kontext, IDbContextTransaction transaktion, CancellationToken abbruch)
         {
             await kontext.SaveChangesAsync(abbruch);
             await transaktion.CommitAsync(abbruch);
-            _warteschlange.VersandAnstossen();
+            _mails.VersandAnstossen();
             return AnmeldeErgebnis.Von(AnmeldeErgebnisArt.EmailVersendet);
         }
     }

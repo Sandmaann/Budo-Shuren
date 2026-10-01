@@ -11,9 +11,11 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         public const string MeineAnmeldung = "veranstaltungen/meine-anmeldung";
         public const string InfoAbmelden = "veranstaltungen/info-abmelden";
         public const string BenachrichtigungAbmelden = "veranstaltungen/benachrichtigung-abmelden";
+        public const string EmailBestaetigen = "veranstaltungen/email-bestaetigen";
+        public const string LinkAnfordern = "veranstaltungen/link-anfordern";
 
         /// <summary>Pfade, deren letztes Segment ein geheimes Token ist.</summary>
-        public static readonly string[] PfadeMitToken = [Bestaetigen, MeineAnmeldung, InfoAbmelden, BenachrichtigungAbmelden];
+        public static readonly string[] PfadeMitToken = [Bestaetigen, MeineAnmeldung, InfoAbmelden, BenachrichtigungAbmelden, EmailBestaetigen];
 
         public static string Veranstaltung(string basisUrl, string slug) => $"{basisUrl}{Basis}/{Uri.EscapeDataString(slug)}";
 
@@ -24,6 +26,10 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         public static string InfoAbmeldenUrl(string basisUrl, string token) => $"{basisUrl}{InfoAbmelden}/{token}";
 
         public static string BenachrichtigungAbmeldenUrl(string basisUrl, string token) => $"{basisUrl}{BenachrichtigungAbmelden}/{token}";
+
+        public static string EmailBestaetigenUrl(string basisUrl, string token) => $"{basisUrl}{EmailBestaetigen}/{token}";
+
+        public static string LinkAnfordernUrl(string basisUrl) => $"{basisUrl}{LinkAnfordern}";
 
         /// <summary>Ersetzt das Token in einem Pfad durch "***", damit es nicht in Logs landet.</summary>
         public static string OhneToken(string? pfad)

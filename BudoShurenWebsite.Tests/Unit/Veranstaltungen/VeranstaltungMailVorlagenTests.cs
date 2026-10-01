@@ -80,6 +80,38 @@ public class VeranstaltungMailVorlagenTests
     }
 
     [Fact]
+    public void Hinweis_an_die_alte_Adresse_nennt_die_neue_kodiert()
+    {
+        var mail = VeranstaltungMailVorlagen.EmailWechselHinweis(Veranstaltung(), Anmeldung(), "neu<b>@example.org");
+
+        mail.Html.ShouldContain("neu&lt;b&gt;@example.org");
+        mail.Html.ShouldContain("mailto:seminar@example.org");
+    }
+
+    [Fact]
+    public void Angeforderte_Links_alle_in_einer_Mail()
+    {
+        var mail = VeranstaltungMailVorlagen.LinksAngefordert(
+        [
+            new("Herbstseminar", "14.11. – 15.11.2026", "https://x.de/veranstaltungen/meine-anmeldung/a", NochUnbestaetigt: false),
+            new("Sommerfest", "01.07.2027", "https://x.de/veranstaltungen/bestaetigen/b", NochUnbestaetigt: true)
+        ]);
+
+        mail.Html.ShouldContain("href=\"https://x.de/veranstaltungen/meine-anmeldung/a\"");
+        mail.Html.ShouldContain("href=\"https://x.de/veranstaltungen/bestaetigen/b\"");
+        mail.Html.ShouldContain("Meine Anmeldung");
+        mail.Html.ShouldContain("Anmeldung bestätigen");
+    }
+
+    [Fact]
+    public void Zeitraum_ueber_die_nicht_abgesagten_Tage()
+    {
+        VeranstaltungMailVorlagen.Zeitraum(Tage).ShouldBe("14.11. – 15.11.2026");
+        VeranstaltungMailVorlagen.Zeitraum([Tage[0]]).ShouldBe("14.11.2026");
+        VeranstaltungMailVorlagen.Zeitraum([]).ShouldBe("");
+    }
+
+    [Fact]
     public void Ablehnung_ist_neutral_und_nennt_den_Kontakt()
     {
         var mail = VeranstaltungMailVorlagen.AnmeldungNichtMoeglich(Veranstaltung());

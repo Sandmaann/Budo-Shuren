@@ -68,6 +68,84 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 Button(veranstaltungUrl, "Zur Veranstaltung") +
                 $"<p style=\"font-size:12px;color:#555;\">Du möchtest keine Infos zu dieser Veranstaltung bekommen? <a href=\"{E(abmeldenUrl)}\" style=\"color:#555;\">Hier abmelden</a>.</p>"));
 
+        public static MailInhalt AenderungGespeichert(Veranstaltung v, IReadOnlyCollection<VeranstaltungsTag> tage, Anmeldung a) => new(
+            $"Anmeldung geändert: {v.Titel}",
+            Layout(
+                $"<p>Hallo {E(a.Vorname)},</p>" +
+                $"<p>deine Anmeldung zu <strong>{E(v.Titel)}</strong> wurde geändert. So sieht sie jetzt aus:</p>" +
+                Zusammenfassung(v, tage, a) +
+                "<p>Weitere Änderungen sind über den Link aus deiner Bestätigungs-E-Mail möglich.</p>" +
+                "<p style=\"font-size:12px;color:#555;\">Du hast nichts geändert? Dann melde dich bitte bei uns.</p>" +
+                Kontakt(v)));
+
+        public static MailInhalt AbmeldungBestaetigt(Veranstaltung v, Anmeldung a, string veranstaltungUrl) => new(
+            $"Abmeldung bestätigt: {v.Titel}",
+            Layout(
+                $"<p>Hallo {E(a.Vorname)},</p>" +
+                $"<p>du hast dich von <strong>{E(v.Titel)}</strong> abgemeldet. Schade, dass du nicht dabei bist!</p>" +
+                "<p>Falls du doch kommen möchtest, kannst du dich über die Veranstaltungsseite erneut anmelden, solange Plätze frei sind.</p>" +
+                Button(veranstaltungUrl, "Zur Veranstaltung") +
+                Kontakt(v)));
+
+        /// <summary>An die neue Adresse; erst nach dem Klick wird sie übernommen.</summary>
+        public static MailInhalt EmailWechselBestaetigen(Veranstaltung v, Anmeldung a, string bestaetigenUrl) => new(
+            $"Bitte bestätige deine neue E-Mail-Adresse: {v.Titel}",
+            Layout(
+                $"<p>Hallo {E(a.Vorname)},</p>" +
+                $"<p>für deine Anmeldung zu <strong>{E(v.Titel)}</strong> wurde diese E-Mail-Adresse angegeben. Bitte bestätige sie:</p>" +
+                Button(bestaetigenUrl, "Neue Adresse bestätigen") +
+                "<p>Bis dahin gehen alle Infos weiter an die bisherige Adresse.</p>" +
+                "<p style=\"font-size:12px;color:#555;\">Du kennst diese Anmeldung nicht? Dann ignoriere diese E-Mail einfach.</p>"));
+
+        /// <summary>An die bisherige Adresse, damit ein unbemerkter Wechsel auffällt.</summary>
+        public static MailInhalt EmailWechselHinweis(Veranstaltung v, Anmeldung a, string neueEmail) => new(
+            $"Neue E-Mail-Adresse angegeben: {v.Titel}",
+            Layout(
+                $"<p>Hallo {E(a.Vorname)},</p>" +
+                $"<p>für deine Anmeldung zu <strong>{E(v.Titel)}</strong> wurde die neue Adresse <strong>{E(neueEmail)}</strong> angegeben. " +
+                "Sobald sie bestätigt ist, gehen alle Infos dorthin, und der bisherige Link zu deiner Anmeldung gilt nicht mehr.</p>" +
+                "<p>Warst du das nicht? Dann melde dich bitte umgehend bei uns.</p>" +
+                Kontakt(v)));
+
+        /// <summary>An die neue Adresse nach der Bestätigung, mit neuem Verwaltungslink.</summary>
+        public static MailInhalt EmailWechselAbgeschlossen(Veranstaltung v, Anmeldung a, string verwaltungUrl) => new(
+            $"Neue E-Mail-Adresse bestätigt: {v.Titel}",
+            Layout(
+                $"<p>Hallo {E(a.Vorname)},</p>" +
+                $"<p>deine neue E-Mail-Adresse für <strong>{E(v.Titel)}</strong> ist bestätigt. Über diesen Link kannst du deine Anmeldung ansehen und ändern:</p>" +
+                Button(verwaltungUrl, "Meine Anmeldung") +
+                "<p style=\"font-size:12px;color:#555;\">Ältere Links gelten nicht mehr. Bitte gib diesen Link nicht weiter.</p>"));
+
+        /// <summary>Ein Eintrag für die Mail "Link anfordern".</summary>
+        public sealed record AngeforderterLink(string Titel, string Termin, string Url, bool NochUnbestaetigt);
+
+        /// <summary>Alle aktiven Anmeldungen einer Adresse in einer Mail.</summary>
+        public static MailInhalt LinksAngefordert(IReadOnlyList<AngeforderterLink> links)
+        {
+            var liste = new StringBuilder();
+            foreach (var link in links)
+            {
+                liste.Append($"<p><strong>{E(link.Titel)}</strong><br>{E(link.Termin)}</p>");
+                liste.Append(Button(link.Url, link.NochUnbestaetigt ? "Anmeldung bestätigen" : "Meine Anmeldung"));
+            }
+
+            return new MailInhalt(
+                "Deine Links zu deinen Anmeldungen",
+                Layout(
+                    "<p>Hallo,</p><p>hier sind die Links zu deinen Anmeldungen:</p>" +
+                    liste +
+                    "<p style=\"font-size:12px;color:#555;\">Ältere Links aus früheren E-Mails gelten nicht mehr. Du hast keine Links angefordert? Dann ignoriere diese E-Mail einfach.</p>"));
+        }
+
+        /// <summary>"14.11.2026" bzw. "14.11. – 15.11.2026" über die nicht abgesagten Tage.</summary>
+        public static string Zeitraum(IReadOnlyCollection<VeranstaltungsTag> tage)
+        {
+            var aktive = tage.Where(t => !t.Abgesagt).Select(t => t.Datum).Order().ToList();
+            if (aktive.Count == 0)
+                return string.Empty;
+            return aktive[0] == aktive[^1] ? $"{aktive[0]:dd.MM.yyyy}" : $"{aktive[0]:dd.MM.} – {aktive[^1]:dd.MM.yyyy}";
+        }
+
         // ------------------------------------------------------------------------------------
 
         private static string E(string? wert) => Encoder.Encode(wert ?? string.Empty);

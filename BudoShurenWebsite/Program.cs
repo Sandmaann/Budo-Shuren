@@ -104,7 +104,9 @@ namespace BudoShurenWebsite
                 //Modul Veranstaltungen (siehe Services/Veranstaltungen); Feature-Schalter Veranstaltungen:Aktiviert
                 builder.Services.Configure<VeranstaltungenOptionen>(builder.Configuration.GetSection(VeranstaltungenOptionen.Abschnitt));
                 builder.Services.AddScoped<IVeranstaltungVerwaltungService, VeranstaltungVerwaltungService>();
+                builder.Services.AddSingleton<AnmeldungMailVersand>();
                 builder.Services.AddScoped<IAnmeldungService, AnmeldungService>();
+                builder.Services.AddScoped<ISelbstverwaltungService, SelbstverwaltungService>();
                 builder.Services.AddScoped<IVeranstaltungAnzeigeService, VeranstaltungAnzeigeService>();
                 builder.Services.AddSingleton<FormularSchutz>();
                 builder.Services.AddRateLimiter(VeranstaltungRateLimit.Konfigurieren);

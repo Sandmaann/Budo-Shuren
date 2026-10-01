@@ -44,6 +44,29 @@ public class AnmeldeFensterTests
         AnmeldeFenster.Zustand(v, Tage, new DateTime(2026, 11, 8, 0, 0, 0)).ShouldBe(AnmeldeZustand.Geschlossen);
     }
 
+    [Fact]
+    public void Aendern_bis_zur_Aenderungsfrist_Abmelden_bis_zum_Beginn()
+    {
+        var v = Veroeffentlicht();
+        v.AenderungenBis = new DateTime(2026, 11, 7, 23, 59, 0);
+
+        AnmeldeFenster.AenderungenMoeglich(v, Tage, new DateTime(2026, 11, 7, 23, 0, 0)).ShouldBeTrue();
+        AnmeldeFenster.AenderungenMoeglich(v, Tage, new DateTime(2026, 11, 8, 0, 0, 0)).ShouldBeFalse();
+        AnmeldeFenster.AbmeldenMoeglich(v, Tage, new DateTime(2026, 11, 14, 9, 59, 0)).ShouldBeTrue("Abmelden geht bis zum Beginn");
+        AnmeldeFenster.AbmeldenMoeglich(v, Tage, new DateTime(2026, 11, 14, 10, 0, 0)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Ohne_Aenderungsfrist_bis_zum_Beginn_und_nur_bei_veroeffentlichten()
+    {
+        var v = Veroeffentlicht();
+        AnmeldeFenster.AenderungenMoeglich(v, Tage, new DateTime(2026, 11, 14, 9, 0, 0)).ShouldBeTrue();
+
+        v.Status = VeranstaltungStatus.Abgesagt;
+        AnmeldeFenster.AenderungenMoeglich(v, Tage, new DateTime(2026, 10, 1)).ShouldBeFalse();
+        AnmeldeFenster.AbmeldenMoeglich(v, Tage, new DateTime(2026, 10, 1)).ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData(VeranstaltungStatus.Entwurf)]
     [InlineData(VeranstaltungStatus.Abgesagt)]
