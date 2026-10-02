@@ -1,6 +1,7 @@
 @page "/veranstaltungen/meine-anmeldung/{Token}"
 @* Statisch gerendert, hinter dem Verwaltungslink. Öffnen ändert nichts; Ändern und Abmelden nur per POST. *@
 
+@using BudoShurenWebsite.Components.Shared.Veranstaltungen
 @using BudoShurenWebsite.Models.Enums
 @using BudoShurenWebsite.Services.Veranstaltungen
 @using Microsoft.AspNetCore.RateLimiting
@@ -145,7 +146,7 @@
             SelbstverwaltungErgebnisArt.Ungueltig => "Bitte prüfe deine Angaben.",
             SelbstverwaltungErgebnisArt.Ausgebucht => ergebnis.VolleTage.Count == 0
                 ? "Für diese Änderung ist leider kein Platz mehr frei."
-                : $"Für diese Änderung ist leider kein Platz mehr frei am {string.Join(", ", ergebnis.VolleTage.Select(d => d.ToString("dd.MM.yyyy")))}.",
+                : $"Für diese Änderung ist leider kein Platz mehr frei: {string.Join(", ", ergebnis.VolleTage)}.",
             _ => "Änderungen sind nicht mehr möglich."
         };
         _fehler = ergebnis.Fehler;
@@ -193,12 +194,7 @@
 
         <section class="my-4 rounded border border-gray-200 p-4">
             <p class="mb-2 font-bold">Du bist angemeldet für:</p>
-            <ul class="space-y-1">
-                @foreach (var tag in gebuchteTage)
-                {
-                    <li class="@(tag.Abgesagt ? "text-gray-400 line-through" : "")">@VeranstaltungTexte.Tag(tag)@(tag.Abgesagt ? " (abgesagt)" : "")</li>
-                }
-            </ul>
+            <TerminListe Termine="gebuchteTage" />
             <p class="mt-2">
                 @(ansicht.Daten.AnzahlBegleitpersonen == 0 ? "1 Person" : $"{1 + ansicht.Daten.AnzahlBegleitpersonen} Personen (du und {ansicht.Daten.AnzahlBegleitpersonen} Begleitperson{(ansicht.Daten.AnzahlBegleitpersonen == 1 ? "" : "en")})")
             </p>

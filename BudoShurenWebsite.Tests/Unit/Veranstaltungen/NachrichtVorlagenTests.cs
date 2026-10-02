@@ -23,9 +23,9 @@ public class NachrichtVorlagenTests
             Tag(2, 15, "Kata"), Tag(1, 14), Tag(3, 16, abgesagt: true)));
 
         betreff.ShouldBe("Änderung: Herbstseminar");
-        var termine = text.ReplaceLineEndings("\n").Split('\n').Where(z => z.StartsWith("- ")).ToArray();
-        termine.ShouldBe(["- Samstag, 14.11.2026, 10:00–16:30 Uhr", "- Sonntag, 15.11.2026, 10:00–16:30 Uhr (Kata)"]);
-        text.ShouldNotContain("16.11.2026");
+        var zeilen = text.ReplaceLineEndings("\n").Split('\n').Where(z => z.Length > 0).ToArray();
+        zeilen[1..5].ShouldBe(["**Samstag, 14. November 2026**", "- 10:00 – 16:30 Uhr", "**Sonntag, 15. November 2026**", "- 10:00 – 16:30 Uhr · Kata"]);
+        text.ShouldNotContain("16. November");
         text.ShouldContain("**Ort:** Halle Nord");
     }
 

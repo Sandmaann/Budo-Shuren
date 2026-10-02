@@ -2,12 +2,13 @@ using BudoShurenWebsite.Models.Enums;
 
 namespace BudoShurenWebsite.Services.Veranstaltungen
 {
-    /// <summary>Geplante Änderung an einem bestehenden Tag.</summary>
-    /// <param name="Entfernen">Tag soll gelöscht werden.</param>
+    /// <summary>Geplante Änderung an einem bestehenden Termin.</summary>
+    /// <param name="Bezeichnung">Für Meldungen, z. B. "Sa 14.11." (TerminText.Kurz).</param>
+    /// <param name="Entfernen">Termin soll gelöscht werden.</param>
     /// <param name="NeuesMax">Neue Kapazität (null = unbegrenzt).</param>
-    /// <param name="Belegt">Aktuell belegte Plätze an diesem Tag.</param>
-    /// <param name="AktiveAnmeldungen">Aktive Anmeldungen, die für diesen Tag gelten.</param>
-    public sealed record TagAenderung(int TagId, DateOnly Datum, bool Entfernen, int? NeuesMax, int Belegt, int AktiveAnmeldungen);
+    /// <param name="Belegt">Aktuell belegte Plätze bei diesem Termin.</param>
+    /// <param name="AktiveAnmeldungen">Aktive Anmeldungen, die für diesen Termin gelten.</param>
+    public sealed record TagAenderung(int TagId, string Bezeichnung, bool Entfernen, int? NeuesMax, int Belegt, int AktiveAnmeldungen);
 
     /// <summary>Geplante Änderung an einer Veranstaltung, mit dem für die Regeln nötigen Ist-Stand.</summary>
     public sealed record VeranstaltungAenderung(
@@ -38,12 +39,10 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
             foreach (var tag in aenderung.Tage)
             {
-                var datum = tag.Datum.ToString("dd.MM.yyyy");
-
                 if (tag.Entfernen && tag.AktiveAnmeldungen > 0)
-                    fehler.Add($"Der Tag {datum} hat Anmeldungen und kann nicht gelöscht werden. Bitte den Tag stattdessen absagen.");
+                    fehler.Add($"Der Termin {tag.Bezeichnung} hat Anmeldungen und kann nicht gelöscht werden. Bitte den Termin stattdessen absagen.");
                 else if (!tag.Entfernen && tag.NeuesMax is { } max && max < tag.Belegt)
-                    fehler.Add($"Die Kapazität am {datum} kann nicht unter die aktuelle Belegung ({tag.Belegt} Personen) gesenkt werden.");
+                    fehler.Add($"Die Kapazität für {tag.Bezeichnung} kann nicht unter die aktuelle Belegung ({tag.Belegt} Personen) gesenkt werden.");
             }
 
             return fehler;

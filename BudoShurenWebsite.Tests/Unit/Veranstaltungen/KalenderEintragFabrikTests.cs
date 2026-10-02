@@ -70,6 +70,21 @@ public class KalenderEintragFabrikTests
     }
 
     [Fact]
+    public void Offenes_Ende_wird_eine_halbe_Stunde_ohne_angezeigte_Endzeit()
+    {
+        var tag = Tag(titel: "Essen");
+        tag.Beginn = new TimeOnly(19, 0);
+        tag.Ende = null;
+        var eintrag = new AppointmentData();
+
+        KalenderEintragFabrik.Uebernehmen(eintrag, Veranstaltung(), tag, Jetzt);
+
+        eintrag.StartTime.ShouldBe(new DateTime(2026, 11, 14, 19, 0, 0));
+        // Kalender.razor zeigt die Uhrzeit erst ab mehr als 30 Minuten; so erscheint keine erfundene Endzeit
+        eintrag.EndTime.ShouldBe(new DateTime(2026, 11, 14, 19, 30, 0));
+    }
+
+    [Fact]
     public void Abteilung_der_Veranstaltung_bestimmt_die_Kalenderfarbe()
     {
         var veranstaltung = Veranstaltung();

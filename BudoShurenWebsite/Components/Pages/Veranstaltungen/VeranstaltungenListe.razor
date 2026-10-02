@@ -33,7 +33,7 @@
                     <li class="rounded border border-gray-200 p-4 hover:bg-gray-50">
                         <a href="@($"/veranstaltungen/{Uri.EscapeDataString(e.Slug)}")" class="block">
                             <p class="font-ptsans text-xs uppercase tracking-wider text-gray-600">
-                                @Zeitraum(e)@(e.Ort is null ? "" : $" · {e.Ort}")@(e.Abteilung is null ? "" : $" · {e.Abteilung}")
+                                @TerminText.Zeitraum([e.ErsterTag, e.LetzterTag])@(e.Ort is null ? "" : $" · {e.Ort}")@(e.Abteilung is null ? "" : $" · {e.Abteilung}")
                             </p>
                             <h2 class="font-yuji mt-1 text-2xl font-bold">@e.Titel</h2>
                             @if (!string.IsNullOrWhiteSpace(e.Kurzbeschreibung))
@@ -66,7 +66,4 @@
 
         _eintraege = await Anzeige.KommendeAsync();
     }
-
-    private static string Zeitraum(VeranstaltungKurz e) =>
-        e.ErsterTag == e.LetzterTag ? $"{e.ErsterTag:dd.MM.yyyy}" : $"{e.ErsterTag:dd.MM.} – {e.LetzterTag:dd.MM.yyyy}";
 }

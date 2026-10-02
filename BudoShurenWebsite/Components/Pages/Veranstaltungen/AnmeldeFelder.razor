@@ -8,6 +8,7 @@
     der Seite fände die Werte beim Absenden nicht.
 *@
 
+<p class="text-xs text-gray-600">Felder mit * sind Pflichtfelder.</p>
 <div class="grid gap-4 md:grid-cols-2">
     <div>
         <label class="@Label" for="@Id("vorname")">Vorname *</label>
@@ -58,21 +59,37 @@
 @if (Einstellungen.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
 {
     <fieldset>
-        <legend class="@Label">An welchen Tagen bist du dabei? *</legend>
-        @for (var i = 0; i < Tage.Count; i++)
-        {
-            var index = i;
-            var tag = TagInfos.Single(t => t.Id == Tage[index].Id);
-            var voll = tag.FreiePlaetze == 0 && !Tage[index].Gewaehlt;
-            <input type="hidden" name="@Name($"Tage[{index}].Id")" value="@tag.Id" />
-            <label class="mt-1 flex items-center gap-2 @(voll ? "text-gray-400" : "")">
-                <InputCheckbox name="@Name($"Tage[{index}].Gewaehlt")" @bind-Value="Tage[index].Gewaehlt" disabled="@voll" />
-                @VeranstaltungTexte.Tag(tag)@(voll ? " – ausgebucht" : "")
-            </label>
-        }
+        <legend class="@Label">
+            An welchen Terminen bist du dabei? *
+            @if (Tage.Count(w => !Voll(w)) > 1)
+            {
+                <button type="button" id="@Id("alle-termine")" onclick="@AlleAuswaehlenSkript" class="ml-2 font-normal underline hover:text-primary">Alle auswählen</button>
+            }
+        </legend>
+        <div class="space-y-2">
+            @* Nach Datum gruppiert; die Formularnamen behalten den Index in Tage *@
+            @foreach (var datum in TerminText.NachDatum(TagInfos.Where(t => Tage.Any(w => w.Id == t.Id))))
+            {
+                <div>
+                    <p class="text-xs font-bold text-gray-700">@TerminText.Datum(datum.Key)</p>
+                    @foreach (var tag in datum)
+                    {
+                        var index = Tage.FindIndex(w => w.Id == tag.Id);
+                        var voll = Voll(Tage[index]);
+                        <input type="hidden" name="@Name($"Tage[{index}].Id")" value="@tag.Id" />
+                        <label class="mt-1 flex items-center gap-2 @(voll ? "text-gray-400" : "")">
+                            <InputCheckbox name="@Name($"Tage[{index}].Gewaehlt")" @bind-Value="Tage[index].Gewaehlt" disabled="@voll" />
+                            <span>
+                                <span class="whitespace-nowrap">@TerminText.Uhrzeit(tag)</span>@(string.IsNullOrWhiteSpace(tag.Titel) ? "" : $" · {tag.Titel}")@(voll ? " – ausgebucht" : "")
+                            </span>
+                        </label>
+                    }
+                </div>
+            }
+        </div>
         @if (Einstellungen.MinTageBeiTeilanmeldung > 1)
         {
-            <p class="mt-1 text-xs text-gray-600">Mindestens @Einstellungen.MinTageBeiTeilanmeldung Tage.</p>
+            <p class="mt-1 text-xs text-gray-600">Mindestens @Einstellungen.MinTageBeiTeilanmeldung Termine.</p>
         }
         @FehlerText(nameof(AnmeldeEingabe.TagIds))
     </fieldset>
@@ -114,7 +131,7 @@
     [Parameter, EditorRequired]
     public AnmeldeEingabe Eingabe { get; set; } = default!;
 
-    /// <summary>Auswahl der Tage (nur bei Teilnahmemodus EinzelneTage), gleiche Reihenfolge wie TagInfos.</summary>
+    /// <summary>Auswahl der Termine (nur bei Teilnahmemodus EinzelneTage); je Eintrag gibt es einen in TagInfos.</summary>
     [Parameter, EditorRequired]
     public List<TagWahl> Tage { get; set; } = [];
 
@@ -141,4 +158,15 @@
             : null;
 
     private static string Stern(FormularFeldModus modus) => modus == FormularFeldModus.Pflicht ? " *" : "";
+
+    /// <summary>Ausgebucht und nicht schon gebucht: nicht wählbar.</summary>
+    private bool Voll(TagWahl wahl) => !wahl.Gewaehlt && TagInfos.Single(t => t.Id == wahl.Id).FreiePlaetze == 0;
+
+    /// <summary>
+    /// Hakt alle wählbaren Termine an. Das change-Ereignis sorgt dafür, dass auf interaktiven Seiten (Verwaltung)
+    /// auch Blazor die Auswahl übernimmt; auf der statischen Anmeldeseite wird sie mit dem Formular gesendet.
+    /// </summary>
+    private const string AlleAuswaehlenSkript =
+        "this.closest('fieldset').querySelectorAll('input[type=checkbox]:not(:disabled)').forEach(function (c) {" +
+        " if (!c.checked) { c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true })); } })";
 }

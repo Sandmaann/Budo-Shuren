@@ -1,0 +1,42 @@
+@typeparam TTermin where TTermin : BudoShurenWebsite.Models.Veranstaltungen.ITermin
+
+@*
+    Termine nach Datum gruppiert: das Datum als Überschrift, darunter Uhrzeit und Titel je Termin.
+    Für öffentliche Seiten (statisch gerendert) und die Verwaltung gleichermaßen.
+*@
+
+<div class="space-y-3">
+    @foreach (var datum in TerminText.NachDatum(Termine))
+    {
+        <div>
+            <p class="font-bold">@TerminText.Datum(datum.Key)</p>
+            <ul>
+                @foreach (var termin in datum)
+                {
+                    <li class="flex flex-wrap items-baseline gap-x-2">
+                        <span class="@(termin.Abgesagt ? "text-gray-400 line-through" : "")">
+                            <span class="whitespace-nowrap">@TerminText.Uhrzeit(termin)</span>@if (!string.IsNullOrWhiteSpace(termin.Titel))
+                            {
+                                <span> · @termin.Titel</span>
+                            }
+                        </span>
+                        @if (termin.Abgesagt)
+                        {
+                            <span class="text-xs font-bold text-red-700">abgesagt</span>
+                        }
+                        @Zusatz?.Invoke(termin)
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IEnumerable<TTermin> Termine { get; set; } = [];
+
+    /// <summary>Optional hinter jedem Termin, z. B. freie Plätze. Nicht für abgesagte Termine gedacht.</summary>
+    [Parameter]
+    public RenderFragment<TTermin>? Zusatz { get; set; }
+}

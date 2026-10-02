@@ -42,19 +42,19 @@ public class TeilnehmerCsvTests
         csv[..3].ShouldBe(Encoding.UTF8.GetPreamble());
         var zeilen = Zeilen(csv);
         zeilen[0].ShouldStartWith("\"Nachname\";\"Vorname\";\"E-Mail\"");
-        zeilen[1].ShouldStartWith("\"Müller\";\"Max\";\"müller@example.org\";\"Angemeldet\";\"2\";\"1\";\"14.11.2026, 15.11.2026\"");
+        zeilen[1].ShouldStartWith("\"Müller\";\"Max\";\"müller@example.org\";\"Angemeldet\";\"2\";\"1\";\"Sa 14.11., So 15.11.\"");
         zeilen[1].ShouldContain("\"01.10.2026 12:00\"", customMessage: "Anmeldezeit in Ortszeit");
     }
 
     [Fact]
-    public void Bei_Teilanmeldung_nur_die_gebuchten_Tage_und_alphabetisch()
+    public void Bei_Teilanmeldung_nur_die_gebuchten_Termine_chronologisch_und_Namen_alphabetisch()
     {
         var zeilen = Zeilen(TeilnehmerCsv.Erstellen([Anmeldung("Zander", 2), Anmeldung("Adler", 1, 2)], Tage, Teilnahmemodus.EinzelneTage));
 
         zeilen[1].ShouldContain("\"Adler\"");
-        zeilen[1].ShouldContain("\"14.11.2026, 15.11.2026\"");
+        zeilen[1].ShouldContain("\"Sa 14.11., So 15.11.\"");
         zeilen[2].ShouldContain("\"Zander\"");
-        zeilen[2].ShouldContain("\"15.11.2026\"");
+        zeilen[2].ShouldContain("\"So 15.11.\"");
     }
 
     [Theory]

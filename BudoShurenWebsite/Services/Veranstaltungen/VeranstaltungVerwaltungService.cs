@@ -220,7 +220,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 RowVersion = v.RowVersion,
                 Status = v.Status,
                 WarVeroeffentlicht = v.ErstmalsVeroeffentlichtUtc != null,
-                Tage = v.Tage.OrderBy(t => t.Datum).Select(t => new TagEingabe
+                Tage = TerminText.Sortiert(v.Tage).Select(t => new TagEingabe
                 {
                     Id = t.Id,
                     Datum = t.Datum,
@@ -542,11 +542,12 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             if (string.IsNullOrWhiteSpace(eingabe.Titel))
                 fehler.Add("Bitte einen Titel angeben.");
 
-            foreach (var doppelt in eingabe.Tage.GroupBy(t => t.Datum).Where(g => g.Count() > 1))
-                fehler.Add($"Der {doppelt.Key:dd.MM.yyyy} ist mehrfach angelegt. Pro Datum ist nur ein Tag möglich.");
+            // Mehrere Termine pro Datum sind erlaubt, aber nicht zweimal derselbe
+            foreach (var doppelt in eingabe.Tage.GroupBy(t => (t.Datum, t.Beginn, Titel: t.Titel?.Trim() ?? "")).Where(g => g.Count() > 1))
+                fehler.Add($"Der Termin {TerminText.Kurz(doppelt.First(), eingabe.Tage)} ist doppelt angelegt.");
 
             foreach (var tag in eingabe.Tage.Where(t => t.Ende <= t.Beginn))
-                fehler.Add($"Am {tag.Datum:dd.MM.yyyy} liegt das Ende nicht nach dem Beginn.");
+                fehler.Add($"Beim Termin {TerminText.Kurz(tag, eingabe.Tage)} liegt das Ende nicht nach dem Beginn.");
 
             if (eingabe.KontaktEmail is { Length: > 0 } kontakt && !EmailAdresse.IstGueltig(kontakt))
                 fehler.Add("Kontakt-E-Mail ist keine gültige E-Mail-Adresse.");
@@ -596,7 +597,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     var anmeldungenAmTag = aktive.Count(a => KapazitaetsRechner
                         .GueltigeTage(v.Teilnahmemodus, tage, a.Tage.Select(at => at.VeranstaltungsTagId).ToList())
                         .Contains(t.Id));
-                    return new TagAenderung(t.Id, t.Datum, Entfernen: neu is null, neu?.MaxTeilnehmer, belegt[t.Id], anmeldungenAmTag);
+                    return new TagAenderung(t.Id, TerminText.Kurz(t, v.Tage), Entfernen: neu is null, neu?.MaxTeilnehmer, belegt[t.Id], anmeldungenAmTag);
                 })
                 .ToList();
 
@@ -614,7 +615,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         private static string? TageUebernehmen(ApplicationDbContext kontext, Veranstaltung v, IReadOnlyList<TagEingabe> eingaben)
         {
             if (eingaben.Any(e => e.Id is { } id && v.Tage.All(t => t.Id != id)))
-                return "Ein Tag gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.";
+                return "Ein Termin gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.";
 
             foreach (var tag in v.Tage.Where(t => !t.Abgesagt && eingaben.All(e => e.Id != t.Id)).ToList())
             {
@@ -699,8 +700,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             }
             catch (DbUpdateException)
             {
-                // Z. B. eindeutiger Index (Datum, Slug) bei gleichzeitigem Speichern oder beim Tauschen zweier Tage
-                return VerwaltungsErgebnis.MitFehler("Die Änderungen konnten nicht gespeichert werden (Datum oder Adresse bereits vergeben). Bitte prüfen und erneut speichern.");
+                // Z. B. eindeutiger Slug, wenn zwei Organisatoren gleichzeitig dieselbe Adresse vergeben
+                return VerwaltungsErgebnis.MitFehler("Die Änderungen konnten nicht gespeichert werden (Adresse bereits vergeben). Bitte prüfen und erneut speichern.");
             }
         }
     }

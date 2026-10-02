@@ -115,7 +115,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         private static IReadOnlyList<int> PruefeTage(Veranstaltung veranstaltung, IReadOnlyCollection<VeranstaltungsTag> tage, List<int>? gewaehlt, Dictionary<string, string> fehler)
         {
-            // Bei NurGesamt gilt die Anmeldung für alle Tage; es werden keine Tage gespeichert
+            // Bei NurGesamt gilt die Anmeldung für alle Termine; es werden keine Termine gespeichert
             if (veranstaltung.Teilnahmemodus == Teilnahmemodus.NurGesamt)
                 return [];
 
@@ -125,11 +125,11 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var mindestens = Math.Clamp(veranstaltung.MinTageBeiTeilanmeldung, 1, Math.Max(1, aktiveTagIds.Count));
 
             if (auswahl.Any(id => !aktiveTagIds.Contains(id)))
-                fehler[nameof(AnmeldeEingabe.TagIds)] = "Bitte wähle nur angebotene Tage aus.";
+                fehler[nameof(AnmeldeEingabe.TagIds)] = "Bitte wähle nur angebotene Termine aus.";
             else if (auswahl.Count < mindestens)
                 fehler[nameof(AnmeldeEingabe.TagIds)] = mindestens == 1
-                    ? "Bitte wähle mindestens einen Tag aus."
-                    : $"Bitte wähle mindestens {mindestens} Tage aus.";
+                    ? "Bitte wähle mindestens einen Termin aus."
+                    : $"Bitte wähle mindestens {mindestens} Termine aus.";
 
             return auswahl.Order().ToList();
         }

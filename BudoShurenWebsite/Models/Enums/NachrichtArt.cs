@@ -7,7 +7,7 @@ namespace BudoShurenWebsite.Models.Enums
         [Description("Rundmail")]
         Rundmail = 0,
 
-        [Description("Tag abgesagt")]
+        [Description("Termin abgesagt")]
         TagAbgesagt = 1,
 
         [Description("Veranstaltung abgesagt")]

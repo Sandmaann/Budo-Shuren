@@ -10,7 +10,7 @@ public class EreignisDiffTests
 {
     private static readonly AnmeldungStand Basis = new(
         "Max", "Müller", null, "Dojo Nord", null, null, 1,
-        [new DateOnly(2026, 11, 14)], ["a@example.org"]);
+        ["Sa 14.11."], ["a@example.org"]);
 
     [Fact]
     public void Ohne_Aenderung_keine_Ereignisse()
@@ -38,7 +38,7 @@ public class EreignisDiffTests
         var neu = Basis with
         {
             AnzahlBegleitpersonen = 2,
-            Tage = [new DateOnly(2026, 11, 14), new DateOnly(2026, 11, 15)],
+            Tage = ["Sa 14.11.", "So 15.11."],
             InfoEmails = ["a@example.org", "b@example.org"]
         };
 
@@ -47,7 +47,7 @@ public class EreignisDiffTests
         aenderungen.Select(a => a.Art).ShouldBe(
             [AnmeldungEreignisArt.BegleitungGeaendert, AnmeldungEreignisArt.TageGeaendert, AnmeldungEreignisArt.InfoEmailsGeaendert]);
         aenderungen.Single(a => a.Art == AnmeldungEreignisArt.TageGeaendert).DetailsJson
-            .ShouldBe("{\"Alt\":[\"14.11.2026\"],\"Neu\":[\"14.11.2026\",\"15.11.2026\"]}");
+            .ShouldBe("{\"Alt\":[\"Sa 14.11.\"],\"Neu\":[\"Sa 14.11.\",\"So 15.11.\"]}");
         aenderungen.Single(a => a.Art == AnmeldungEreignisArt.BegleitungGeaendert).DetailsJson
             .ShouldBe("{\"Alt\":\"1\",\"Neu\":\"2\"}");
     }
@@ -59,7 +59,7 @@ public class EreignisDiffTests
     }
 
     [Fact]
-    public void Stand_aus_Anmeldung_rechnet_Tag_Ids_in_Daten_um()
+    public void Stand_aus_Anmeldung_rechnet_Tag_Ids_in_Kurztexte_um()
     {
         VeranstaltungsTag[] tage =
         [
@@ -76,7 +76,23 @@ public class EreignisDiffTests
 
         var stand = AnmeldungStand.Von(anmeldung, tage);
 
-        stand.Tage.ShouldBe([new DateOnly(2026, 11, 14), new DateOnly(2026, 11, 15)]);
+        stand.Tage.ShouldBe(["Sa 14.11.", "So 15.11."]);
         stand.InfoEmails.ShouldBe(["a@example.org", "b@example.org"]);
+    }
+
+    [Fact]
+    public void Wechsel_zwischen_Terminen_am_selben_Datum_wird_erkannt()
+    {
+        VeranstaltungsTag[] tage =
+        [
+            new() { Id = 1, Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(10, 0), Titel = "Training" },
+            new() { Id = 2, Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(19, 0), Titel = "Essen" }
+        ];
+        Anmeldung Mit(int tagId) => new() { Tage = { new AnmeldungTag { VeranstaltungsTagId = tagId } } };
+
+        var aenderung = EreignisDiff.Erstellen(AnmeldungStand.Von(Mit(1), tage), AnmeldungStand.Von(Mit(2), tage)).ShouldHaveSingleItem();
+
+        aenderung.Art.ShouldBe(AnmeldungEreignisArt.TageGeaendert);
+        EreignisText.Beschreiben(aenderung.Art, aenderung.DetailsJson).ShouldBe("Termine: Sa 14.11. 10:00 Training → Sa 14.11. 19:00 Essen");
     }
 }

@@ -14,10 +14,10 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         string? Graduierung,
         string? Bemerkung,
         int AnzahlBegleitpersonen,
-        IReadOnlyList<DateOnly> Tage,
+        IReadOnlyList<string> Tage,
         IReadOnlyList<string> InfoEmails)
     {
-        /// <param name="tage">Alle Tage der Veranstaltung, um gebuchte Tag-Ids in Daten umzurechnen.</param>
+        /// <param name="tage">Alle Termine der Veranstaltung, um gebuchte Ids in lesbare Kurztexte umzurechnen (TerminText.Kurz).</param>
         public static AnmeldungStand Von(Anmeldung a, IReadOnlyCollection<VeranstaltungsTag> tage)
         {
             var gebucht = a.Tage.Select(t => t.VeranstaltungsTagId).ToHashSet();
@@ -29,7 +29,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 a.Graduierung,
                 a.Bemerkung,
                 a.AnzahlBegleitpersonen,
-                tage.Where(t => gebucht.Contains(t.Id)).Select(t => t.Datum).Order().ToList(),
+                TerminText.Sortiert(tage.Where(t => gebucht.Contains(t.Id))).Select(t => TerminText.Kurz(t, tage, mitTitel: true)).ToList(),
                 a.InfoEmails.Select(i => i.Email).Order().ToList());
         }
     }
@@ -68,7 +68,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
             if (!alt.Tage.SequenceEqual(neu.Tage))
                 ergebnis.Add(new EreignisAenderung(AnmeldungEreignisArt.TageGeaendert,
-                    JsonSerializer.Serialize(new ListenAenderung(Datumsliste(alt.Tage), Datumsliste(neu.Tage)), Json)));
+                    JsonSerializer.Serialize(new ListenAenderung(alt.Tage, neu.Tage), Json)));
 
             if (!alt.InfoEmails.SequenceEqual(neu.InfoEmails))
                 ergebnis.Add(new EreignisAenderung(AnmeldungEreignisArt.InfoEmailsGeaendert,
@@ -88,8 +88,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             if (!string.Equals(alt ?? "", neu ?? "", StringComparison.Ordinal))
                 daten[feld] = new WertAenderung(alt, neu);
         }
-
-        private static IReadOnlyList<string> Datumsliste(IEnumerable<DateOnly> tage) => tage.Select(t => t.ToString("dd.MM.yyyy")).ToList();
 
         private sealed record WertAenderung(string? Alt, string? Neu);
 

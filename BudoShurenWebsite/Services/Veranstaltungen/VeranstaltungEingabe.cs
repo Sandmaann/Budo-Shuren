@@ -1,5 +1,6 @@
 using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Models.Enums;
+using BudoShurenWebsite.Models.Veranstaltungen;
 using System.ComponentModel.DataAnnotations;
 
 namespace BudoShurenWebsite.Services.Veranstaltungen
@@ -51,7 +52,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         public Teilnahmemodus Teilnahmemodus { get; set; } = Teilnahmemodus.NurGesamt;
 
-        [Range(1, 30, ErrorMessage = "Mindestens 1 Tag.")]
+        [Range(1, 30, ErrorMessage = "Mindestens 1 Termin.")]
         public int MinTageBeiTeilanmeldung { get; set; } = 1;
 
         [Range(1, 10000, ErrorMessage = "Die Kapazität muss mindestens 1 sein (leer = unbegrenzt).")]
@@ -83,7 +84,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         public bool WarVeroeffentlicht { get; set; }
 
         /// <summary>
-        /// Was Teilnehmer bei einer Änderung erfahren sollten (Plan 6.2): Ort, Adresse und Zeiten der stattfindenden Tage.
+        /// Was Teilnehmer bei einer Änderung erfahren sollten (Plan 6.2): Ort, Adresse und Zeiten der stattfindenden Termine.
         /// Zwei Stände vergleichen: ungleich = Termin oder Ort geändert.
         /// </summary>
         public string TerminUndOrt() =>
@@ -94,16 +95,17 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                         .Order(StringComparer.Ordinal)));
     }
 
-    public sealed class TagEingabe
+    public sealed class TagEingabe : ITermin
     {
-        /// <summary>Leer = neuer Tag.</summary>
+        /// <summary>Leer = neuer Termin.</summary>
         public int? Id { get; set; }
 
         public DateOnly Datum { get; set; }
 
         public TimeOnly Beginn { get; set; } = new(10, 0);
 
-        public TimeOnly Ende { get; set; } = new(16, 0);
+        /// <summary>Leer = offenes Ende ("ab 19:00 Uhr").</summary>
+        public TimeOnly? Ende { get; set; } = new(16, 0);
 
         [MaxLength(200)]
         public string? Titel { get; set; }
@@ -111,7 +113,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         [Range(1, 10000, ErrorMessage = "Die Kapazität muss mindestens 1 sein (leer = unbegrenzt).")]
         public int? MaxTeilnehmer { get; set; }
 
-        // Nur zur Anzeige: abgesagte Tage werden über "Tag absagen" verwaltet, nicht im Formular
+        // Nur zur Anzeige: abgesagte Termine werden über "Termin absagen" verwaltet, nicht im Formular
         public bool Abgesagt { get; set; }
     }
 }

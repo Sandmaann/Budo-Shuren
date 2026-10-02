@@ -1,4 +1,4 @@
-@* Teilnehmer einer Veranstaltung mit Schnellfiltern, Suche und Mehrfachauswahl. Bei Teilanmeldung eine ✓-Spalte pro Tag. *@
+@* Teilnehmer einer Veranstaltung mit Schnellfiltern, Suche und Mehrfachauswahl. Bei Teilanmeldung eine ✓-Spalte pro Termin. *@
 
 <div class="font-ptsans mb-3 flex flex-wrap items-center gap-2 text-sm">
     @foreach (var art in Enum.GetValues<TeilnehmerFilterArt>())
@@ -44,7 +44,7 @@ else
                     {
                         @foreach (var tag in AktiveTage)
                         {
-                            <th class="px-2 py-2 text-center" title="@tag.Titel">@tag.Datum.ToString("dd.MM.")</th>
+                            <th class="px-2 py-2 text-center" title="@TerminText.Zeile(tag)">@TerminText.Kurz(tag, AktiveTage)</th>
                         }
                     }
                     <th class="hidden px-2 py-2 md:table-cell">Verein</th>
@@ -127,7 +127,7 @@ else
 
     private bool MitTagen => Teilnahmemodus == Teilnahmemodus.EinzelneTage;
 
-    private IEnumerable<TagBelegung> AktiveTage => Tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum).ThenBy(t => t.Beginn);
+    private IReadOnlyList<TagBelegung> AktiveTage => TerminText.Sortiert(Tage.Where(t => !t.Abgesagt)).ToList();
 
     private bool AlleSichtbarenAusgewaehlt => _sichtbar.Count > 0 && _sichtbar.All(t => _auswahl.Contains(t.Id));
 

@@ -42,10 +42,10 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 {
                     AnmeldungEreignisArt.DatenGeaendert or AnmeldungEreignisArt.AdminBearbeitet => Felder(details, datensparsam),
                     AnmeldungEreignisArt.BegleitungGeaendert => $"Begleitpersonen: {Wert(details, "Alt")} → {Wert(details, "Neu")}",
-                    AnmeldungEreignisArt.TageGeaendert => $"Tage: {Liste(details, "Alt")} → {Liste(details, "Neu")}",
+                    AnmeldungEreignisArt.TageGeaendert => $"Termine: {Liste(details, "Alt")} → {Liste(details, "Neu")}",
                     AnmeldungEreignisArt.InfoEmailsGeaendert => InfoAdressen(details),
                     AnmeldungEreignisArt.EmailGeaendert => $"E-Mail: {Wert(details, "Alt")} → {Wert(details, "Neu")}",
-                    AnmeldungEreignisArt.TagAbgesagt => $"Tag abgesagt: {Wert(details, "Alt")}",
+                    AnmeldungEreignisArt.TagAbgesagt => $"Termin abgesagt: {Wert(details, "Alt")}",
                     AnmeldungEreignisArt.Abgelehnt => details.TryGetProperty("Grund", out var grund) && grund.ValueKind == JsonValueKind.String
                         ? $"Abgelehnt: {grund.GetString()}"
                         : null,

@@ -172,8 +172,8 @@ namespace BudoShurenWebsite.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.Entity<VeranstaltungsTag>().ToTable("VeranstaltungsTage");
-            // Ein Eintrag pro Kalendertag: die Kapazität wird pro Tag gezählt
-            builder.Entity<VeranstaltungsTag>().HasIndex(t => new { t.VeranstaltungId, t.Datum }).IsUnique();
+            // Mehrere Termine pro Datum möglich (z. B. Training und Essen), deshalb nicht eindeutig
+            builder.Entity<VeranstaltungsTag>().HasIndex(t => new { t.VeranstaltungId, t.Datum, t.Beginn });
             builder.Entity<VeranstaltungsTag>()
                 .HasOne(t => t.Veranstaltung)
                 .WithMany(v => v.Tage)

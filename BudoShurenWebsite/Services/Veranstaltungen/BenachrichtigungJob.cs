@@ -130,7 +130,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 {
                     var a = anmeldungen[g.Key];
                     var tage = v.Teilnahmemodus == Teilnahmemodus.EinzelneTage
-                        ? v.Tage.Where(t => a.TagIds.Contains(t.Id)).Select(t => t.Datum).Order().ToList()
+                        ? TerminText.Sortiert(v.Tage.Where(t => a.TagIds.Contains(t.Id))).Select(t => TerminText.Kurz(t, v.Tage, mitTitel: true)).ToList()
                         : [];
                     return new BenachrichtigungsAbschnitt(
                         $"{a.Vorname} {a.Nachname}",
@@ -174,7 +174,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             return e.Akteur == EreignisAkteur.Admin ? $"{text} (durch Organisator)" : text;
         }
 
-        /// <summary>Belegung je stattfindendem Tag; ausgebucht = niemand kann sich mehr anmelden.</summary>
+        /// <summary>Belegung je stattfindendem Termin; ausgebucht = niemand kann sich mehr anmelden.</summary>
         private static List<TagStand> Stand(Veranstaltung v, IEnumerable<AnmeldungKurz> anmeldungen, DateTime jetzt, out bool ausgebucht)
         {
             var tage = v.Tage.Select(t => new TagKapazitaet(t.Id, t.MaxTeilnehmer, t.Abgesagt)).ToList();
@@ -187,7 +187,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 ? frei.Values.Any(f => f == 0)
                 : frei.Values.All(f => f == 0));
 
-            return v.Tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum).ThenBy(t => t.Beginn)
+            return TerminText.Sortiert(v.Tage.Where(t => !t.Abgesagt))
                 .Select(t => new TagStand(t, belegt[t.Id], t.MaxTeilnehmer))
                 .ToList();
         }

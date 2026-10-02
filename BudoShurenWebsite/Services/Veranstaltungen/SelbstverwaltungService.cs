@@ -53,7 +53,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
     public sealed record SelbstverwaltungErgebnis(
         SelbstverwaltungErgebnisArt Art,
         IReadOnlyDictionary<string, string> Fehler,
-        IReadOnlyList<DateOnly> VolleTage,
+        IReadOnlyList<string> VolleTage,
         bool EmailWechselAngefordert = false)
     {
         private static readonly IReadOnlyDictionary<string, string> KeineFehler = new Dictionary<string, string>();
@@ -62,7 +62,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         public static SelbstverwaltungErgebnis Ungueltig(IReadOnlyDictionary<string, string> fehler) => new(SelbstverwaltungErgebnisArt.Ungueltig, fehler, []);
 
-        public static SelbstverwaltungErgebnis Ausgebucht(IReadOnlyList<DateOnly> tage) => new(SelbstverwaltungErgebnisArt.Ausgebucht, KeineFehler, tage);
+        public static SelbstverwaltungErgebnis Ausgebucht(IReadOnlyList<string> tage) => new(SelbstverwaltungErgebnisArt.Ausgebucht, KeineFehler, tage);
     }
 
     public enum EmailWechselErgebnis
@@ -151,7 +151,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 .Select(x => new AnmeldungBelegung(x.Id, x.Status, x.ReserviertBisUtc, x.AnzahlBegleitpersonen, x.Tage.Select(t => t.VeranstaltungsTagId).ToList()))
                 .ToListAsync(abbruch);
 
-            var tage = v.Tage.OrderBy(t => t.Datum).ToList();
+            var tage = TerminText.Sortiert(v.Tage).ToList();
             var frei = KapazitaetsRechner.FreiePlaetzeProTag(
                 v.Teilnahmemodus, tage.Select(t => new TagKapazitaet(t.Id, t.MaxTeilnehmer, t.Abgesagt)).ToList(), belegungen, JetztUtc, ohneAnmeldungId: a.Id);
             var jetzt = Ortszeit.Jetzt(_zeit);
@@ -227,7 +227,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 1 + daten.AnzahlBegleitpersonen,
                 a.Id);
             if (!kapazitaet.Passt)
-                return SelbstverwaltungErgebnis.Ausgebucht(tage.Where(t => kapazitaet.VolleTagIds.Contains(t.Id)).Select(t => t.Datum).Order().ToList());
+                return SelbstverwaltungErgebnis.Ausgebucht(TerminText.Sortiert(tage.Where(t => kapazitaet.VolleTagIds.Contains(t.Id))).Select(t => TerminText.Kurz(t, tage, mitTitel: true)).ToList());
 
             var alt = AnmeldungStand.Von(a, tage);
             var alteInfoEmails = a.InfoEmails.Select(i => i.Email).ToHashSet();
@@ -345,7 +345,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
             var jetzt = JetztUtc;
             var links = new List<VeranstaltungMailVorlagen.AngeforderterLink>();
-            foreach (var a in anmeldungen.OrderBy(x => x.Veranstaltung!.Tage.Where(t => !t.Abgesagt).Min(t => t.Datum)))
+            foreach (var a in anmeldungen.OrderBy(x => x.Veranstaltung!.Tage.Where(t => !t.Abgesagt).Min(t => t.Datum.ToDateTime(t.Beginn))))
             {
                 var v = a.Veranstaltung!;
                 var neu = AnmeldeToken.Erzeugen();

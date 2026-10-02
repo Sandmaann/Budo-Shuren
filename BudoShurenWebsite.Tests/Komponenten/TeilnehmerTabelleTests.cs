@@ -86,7 +86,7 @@ public class TeilnehmerTabelleTests : BunitContext
 
         var tabelle = Tabelle([Zeile(1, "Adler", tage: [3])], Teilnahmemodus.EinzelneTage);
 
-        tabelle.FindAll("th").Select(th => th.TextContent.Trim()).ShouldBe(["", "Name", "Status", "Pers.", "14.11.", "16.11.", "Verein", "Angemeldet"]);
+        tabelle.FindAll("th").Select(th => th.TextContent.Trim()).ShouldBe(["", "Name", "Status", "Pers.", "Sa 14.11.", "Mo 16.11.", "Verein", "Angemeldet"]);
         tabelle.FindAll("tr[data-anmeldung] td").Select(td => td.TextContent.Trim()).Skip(4).Take(2).ShouldBe(["", "✓"]);
     }
 

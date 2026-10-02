@@ -22,7 +22,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         Ausgebucht
     }
 
-    public sealed record AnmeldeErgebnis(AnmeldeErgebnisArt Art, IReadOnlyDictionary<string, string> Fehler, IReadOnlyList<DateOnly> VolleTage)
+    /// <param name="VolleTage">Ausgebuchte Termine als Kurztext (TerminText.Kurz).</param>
+    public sealed record AnmeldeErgebnis(AnmeldeErgebnisArt Art, IReadOnlyDictionary<string, string> Fehler, IReadOnlyList<string> VolleTage)
     {
         private static readonly IReadOnlyDictionary<string, string> KeineFehler = new Dictionary<string, string>();
 
@@ -30,7 +31,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         public static AnmeldeErgebnis Ungueltig(IReadOnlyDictionary<string, string> fehler) => new(AnmeldeErgebnisArt.Ungueltig, fehler, []);
 
-        public static AnmeldeErgebnis Ausgebucht(IReadOnlyList<DateOnly> volleTage) => new(AnmeldeErgebnisArt.Ausgebucht, KeineFehler, volleTage);
+        public static AnmeldeErgebnis Ausgebucht(IReadOnlyList<string> volleTage) => new(AnmeldeErgebnisArt.Ausgebucht, KeineFehler, volleTage);
     }
 
     public enum BestaetigungsErgebnis
@@ -140,7 +141,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 1 + daten.AnzahlBegleitpersonen,
                 vorhanden?.Id);
             if (!kapazitaet.Passt)
-                return AnmeldeErgebnis.Ausgebucht(tage.Where(t => kapazitaet.VolleTagIds.Contains(t.Id)).Select(t => t.Datum).Order().ToList());
+                return AnmeldeErgebnis.Ausgebucht(TerminText.Sortiert(tage.Where(t => kapazitaet.VolleTagIds.Contains(t.Id))).Select(t => TerminText.Kurz(t, tage, mitTitel: true)).ToList());
 
             var anmeldung = vorhanden ?? new Anmeldung { VeranstaltungId = v.Id, Quelle = AnmeldungQuelle.Formular, ErstelltUtc = jetzt };
             var ereignis = vorhanden?.Status switch

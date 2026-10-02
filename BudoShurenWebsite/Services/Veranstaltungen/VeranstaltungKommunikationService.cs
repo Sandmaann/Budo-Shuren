@@ -125,15 +125,15 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
             var tag = v.Tage.SingleOrDefault(t => t.Id == tagId);
             if (tag is null)
-                return VerwaltungsErgebnis.MitFehler("Der Tag gehört nicht zu dieser Veranstaltung.");
+                return VerwaltungsErgebnis.MitFehler("Der Termin gehört nicht zu dieser Veranstaltung.");
             if (tag.Abgesagt)
-                return VerwaltungsErgebnis.MitFehler("Der Tag ist bereits abgesagt.");
+                return VerwaltungsErgebnis.MitFehler("Der Termin ist bereits abgesagt.");
             if (v.Status != VeranstaltungStatus.Veroeffentlicht)
-                return VerwaltungsErgebnis.MitFehler("Tage können nur bei veröffentlichten Veranstaltungen abgesagt werden. Im Entwurf den Tag einfach entfernen.");
+                return VerwaltungsErgebnis.MitFehler("Termine können nur bei veröffentlichten Veranstaltungen abgesagt werden. Im Entwurf den Termin einfach entfernen.");
             if (v.Tage.Count(t => !t.Abgesagt) == 1)
-                return VerwaltungsErgebnis.MitFehler("Das ist der letzte Tag. Bitte stattdessen die ganze Veranstaltung absagen.");
+                return VerwaltungsErgebnis.MitFehler("Das ist der letzte Termin. Bitte stattdessen die ganze Veranstaltung absagen.");
 
-            // Betroffen sind aktive Anmeldungen, die für diesen Tag gelten (vor der Absage berechnet)
+            // Betroffen sind aktive Anmeldungen, die für diesen Termin gelten (vor der Absage berechnet)
             var tagKapazitaeten = v.Tage.Select(t => new TagKapazitaet(t.Id, t.MaxTeilnehmer, t.Abgesagt)).ToList();
             var betroffen = v.Anmeldungen
                 .Where(a => AnmeldungStatusUebergaenge.IstAktiv(a.Status)
@@ -147,7 +147,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             foreach (var a in betroffen)
             {
                 AnmeldungDaten.EreignisHinzufuegen(a, AnmeldungEreignisArt.TagAbgesagt, EreignisAkteur.Admin, jetzt,
-                    EreignisDiff.Wert(tag.Datum.ToString("dd.MM.yyyy"), null), benutzer.UserId);
+                    EreignisDiff.Wert(TerminText.Kurz(tag, v.Tage, mitTitel: true), null), benutzer.UserId);
             }
 
             var betreff = $"Termin abgesagt: {v.Titel}";

@@ -102,12 +102,17 @@ public class VeranstaltungSchemaTests(SqlServerFixture datenbank) : DatenbankTes
     }
 
     [DatenbankFact]
-    public async Task Zwei_Tage_am_selben_Datum_sind_nicht_erlaubt()
+    public async Task Mehrere_Termine_am_selben_Datum_auch_ohne_Ende()
     {
         var veranstaltung = NeueVeranstaltung();
-        veranstaltung.Tage.Add(new VeranstaltungsTag { Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(18, 0), Ende = new TimeOnly(20, 0) });
+        veranstaltung.Tage.Add(new VeranstaltungsTag { Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(19, 0), Ende = null, Titel = "Essen" });
 
-        await Should.ThrowAsync<DbUpdateException>(() => SpeichernAsync(veranstaltung));
+        var id = await SpeichernAsync(veranstaltung);
+
+        await using var kontext = Datenbank.NeuerKontext();
+        var termine = await kontext.VeranstaltungsTage.Where(t => t.VeranstaltungId == id && t.Datum == new DateOnly(2026, 11, 14)).ToListAsync(Abbruch);
+        termine.Count.ShouldBe(2);
+        termine.ShouldContain(t => t.Ende == null);
     }
 
     [DatenbankFact]

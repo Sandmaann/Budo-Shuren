@@ -7,7 +7,7 @@ namespace BudoShurenWebsite.Models.Enums
         [Description("Anmeldung nur für die gesamte Veranstaltung")]
         NurGesamt = 0,
 
-        [Description("Anmeldung auch für einzelne Tage")]
+        [Description("Anmeldung auch für einzelne Termine")]
         EinzelneTage = 1
     }
 }

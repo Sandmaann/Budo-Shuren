@@ -173,11 +173,11 @@ public class VeranstaltungKommunikationServiceTests(SqlServerFixture datenbank) 
         (await MitKontextAsync(k => k.Appointments.Select(a => a.VeranstaltungsTagId).ToListAsync(Abbruch))).ShouldBe([_sonntag]);
         var mails = await MailsAsync();
         mails.Select(m => m.An).ShouldBe(["max@example.org", "unbestaetigt@example.org", "begleitung@example.org"], ignoreOrder: true);
-        mails.First().Html.ShouldContain("Samstag, 14.11.2026");
+        mails.First().Html.ShouldContain("Samstag, 14. November 2026");
         mails.First().Html.ShouldContain("<strong>gesperrt</strong>");
         var ereignisse = await MitKontextAsync(k => k.AnmeldungEreignisse.Where(e => e.Art == AnmeldungEreignisArt.TagAbgesagt).ToListAsync(Abbruch));
         ereignisse.Count.ShouldBe(2, "nur aktive Anmeldungen");
-        EreignisText.Beschreiben(ereignisse[0].Art, ereignisse[0].DetailsJson).ShouldBe("Tag abgesagt: 14.11.2026");
+        EreignisText.Beschreiben(ereignisse[0].Art, ereignisse[0].DetailsJson).ShouldBe("Termin abgesagt: Sa 14.11.");
 
         (await Service.TagAbsagenAsync(_v.Id, _samstag, null, Basis, _admin, Abbruch)).Erfolgreich.ShouldBeFalse("schon abgesagt");
         (await Service.TagAbsagenAsync(_v.Id, _sonntag, null, Basis, _admin, Abbruch)).Fehler.ShouldHaveSingleItem().ShouldContain("ganze Veranstaltung");

@@ -208,6 +208,33 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
     }
 
     [DatenbankFact]
+    public async Task Mehrere_Termine_an_einem_Datum_auch_mit_offenem_Ende()
+    {
+        var eingabe = Eingabe();
+        eingabe.Tage.Add(new TagEingabe { Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(19, 0), Ende = null, Titel = "Essen", MaxTeilnehmer = 30 });
+        var id = await AnlegenAsync(eingabe);
+
+        (await Service.VeroeffentlichenAsync(id, _admin, Abbruch)).Fehler.ShouldBeEmpty();
+
+        var geladen = (await Service.EingabeLadenAsync(id, _admin, Abbruch))!;
+        geladen.Tage.Select(t => (t.Datum.Day, t.Beginn.Hour, t.Ende?.Hour)).ShouldBe([(14, 10, 16), (14, 19, (int?)null), (15, 9, 13)]);
+        var essen = (await KalenderAsync())[1];
+        essen.Subject.ShouldBe("Herbstseminar – Essen");
+        essen.EndTime.ShouldBe(new DateTime(2026, 11, 14, 19, 30, 0), "offenes Ende: kurzer Eintrag ohne erfundene Endzeit");
+    }
+
+    [DatenbankFact]
+    public async Task Derselbe_Termin_zweimal_wird_abgelehnt()
+    {
+        var eingabe = Eingabe();
+        eingabe.Tage.Add(new TagEingabe { Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(10, 0), Ende = new TimeOnly(12, 0) });
+
+        var ergebnis = await Service.SpeichernAsync(eingabe, _admin, Abbruch);
+
+        ergebnis.Fehler.ShouldHaveSingleItem().ShouldBe("Der Termin Sa 14.11. 10:00 ist doppelt angelegt.");
+    }
+
+    [DatenbankFact]
     public async Task Nur_per_Link_sichtbare_Veranstaltung_bleibt_aus_dem_Kalender()
     {
         var eingabe = Eingabe();
@@ -253,8 +280,8 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
 
         fehler.Count.ShouldBe(3);
         fehler.ShouldContain(f => f.Contains("Teilnahmemodus"));
-        fehler.ShouldContain(f => f.Contains("15.11.2026") && f.Contains("absagen"));
-        fehler.ShouldContain(f => f.Contains("14.11.2026") && f.Contains("Kapazität"));
+        fehler.ShouldContain(f => f.Contains("So 15.11.") && f.Contains("absagen"));
+        fehler.ShouldContain(f => f.Contains("Sa 14.11.") && f.Contains("Kapazität"));
     }
 
     [DatenbankFact]

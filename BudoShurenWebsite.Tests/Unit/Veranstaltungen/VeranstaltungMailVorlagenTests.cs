@@ -50,9 +50,24 @@ public class VeranstaltungMailVorlagenTests
 
         mail.Html.ShouldContain("href=\"https://x.de/veranstaltungen/bestaetigen/abc\"");
         mail.Html.ShouldContain("24 Stunden");
-        mail.Html.ShouldContain("Samstag, 14.11.2026, 10:00–16:00 Uhr");
-        mail.Html.ShouldContain("Sonntag, 15.11.2026, 09:30–12:00 Uhr (Prüfung)");
+        // Nach Datum gruppiert: Datum fett, darunter Uhrzeit und Titel
+        mail.Html.ShouldContain("<strong>Samstag, 14. November 2026</strong><br>10:00 – 16:00 Uhr</p>");
+        mail.Html.ShouldContain("<strong>Sonntag, 15. November 2026</strong><br>09:30 – 12:00 Uhr · Prüfung</p>");
         mail.Html.ShouldContain("3 Personen (du und 2 Begleitpersonen)");
+    }
+
+    [Fact]
+    public void Mehrere_Termine_an_einem_Datum_stehen_unter_einer_Ueberschrift()
+    {
+        VeranstaltungsTag[] tage =
+        [
+            new() { Id = 3, Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(19, 0), Titel = "Essen bei <Luigi>" },
+            Tage[0]
+        ];
+
+        var mail = VeranstaltungMailVorlagen.OptIn(Veranstaltung(), tage, Anmeldung(), "https://x.de/b", 24);
+
+        mail.Html.ShouldContain("<strong>Samstag, 14. November 2026</strong><br>10:00 – 16:00 Uhr<br>ab 19:00 Uhr · Essen bei &lt;Luigi&gt;</p>");
     }
 
     [Fact]
@@ -63,8 +78,8 @@ public class VeranstaltungMailVorlagenTests
 
         var mail = VeranstaltungMailVorlagen.Bestaetigung(Veranstaltung(), Tage, anmeldung, "https://x.de/veranstaltungen/meine-anmeldung/abc");
 
-        mail.Html.ShouldContain("15.11.2026");
-        mail.Html.ShouldNotContain("14.11.2026");
+        mail.Html.ShouldContain("15. November 2026");
+        mail.Html.ShouldNotContain("14. November 2026");
         mail.Html.ShouldContain("href=\"https://x.de/veranstaltungen/meine-anmeldung/abc\"");
     }
 
@@ -106,8 +121,8 @@ public class VeranstaltungMailVorlagenTests
     [Fact]
     public void Zeitraum_ueber_die_nicht_abgesagten_Tage()
     {
-        VeranstaltungMailVorlagen.Zeitraum(Tage).ShouldBe("14.11. – 15.11.2026");
-        VeranstaltungMailVorlagen.Zeitraum([Tage[0]]).ShouldBe("14.11.2026");
+        VeranstaltungMailVorlagen.Zeitraum(Tage).ShouldBe("14.–15. November 2026");
+        VeranstaltungMailVorlagen.Zeitraum([Tage[0]]).ShouldBe("14. November 2026");
         VeranstaltungMailVorlagen.Zeitraum([]).ShouldBe("");
     }
 
@@ -142,7 +157,7 @@ public class VeranstaltungMailVorlagenTests
     public void Absage_eines_Tages_nennt_den_Termin()
     {
         VeranstaltungMailVorlagen.TagAbgesagtInhalt(Tage[1], "<p>Zusatz</p>")
-            .ShouldBe("<p><strong>Der Termin am Sonntag, 15.11.2026, 09:30–12:00 Uhr (Prüfung) wurde abgesagt.</strong> Die übrigen Termine finden wie geplant statt.</p><p>Zusatz</p>");
+            .ShouldBe("<p><strong>Der Termin am Sonntag, 15. November 2026, 09:30 – 12:00 Uhr (Prüfung) wurde abgesagt.</strong> Die übrigen Termine finden wie geplant statt.</p><p>Zusatz</p>");
     }
 
     [Fact]

@@ -7,7 +7,7 @@ namespace BudoShurenWebsite.Tests.Unit.Veranstaltungen;
 [Trait("Category", "Unit")]
 public class EreignisTextTests
 {
-    private static AnmeldungStand Stand(string vorname = "Max", string? verein = null, int begleitung = 0, DateOnly[]? tage = null, string[]? info = null) =>
+    private static AnmeldungStand Stand(string vorname = "Max", string? verein = null, int begleitung = 0, string[]? tage = null, string[]? info = null) =>
         new(vorname, "Muster", null, verein, null, null, begleitung, tage ?? [], info ?? []);
 
     [Fact]
@@ -23,12 +23,12 @@ public class EreignisTextTests
     {
         var aenderungen = EreignisDiff.Erstellen(
             Stand(),
-            Stand(begleitung: 2, tage: [new DateOnly(2026, 11, 14), new DateOnly(2026, 11, 15)], info: ["a@example.org"]));
+            Stand(begleitung: 2, tage: ["Sa 14.11.", "So 15.11."], info: ["a@example.org"]));
 
         aenderungen.Select(a => EreignisText.Beschreiben(a.Art, a.DetailsJson)).ShouldBe(
         [
             "Begleitpersonen: 0 → 2",
-            "Tage: – → 14.11.2026, 15.11.2026",
+            "Termine: – → Sa 14.11., So 15.11.",
             "Info-Adressen: – → a@example.org"
         ]);
     }

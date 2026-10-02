@@ -1,5 +1,4 @@
 using BudoShurenWebsite.Models.Veranstaltungen;
-using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
@@ -14,8 +13,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
     /// </summary>
     public static class VeranstaltungMailVorlagen
     {
-        private static readonly CultureInfo Deutsch = CultureInfo.GetCultureInfo("de-DE");
-
         // Maskiert < > & " ', lässt aber Umlaute lesbar (HtmlEncoder.Default würde sie als &#xE4; schreiben)
         private static readonly HtmlEncoder Encoder = HtmlEncoder.Create(UnicodeRanges.All);
 
@@ -140,7 +137,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         /// <param name="zusatzHtml">Optionaler Text der Organisatoren, bereits sicher gerendert.</param>
         public static string TagAbgesagtInhalt(VeranstaltungsTag tag, string? zusatzHtml) =>
-            $"<p><strong>Der Termin am {E(TagText(tag))} wurde abgesagt.</strong> Die übrigen Termine finden wie geplant statt.</p>" +
+            $"<p><strong>Der Termin am {E(TerminText.Zeile(tag))} wurde abgesagt.</strong> Die übrigen Termine finden wie geplant statt.</p>" +
             (zusatzHtml ?? "");
 
         public static string AbgesagtInhalt(string? zusatzHtml) =>
@@ -177,14 +174,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     "<p style=\"font-size:12px;color:#555;\">Ältere Links aus früheren E-Mails gelten nicht mehr. Du hast keine Links angefordert? Dann ignoriere diese E-Mail einfach.</p>"));
         }
 
-        /// <summary>"14.11.2026" bzw. "14.11. – 15.11.2026" über die nicht abgesagten Tage.</summary>
-        public static string Zeitraum(IReadOnlyCollection<VeranstaltungsTag> tage)
-        {
-            var aktive = tage.Where(t => !t.Abgesagt).Select(t => t.Datum).Order().ToList();
-            if (aktive.Count == 0)
-                return string.Empty;
-            return aktive[0] == aktive[^1] ? $"{aktive[0]:dd.MM.yyyy}" : $"{aktive[0]:dd.MM.} – {aktive[^1]:dd.MM.yyyy}";
-        }
+        /// <summary>Zeitraum über die nicht abgesagten Termine, z. B. "14.–15. November 2026".</summary>
+        public static string Zeitraum(IReadOnlyCollection<VeranstaltungsTag> tage) =>
+            TerminText.Zeitraum(tage.Where(t => !t.Abgesagt).Select(t => t.Datum));
 
         // ------------------------------------------------------------------------------------
 
@@ -194,14 +186,20 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             $"<p style=\"margin:24px 0;\"><a href=\"{E(url)}\" style=\"display:inline-block;padding:10px 20px;background-color:#000000;color:#ffffff;text-decoration:none;\">{E(text)}</a></p>" +
             $"<p style=\"font-size:12px;color:#555;word-break:break-all;\">Falls der Button nicht funktioniert: {E(url)}</p>";
 
+        /// <summary>Termine nach Datum gruppiert (Datum fett, darunter Uhrzeit und Titel), danach der Ort.</summary>
         private static string Termine(Veranstaltung v, IReadOnlyCollection<VeranstaltungsTag> tage)
         {
-            var sb = new StringBuilder("<p><strong>Termin:</strong><br>");
-            foreach (var tag in tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum))
-                sb.Append(E(TagText(tag))).Append("<br>");
+            var sb = new StringBuilder();
+            foreach (var datum in TerminText.NachDatum(tage.Where(t => !t.Abgesagt)))
+            {
+                sb.Append($"<p style=\"margin:0 0 8px;\"><strong>{E(TerminText.Datum(datum.Key))}</strong>");
+                foreach (var tag in datum)
+                    sb.Append($"<br>{E(TerminText.Uhrzeit(tag))}").Append(string.IsNullOrWhiteSpace(tag.Titel) ? "" : $" · {E(tag.Titel)}");
+                sb.Append("</p>");
+            }
             if (!string.IsNullOrWhiteSpace(v.Ort))
-                sb.Append("<strong>Ort:</strong> ").Append(E(v.Ort)).Append(string.IsNullOrWhiteSpace(v.Adresse) ? "" : $", {E(v.Adresse)}");
-            return sb.Append("</p>").ToString();
+                sb.Append($"<p style=\"margin:0 0 8px;\"><strong>Ort:</strong> {E(v.Ort)}").Append(string.IsNullOrWhiteSpace(v.Adresse) ? "" : $", {E(v.Adresse)}").Append("</p>");
+            return sb.ToString();
         }
 
         private static string Zusammenfassung(Veranstaltung v, IReadOnlyCollection<VeranstaltungsTag> tage, Anmeldung a)
@@ -224,10 +222,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             string.IsNullOrWhiteSpace(v.KontaktEmail)
                 ? string.Empty
                 : $"<p>Bei Fragen erreichst du {E(v.KontaktName ?? "die Organisatoren")} unter <a href=\"mailto:{E(v.KontaktEmail)}\" style=\"color:#000000;\">{E(v.KontaktEmail)}</a> oder einfach mit einer Antwort auf diese E-Mail.</p>";
-
-        public static string TagText(VeranstaltungsTag tag) =>
-            $"{tag.Datum.ToString("dddd, dd.MM.yyyy", Deutsch)}, {tag.Beginn:HH\\:mm}–{tag.Ende:HH\\:mm} Uhr" +
-            (string.IsNullOrWhiteSpace(tag.Titel) ? "" : $" ({tag.Titel})");
 
         internal static string Layout(string inhalt) =>
             "<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head>" +

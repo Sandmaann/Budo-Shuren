@@ -10,7 +10,7 @@ public class BenachrichtigungMailVorlagenTests
     private static readonly Veranstaltung V = new() { Id = 3, Titel = "Herbst <seminar>", ZusammenfassungUhrzeit = new TimeOnly(7, 30) };
     private static readonly VeranstaltungsTag Tag = new() { Id = 1, Datum = new DateOnly(2026, 11, 14), Beginn = new TimeOnly(10, 0), Ende = new TimeOnly(16, 0) };
 
-    private static readonly BenachrichtigungsAbschnitt Abschnitt = new("Max <b>Muster</b>", 3, [new DateOnly(2026, 11, 14)],
+    private static readonly BenachrichtigungsAbschnitt Abschnitt = new("Max <b>Muster</b>", 3, ["Sa 14.11."],
         [new BenachrichtigungsZeile(new DateTime(2026, 10, 1, 10, 0, 0, DateTimeKind.Utc), "Bestätigt")]);
 
     [Fact]
@@ -22,7 +22,7 @@ public class BenachrichtigungMailVorlagenTests
         mail.Betreff.ShouldBe("Benachrichtigung: Herbst <seminar> (ausgebucht)");
         mail.Html.ShouldNotContain("<b>Muster</b>");
         mail.Html.ShouldContain("Max &lt;b&gt;Muster&lt;/b&gt;");
-        mail.Html.ShouldContain("3 Personen, 14.11.");
+        mail.Html.ShouldContain("3 Personen, Sa 14.11.");
         mail.Html.ShouldContain("Bestätigt <span style=\"color:#555;font-size:12px;\">(01.10. 12:00)</span>");
         mail.Html.ShouldContain("ausgebucht");
         mail.Html.ShouldContain("18 von 20 Plätzen belegt");

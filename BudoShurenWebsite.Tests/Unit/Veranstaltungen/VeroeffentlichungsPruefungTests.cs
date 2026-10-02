@@ -38,8 +38,8 @@ public class VeroeffentlichungsPruefungTests
     [Fact]
     public void Ohne_aktive_Tage_nicht_veroeffentlichen()
     {
-        Pruefen(GueltigeVeranstaltung()).ShouldHaveSingleItem().ShouldContain("Tag");
-        Pruefen(GueltigeVeranstaltung(), Tag(14, abgesagt: true)).ShouldHaveSingleItem().ShouldContain("Tag");
+        Pruefen(GueltigeVeranstaltung()).ShouldHaveSingleItem().ShouldContain("Termin");
+        Pruefen(GueltigeVeranstaltung(), Tag(14, abgesagt: true)).ShouldHaveSingleItem().ShouldContain("Termin");
     }
 
     [Theory]
@@ -61,8 +61,8 @@ public class VeroeffentlichungsPruefungTests
         var fehler = Pruefen(GueltigeVeranstaltung(), Tag(14, beginn: 16, ende: 10), Tag(15, max: 0));
 
         fehler.Count.ShouldBe(2);
-        fehler.ShouldContain(f => f.Contains("14.11.2026") && f.Contains("Ende"));
-        fehler.ShouldContain(f => f.Contains("15.11.2026") && f.Contains("Kapazität"));
+        fehler.ShouldContain(f => f.Contains("Sa 14.11.") && f.Contains("Ende"));
+        fehler.ShouldContain(f => f.Contains("So 15.11.") && f.Contains("Kapazität"));
     }
 
     [Fact]

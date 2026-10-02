@@ -65,6 +65,7 @@
             <EditForm Model="_eingabe" OnValidSubmit="SpeichernAsync" FormName="veranstaltung-bearbeiten">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="font-ptsans mb-4 text-sm text-red-700" />
+                <p class="@Hinweis mb-4">Felder mit * sind Pflichtfelder.</p>
 
                 <div class="space-y-6">
                     <!-- 1. Grunddaten -->
@@ -137,15 +138,20 @@
 
                     <!-- 2. Termine -->
                     <section class="rounded border border-gray-200 p-5">
-                        <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">Termine</h4>
+                        <h4 class="font-ptsans mb-1 text-sm font-bold tracking-wider">Termine</h4>
+                        <p class="@Hinweis mb-4">
+                            Ein Datum kann mehrere Termine haben, z. B. Training am Tag und gemeinsames Essen am Abend.
+                            Bei „Anmeldung auch für einzelne Termine“ wählen Teilnehmer jeden Termin einzeln; die Plätze gelten pro Termin.
+                            Ohne Ende wird „ab 19:00 Uhr“ angezeigt.
+                        </p>
                         @if (_eingabe.Tage.Count == 0)
                         {
-                            <p class="@Hinweis mb-3">Noch kein Tag angelegt.</p>
+                            <p class="@Hinweis mb-3">Noch kein Termin angelegt.</p>
                         }
                         <div class="space-y-3">
                             @foreach (var tag in _eingabe.Tage)
                             {
-                                <div class="rounded border border-gray-200 p-3 @(tag.Abgesagt ? "bg-gray-100 opacity-70" : "")">
+                                <div @key="tag" class="rounded border border-gray-200 p-3 @(tag.Abgesagt ? "bg-gray-100 opacity-70" : "")">
                                     <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
                                         <div>
                                             <label class="@Label">Datum</label>
@@ -156,7 +162,7 @@
                                             <InputDate Type="InputDateType.Time" @bind-Value="tag.Beginn" class="@Feld" disabled="@tag.Abgesagt" />
                                         </div>
                                         <div>
-                                            <label class="@Label">Ende</label>
+                                            <label class="@Label">Ende <span class="font-normal text-gray-500">(optional)</span></label>
                                             <InputDate Type="InputDateType.Time" @bind-Value="tag.Ende" class="@Feld" disabled="@tag.Abgesagt" />
                                         </div>
                                         <div>
@@ -177,15 +183,23 @@
                                             }
                                         </div>
                                     </div>
-                                    <div class="mt-2">
-                                        <InputText @bind-Value="tag.Titel" class="@Feld" placeholder="Programm des Tages (optional)" disabled="@tag.Abgesagt" />
+                                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                                        <InputText @bind-Value="tag.Titel" class="@($"{Feld} flex-1")" placeholder="Titel des Termins (optional), z. B. Training oder Gemeinsames Essen" disabled="@tag.Abgesagt" />
+                                        @if (!tag.Abgesagt)
+                                        {
+                                            <button type="button" @onclick="() => TerminAmSelbenTag(tag)"
+                                                    class="font-ptsans whitespace-nowrap rounded border border-gray-400 px-2 py-2 text-xs hover:bg-gray-100"
+                                                    title="Weiteren Termin an diesem Datum anlegen">
+                                                + am selben Tag
+                                            </button>
+                                        }
                                     </div>
                                 </div>
                             }
                         </div>
                         <button type="button" @onclick="TagHinzufuegen"
                                 class="font-ptsans mt-3 rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-100">
-                            + Tag hinzufügen
+                            + Termin hinzufügen
                         </button>
                     </section>
 
@@ -217,12 +231,12 @@
                                 @if (_eingabe.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
                                 {
                                     <div>
-                                        <label class="@Label">Mindestens Tage</label>
+                                        <label class="@Label">Mindestens Termine</label>
                                         <InputNumber @bind-Value="_eingabe.MinTageBeiTeilanmeldung" class="@Feld" />
                                     </div>
                                 }
                                 <div>
-                                    <label class="@Label">Plätze pro Tag (Vorgabe)</label>
+                                    <label class="@Label">Plätze pro Termin (Vorgabe)</label>
                                     <InputNumber @bind-Value="_eingabe.MaxTeilnehmerVorgabe" class="@Feld" placeholder="unbegrenzt" />
                                 </div>
                                 <div>
@@ -395,12 +409,26 @@
 
     private void TagHinzufuegen()
     {
-        var letzter = _eingabe!.Tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum).LastOrDefault();
+        // Vorlage ist der erste Termin des letzten Datums (z. B. das Training, nicht das Essen danach)
+        var aktive = _eingabe!.Tage.Where(t => !t.Abgesagt).ToList();
+        var letzter = aktive.Count == 0 ? null : TerminText.Sortiert(aktive.Where(t => t.Datum == aktive.Max(x => x.Datum))).First();
         _eingabe.Tage.Add(new TagEingabe
         {
             Datum = letzter?.Datum.AddDays(1) ?? DateOnly.FromDateTime(DateTime.Today.AddDays(14)),
             Beginn = letzter?.Beginn ?? new TimeOnly(10, 0),
-            Ende = letzter?.Ende ?? new TimeOnly(16, 0),
+            Ende = letzter is null ? new TimeOnly(16, 0) : letzter.Ende,
+            MaxTeilnehmer = _eingabe.MaxTeilnehmerVorgabe
+        });
+    }
+
+    /// <summary>Weiterer Termin am selben Datum direkt darunter, z. B. das Essen nach dem Training (Beginn = Ende des Termins, offenes Ende).</summary>
+    private void TerminAmSelbenTag(TagEingabe tag)
+    {
+        _eingabe!.Tage.Insert(_eingabe.Tage.IndexOf(tag) + 1, new TagEingabe
+        {
+            Datum = tag.Datum,
+            Beginn = tag.Ende ?? tag.Beginn,
+            Ende = null,
             MaxTeilnehmer = _eingabe.MaxTeilnehmerVorgabe
         });
     }

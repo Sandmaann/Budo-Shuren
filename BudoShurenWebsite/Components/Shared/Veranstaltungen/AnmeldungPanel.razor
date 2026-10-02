@@ -84,12 +84,9 @@
             <dd>@(1 + _detail.Daten.AnzahlBegleitpersonen)@(_detail.Daten.AnzahlBegleitpersonen > 0 ? $" (inkl. {_detail.Daten.AnzahlBegleitpersonen} Begleitung)" : "")</dd>
             @if (Einstellungen.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
             {
-                <dt class="text-gray-500">Tage</dt>
+                <dt class="text-gray-500">Termine</dt>
                 <dd>
-                    @foreach (var tag in TagInfos.Where(t => _detail.Daten.TagIds.Contains(t.Id)))
-                    {
-                        <div class="@(tag.Abgesagt ? "line-through" : "")">@VeranstaltungTexte.Tag(tag)</div>
-                    }
+                    <TerminListe Termine="TagInfos.Where(t => _detail.Daten.TagIds.Contains(t.Id))" />
                 </dd>
             }
             @if (_detail.InfoEmails.Count > 0 || _detail.AbgemeldeteInfoEmails.Count > 0)

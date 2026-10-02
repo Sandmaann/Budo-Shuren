@@ -41,15 +41,15 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var aktiveTage = tage.Where(t => !t.Abgesagt).OrderBy(t => t.Datum).ThenBy(t => t.Beginn).ToList();
             if (aktiveTage.Count == 0)
             {
-                fehler.Add("Mindestens ein Tag muss angelegt sein.");
+                fehler.Add("Mindestens ein Termin muss angelegt sein.");
                 return fehler;
             }
 
             foreach (var tag in aktiveTage.Where(t => t.Ende <= t.Beginn))
-                fehler.Add($"Am {tag.Datum:dd.MM.yyyy} liegt das Ende nicht nach dem Beginn.");
+                fehler.Add($"Beim Termin {TerminText.Kurz(tag, aktiveTage)} liegt das Ende nicht nach dem Beginn.");
 
             foreach (var tag in aktiveTage.Where(t => t.MaxTeilnehmer is <= 0))
-                fehler.Add($"Die Kapazität am {tag.Datum:dd.MM.yyyy} muss größer als 0 sein (oder leer für unbegrenzt).");
+                fehler.Add($"Die Kapazität für {TerminText.Kurz(tag, aktiveTage)} muss größer als 0 sein (oder leer für unbegrenzt).");
 
             var beginn = aktiveTage[0].Datum.ToDateTime(aktiveTage[0].Beginn);
 
@@ -66,7 +66,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             if (veranstaltung.Teilnahmemodus == Teilnahmemodus.EinzelneTage
                 && (veranstaltung.MinTageBeiTeilanmeldung < 1 || veranstaltung.MinTageBeiTeilanmeldung > aktiveTage.Count))
             {
-                fehler.Add($"Die Mindestzahl an Tagen muss zwischen 1 und {aktiveTage.Count} liegen.");
+                fehler.Add($"Die Mindestzahl an Terminen muss zwischen 1 und {aktiveTage.Count} liegen.");
             }
 
             return fehler;

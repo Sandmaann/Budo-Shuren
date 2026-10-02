@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 namespace BudoShurenWebsite.Services.Veranstaltungen
 {
     /// <param name="Max">null = unbegrenzt.</param>
-    public sealed record TagBelegung(int Id, DateOnly Datum, TimeOnly Beginn, TimeOnly Ende, string? Titel, bool Abgesagt, int? Max, int Belegt)
+    public sealed record TagBelegung(int Id, DateOnly Datum, TimeOnly Beginn, TimeOnly? Ende, string? Titel, bool Abgesagt, int? Max, int Belegt) : ITermin
     {
         /// <summary>Für die Formularfelder (AnmeldeFelder); FreiePlaetze null = unbegrenzt.</summary>
         public TagAnzeige AlsAnzeige() => new(Id, Datum, Beginn, Ende, Titel, Abgesagt, Max is { } max ? Math.Max(0, max - Belegt) : null);
@@ -145,7 +145,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 .ToListAsync(abbruch);
             var namen = await AkteurNamenAsync(kontext, anmeldungen.SelectMany(a => a.Ereignisse), abbruch);
 
-            var tage = v.Tage.OrderBy(t => t.Datum).ToList();
+            var tage = TerminText.Sortiert(v.Tage).ToList();
             var belegt = KapazitaetsRechner.BelegungProTag(
                 v.Teilnahmemodus, tage.Select(t => new TagKapazitaet(t.Id, t.MaxTeilnehmer, t.Abgesagt)).ToList(),
                 anmeldungen.Select(AnmeldungDaten.Belegung), JetztUtc);

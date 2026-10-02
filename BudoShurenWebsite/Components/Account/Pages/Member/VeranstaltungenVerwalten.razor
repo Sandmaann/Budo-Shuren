@@ -121,8 +121,7 @@
 
     private static string Zeitraum(VeranstaltungListenEintrag e) => (e.ErsterTag, e.LetzterTag) switch
     {
-        (null, _) => "noch kein Termin",
-        ({ } von, { } bis) when von != bis => $"{von:dd.MM.yyyy} – {bis:dd.MM.yyyy}",
-        ({ } von, _) => $"{von:dd.MM.yyyy}"
+        ({ } von, { } bis) => TerminText.Zeitraum([von, bis]),
+        _ => "noch kein Termin"
     };
 }

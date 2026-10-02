@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace BudoShurenWebsite.Services.Veranstaltungen
 {
     /// <param name="FreiePlaetze">null = unbegrenzt.</param>
-    public sealed record TagAnzeige(int Id, DateOnly Datum, TimeOnly Beginn, TimeOnly Ende, string? Titel, bool Abgesagt, int? FreiePlaetze);
+    public sealed record TagAnzeige(int Id, DateOnly Datum, TimeOnly Beginn, TimeOnly? Ende, string? Titel, bool Abgesagt, int? FreiePlaetze) : ITermin;
 
     /// <summary>Was die öffentliche Seite einer Veranstaltung braucht (ohne Teilnehmerdaten).</summary>
     public sealed record VeranstaltungAnzeige(
@@ -109,7 +109,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 .Select(a => new AnmeldungBelegung(a.Id, a.Status, a.ReserviertBisUtc, a.AnzahlBegleitpersonen, a.Tage.Select(t => t.VeranstaltungsTagId).ToList()))
                 .ToListAsync(abbruch);
 
-            var tage = v.Tage.OrderBy(t => t.Datum).ToList();
+            var tage = TerminText.Sortiert(v.Tage).ToList();
             var frei = KapazitaetsRechner.FreiePlaetzeProTag(
                 v.Teilnahmemodus,
                 tage.Select(t => new TagKapazitaet(t.Id, t.MaxTeilnehmer, t.Abgesagt)).ToList(),

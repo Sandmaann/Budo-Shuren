@@ -7,8 +7,8 @@ using static BudoShurenWebsite.Services.Veranstaltungen.VeranstaltungMailVorlage
 namespace BudoShurenWebsite.Services.Veranstaltungen
 {
     /// <summary>Was in einer Benachrichtigung zu einer Anmeldung steht.</summary>
-    /// <param name="Tage">Gebuchte Tage; leer bei Teilnahmemodus NurGesamt.</param>
-    public sealed record BenachrichtigungsAbschnitt(string Name, int Personen, IReadOnlyList<DateOnly> Tage, IReadOnlyList<BenachrichtigungsZeile> Zeilen);
+    /// <param name="Tage">Gebuchte Termine als Kurztext (TerminText.Kurz); leer bei Teilnahmemodus NurGesamt.</param>
+    public sealed record BenachrichtigungsAbschnitt(string Name, int Personen, IReadOnlyList<string> Tage, IReadOnlyList<BenachrichtigungsZeile> Zeilen);
 
     public sealed record BenachrichtigungsZeile(DateTime ZeitpunktUtc, string Text);
 
@@ -44,7 +44,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 inhalt.Append("<div style=\"border-left:3px solid #ccc;padding-left:12px;margin:16px 0;\">");
                 inhalt.Append($"<p style=\"margin:0;\"><strong>{E(a.Name)}</strong> ({(a.Personen == 1 ? "1 Person" : $"{a.Personen} Personen")}");
                 if (a.Tage.Count > 0)
-                    inhalt.Append(", ").Append(E(string.Join(", ", a.Tage.Select(t => t.ToString("dd.MM.")))));
+                    inhalt.Append(", ").Append(E(string.Join(", ", a.Tage)));
                 inhalt.Append(")</p><ul style=\"margin:4px 0;padding-left:20px;\">");
                 foreach (var z in a.Zeilen)
                     inhalt.Append($"<li>{E(z.Text)} <span style=\"color:#555;font-size:12px;\">({Ortszeit.AusUtc(z.ZeitpunktUtc):dd.MM. HH:mm})</span></li>");
@@ -54,8 +54,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             if (stand.Count > 0)
             {
                 inhalt.Append("<p><strong>Aktueller Stand:</strong><br>");
+                var alle = stand.Select(s => s.Tag).ToList();
                 foreach (var t in stand)
-                    inhalt.Append(E(TagText(t.Tag))).Append(": ").Append(t.Max is { } max ? $"{t.Belegt} von {max} Plätzen belegt" : $"{t.Belegt} Personen").Append("<br>");
+                    inhalt.Append(E(TerminText.Kurz(t.Tag, alle, mitTitel: true))).Append(": ").Append(t.Max is { } max ? $"{t.Belegt} von {max} Plätzen belegt" : $"{t.Belegt} Personen").Append("<br>");
                 inhalt.Append("</p>");
             }
 

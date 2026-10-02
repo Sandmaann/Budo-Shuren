@@ -231,7 +231,7 @@ public class AnmeldungServiceTests(SqlServerFixture datenbank) : DatenbankTest(d
 
         var voll = await Service.AnmeldenAsync("herbstseminar", Eingabe("zweite@example.org"), Basis, Abbruch);
         voll.Art.ShouldBe(AnmeldeErgebnisArt.Ausgebucht);
-        voll.VolleTage.ShouldBe([new DateOnly(2026, 11, 14), new DateOnly(2026, 11, 15)]);
+        voll.VolleTage.ShouldBe(["Sa 14.11.", "So 15.11."]);
 
         _zeit.Advance(TimeSpan.FromHours(25)); // Reservierung abgelaufen
         (await AnmeldenAsync(Eingabe("zweite@example.org"))).ShouldBe(AnmeldeErgebnisArt.EmailVersendet);

@@ -30,7 +30,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             eintrag.Subject = string.IsNullOrWhiteSpace(tag.Titel) ? veranstaltung.Titel : $"{veranstaltung.Titel} – {tag.Titel}";
             eintrag.Location = veranstaltung.Ort ?? string.Empty;
             eintrag.StartTime = tag.Datum.ToDateTime(tag.Beginn);
-            eintrag.EndTime = tag.Datum.ToDateTime(tag.Ende);
+            eintrag.EndTime = Ende(tag);
             eintrag.IsAllDay = false;
             eintrag.RecurrenceRule = string.Empty;
             eintrag.RecurrenceException = string.Empty;
@@ -48,6 +48,13 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             eintrag.LastChange = jetztOrtszeit;
             eintrag.LastChangedBy = Ersteller;
         }
+
+        /// <summary>
+        /// Bei offenem Ende eine halbe Stunde: der Kalender zeigt dann nur den Titel und keine erfundene Endzeit
+        /// (Kalender.razor blendet die Uhrzeit erst ab mehr als 30 Minuten ein).
+        /// </summary>
+        private static DateTime Ende(VeranstaltungsTag tag) =>
+            tag.Ende is { } ende ? tag.Datum.ToDateTime(ende) : tag.Datum.ToDateTime(tag.Beginn).AddMinutes(30);
 
         private static string Beschreibung(Veranstaltung veranstaltung)
         {

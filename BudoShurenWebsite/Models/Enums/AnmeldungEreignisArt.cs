@@ -13,7 +13,7 @@ namespace BudoShurenWebsite.Models.Enums
         [Description("Daten geändert")]
         DatenGeaendert = 2,
 
-        [Description("Tage geändert")]
+        [Description("Termine geändert")]
         TageGeaendert = 3,
 
         [Description("Begleitpersonen geändert")]
@@ -43,7 +43,7 @@ namespace BudoShurenWebsite.Models.Enums
         [Description("Verwaltungslink versendet")]
         LinkVersendet = 12,
 
-        [Description("Tag abgesagt")]
+        [Description("Termin abgesagt")]
         TagAbgesagt = 13
     }
 }

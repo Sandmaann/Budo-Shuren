@@ -6,7 +6,7 @@ namespace BudoShurenWebsite.Tests.Unit.Veranstaltungen;
 [Trait("Category", "Unit")]
 public class VeranstaltungAenderungsRegelnTests
 {
-    private static readonly DateOnly Samstag = new(2026, 11, 14);
+    private const string Samstag = "Sa 14.11.";
 
     private static VeranstaltungAenderung Aenderung(
         Teilnahmemodus neuerModus = Teilnahmemodus.NurGesamt,
@@ -47,7 +47,7 @@ public class VeranstaltungAenderungsRegelnTests
         var fehler = VeranstaltungAenderungsRegeln.Pruefen(Aenderung(tage:
             new TagAenderung(1, Samstag, Entfernen: true, NeuesMax: null, Belegt: 3, AktiveAnmeldungen: 2)));
 
-        fehler.ShouldHaveSingleItem().ShouldContain("14.11.2026");
+        fehler.ShouldHaveSingleItem().ShouldContain("Termin Sa 14.11.");
     }
 
     [Theory]
