@@ -3,6 +3,8 @@
 @layout ManageLayout
 @using BudoShurenWebsite.Components.Account.Shared
 @using BudoShurenWebsite.Services
+@using BudoShurenWebsite.Services.Systemzustand
+@using Microsoft.Extensions.Diagnostics.HealthChecks
 
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Aktiviert")]
@@ -14,6 +16,7 @@
 @inject AdminMaintenanceService AdminMaintenanceService
 @inject IJSRuntime JSRuntime
 @inject VisitorCounterService VisitorCounter
+@inject HealthCheckService HealthChecks
 
 <PageTitle>Admin</PageTitle>
 
@@ -29,6 +32,41 @@
         {
             <StatusMessage ShowAsError="@showError" Message="@statusMessage" />
         }
+
+        <div class="mb-10 border border-black p-6">
+            <h3 class="font-yuji mb-4 text-xl">Systemzustand</h3>
+
+            <p class="font-ptsans mb-4 text-sm tracking-wider text-black">
+                Prüft Datenbank, Hintergrunddienste und Mail-Warteschlange sowie die Daten (lose Bilder, Veranstaltungen).
+                Für die Überwachung von außen gibt es <strong>/health</strong> mit dem Header <strong>@SystemzustandPruefung.TokenHeader</strong> (Wert aus Systemzustand:Token).
+            </p>
+
+            @if (systemzustand is not null)
+            {
+                <p class="font-ptsans mb-4 text-sm tracking-wider text-black">
+                    Gesamt: <strong class="@StatusKlasse(systemzustand.Status)">@SystemzustandPruefung.Text(systemzustand.Status)</strong>
+                </p>
+                <ul class="mb-4">
+                    @foreach (var (name, eintrag) in systemzustand.Entries)
+                    {
+                        <li class="mb-4">
+                            <p class="font-ptsans text-sm tracking-wider text-black">
+                                <strong>@name</strong>: <span class="@StatusKlasse(eintrag.Status)">@SystemzustandPruefung.Text(eintrag.Status)</span>
+                            </p>
+                            <p class="font-ptsans text-sm tracking-wider text-black">
+                                @(eintrag.Exception is not null ? "Fehler bei der Prüfung, siehe Log." : eintrag.Description)
+                            </p>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <button @onclick="SystemzustandPruefenAsync"
+                    disabled="@isBusy"
+                    class="font-yuji h-10 transform bg-primary px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90 disabled:opacity-50">
+                Jetzt prüfen
+            </button>
+        </div>
 
         <div class="mb-10 border border-black p-6">
             <h3 class="font-yuji mb-4 text-xl">Datenbankmigration</h3>
@@ -175,6 +213,7 @@
 
 @code {
     private bool isBusy;
+    private HealthReport? systemzustand;
     private bool showError;
     private string? statusMessage;
     private List<string> pendingMigrations = [];
@@ -227,6 +266,32 @@
             Logger.LogError(ex, "Fehler beim Laden der Besucherzahlen");
         }
     }
+
+    private async Task SystemzustandPruefenAsync()
+    {
+        isBusy = true;
+        try
+        {
+            systemzustand = await SystemzustandPruefung.PruefenAsync(HealthChecks, nurBetrieb: false, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Prüfen des Systemzustands");
+            showError = true;
+            statusMessage = "Der Systemzustand konnte nicht geprüft werden.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static string StatusKlasse(HealthStatus status) => status switch
+    {
+        HealthStatus.Unhealthy => "text-red-700",
+        HealthStatus.Degraded => "text-amber-700",
+        _ => "text-black"
+    };
 
     private async Task LoadPendingMigrationsAsync()
     {

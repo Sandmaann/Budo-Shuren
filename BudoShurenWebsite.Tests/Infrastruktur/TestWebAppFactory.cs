@@ -13,6 +13,9 @@ namespace BudoShurenWebsite.Tests.Infrastruktur;
 /// </summary>
 public sealed class TestWebAppFactory : WebApplicationFactory<Program>
 {
+    /// <summary>Wert für den Header X-Health-Token (Systemzustand:Token).</summary>
+    public const string HealthToken = "test-health-token";
+
     private readonly TimeProvider? _zeit;
 
     public FakeMailTransport Mails { get; } = new();
@@ -34,6 +37,7 @@ public sealed class TestWebAppFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("Veranstaltungen__HintergrundJobsAktiviert", "false");
         // Ebenso das Aufräumen nicht gespeicherter Bilder (BildAufraeumJob)
         Environment.SetEnvironmentVariable("BildAufraeumen__Aktiviert", "false");
+        Environment.SetEnvironmentVariable("Systemzustand__Token", HealthToken);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

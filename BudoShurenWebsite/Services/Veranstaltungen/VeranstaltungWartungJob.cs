@@ -1,6 +1,7 @@
 using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Global;
 using BudoShurenWebsite.Models.Enums;
+using BudoShurenWebsite.Models.Veranstaltungen;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudoShurenWebsite.Services.Veranstaltungen
@@ -36,9 +37,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var jetzt = _zeit.GetUtcNow().UtcDateTime;
             var grenze = jetzt - VerwerfenNach;
 
-            var abgelaufen = await kontext.Anmeldungen
+            var abgelaufen = await AbgelaufeneAnmeldungen(kontext, grenze)
                 .Include(a => a.Ereignisse)
-                .Where(a => a.Status == AnmeldungStatus.Unbestaetigt && a.ReserviertBisUtc != null && a.ReserviertBisUtc < grenze)
                 .ToListAsync(abbruch);
 
             foreach (var a in abgelaufen)
@@ -56,9 +56,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             }
 
             var heute = DateOnly.FromDateTime(Ortszeit.AusUtc(jetzt));
-            var vorbei = await kontext.Veranstaltungen
-                .Where(v => v.Status == VeranstaltungStatus.Veroeffentlicht && v.Tage.Any() && v.Tage.Max(t => t.Datum) < heute)
-                .ToListAsync(abbruch);
+            var vorbei = await VorbeiAberNichtAbgeschlossen(kontext, heute).ToListAsync(abbruch);
             foreach (var v in vorbei)
             {
                 v.Status = VeranstaltungStatus.Abgeschlossen;
@@ -68,5 +66,13 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             await kontext.SaveChangesAsync(abbruch);
             return new WartungErgebnis(abgelaufen.Count, vorbei.Count);
         }
+
+        /// <summary>Unbestätigte Anmeldungen, deren Reservierung vor <paramref name="grenzeUtc"/> abgelaufen ist.</summary>
+        public static IQueryable<Anmeldung> AbgelaufeneAnmeldungen(ApplicationDbContext kontext, DateTime grenzeUtc) =>
+            kontext.Anmeldungen.Where(a => a.Status == AnmeldungStatus.Unbestaetigt && a.ReserviertBisUtc != null && a.ReserviertBisUtc < grenzeUtc);
+
+        /// <summary>Veröffentlichte Veranstaltungen, deren letzter Tag vor <paramref name="heute"/> liegt.</summary>
+        public static IQueryable<Veranstaltung> VorbeiAberNichtAbgeschlossen(ApplicationDbContext kontext, DateOnly heute) =>
+            kontext.Veranstaltungen.Where(v => v.Status == VeranstaltungStatus.Veroeffentlicht && v.Tage.Any() && v.Tage.Max(t => t.Datum) < heute);
     }
 }

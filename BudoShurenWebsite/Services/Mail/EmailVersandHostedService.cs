@@ -1,3 +1,4 @@
+using BudoShurenWebsite.Services.Systemzustand;
 using Microsoft.Extensions.Options;
 
 namespace BudoShurenWebsite.Services.Mail
@@ -15,6 +16,7 @@ namespace BudoShurenWebsite.Services.Mail
         private readonly EmailVersandSignal _signal;
         private readonly TimeProvider _zeit;
         private readonly EmailVersandOptionen _optionen;
+        private readonly DienstHerzschlag _herzschlag;
         private readonly ILogger<EmailVersandHostedService> _logger;
 
         public EmailVersandHostedService(
@@ -22,12 +24,14 @@ namespace BudoShurenWebsite.Services.Mail
             EmailVersandSignal signal,
             TimeProvider zeit,
             IOptions<EmailVersandOptionen> optionen,
+            DienstHerzschlag herzschlag,
             ILogger<EmailVersandHostedService> logger)
         {
             _job = job;
             _signal = signal;
             _zeit = zeit;
             _optionen = optionen.Value;
+            _herzschlag = herzschlag;
             _logger = logger;
         }
 
@@ -36,8 +40,13 @@ namespace BudoShurenWebsite.Services.Mail
             if (!_optionen.Aktiviert)
             {
                 _logger.LogInformation("Mailversand aus der Warteschlange ist deaktiviert ({Abschnitt}:Aktiviert)", EmailVersandOptionen.Abschnitt);
+                _herzschlag.Abgeschaltet(DienstHerzschlag.EmailVersand, $"{EmailVersandOptionen.Abschnitt}:Aktiviert=false", erwartet: false);
                 return;
             }
+
+            // Ein Durchlauf wartet höchstens Abfrageintervall bzw. nach einem Fehler WartezeitNachFehler;
+            // der Rest ist Puffer für große Stapel und langsame SMTP-Antworten
+            _herzschlag.Gestartet(DienstHerzschlag.EmailVersand, _optionen.Abfrageintervall + _optionen.WartezeitNachFehler + TimeSpan.FromMinutes(30));
 
             var naechsteBereinigung = DateTimeOffset.MinValue;
 
@@ -57,6 +66,7 @@ namespace BudoShurenWebsite.Services.Mail
                     while (await _job.StapelVersendenAsync(stoppingToken) >= _optionen.StapelGroesse)
                     {
                     }
+                    _herzschlag.Gelaufen(DienstHerzschlag.EmailVersand, ok: true);
 
                     await _signal.WartenAsync(_optionen.Abfrageintervall, stoppingToken);
                 }
@@ -67,6 +77,7 @@ namespace BudoShurenWebsite.Services.Mail
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Fehler beim Mailversand aus der Warteschlange, neuer Versuch in {Wartezeit}", _optionen.WartezeitNachFehler);
+                    _herzschlag.Gelaufen(DienstHerzschlag.EmailVersand, ok: false);
                     try
                     {
                         await Task.Delay(_optionen.WartezeitNachFehler, _zeit, stoppingToken);

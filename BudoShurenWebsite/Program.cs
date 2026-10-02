@@ -5,6 +5,7 @@ using BudoShurenWebsite.Global;
 using BudoShurenWebsite.Middleware;
 using BudoShurenWebsite.Services;
 using BudoShurenWebsite.Services.Mail;
+using BudoShurenWebsite.Services.Systemzustand;
 using BudoShurenWebsite.Services.Veranstaltungen;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -121,6 +122,9 @@ namespace BudoShurenWebsite
                 builder.Services.AddSingleton<VeranstaltungWartungJob>();
                 builder.Services.AddHostedService<VeranstaltungJobsHostedService>();
                 builder.Services.AddRateLimiter(VeranstaltungRateLimit.Konfigurieren);
+
+                //Health Checks: GET /health (Betrieb) und /health/alle, nur Admins oder mit Systemzustand:Token (siehe Services/Systemzustand)
+                builder.Services.AddSystemzustand(builder.Configuration);
 
                 //Adapter für SfGrid & SfScheduler
                 builder.Services.AddScoped<MitgliederAdaptor>();
@@ -263,6 +267,7 @@ namespace BudoShurenWebsite
                 // Add additional endpoints required by the Identity /Account Razor components.
                 app.MapAdditionalIdentityEndpoints();
                 app.MapControllers();
+                app.MapSystemzustand();
                 app.Run();
 
                 stopwatch.Stop();

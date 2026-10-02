@@ -1,4 +1,5 @@
 using BudoShurenWebsite.Data;
+using BudoShurenWebsite.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudoShurenWebsite.Services
@@ -31,10 +32,14 @@ namespace BudoShurenWebsite.Services
 
             // Eine einzige Anweisung: Prüfung auf Verwendung und Löschen sind nicht zu trennen. Sonst könnte ein gleichzeitiges
             // Speichern dazwischenkommen, und bei Aktuelles würde das Löschen die Verwendung im Beitrag mitlöschen (Cascade).
+            return await Abgelaufene(kontext, grenze).ExecuteDeleteAsync(abbruch);
+        }
+
+        /// <summary>Was der Job löscht: vor <paramref name="grenzeUtc"/> vorläufig hochgeladen und nirgends verwendet.</summary>
+        public static IQueryable<DbImage> Abgelaufene(ApplicationDbContext kontext, DateTime grenzeUtc)
+        {
             var verwendet = BildVerwendung.VerwendeteBildIds(kontext);
-            return await kontext.Images
-                .Where(i => i.VorlaeufigSeitUtc != null && i.VorlaeufigSeitUtc < grenze && !verwendet.Contains(i.Id))
-                .ExecuteDeleteAsync(abbruch);
+            return kontext.Images.Where(i => i.VorlaeufigSeitUtc != null && i.VorlaeufigSeitUtc < grenzeUtc && !verwendet.Contains(i.Id));
         }
     }
 }

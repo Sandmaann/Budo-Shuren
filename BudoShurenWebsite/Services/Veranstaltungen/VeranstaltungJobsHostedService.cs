@@ -1,3 +1,4 @@
+using BudoShurenWebsite.Services.Systemzustand;
 using Microsoft.Extensions.Options;
 
 namespace BudoShurenWebsite.Services.Veranstaltungen
@@ -16,6 +17,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         private readonly VeranstaltungWartungJob _wartung;
         private readonly TimeProvider _zeit;
         private readonly VeranstaltungenOptionen _optionen;
+        private readonly DienstHerzschlag _herzschlag;
         private readonly ILogger<VeranstaltungJobsHostedService> _logger;
 
         public VeranstaltungJobsHostedService(
@@ -23,12 +25,14 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             VeranstaltungWartungJob wartung,
             TimeProvider zeit,
             IOptions<VeranstaltungenOptionen> optionen,
+            DienstHerzschlag herzschlag,
             ILogger<VeranstaltungJobsHostedService> logger)
         {
             _benachrichtigung = benachrichtigung;
             _wartung = wartung;
             _zeit = zeit;
             _optionen = optionen.Value;
+            _herzschlag = herzschlag;
             _logger = logger;
         }
 
@@ -38,15 +42,22 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             {
                 _logger.LogInformation("Hintergrund-Jobs des Moduls Veranstaltungen laufen nicht (Aktiviert={Aktiviert}, HintergrundJobsAktiviert={Jobs})",
                     _optionen.Aktiviert, _optionen.HintergrundJobsAktiviert);
+                // Modul aus: gewollt. Modul an, Jobs aus: Benachrichtigungen und Wartung bleiben liegen
+                _herzschlag.Abgeschaltet(DienstHerzschlag.Veranstaltungen,
+                    _optionen.Aktiviert ? "Veranstaltungen:HintergrundJobsAktiviert=false" : "Modul Veranstaltungen ausgeschaltet",
+                    erwartet: !_optionen.Aktiviert);
                 return;
             }
+
+            _herzschlag.Gestartet(DienstHerzschlag.Veranstaltungen, Takt + TimeSpan.FromMinutes(15));
 
             var naechsteWartung = DateTimeOffset.MinValue;
             while (!stoppingToken.IsCancellationRequested)
             {
+                var ok = true;
                 if (_zeit.GetUtcNow() >= naechsteWartung)
                 {
-                    await SicherAusfuehrenAsync("Wartung", async () =>
+                    ok &= await SicherAusfuehrenAsync("Wartung", async () =>
                     {
                         var ergebnis = await _wartung.AusfuehrenAsync(stoppingToken);
                         if (ergebnis.VerworfeneAnmeldungen > 0 || ergebnis.AbgeschlosseneVeranstaltungen > 0)
@@ -56,7 +67,10 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     naechsteWartung = _zeit.GetUtcNow() + WartungIntervall;
                 }
 
-                await SicherAusfuehrenAsync("Benachrichtigungen", () => _benachrichtigung.AusfuehrenAsync(stoppingToken), stoppingToken);
+                ok &= await SicherAusfuehrenAsync("Benachrichtigungen", () => _benachrichtigung.AusfuehrenAsync(stoppingToken), stoppingToken);
+                // Ein Fehler der stündlichen Wartung zeigt sich hier nur bis zum nächsten Takt (steht im Log);
+                // liegengebliebene Wartung meldet zusätzlich VeranstaltungWartungCheck
+                _herzschlag.Gelaufen(DienstHerzschlag.Veranstaltungen, ok);
 
                 try
                 {
@@ -70,18 +84,22 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         }
 
         // Ein Fehler in einem Durchlauf (z. B. Datenbank kurz nicht erreichbar) beendet den Dienst nicht; der nächste Takt versucht es erneut
-        private async Task SicherAusfuehrenAsync(string name, Func<Task> aktion, CancellationToken stoppingToken)
+        /// <returns>false, wenn der Durchlauf mit einem Fehler endete.</returns>
+        private async Task<bool> SicherAusfuehrenAsync(string name, Func<Task> aktion, CancellationToken stoppingToken)
         {
             try
             {
                 await aktion();
+                return true;
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fehler im Job {Job} des Moduls Veranstaltungen", name);
+                return false;
             }
         }
     }

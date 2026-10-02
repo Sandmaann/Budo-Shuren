@@ -1,3 +1,5 @@
+using BudoShurenWebsite.Services.Systemzustand;
+
 namespace BudoShurenWebsite.Services
 {
     /// <summary>
@@ -11,13 +13,15 @@ namespace BudoShurenWebsite.Services
         private readonly BildAufraeumJob _job;
         private readonly TimeProvider _zeit;
         private readonly bool _aktiviert;
+        private readonly DienstHerzschlag _herzschlag;
         private readonly ILogger<BildAufraeumHostedService> _logger;
 
-        public BildAufraeumHostedService(BildAufraeumJob job, TimeProvider zeit, IConfiguration konfiguration, ILogger<BildAufraeumHostedService> logger)
+        public BildAufraeumHostedService(BildAufraeumJob job, TimeProvider zeit, IConfiguration konfiguration, DienstHerzschlag herzschlag, ILogger<BildAufraeumHostedService> logger)
         {
             _job = job;
             _zeit = zeit;
             _aktiviert = konfiguration.GetValue("BildAufraeumen:Aktiviert", true);
+            _herzschlag = herzschlag;
             _logger = logger;
         }
 
@@ -26,8 +30,11 @@ namespace BudoShurenWebsite.Services
             if (!_aktiviert)
             {
                 _logger.LogInformation("Aufräumen nicht gespeicherter Bilder ist deaktiviert (BildAufraeumen:Aktiviert)");
+                _herzschlag.Abgeschaltet(DienstHerzschlag.BildAufraeumen, "BildAufraeumen:Aktiviert=false", erwartet: false);
                 return;
             }
+
+            _herzschlag.Gestartet(DienstHerzschlag.BildAufraeumen, Intervall + TimeSpan.FromHours(1));
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -36,6 +43,7 @@ namespace BudoShurenWebsite.Services
                     var geloescht = await _job.AusfuehrenAsync(stoppingToken);
                     if (geloescht > 0)
                         _logger.LogInformation("{Anzahl} nie gespeicherte Bilder gelöscht", geloescht);
+                    _herzschlag.Gelaufen(DienstHerzschlag.BildAufraeumen, ok: true);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -45,6 +53,7 @@ namespace BudoShurenWebsite.Services
                 {
                     // Z. B. Datenbank kurz nicht erreichbar: der nächste Durchlauf versucht es erneut
                     _logger.LogError(ex, "Fehler beim Aufräumen nicht gespeicherter Bilder");
+                    _herzschlag.Gelaufen(DienstHerzschlag.BildAufraeumen, ok: false);
                 }
 
                 try
