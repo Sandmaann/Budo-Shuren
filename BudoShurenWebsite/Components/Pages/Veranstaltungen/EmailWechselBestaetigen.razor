@@ -15,33 +15,35 @@
     <meta name="robots" content="noindex, nofollow">
 </HeadContent>
 
+<Headline Titel="武道" Untertitel="Veranstaltungen" Anekdote="" />
+
 <div class="container mx-auto max-w-screen-md">
-    <div class="font-ptsans mx-10 my-12 text-sm">
+    <div class="font-ptsans mx-10 mb-12 text-sm">
         @if (!Optionen.Value.Aktiviert)
         {
             <Standardtext Text="Diese Seite gibt es nicht." />
         }
         else if (_ergebnis == EmailWechselErgebnis.Bestaetigt)
         {
-            <h1 class="mb-3 text-xl font-bold">Neue Adresse bestätigt</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Neue Adresse bestätigt</h2>
             <p>Ab jetzt gehen alle Infos an deine neue Adresse. Dorthin haben wir dir auch einen neuen Link zu deiner Anmeldung geschickt.</p>
         }
         else if (_ergebnis == EmailWechselErgebnis.AdresseVergeben)
         {
-            <h1 class="mb-3 text-xl font-bold">Adresse bereits angemeldet</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Adresse bereits angemeldet</h2>
             <p>Mit dieser Adresse gibt es für die Veranstaltung schon eine andere Anmeldung. Die Adresse wurde deshalb nicht geändert.</p>
         }
         else if (_neueEmail is null)
         {
-            <h1 class="mb-3 text-xl font-bold">Link ungültig</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Link ungültig</h2>
             <p>Dieser Link ist ungültig oder wurde bereits verwendet.</p>
         }
         else
         {
-            <h1 class="mb-3 text-xl font-bold">Neue E-Mail-Adresse bestätigen</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Neue E-Mail-Adresse bestätigen</h2>
             <p class="mb-4">Soll <strong>@_neueEmail</strong> die Adresse für deine Anmeldung werden?</p>
             <EditForm Model="Formular" FormName="email-bestaetigen" OnSubmit="BestaetigenAsync" Enhance>
-                <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                <button type="submit" class="knopf-primaer">
                     Adresse bestätigen
                 </button>
             </EditForm>

@@ -25,6 +25,7 @@ public class RundmailBereichTests : BunitContext
     private IRenderedComponent<RundmailBereich> Bereich(int teilnehmer = 3, string? eigeneEmail = "olga@example.org", string? betreff = null, string? text = null) =>
         Render<RundmailBereich>(p => p
             .Add(x => x.VeranstaltungId, VeranstaltungId)
+            .Add(x => x.Titel, "Herbstseminar")
             .Add(x => x.Benutzer, Admin)
             .Add(x => x.BasisUrl, Basis)
             .Add(x => x.AnzahlTeilnehmer, teilnehmer)
@@ -43,6 +44,21 @@ public class RundmailBereichTests : BunitContext
         bereich.Find("#rundmail-betreff").GetAttribute("value").ShouldBe("Änderung: Herbstseminar");
         bereich.Find("details").InnerHtml.ShouldContain("<strong>Ort:</strong> Halle");
         bereich.Markup.ShouldContain("Noch keine.");
+    }
+
+    [Fact]
+    public void Anrede_steht_sichtbar_ueber_dem_Text_und_doppelte_Anrede_wird_gemeldet()
+    {
+        var bereich = Bereich();
+
+        bereich.Find("#rundmail-anrede").TextContent.ShouldContain("Hallo Vorname, eine Nachricht zu Herbstseminar:");
+        bereich.FindAll("#rundmail-doppelte-anrede").ShouldBeEmpty();
+
+        bereich.Find("#rundmail-text").Input("Hallo zusammen, die Halle ist geändert.");
+        bereich.Find("#rundmail-doppelte-anrede").TextContent.ShouldContain("die Anrede stünde dann doppelt");
+
+        bereich.Find("#rundmail-text").Input("Die Halle ist geändert.");
+        bereich.FindAll("#rundmail-doppelte-anrede").ShouldBeEmpty();
     }
 
     [Fact]

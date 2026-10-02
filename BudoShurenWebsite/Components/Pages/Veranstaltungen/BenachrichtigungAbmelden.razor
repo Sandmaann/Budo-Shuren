@@ -14,28 +14,30 @@
     <meta name="robots" content="noindex, nofollow">
 </HeadContent>
 
+<Headline Titel="武道" Untertitel="Veranstaltungen" Anekdote="" />
+
 <div class="container mx-auto max-w-screen-md">
-    <div class="font-ptsans mx-10 my-12 text-sm">
+    <div class="font-ptsans mx-10 mb-12 text-sm">
         @if (!Optionen.Value.Aktiviert)
         {
             <Standardtext Text="Diese Seite gibt es nicht." />
         }
         else if (_abgemeldet)
         {
-            <h1 class="mb-3 text-xl font-bold">Abgemeldet</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Abgemeldet</h2>
             <p>Du bekommst keine Benachrichtigungen mehr zu dieser Veranstaltung.</p>
         }
         else if (_titel is null)
         {
-            <h1 class="mb-3 text-xl font-bold">Link ungültig</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Link ungültig</h2>
             <p>Dieser Link ist ungültig, oder du bist bereits abgemeldet. Es gilt jeweils der Link aus der neuesten E-Mail.</p>
         }
         else
         {
-            <h1 class="mb-3 text-xl font-bold">Benachrichtigungen abbestellen</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Benachrichtigungen abbestellen</h2>
             <p class="mb-4">Du bekommst Benachrichtigungen über Anmeldungen zu <strong>@_titel</strong>. Möchtest du keine mehr bekommen?</p>
             <EditForm Model="Formular" FormName="benachrichtigung-abmelden" OnSubmit="AbmeldenAsync" Enhance>
-                <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                <button type="submit" class="knopf-primaer">
                     Keine Benachrichtigungen mehr
                 </button>
             </EditForm>

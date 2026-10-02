@@ -267,12 +267,18 @@
                         {
                             <BenachrichtigungEmpfaengerListe VeranstaltungId="veranstaltungId"
                                                              Benutzer="_benutzer"
-                                                             AbteilungEmail="@_abteilungen.FirstOrDefault(a => a.Id == _eingabe.AbteilungId)?.Email" />
+                                                             AbteilungEmail="@_abteilungen.FirstOrDefault(a => a.Id == _eingabe.AbteilungId)?.Email"
+                                                             ZusammenfassungUhrzeit="_eingabe.ZusammenfassungUhrzeit" />
                         }
                         else
                         {
                             <p class="@Hinweis">Nach dem ersten Speichern bist du automatisch eingetragen und kannst weitere Empfänger hinzufügen.</p>
                         }
+                        <div class="mt-4">
+                            <label class="@Label" for="zusammenfassung-uhrzeit">Uhrzeit der täglichen Zusammenfassung</label>
+                            <InputDate id="zusammenfassung-uhrzeit" Type="InputDateType.Time" @bind-Value="_eingabe.ZusammenfassungUhrzeit" class="@($"{Feld} md:w-40")" />
+                            <p class="@Hinweis">Gilt für alle Empfänger mit „Nur Tageszusammenfassung“ und wird mit „Speichern“ übernommen.</p>
+                        </div>
                     </section>
 
                     <!-- 6. Erweitert -->
@@ -283,10 +289,6 @@
                                 <InputCheckbox @bind-Value="_eingabe.DoubleOptIn" />
                                 Anmeldung erst nach Bestätigung der E-Mail-Adresse gültig (empfohlen)
                             </label>
-                            <div>
-                                <label class="@Label">Uhrzeit der täglichen Zusammenfassung</label>
-                                <InputDate Type="InputDateType.Time" @bind-Value="_eingabe.ZusammenfassungUhrzeit" class="@($"{Feld} md:w-40")" />
-                            </div>
                         </div>
                     </details>
 

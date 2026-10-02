@@ -21,8 +21,10 @@
     </HeadContent>
 }
 
+<Headline Titel="武道" Untertitel="Veranstaltungen" Anekdote="" />
+
 <div class="container mx-auto max-w-screen-md">
-    <div class="mx-10 my-6">
+    <div class="mx-10 mb-12">
         @if (_v is null)
         {
             <Standardtext Text="Diese Veranstaltung gibt es nicht (mehr)." />
@@ -32,11 +34,13 @@
         {
             <a href="/veranstaltungen" class="font-ptsans text-sm hover:underline">← Alle Veranstaltungen</a>
 
-            <h1 class="font-ptsans mt-4 text-2xl font-bold">@_v.Titel</h1>
             @if (_v.Abteilung is not null)
             {
-                <p class="font-ptsans text-sm text-gray-600">@_v.Abteilung</p>
+                <div class="mt-6">
+                    <span class="font-ptsans rounded bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">@_v.Abteilung</span>
+                </div>
             }
+            <h2 class="font-yuji mt-2 text-2xl font-bold">@_v.Titel</h2>
 
             @if (_v.Status == VeranstaltungStatus.Abgesagt)
             {
@@ -81,14 +85,14 @@
                 }
             </section>
 
-            <div class="font-ptsans prose prose-sm max-w-none">
+            <div class="font-ptsans markdown-content text-sm tracking-wider">
                 @((MarkupString)_v.BeschreibungHtml)
             </div>
 
             <!-- Anmeldung -->
-            <section id="anmeldung" class="my-8 rounded border border-gray-300 p-5">
-                <h2 class="font-ptsans mb-1 text-lg font-bold">Anmeldung</h2>
-                <p class="font-ptsans mb-4 text-xs text-gray-600">
+            <section id="anmeldung" class="scroll-mt-24">
+                <SectionBanner Titel="Anmeldung" />
+                <p class="font-ptsans -mt-6 mb-6 text-xs text-gray-600">
                     Schon angemeldet? Über den Link aus deiner Bestätigungs-E-Mail kannst du deine Anmeldung ändern.
                     <a href="/veranstaltungen/link-anfordern" class="underline">Link verloren?</a>
                 </p>
@@ -153,13 +157,14 @@
                                     <InputCheckbox @bind-Value="Formular.Eingabe.DatenschutzAkzeptiert" class="mt-1" />
                                     <span>
                                         Ich bin einverstanden, dass meine Angaben zur Organisation dieser Veranstaltung gespeichert und verarbeitet werden.
-                                        Details in der <a href="/impressum" target="_blank" class="underline">Datenschutzerklärung</a>. *
+                                        Welche Daten das sind, wer sie sieht und wann wir sie löschen, steht in der
+                                        <a href="/Impressum#datenschutz-veranstaltungen" target="_blank" class="underline">Datenschutzerklärung</a>. *
                                     </span>
                                 </label>
                                 @FehlerText(nameof(AnmeldeEingabe.DatenschutzAkzeptiert))
                             </div>
 
-                            <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                            <button type="submit" class="knopf-primaer">
                                 Anmelden
                             </button>
                         </div>

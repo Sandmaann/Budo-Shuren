@@ -16,24 +16,26 @@
     <meta name="robots" content="noindex, nofollow">
 </HeadContent>
 
+<Headline Titel="武道" Untertitel="Veranstaltungen" Anekdote="" />
+
 <div class="container mx-auto max-w-screen-md">
-    <div class="font-ptsans mx-10 my-8 text-sm">
+    <div class="font-ptsans mx-10 mb-12 text-sm">
         @if (!Optionen.Value.Aktiviert)
         {
             <Standardtext Text="Diese Seite gibt es nicht." />
         }
         else if (_ansicht is null)
         {
-            <h1 class="mb-3 text-xl font-bold">Link ungültig</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Link ungültig</h2>
             <p>Dieser Link ist ungültig oder nicht mehr aktuell, zum Beispiel weil inzwischen ein neuer Link verschickt wurde.</p>
             <a href="/veranstaltungen/link-anfordern" class="mt-3 inline-block underline">Neuen Link anfordern</a>
         }
         else
         {
             <p class="text-xs uppercase tracking-wider text-gray-600">Meine Anmeldung</p>
-            <h1 class="mb-1 text-xl font-bold">
+            <h2 class="font-yuji mb-1 text-2xl font-bold">
                 <a href="@($"/veranstaltungen/{Uri.EscapeDataString(_ansicht.Slug)}")" class="hover:underline">@_ansicht.Titel</a>
-            </h1>
+            </h2>
 
             @if (_meldung is not null)
             {
@@ -49,7 +51,7 @@
             {
                 case AnmeldungStatus.Unbestaetigt:
                     <p class="my-4">Deine Anmeldung ist noch nicht bestätigt.</p>
-                    <a href="@($"/veranstaltungen/bestaetigen/{Token}")" class="inline-block rounded border border-black bg-black px-6 py-2 text-white hover:bg-gray-800">Jetzt bestätigen</a>
+                    <a href="@($"/veranstaltungen/bestaetigen/{Token}")" class="knopf-primaer">Jetzt bestätigen</a>
                     break;
 
                 case AnmeldungStatus.Storniert:
@@ -209,7 +211,7 @@
         @if (ansicht.AenderungenMoeglich)
         {
             <section class="my-6 rounded border border-gray-300 p-5">
-                <h2 class="mb-4 text-lg font-bold">Anmeldung ändern</h2>
+                <h3 class="font-yuji mb-4 text-xl font-bold">Anmeldung ändern</h3>
                 <EditForm Model="Aenderung" FormName="aendern" OnSubmit="SpeichernAsync" Enhance>
                     <div class="space-y-4">
                         <AnmeldeFelder Praefix="Aenderung"
@@ -223,7 +225,7 @@
                         {
                             <p class="text-xs text-gray-600">Abgemeldet und ohne weitere Infos: @string.Join(", ", ansicht.AbgemeldeteInfoEmails)</p>
                         }
-                        <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                        <button type="submit" class="knopf-primaer">
                             Änderungen speichern
                         </button>
                     </div>
@@ -239,14 +241,14 @@
         @if (ansicht.AbmeldenMoeglich)
         {
             <section class="my-6 rounded border border-gray-300 p-5">
-                <h2 class="mb-2 text-lg font-bold">Abmelden</h2>
+                <h3 class="font-yuji mb-2 text-xl font-bold">Abmelden</h3>
                 <p class="mb-3">Du kannst nicht teilnehmen? Dann melde dich bitte ab, damit dein Platz frei wird.</p>
                 <EditForm Model="Abmeldung" FormName="abmelden" OnSubmit="AbmeldenAsync" Enhance>
                     <label class="mb-3 flex items-center gap-2">
                         <InputCheckbox @bind-Value="Abmeldung!.Bestaetigt" />
                         Ja, ich möchte mich abmelden.
                     </label>
-                    <button type="submit" class="rounded border border-red-800 px-6 py-2 text-red-800 hover:bg-red-50">
+                    <button type="submit" class="font-yuji inline-flex h-10 items-center border border-red-800 px-5 text-sm tracking-widest text-red-800 transition duration-150 ease-in-out hover:bg-red-50 active:scale-90">
                         Abmelden
                     </button>
                 </EditForm>

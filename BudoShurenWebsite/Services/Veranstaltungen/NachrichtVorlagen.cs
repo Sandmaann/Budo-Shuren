@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace BudoShurenWebsite.Services.Veranstaltungen
 {
@@ -29,5 +30,16 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
             return ($"Änderung: {v.Titel}", text.ToString());
         }
+
+        // Typische Anreden am Textanfang, z. B. "Hallo zusammen," oder "Liebe Teilnehmer"
+        private static readonly Regex Anrede = new(
+            @"^\s*(hallo|hi|hey|servus|moin|liebe[rs]?|guten\s+(tag|morgen|abend)|sehr\s+geehrte[rs]?|grüß\s+gott)\b",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        /// <summary>
+        /// Beginnt der Text selbst mit einer Anrede? Die Mail beginnt schon mit "Hallo Vorname," (VeranstaltungMailVorlagen.Nachricht),
+        /// die Anrede stünde dann doppelt.
+        /// </summary>
+        public static bool BeginntMitAnrede(string? text) => !string.IsNullOrWhiteSpace(text) && Anrede.IsMatch(text);
     }
 }

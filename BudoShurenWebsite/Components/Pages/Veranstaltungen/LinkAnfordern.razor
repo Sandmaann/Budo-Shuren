@@ -13,21 +13,23 @@
 
 <PageTitle>Link zur Anmeldung anfordern | Budo Shuren Dojo</PageTitle>
 
+<Headline Titel="武道" Untertitel="Veranstaltungen" Anekdote="" />
+
 <div class="container mx-auto max-w-screen-md">
-    <div class="font-ptsans mx-10 my-12 text-sm">
+    <div class="font-ptsans mx-10 mb-12 text-sm">
         @if (!Optionen.Value.Aktiviert)
         {
             <Standardtext Text="Diese Seite gibt es nicht." />
         }
         else if (_abgeschickt)
         {
-            <h1 class="mb-3 text-xl font-bold">Schau in dein Postfach</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Schau in dein Postfach</h2>
             <p>Wenn es zu dieser Adresse Anmeldungen gibt, haben wir dir eine E-Mail mit den Links geschickt. Ältere Links gelten dann nicht mehr.</p>
             <p class="mt-2 text-xs text-gray-600">Keine E-Mail bekommen? Bitte schau auch im Spam-Ordner nach.</p>
         }
         else
         {
-            <h1 class="mb-3 text-xl font-bold">Link zu deiner Anmeldung</h1>
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Link zu deiner Anmeldung</h2>
             <p class="mb-4">Du findest den Link zu deiner Anmeldung nicht mehr? Gib die Adresse ein, mit der du dich angemeldet hast. Wir schicken dir die Links zu allen deinen Anmeldungen.</p>
             <EditForm Model="Formular" FormName="link-anfordern" OnSubmit="AnfordernAsync" Enhance>
                 <div class="space-y-3">
@@ -41,7 +43,7 @@
                         <InputText id="website" @bind-Value="Formular.Website" tabindex="-1" autocomplete="off" />
                     </div>
                     <InputText type="hidden" @bind-Value="Formular.Zeitstempel" />
-                    <button type="submit" class="rounded border border-black bg-black px-6 py-2 tracking-wider text-white hover:bg-gray-800">
+                    <button type="submit" class="knopf-primaer">
                         Link schicken
                     </button>
                 </div>

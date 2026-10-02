@@ -32,4 +32,22 @@ public class NachrichtVorlagenTests
     [Fact]
     public void Ohne_Ort_keine_Ortszeile() =>
         NachrichtVorlagen.Terminaenderung(Uebersicht(" ", Tag(1, 14))).Text.ShouldNotContain("Ort:");
+
+    [Theory]
+    [InlineData("Hallo zusammen,\n\nder Termin steht.", true)]
+    [InlineData("  hallo", true)]
+    [InlineData("Hi Leute", true)]
+    [InlineData("Liebe Teilnehmer", true)]
+    [InlineData("Lieber Max", true)]
+    [InlineData("Guten Morgen!", true)]
+    [InlineData("Sehr geehrte Damen und Herren", true)]
+    [InlineData("Grüß Gott", true)]
+    [InlineData("Hinweis: der Termin steht.", false)]
+    [InlineData("Hallenwechsel: wir trainieren in Halle 2.", false)]
+    [InlineData("bei der Veranstaltung haben sich Termin oder Ort geändert.", false)]
+    [InlineData("Viele liebe Grüße", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void Erkennt_eine_Anrede_am_Textanfang(string? text, bool erwartet) =>
+        NachrichtVorlagen.BeginntMitAnrede(text).ShouldBe(erwartet);
 }

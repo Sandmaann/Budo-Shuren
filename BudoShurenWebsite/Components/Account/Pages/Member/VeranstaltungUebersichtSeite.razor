@@ -162,7 +162,7 @@
                     break;
 
                 case Tab.Nachrichten:
-                    <RundmailBereich @key="_vorlage" VeranstaltungId="v.Id" Benutzer="_benutzer" BasisUrl="@NavigationManager.BaseUri"
+                    <RundmailBereich @key="_vorlage" VeranstaltungId="v.Id" Titel="@v.Titel" Benutzer="_benutzer" BasisUrl="@NavigationManager.BaseUri"
                                      AnzahlTeilnehmer="v.Teilnehmer.Count(t => t.Status == AnmeldungStatus.Angemeldet)"
                                      EigeneEmail="@_eigeneEmail" VorlageBetreff="@_vorlage?.Betreff" VorlageText="@_vorlage?.Text" />
                     break;

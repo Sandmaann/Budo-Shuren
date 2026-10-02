@@ -172,6 +172,26 @@ public class BenachrichtigungsAuswertungTests
             .ShouldBeNull("erst am nächsten Morgen wieder");
     }
 
+    [Fact]
+    public void Zusammenfassung_ohne_Neuigkeiten_wird_nicht_gesendet()
+    {
+        var empfaenger = Empfaenger(BenachrichtigungModus.TaeglicheZusammenfassung, bis: new DateTime(2026, 9, 30, 6, 0, 0, DateTimeKind.Utc));
+        var danach = new DateTime(2026, 10, 1, 5, 2, 0, DateTimeKind.Utc);
+        // Nur Ereignisse, die nie gemeldet werden (System, unbestätigte Anmeldung)
+        BenachrichtigungEreignis[] ereignisse =
+        [
+            new(1, new DateTime(2026, 9, 30, 15, 0, 0, DateTimeKind.Utc), AnmeldungEreignisArt.Angelegt, EreignisAkteur.Teilnehmer, null, null),
+            new(2, new DateTime(2026, 9, 30, 16, 0, 0, DateTimeKind.Utc), AnmeldungEreignisArt.Storniert, EreignisAkteur.System, null, null)
+        ];
+
+        foreach (var offen in new BenachrichtigungEreignis[][] { [], ereignisse })
+        {
+            var plan = BenachrichtigungsAuswertung.Auswerten(empfaenger, Veranstaltung(), offen, danach).ShouldNotBeNull();
+            plan.Senden.ShouldBeFalse();
+            plan.NeuBisUtc.ShouldBe(danach - BenachrichtigungsAuswertung.Puffer, "der Tag gilt trotzdem als erledigt");
+        }
+    }
+
     [Theory]
     // Sommerzeit: 07:00 Ortszeit = 05:00 UTC
     [InlineData("2026-10-01T05:30:00", "2026-10-01T05:00:00")]

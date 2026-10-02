@@ -71,9 +71,11 @@
                                                   title="Anmeldungen mit ungesehenen Änderungen">@e.UngeseheneAenderungen neu</span>
                                         }
                                     </td>
-                                    <td class="px-2 py-2 text-right">
+                                    <td class="whitespace-nowrap px-2 py-2 text-right">
+                                        <a href="@UebersichtLink(e.Id)" title="Teilnehmer, Änderungen und Nachrichten"
+                                           class="rounded border border-black bg-black px-2 py-1 text-xs text-white hover:bg-primary">Übersicht</a>
                                         <a href="@BearbeitenLink(e.Id)"
-                                           class="rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100">Bearbeiten</a>
+                                           class="ml-1 rounded border border-gray-400 px-2 py-1 text-xs hover:bg-gray-100">Bearbeiten</a>
                                     </td>
                                 </tr>
                             }

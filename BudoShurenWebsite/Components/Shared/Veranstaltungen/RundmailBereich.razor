@@ -18,8 +18,26 @@
         <input id="rundmail-betreff" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="_betreff" @bind:event="oninput" />
     </div>
     <div>
-        <label class="mb-1 block text-xs font-bold" for="rundmail-text">Text <span class="font-normal text-gray-500">(Markdown; die Anrede "Hallo Vorname," wird automatisch ergänzt)</span></label>
-        <textarea id="rundmail-text" rows="10" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="_text" @bind:event="oninput"></textarea>
+        <label class="mb-1 block text-xs font-bold" for="rundmail-text">Text <span class="font-normal text-gray-500">(Markdown)</span></label>
+        @* Rahmen wie die fertige Mail (VeranstaltungMailVorlagen.Nachricht): Anrede davor, Kontakt und Links danach *@
+        <div class="rounded border border-gray-300">
+            <div id="rundmail-anrede" class="border-b border-dashed border-gray-300 bg-gray-50 px-2 py-2">
+                <p class="text-xs font-bold uppercase tracking-wider text-gray-500">Steht automatisch am Anfang jeder Mail</p>
+                <p class="mt-1 text-gray-700"><strong>Hallo Vorname,</strong> eine Nachricht zu <strong>@Titel</strong>:</p>
+            </div>
+            <textarea id="rundmail-text" rows="10" class="block w-full border-0 p-2 text-sm" @bind="_text" @bind:event="oninput"
+                      placeholder="Hier nur deinen Text schreiben, ohne Anrede."></textarea>
+            <p class="border-t border-dashed border-gray-300 bg-gray-50 px-2 py-2 text-xs text-gray-500">
+                Danach folgen automatisch die Kontaktdaten der Veranstaltung und ein Hinweis, wie Teilnehmer ihre Anmeldung ändern können.
+                Info-Adressen bekommen „Hallo,“ ohne Namen und einen Abmeldelink.
+            </p>
+        </div>
+        @if (NachrichtVorlagen.BeginntMitAnrede(_text))
+        {
+            <p id="rundmail-doppelte-anrede" class="mt-2 rounded border border-amber-400 bg-amber-50 p-2">
+                Dein Text beginnt mit einer Anrede. Die Mail beginnt schon mit „Hallo Vorname,“, die Anrede stünde dann doppelt.
+            </p>
+        }
     </div>
     <label class="flex items-center gap-2">
         <input type="checkbox" @bind="_anInfoAdressen" /> Auch an die Info-Adressen der Teilnehmer
@@ -29,7 +47,7 @@
     {
         <details class="rounded border border-gray-200 p-3">
             <summary class="cursor-pointer text-xs font-bold">Vorschau</summary>
-            <div class="prose prose-sm mt-2 max-w-none">@((MarkupString)MarkdownText.SicherZuHtml(_text))</div>
+            <div class="markdown-content mt-2">@((MarkupString)MarkdownText.SicherZuHtml(_text))</div>
         </details>
     }
 
@@ -94,6 +112,10 @@ else
 
     [Parameter, EditorRequired]
     public string BasisUrl { get; set; } = string.Empty;
+
+    /// <summary>Titel der Veranstaltung, für den Mail-Kopf über dem Textfeld.</summary>
+    [Parameter, EditorRequired]
+    public string Titel { get; set; } = string.Empty;
 
     /// <summary>Bestätigte Teilnehmer (ohne Info-Adressen), für die Rückfrage vor dem Senden.</summary>
     [Parameter, EditorRequired]
