@@ -1,0 +1,43 @@
+@*
+    Ein Baustein der Veranstaltungsbeschreibung: Text (bereits sicher gerendertes HTML) oder Bildergalerie.
+    Für die öffentliche Seite (statisch gerendert) und die Vorschau im Editor.
+*@
+
+@if (Block.Typ == VeranstaltungBlockTyp.MarkdownText)
+{
+    <div class="markdown-content font-ptsans my-6 text-sm tracking-wider">
+        @((MarkupString)Block.Html)
+    </div>
+}
+else if (Block.BildIds.Count > 0)
+{
+    <figure class="my-8">
+        <div class="galerie-raster" style="--spalten: @Spalten; --spalten-mobil: @Math.Min(Spalten, 2)">
+            @foreach (var id in Block.BildIds)
+            {
+                <a href="@BildUrl(id)" target="_blank" rel="noopener" class="block overflow-hidden" title="Bild in voller Größe öffnen">
+                    <img src="@BildUrl(id)" alt="@(Block.BildUnterschrift ?? AltText)" loading="lazy"
+                         class="@(Spalten == 1 ? "h-auto w-full" : "aspect-[4/3] h-full w-full object-cover")" />
+                </a>
+            }
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Block.BildUnterschrift))
+        {
+            <figcaption class="font-ptsans mt-2 text-xs italic tracking-wider text-gray-600">@Block.BildUnterschrift</figcaption>
+        }
+    </figure>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public InhaltsBlockAnzeige Block { get; set; } = default!;
+
+    /// <summary>Alternativtext, wenn die Galerie keine Unterschrift hat (z. B. der Titel der Veranstaltung).</summary>
+    [Parameter, EditorRequired]
+    public string AltText { get; set; } = string.Empty;
+
+    private int Spalten => Math.Clamp(Block.BilderProReihe, 1, 6);
+
+    // Relativ zur Website; absolute Adressen (Suchmaschinen, Link-Vorschau) baut VeranstaltungSeo mit der Basis-URL
+    private static string BildUrl(int id) => VeranstaltungSeo.BildUrl("/", id);
+}

@@ -9,12 +9,15 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
     /// <param name="FreiePlaetze">null = unbegrenzt.</param>
     public sealed record TagAnzeige(int Id, DateOnly Datum, TimeOnly Beginn, TimeOnly? Ende, string? Titel, bool Abgesagt, int? FreiePlaetze) : ITermin;
 
+    /// <summary>Ein Baustein der Beschreibung. Html nur bei Text (bereits sicher gerendert), BildIds nur bei Galerien.</summary>
+    public sealed record InhaltsBlockAnzeige(VeranstaltungBlockTyp Typ, string Html, int BilderProReihe, string? BildUnterschrift, IReadOnlyList<int> BildIds);
+
     /// <summary>Was die öffentliche Seite einer Veranstaltung braucht (ohne Teilnehmerdaten).</summary>
     public sealed record VeranstaltungAnzeige(
         string Titel,
         string Slug,
         string? Kurzbeschreibung,
-        string BeschreibungHtml,
+        IReadOnlyList<InhaltsBlockAnzeige> Bloecke,
         string? Ort,
         string? Adresse,
         string? KartenLink,
@@ -22,6 +25,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         string? KontaktName,
         string? KontaktEmail,
         VeranstaltungStatus Status,
+        VeranstaltungSichtbarkeit Sichtbarkeit,
         AnmeldeZustand Anmeldung,
         DateTime? AnmeldungAb,
         DateTime? AnmeldungBis,
@@ -36,6 +40,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         IReadOnlyList<TagAnzeige> Tage)
     {
         public IEnumerable<TagAnzeige> AktiveTage => Tage.Where(t => !t.Abgesagt);
+
+        /// <summary>Alle Bilder der Galerien in Anzeigereihenfolge (z. B. für Vorschaubilder in sozialen Netzen).</summary>
+        public IEnumerable<int> BildIds => Bloecke.SelectMany(b => b.BildIds);
 
         public AnmeldeFormularEinstellungen Formular => new(
             Teilnahmemodus, MinTageBeiTeilanmeldung, MaxBegleitpersonen, TelefonFeld, VereinFeld, GraduierungFeld, BemerkungFeld);
@@ -59,7 +66,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
     public sealed class VeranstaltungAnzeigeService : IVeranstaltungAnzeigeService
     {
-        private static readonly VeranstaltungStatus[] Sichtbar =
+        /// <summary>In diesen Status ist die Seite über ihren Slug erreichbar (auch "nur per Link"); ebenso ihre Bilder (ImageService).</summary>
+        public static readonly VeranstaltungStatus[] Sichtbar =
             [VeranstaltungStatus.Veroeffentlicht, VeranstaltungStatus.Abgesagt, VeranstaltungStatus.Abgeschlossen];
 
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
@@ -99,6 +107,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var v = await kontext.Veranstaltungen.AsNoTracking()
                 .Include(x => x.Abteilung)
                 .Include(x => x.Tage)
+                .Include(x => x.Bloecke).ThenInclude(b => b.Bilder)
+                .AsSplitQuery()
                 .SingleOrDefaultAsync(x => x.Slug == slug && Sichtbar.Contains(x.Status), abbruch);
             if (v is null)
                 return null;
@@ -120,7 +130,12 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 v.Titel,
                 v.Slug,
                 v.Kurzbeschreibung,
-                MarkdownText.SicherZuHtml(v.Beschreibung),
+                v.Bloecke.OrderBy(b => b.Sortierung).Select(b => new InhaltsBlockAnzeige(
+                    b.Typ,
+                    b.Typ == VeranstaltungBlockTyp.MarkdownText ? MarkdownText.SicherZuHtml(b.MarkdownInhalt) : string.Empty,
+                    b.BilderProReihe,
+                    b.BildUnterschrift,
+                    b.Bilder.OrderBy(bi => bi.Sortierung).Select(bi => bi.BildId).ToList())).ToList(),
                 v.Ort,
                 v.Adresse,
                 v.KartenLink,
@@ -128,6 +143,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 v.KontaktName,
                 v.KontaktEmail,
                 v.Status,
+                v.Sichtbarkeit,
                 AnmeldeFenster.Zustand(v, tage, Ortszeit.Jetzt(_zeit)),
                 v.AnmeldungAb,
                 v.AnmeldungBis,

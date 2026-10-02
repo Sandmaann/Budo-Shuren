@@ -1,5 +1,6 @@
 ﻿using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Models;
+using BudoShurenWebsite.Services.Veranstaltungen;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudoShurenWebsite.Services
@@ -76,6 +77,11 @@ namespace BudoShurenWebsite.Services
                 .Include(b => b.Beitrag)
                 .FirstOrDefaultAsync(b => b.BildId == id && b.Beitrag != null && b.Beitrag.Veroeffentlicht);
             if (wissenBlock != null)
+                return true;
+
+            //Prüfen ob es ein Bild einer erreichbaren Veranstaltung ist (gleiche Regel wie die Veranstaltungsseite)
+            if (await _context.VeranstaltungBilder.AnyAsync(b => b.BildId == id
+                    && VeranstaltungAnzeigeService.Sichtbar.Contains(b.Block!.Veranstaltung!.Status)))
                 return true;
 
             return false;

@@ -88,12 +88,9 @@
                                 }
                             </div>
                             <div>
-                                <label class="@Label">Kurzbeschreibung <span class="ml-1 font-normal text-gray-500">(Liste, Kalender)</span></label>
+                                <label class="@Label">Kurzbeschreibung <span class="ml-1 font-normal text-gray-500">(Liste, Kalender, Suchmaschinen)</span></label>
                                 <InputTextArea @bind-Value="_eingabe.Kurzbeschreibung" rows="2" class="@Feld" />
-                            </div>
-                            <div>
-                                <label class="@Label">Beschreibung <span class="ml-1 font-normal text-gray-500">(Markdown)</span></label>
-                                <InputTextArea @bind-Value="_eingabe.Beschreibung" rows="8" class="@Feld" />
+                                <p class="@Hinweis">Ein bis zwei Sätze. Erscheint oben auf der Seite, in der Liste, bei Google und in der Vorschau geteilter Links (dort mit dem ersten Bild).</p>
                             </div>
                             <div class="grid gap-4 md:grid-cols-2">
                                 <div>
@@ -134,6 +131,13 @@
                                 </div>
                             </div>
                         </div>
+                    </section>
+
+                    <!-- Inhalt der Seite -->
+                    <section class="rounded border border-gray-200 p-5">
+                        <h4 class="font-ptsans mb-1 text-sm font-bold tracking-wider">Inhalt der Seite</h4>
+                        <p class="@Hinweis mb-4">Text und Bilder in beliebiger Reihenfolge, wie bei Aktuelles. Termine, Ort und Kontakt stehen automatisch darüber.</p>
+                        <InhaltsBloeckeEditor Bloecke="_eingabe.Bloecke" Benutzer="_benutzer" AltText="@_eingabe.Titel" />
                     </section>
 
                     <!-- 2. Termine -->

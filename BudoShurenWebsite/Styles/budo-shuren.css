@@ -80,3 +80,18 @@
         @apply font-yuji inline-flex h-10 items-center justify-center bg-black px-5 text-sm font-normal tracking-widest text-white transition duration-150 ease-in-out hover:bg-primary active:scale-90 disabled:pointer-events-none disabled:opacity-50;
     }
 }
+
+/* Bildergalerie der Veranstaltungen: Spalten aus den Einstellungen des Bausteins, auf dem Handy höchstens zwei (InhaltsBlock.razor) */
+@layer components {
+    .galerie-raster {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(var(--spalten-mobil), minmax(0, 1fr));
+    }
+
+    @media (min-width: 768px) {
+        .galerie-raster {
+            grid-template-columns: repeat(var(--spalten), minmax(0, 1fr));
+        }
+    }
+}

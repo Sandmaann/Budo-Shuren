@@ -234,6 +234,90 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         ergebnis.Fehler.ShouldHaveSingleItem().ShouldBe("Der Termin Sa 14.11. 10:00 ist doppelt angelegt.");
     }
 
+    private static MemoryStream Png()
+    {
+        using var bild = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(40, 30);
+        var daten = new MemoryStream();
+        SixLabors.ImageSharp.ImageExtensions.SaveAsPng(bild, daten);
+        daten.Position = 0;
+        return daten;
+    }
+
+    private async Task<int> HochladenAsync() => (await Service.BildHochladenAsync(Png(), "dojo.png", _admin, Abbruch)).Id!.Value;
+
+    private async Task<List<int>> BildIdsAsync()
+    {
+        await using var kontext = Datenbank.NeuerKontext();
+        return await kontext.Images.Select(i => i.Id).ToListAsync(Abbruch);
+    }
+
+    [DatenbankFact]
+    public async Task Bausteine_werden_gespeichert_und_entfernte_Bilder_geloescht()
+    {
+        var (erstes, zweites) = (await HochladenAsync(), await HochladenAsync());
+        var eingabe = Eingabe();
+        eingabe.Bloecke =
+        [
+            new BlockEingabe { Typ = VeranstaltungBlockTyp.MarkdownText, MarkdownInhalt = "Hallo" },
+            new BlockEingabe { Typ = VeranstaltungBlockTyp.BilderGalerie, BilderProReihe = 2, BildUnterschrift = " Training ", BildIds = [zweites, erstes] }
+        ];
+        var id = await AnlegenAsync(eingabe);
+
+        var geladen = (await Service.EingabeLadenAsync(id, _admin, Abbruch))!;
+        geladen.Bloecke.Select(b => b.Typ).ShouldBe([VeranstaltungBlockTyp.MarkdownText, VeranstaltungBlockTyp.BilderGalerie]);
+        geladen.Bloecke[0].MarkdownInhalt.ShouldBe("Hallo");
+        geladen.Bloecke[1].BildIds.ShouldBe([zweites, erstes]);
+        geladen.Bloecke[1].BildUnterschrift.ShouldBe("Training");
+
+        // Bild entfernen und Bausteine tauschen
+        geladen.Bloecke[1].BildIds.Remove(erstes);
+        geladen.Bloecke.Reverse();
+        (await Service.SpeichernAsync(geladen, _admin, Abbruch)).Fehler.ShouldBeEmpty();
+
+        var danach = (await Service.EingabeLadenAsync(id, _admin, Abbruch))!;
+        danach.Bloecke.Select(b => b.Typ).ShouldBe([VeranstaltungBlockTyp.BilderGalerie, VeranstaltungBlockTyp.MarkdownText]);
+        (await BildIdsAsync()).ShouldBe([zweites], "die Bilddaten des entfernten Bildes sind gelöscht");
+
+        (await Service.LoeschenAsync(id, _admin, Abbruch)).Fehler.ShouldBeEmpty();
+        (await BildIdsAsync()).ShouldBeEmpty("mit dem Entwurf verschwinden auch seine Bilder");
+    }
+
+    [DatenbankFact]
+    public async Task Nur_frisch_hochgeladene_Bilder_koennen_eingebunden_werden()
+    {
+        // Ein Bild, das schon woanders verwendet wird (hier eine Neuigkeit), darf nicht über die Veranstaltung öffentlich werden
+        await using (var kontext = Datenbank.NeuerKontext())
+        {
+            kontext.Neuigkeiten.Add(new Neuigkeit
+            {
+                Titel = "Intern",
+                DbImage = new DbImage { Title = "intern.jpg", ImageData = [1], ContentType = "image/jpeg", CreatedAt = _zeit.GetUtcNow().UtcDateTime }
+            });
+            await kontext.SaveChangesAsync(Abbruch);
+        }
+        var fremdesBild = (await BildIdsAsync()).Single();
+
+        foreach (var bildId in new[] { fremdesBild, 999_999 })
+        {
+            var eingabe = Eingabe();
+            eingabe.Bloecke = [new BlockEingabe { Typ = VeranstaltungBlockTyp.BilderGalerie, BildIds = [bildId] }];
+
+            (await Service.SpeichernAsync(eingabe, _admin, Abbruch)).Fehler.ShouldHaveSingleItem().ShouldContain("gehört nicht zu dieser Veranstaltung");
+        }
+    }
+
+    [DatenbankFact]
+    public async Task Hochladen_speichert_JPEG_und_lehnt_andere_Dateien_ab()
+    {
+        var id = await HochladenAsync();
+        await using (var kontext = Datenbank.NeuerKontext())
+            (await kontext.Images.SingleAsync(i => i.Id == id, Abbruch)).ContentType.ShouldBe("image/jpeg");
+
+        var ergebnis = await Service.BildHochladenAsync(new MemoryStream("kein Bild"u8.ToArray()), "notiz.png", _admin, Abbruch);
+
+        ergebnis.Fehler.ShouldHaveSingleItem().ShouldBe("„notiz.png“ ist kein unterstütztes Bild (JPG, PNG oder WebP).");
+    }
+
     [DatenbankFact]
     public async Task Nur_per_Link_sichtbare_Veranstaltung_bleibt_aus_dem_Kalender()
     {

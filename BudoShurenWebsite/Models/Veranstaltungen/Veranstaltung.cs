@@ -24,13 +24,6 @@ namespace BudoShurenWebsite.Models.Veranstaltungen
         [MaxLength(500)]
         public string? Kurzbeschreibung { get; set; }
 
-        /// <summary>Markdown, gerendert mit Markdig.</summary>
-        public string Beschreibung { get; set; } = string.Empty;
-
-        public int? BildId { get; set; }
-
-        public DbImage? Bild { get; set; }
-
         [MaxLength(200)]
         public string? Ort { get; set; }
 
@@ -107,6 +100,9 @@ namespace BudoShurenWebsite.Models.Veranstaltungen
         public byte[] RowVersion { get; set; } = [];
 
         public ICollection<VeranstaltungsTag> Tage { get; set; } = new List<VeranstaltungsTag>();
+
+        /// <summary>Beschreibung aus Text- und Bildbausteinen (wie bei Aktuelles).</summary>
+        public ICollection<VeranstaltungBlock> Bloecke { get; set; } = new List<VeranstaltungBlock>();
 
         public ICollection<Anmeldung> Anmeldungen { get; set; } = new List<Anmeldung>();
 

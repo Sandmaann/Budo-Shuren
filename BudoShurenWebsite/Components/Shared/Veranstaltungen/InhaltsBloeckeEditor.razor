@@ -1,0 +1,172 @@
+@*
+    Beschreibung einer Veranstaltung aus Bausteinen (wie bei Aktuelles): Text (Markdown) und Bildergalerien.
+    Bearbeitet die Liste der Eingabe direkt; gespeichert wird mit der Veranstaltung. Bilder werden sofort hochgeladen
+    (verkleinert, siehe BildKomprimierung) und erscheinen erst nach dem Speichern auf der öffentlichen Seite.
+*@
+
+@using BudoShurenWebsite.Global
+@using BudoShurenWebsite.Services
+
+@inject IVeranstaltungVerwaltungService Verwaltung
+
+@if (Bloecke.Count == 0)
+{
+    <p class="@Hinweis mb-3">Noch keine Inhalte. Füge unten Text oder Bilder hinzu.</p>
+}
+
+<div class="space-y-4">
+    @for (var i = 0; i < Bloecke.Count; i++)
+    {
+        var index = i;
+        var block = Bloecke[index];
+        <div @key="block" class="rounded border border-gray-300" data-block="@index">
+            <div class="flex items-center justify-between rounded-t border-b border-gray-300 bg-gray-50 px-3 py-2">
+                <span class="font-ptsans text-xs font-bold text-gray-600">@(block.Typ == VeranstaltungBlockTyp.MarkdownText ? "Text" : "Bilder")</span>
+                <div class="flex gap-1">
+                    <button type="button" class="@Klein" disabled="@(index == 0)" title="Nach oben" @onclick="() => Verschieben(index, -1)">↑</button>
+                    <button type="button" class="@Klein" disabled="@(index == Bloecke.Count - 1)" title="Nach unten" @onclick="() => Verschieben(index, 1)">↓</button>
+                    <button type="button" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50" title="Entfernen" @onclick="() => Bloecke.RemoveAt(index)">✕</button>
+                </div>
+            </div>
+
+            <div class="p-3">
+                @if (block.Typ == VeranstaltungBlockTyp.MarkdownText)
+                {
+                    <textarea class="@Feld" rows="8" @bind="block.MarkdownInhalt" @bind:event="oninput"
+                              placeholder="**fett**, *kursiv*, ## Überschrift, - Aufzählung, [Link](https://...)"></textarea>
+                    @if (!string.IsNullOrWhiteSpace(block.MarkdownInhalt))
+                    {
+                        <p class="@Hinweis mt-2">Vorschau:</p>
+                        <div class="rounded border border-gray-200 px-3">
+                            <InhaltsBlock Block="Vorschau(block)" AltText="@AltText" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    @if (block.BildIds.Count > 0)
+                    {
+                        <div class="mb-3 grid grid-cols-3 gap-2 md:grid-cols-4">
+                            @for (var b = 0; b < block.BildIds.Count; b++)
+                            {
+                                var bildIndex = b;
+                                <div class="relative">
+                                    <img src="@VeranstaltungSeo.BildUrl("/", block.BildIds[bildIndex])" alt="" class="aspect-[4/3] w-full rounded object-cover" />
+                                    <div class="absolute right-1 top-1 flex gap-1">
+                                        @if (bildIndex > 0)
+                                        {
+                                            <button type="button" class="rounded bg-white/90 px-1.5 text-xs hover:bg-white" title="Nach vorne" @onclick="() => BildVerschieben(block, bildIndex, -1)">←</button>
+                                        }
+                                        <button type="button" class="rounded bg-red-600 px-1.5 text-xs text-white hover:bg-red-700" title="Bild entfernen" @onclick="() => block.BildIds.RemoveAt(bildIndex)">✕</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <label class="@Label" for="@($"bilder-{index}")">Bilder hinzufügen</label>
+                    <InputFile id="@($"bilder-{index}")" multiple accept=".jpg,.jpeg,.png,.webp" disabled="@(_laedtHoch is not null)"
+                               OnChange="e => HochladenAsync(block, e)" class="font-ptsans text-xs" />
+                    <p class="@Hinweis">JPG, PNG oder WebP, höchstens 5 MB je Bild. Große Bilder werden verkleinert. Sie erscheinen nach dem Speichern auf der Seite.</p>
+                    @if (_laedtHoch == block)
+                    {
+                        <p class="font-ptsans mt-1 text-xs">Wird hochgeladen...</p>
+                    }
+                    @if (_fehler.TryGetValue(block, out var fehler))
+                    {
+                        <p class="font-ptsans mt-1 text-xs text-red-700">@fehler</p>
+                    }
+
+                    <div class="mt-3 grid gap-3 md:grid-cols-[8rem_1fr]">
+                        <div>
+                            <label class="@Label" for="@($"spalten-{index}")">Bilder pro Reihe</label>
+                            <input id="@($"spalten-{index}")" type="number" min="1" max="6" class="@Feld" @bind="block.BilderProReihe" />
+                        </div>
+                        <div>
+                            <label class="@Label" for="@($"unterschrift-{index}")">Bildunterschrift (optional)</label>
+                            <input id="@($"unterschrift-{index}")" type="text" maxlength="500" class="@Feld" @bind="block.BildUnterschrift" />
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<div class="mt-3 flex flex-wrap gap-2">
+    <button type="button" class="@Knopf" @onclick="() => Bloecke.Add(new BlockEingabe { Typ = VeranstaltungBlockTyp.MarkdownText })">+ Text</button>
+    <button type="button" class="@Knopf" @onclick="() => Bloecke.Add(new BlockEingabe { Typ = VeranstaltungBlockTyp.BilderGalerie })">+ Bilder</button>
+</div>
+
+@code {
+    private const string Label = "font-ptsans mb-1 mt-1 block text-xs font-bold";
+    private const string Feld = "font-ptsans w-full rounded border border-gray-300 p-2 text-sm";
+    private const string Hinweis = "font-ptsans mt-1 text-xs text-gray-500";
+    private const string Klein = "rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-200 disabled:opacity-30";
+    private const string Knopf = "font-ptsans rounded border border-gray-400 px-3 py-1 text-xs hover:bg-gray-100";
+
+    /// <summary>Wird direkt bearbeitet (VeranstaltungEingabe.Bloecke).</summary>
+    [Parameter, EditorRequired]
+    public List<BlockEingabe> Bloecke { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public VerwaltungsBenutzer Benutzer { get; set; } = default!;
+
+    /// <summary>Für die Vorschau der Galerie (Alternativtext), z. B. der Titel der Veranstaltung.</summary>
+    [Parameter]
+    public string AltText { get; set; } = string.Empty;
+
+    private BlockEingabe? _laedtHoch;
+    private readonly Dictionary<BlockEingabe, string> _fehler = [];
+
+    private static InhaltsBlockAnzeige Vorschau(BlockEingabe block) =>
+        new(block.Typ, MarkdownText.SicherZuHtml(block.MarkdownInhalt), block.BilderProReihe, block.BildUnterschrift, block.BildIds);
+
+    private void Verschieben(int index, int richtung) => Tauschen(Bloecke, index, index + richtung);
+
+    private static void BildVerschieben(BlockEingabe block, int index, int richtung) => Tauschen(block.BildIds, index, index + richtung);
+
+    private static void Tauschen<T>(List<T> liste, int a, int b)
+    {
+        if (b < 0 || b >= liste.Count)
+            return;
+        (liste[a], liste[b]) = (liste[b], liste[a]);
+    }
+
+    private async Task HochladenAsync(BlockEingabe block, InputFileChangeEventArgs e)
+    {
+        _laedtHoch = block;
+        _fehler.Remove(block);
+        var probleme = new List<string>();
+        try
+        {
+            foreach (var datei in e.GetMultipleFiles(maximumFileCount: 20))
+            {
+                if (datei.Size > BildKomprimierung.MaximaleDateigroesse)
+                {
+                    probleme.Add($"„{datei.Name}“ ist größer als 5 MB.");
+                    continue;
+                }
+
+                await using var daten = datei.OpenReadStream(BildKomprimierung.MaximaleDateigroesse);
+                var ergebnis = await Verwaltung.BildHochladenAsync(daten, datei.Name, Benutzer);
+                if (ergebnis.Erfolgreich)
+                    block.BildIds.Add(ergebnis.Id!.Value);
+                else
+                    probleme.AddRange(ergebnis.Fehler);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Mehr als 20 Dateien auf einmal
+            probleme.Add("Bitte höchstens 20 Bilder auf einmal auswählen.");
+        }
+        finally
+        {
+            _laedtHoch = null;
+        }
+
+        if (probleme.Count > 0)
+            _fehler[block] = string.Join(" ", probleme);
+    }
+}

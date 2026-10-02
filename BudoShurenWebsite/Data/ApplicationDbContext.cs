@@ -165,11 +165,26 @@ namespace BudoShurenWebsite.Data
                 .WithMany()
                 .HasForeignKey(v => v.AbteilungId)
                 .OnDelete(DeleteBehavior.SetNull);
-            builder.Entity<Veranstaltung>()
-                .HasOne(v => v.Bild)
+
+            builder.Entity<VeranstaltungBlock>().ToTable("VeranstaltungBloecke");
+            builder.Entity<VeranstaltungBlock>()
+                .HasOne(b => b.Veranstaltung)
+                .WithMany(v => v.Bloecke)
+                .HasForeignKey(b => b.VeranstaltungId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<VeranstaltungBild>().ToTable("VeranstaltungBilder");
+            builder.Entity<VeranstaltungBild>()
+                .HasOne(b => b.Block)
+                .WithMany(bl => bl.Bilder)
+                .HasForeignKey(b => b.BlockId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // Restrict: die Bilddaten löscht der VeranstaltungVerwaltungService ausdrücklich, wenn ein Bild entfernt wird
+            builder.Entity<VeranstaltungBild>()
+                .HasOne(b => b.Bild)
                 .WithMany()
-                .HasForeignKey(v => v.BildId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasForeignKey(b => b.BildId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<VeranstaltungsTag>().ToTable("VeranstaltungsTage");
             // Mehrere Termine pro Datum möglich (z. B. Training und Essen), deshalb nicht eindeutig
@@ -274,6 +289,8 @@ namespace BudoShurenWebsite.Data
         public DbSet<EmailAusgang> EmailAusgang { get; set; }
         public DbSet<Veranstaltung> Veranstaltungen { get; set; }
         public DbSet<VeranstaltungsTag> VeranstaltungsTage { get; set; }
+        public DbSet<VeranstaltungBlock> VeranstaltungBloecke { get; set; }
+        public DbSet<VeranstaltungBild> VeranstaltungBilder { get; set; }
         public DbSet<Anmeldung> Anmeldungen { get; set; }
         public DbSet<AnmeldungTag> AnmeldungTage { get; set; }
         public DbSet<AnmeldungInfoEmail> AnmeldungInfoEmails { get; set; }

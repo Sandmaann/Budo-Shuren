@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using BudoShurenWebsite.Models;
 using BudoShurenWebsite.Models.Enums;
 using BudoShurenWebsite.Models.Veranstaltungen;
 using BudoShurenWebsite.Services.Veranstaltungen;
@@ -32,7 +33,6 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
             Slug = slug,
             Status = status,
             Sichtbarkeit = sichtbarkeit,
-            Beschreibung = beschreibung,
             KontaktEmail = "seminar@example.org",
             ErstelltUtc = Start.UtcDateTime,
             Tage =
@@ -41,10 +41,30 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
                 new VeranstaltungsTag { Datum = new DateOnly(2026, 11, 15), Beginn = new TimeOnly(9, 0), Ende = new TimeOnly(13, 0), MaxTeilnehmer = 20 }
             }
         };
+        if (beschreibung.Length > 0)
+            v.Bloecke.Add(new VeranstaltungBlock { Typ = VeranstaltungBlockTyp.MarkdownText, MarkdownInhalt = beschreibung });
         await using var kontext = Datenbank.NeuerKontext();
         kontext.Veranstaltungen.Add(v);
         await kontext.SaveChangesAsync(Abbruch);
         return v;
+    }
+
+    /// <summary>Hängt eine Galerie mit einem Bild an; liefert die Id des Bildes.</summary>
+    private async Task<int> GalerieAnhaengenAsync(Veranstaltung v, string unterschrift)
+    {
+        await using var kontext = Datenbank.NeuerKontext();
+        var bild = new DbImage { Title = "dojo.jpg", ImageData = [1, 2, 3], ContentType = "image/jpeg", CreatedAt = Start.UtcDateTime };
+        kontext.VeranstaltungBloecke.Add(new VeranstaltungBlock
+        {
+            VeranstaltungId = v.Id,
+            Typ = VeranstaltungBlockTyp.BilderGalerie,
+            Sortierung = 1,
+            BilderProReihe = 2,
+            BildUnterschrift = unterschrift,
+            Bilder = { new VeranstaltungBild { Bild = bild } }
+        });
+        await kontext.SaveChangesAsync(Abbruch);
+        return bild.Id;
     }
 
     private static Dictionary<string, string> MitAnmeldedaten(Dictionary<string, string> felder, string vorname = "Max")
@@ -101,6 +121,41 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         html.ShouldContain("/veranstaltungen/oeffentlich");
         html.ShouldNotContain("/veranstaltungen/geheim");
         html.ShouldNotContain("/veranstaltungen/entwurf");
+    }
+
+    [DatenbankFact]
+    public async Task Detailseite_zeigt_Bausteine_und_Angaben_fuer_Suchmaschinen()
+    {
+        var v = await AnlegenAsync("herbstseminar", beschreibung: "Erster **Text**");
+        var bildId = await GalerieAnhaengenAsync(v, "Training <2025>");
+        var geheim = await AnlegenAsync("geheim", sichtbarkeit: VeranstaltungSichtbarkeit.NurPerLink);
+        var geheimesBild = await GalerieAnhaengenAsync(geheim, "geheim");
+        var entwurf = await AnlegenAsync("entwurf", status: VeranstaltungStatus.Entwurf);
+        var entwurfsBild = await GalerieAnhaengenAsync(entwurf, "Entwurf");
+        await using var app = App();
+        using var client = app.CreateClient();
+
+        var html = await client.GetStringAsync("/veranstaltungen/herbstseminar", Abbruch);
+
+        html.IndexOf("Erster <strong>Text</strong>").ShouldBeLessThan(html.IndexOf("galerie-raster"), "Reihenfolge der Bausteine");
+        html.ShouldContain($"src=\"/Account/Member/Filesave/GetImage/{bildId}\"");
+        html.ShouldContain("Training &lt;2025&gt;");
+        html.ShouldContain("<link rel=\"canonical\" href=\"https://www.budo-shuren-dojo.de/veranstaltungen/herbstseminar\"");
+        html.ShouldContain($"<meta property=\"og:image\" content=\"https://www.budo-shuren-dojo.de/Account/Member/Filesave/GetImage/{bildId}\"");
+        // Blazor kodiert das "+" im Attribut als &#x2B;, der Browser liest es wie "+"
+        html.ShouldContain("<script type=\"application/ld&#x2B;json\">{\"@context\":\"https://schema.org\",\"@type\":\"Event\"");
+        html.ShouldContain("\"startDate\":\"2026-11-14T10:00:00"); // "+01:00" steht JSON-kodiert als +01:00 (VeranstaltungSeoTests)
+        html.ShouldNotContain("noindex");
+
+        // Bilder veröffentlichter (auch "nur per Link") Veranstaltungen sind ohne Login abrufbar, Entwürfe nicht
+        (await client.GetAsync($"/Account/Member/Filesave/GetImage/{bildId}", Abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await client.GetAsync($"/Account/Member/Filesave/GetImage/{geheimesBild}", Abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await client.GetAsync($"/Account/Member/Filesave/GetImage/{entwurfsBild}", Abbruch)).StatusCode.ShouldNotBe(HttpStatusCode.OK);
+
+        // "Nur per Link" soll nicht in Suchmaschinen auftauchen
+        var geheimHtml = await client.GetStringAsync("/veranstaltungen/geheim", Abbruch);
+        geheimHtml.ShouldContain("<meta name=\"robots\" content=\"noindex\"");
+        geheimHtml.ShouldNotContain("\"@type\":\"Event\"");
     }
 
     [DatenbankFact]

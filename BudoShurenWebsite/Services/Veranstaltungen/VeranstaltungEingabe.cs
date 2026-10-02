@@ -21,7 +21,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         [MaxLength(500, ErrorMessage = "Die Kurzbeschreibung darf höchstens 500 Zeichen lang sein.")]
         public string? Kurzbeschreibung { get; set; }
 
-        public string Beschreibung { get; set; } = string.Empty;
+        /// <summary>Beschreibung als Text- und Bildbausteine, in Anzeigereihenfolge.</summary>
+        public List<BlockEingabe> Bloecke { get; set; } = [];
 
         [MaxLength(200)]
         public string? Ort { get; set; }
@@ -93,6 +94,23 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     .Concat(Tage.Where(t => !t.Abgesagt)
                         .Select(t => $"{t.Datum:yyyy-MM-dd} {t.Beginn:HH\\:mm}-{t.Ende:HH\\:mm}")
                         .Order(StringComparer.Ordinal)));
+    }
+
+    /// <summary>Ein Baustein der Beschreibung. Beim Speichern werden alle Bausteine neu geschrieben (sie haben keine Verweise).</summary>
+    public sealed class BlockEingabe
+    {
+        public VeranstaltungBlockTyp Typ { get; set; }
+
+        public string? MarkdownInhalt { get; set; }
+
+        [Range(1, 6, ErrorMessage = "Zwischen 1 und 6 Bilder pro Reihe.")]
+        public int BilderProReihe { get; set; } = 3;
+
+        [MaxLength(500, ErrorMessage = "Die Bildunterschrift darf höchstens 500 Zeichen lang sein.")]
+        public string? BildUnterschrift { get; set; }
+
+        /// <summary>Ids der Bilder (DbImage), in Anzeigereihenfolge.</summary>
+        public List<int> BildIds { get; set; } = [];
     }
 
     public sealed class TagEingabe : ITermin

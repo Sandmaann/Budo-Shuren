@@ -70,6 +70,12 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         Task<VerwaltungsErgebnis> LoeschenAsync(int id, VerwaltungsBenutzer benutzer, CancellationToken abbruch = default);
 
+        /// <summary>
+        /// Verkleinert ein Bild (BildKomprimierung) und speichert es; die Id kommt in eine Galerie (BlockEingabe.BildIds)
+        /// und gilt erst mit dem Speichern der Veranstaltung. Die Größe begrenzt der Aufrufer (BildKomprimierung.MaximaleDateigroesse).
+        /// </summary>
+        Task<VerwaltungsErgebnis> BildHochladenAsync(Stream daten, string dateiname, VerwaltungsBenutzer benutzer, CancellationToken abbruch = default);
+
         Task<IReadOnlyList<EmpfaengerAnzeige>> EmpfaengerAsync(int veranstaltungId, VerwaltungsBenutzer benutzer, CancellationToken abbruch = default);
 
         /// <summary>Website-Benutzer, die als Empfänger ausgewählt werden können (Admins, Abteilungsleiter, Editoren).</summary>
@@ -185,6 +191,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var v = await kontext.Veranstaltungen.AsNoTracking()
                 .Include(x => x.Abteilung)
                 .Include(x => x.Tage)
+                .Include(x => x.Bloecke).ThenInclude(b => b.Bilder)
+                .AsSplitQuery()
                 .SingleOrDefaultAsync(x => x.Id == id, abbruch);
 
             if (v is null || !VeranstaltungRechte.DarfVerwalten(benutzer, v.AbteilungId, v.Abteilung?.Name))
@@ -196,7 +204,14 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 Titel = v.Titel,
                 Slug = v.Slug,
                 Kurzbeschreibung = v.Kurzbeschreibung,
-                Beschreibung = v.Beschreibung,
+                Bloecke = v.Bloecke.OrderBy(b => b.Sortierung).Select(b => new BlockEingabe
+                {
+                    Typ = b.Typ,
+                    MarkdownInhalt = b.MarkdownInhalt,
+                    BilderProReihe = b.BilderProReihe,
+                    BildUnterschrift = b.BildUnterschrift,
+                    BildIds = b.Bilder.OrderBy(bi => bi.Sortierung).Select(bi => bi.BildId).ToList()
+                }).ToList(),
                 Ort = v.Ort,
                 Adresse = v.Adresse,
                 KartenLink = v.KartenLink,
@@ -256,6 +271,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     .Include(x => x.Abteilung)
                     .Include(x => x.Tage)
                     .Include(x => x.Anmeldungen).ThenInclude(a => a.Tage)
+                    .Include(x => x.Bloecke).ThenInclude(b => b.Bilder)
+                    .AsSplitQuery()
                     .SingleOrDefaultAsync(x => x.Id == id, abbruch);
                 if (vorhanden is null)
                     return VerwaltungsErgebnis.MitFehler(NichtGefunden);
@@ -291,6 +308,10 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             var tagFehler = TageUebernehmen(kontext, v, eingabe.Tage);
             if (tagFehler is not null)
                 return VerwaltungsErgebnis.MitFehler(tagFehler);
+
+            var blockFehler = await BloeckeUebernehmenAsync(kontext, v, eingabe.Bloecke, abbruch);
+            if (blockFehler is not null)
+                return VerwaltungsErgebnis.MitFehler(blockFehler);
 
             FelderUebernehmen(v, eingabe, slug);
             v.Abteilung = abteilung;
@@ -364,7 +385,12 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             if (await kontext.Anmeldungen.AnyAsync(a => a.VeranstaltungId == id, abbruch))
                 return VerwaltungsErgebnis.MitFehler("Die Veranstaltung hat Anmeldungen und kann nicht gelöscht werden.");
 
+            // Die Bilder gehören nur zu dieser Veranstaltung (BloeckeUebernehmenAsync); ihre Daten mit löschen.
+            // Bausteine laden: Remove löscht sie samt Bildverweisen sofort mit, erst danach dürfen die Bilder weg.
+            await kontext.Entry(v).Collection(x => x.Bloecke).Query().Include(b => b.Bilder).LoadAsync(abbruch);
+            var bildIds = v.Bloecke.SelectMany(b => b.Bilder).Select(b => b.BildId).ToList();
             kontext.Veranstaltungen.Remove(v);
+            await BilderLoeschenAsync(kontext, bildIds, id, abbruch);
             await kontext.SaveChangesAsync(abbruch);
             return VerwaltungsErgebnis.Ok(id);
         }
@@ -496,6 +522,28 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             kontext.BenachrichtigungEmpfaenger.Remove(empfaenger);
             await kontext.SaveChangesAsync(abbruch);
             return VerwaltungsErgebnis.Ok(empfaengerId);
+        }
+
+        public async Task<VerwaltungsErgebnis> BildHochladenAsync(Stream daten, string dateiname, VerwaltungsBenutzer benutzer, CancellationToken abbruch = default)
+        {
+            if (!VeranstaltungRechte.DarfModulNutzen(benutzer))
+                return VerwaltungsErgebnis.MitFehler(KeineBerechtigung);
+
+            byte[] jpeg;
+            try
+            {
+                jpeg = await BildKomprimierung.AlsJpegAsync(daten, abbruch);
+            }
+            catch (Exception ex) when (ex is SixLabors.ImageSharp.UnknownImageFormatException or SixLabors.ImageSharp.InvalidImageContentException)
+            {
+                return VerwaltungsErgebnis.MitFehler($"„{Path.GetFileName(dateiname)}“ ist kein unterstütztes Bild (JPG, PNG oder WebP).");
+            }
+
+            await using var kontext = await _dbFactory.CreateDbContextAsync(abbruch);
+            var bild = new DbImage { Title = Path.GetFileName(dateiname), ImageData = jpeg, ContentType = "image/jpeg", CreatedAt = JetztUtc };
+            kontext.Images.Add(bild);
+            await kontext.SaveChangesAsync(abbruch);
+            return VerwaltungsErgebnis.Ok(bild.Id);
         }
 
         // ---------------------------------------------------------------------------------------------
@@ -646,12 +694,72 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             return null;
         }
 
+        /// <summary>
+        /// Schreibt die Bausteine neu. Neue Bilder müssen frisch hochgeladen sein (nirgends sonst verwendet): sonst ließe sich
+        /// über die öffentliche Seite jedes Bild der Website freigeben. Entfernte Bilder werden samt Bilddaten gelöscht.
+        /// </summary>
+        private static async Task<string?> BloeckeUebernehmenAsync(ApplicationDbContext kontext, Veranstaltung v, IReadOnlyList<BlockEingabe> eingaben, CancellationToken abbruch)
+        {
+            var alte = v.Bloecke.SelectMany(b => b.Bilder).Select(b => b.BildId).ToHashSet();
+            var neue = eingaben.Where(b => b.Typ == VeranstaltungBlockTyp.BilderGalerie).SelectMany(b => b.BildIds).ToHashSet();
+
+            var hinzugekommen = neue.Except(alte).ToList();
+            if (hinzugekommen.Count > 0)
+            {
+                var vorhanden = await kontext.Images.CountAsync(i => hinzugekommen.Contains(i.Id), abbruch);
+                var verwendet = await VerwendeteBildIds(kontext, ohneVeranstaltungId: null).AnyAsync(id => hinzugekommen.Contains(id), abbruch);
+                if (vorhanden != hinzugekommen.Count || verwendet)
+                    return "Ein Bild gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden und das Bild erneut hochladen.";
+            }
+
+            foreach (var block in v.Bloecke.ToList())
+            {
+                v.Bloecke.Remove(block);
+                kontext.VeranstaltungBloecke.Remove(block);
+            }
+
+            var sortierung = 0;
+            foreach (var e in eingaben)
+            {
+                var istText = e.Typ == VeranstaltungBlockTyp.MarkdownText;
+                v.Bloecke.Add(new VeranstaltungBlock
+                {
+                    Typ = e.Typ,
+                    Sortierung = sortierung++,
+                    MarkdownInhalt = istText ? e.MarkdownInhalt ?? string.Empty : null,
+                    BilderProReihe = Math.Clamp(e.BilderProReihe, 1, 6),
+                    BildUnterschrift = istText || string.IsNullOrWhiteSpace(e.BildUnterschrift) ? null : e.BildUnterschrift.Trim(),
+                    Bilder = istText ? [] : e.BildIds.Distinct().Select((id, i) => new VeranstaltungBild { BildId = id, Sortierung = i }).ToList()
+                });
+            }
+
+            await BilderLoeschenAsync(kontext, alte.Except(neue).ToList(), v.Id, abbruch);
+            return null;
+        }
+
+        /// <summary>Löscht die Bilddaten, sofern nicht noch anderswo auf sie verwiesen wird.</summary>
+        private static async Task BilderLoeschenAsync(ApplicationDbContext kontext, IReadOnlyCollection<int> bildIds, int veranstaltungId, CancellationToken abbruch)
+        {
+            if (bildIds.Count == 0)
+                return;
+            var nochVerwendet = await VerwendeteBildIds(kontext, veranstaltungId).Where(id => bildIds.Contains(id)).ToListAsync(abbruch);
+            var loeschen = await kontext.Images.Where(i => bildIds.Contains(i.Id) && !nochVerwendet.Contains(i.Id)).ToListAsync(abbruch);
+            kontext.Images.RemoveRange(loeschen);
+        }
+
+        /// <summary>Alle Bilder, auf die Inhalte der Website verweisen (ohne die Galerien der angegebenen Veranstaltung).</summary>
+        private static IQueryable<int> VerwendeteBildIds(ApplicationDbContext kontext, int? ohneVeranstaltungId) =>
+            kontext.Galerie.Where(g => g.DbImageId != null).Select(g => g.DbImageId!.Value)
+                .Concat(kontext.Neuigkeiten.Where(n => n.DbImageId != null).Select(n => n.DbImageId!.Value))
+                .Concat(kontext.WissenBloecke.Where(w => w.BildId != null).Select(w => w.BildId!.Value))
+                .Concat(kontext.AktuellesBilder.Select(a => a.BildId))
+                .Concat(kontext.VeranstaltungBilder.Where(b => b.Block!.VeranstaltungId != ohneVeranstaltungId).Select(b => b.BildId));
+
         private static void FelderUebernehmen(Veranstaltung v, VeranstaltungEingabe e, string slug)
         {
             v.Titel = e.Titel.Trim();
             v.Slug = slug;
             v.Kurzbeschreibung = Leer(e.Kurzbeschreibung);
-            v.Beschreibung = e.Beschreibung ?? string.Empty;
             v.Ort = Leer(e.Ort);
             v.Adresse = Leer(e.Adresse);
             v.KartenLink = Leer(e.KartenLink);

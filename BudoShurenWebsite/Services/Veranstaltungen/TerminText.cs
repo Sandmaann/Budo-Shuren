@@ -25,6 +25,9 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         /// <summary>"Samstag, 14. November 2026".</summary>
         public static string Datum(DateOnly datum) => datum.ToString("dddd, d. MMMM yyyy", Deutsch);
 
+        /// <summary>Frist oder Zeitpunkt: "Freitag, 9. Oktober 2026, 18:00 Uhr".</summary>
+        public static string Zeitpunkt(DateTime ortszeit) => $"{Datum(DateOnly.FromDateTime(ortszeit))}, {ortszeit:HH\\:mm} Uhr";
+
         /// <summary>"10:00 – 17:00 Uhr" bzw. "ab 19:00 Uhr" bei offenem Ende.</summary>
         public static string Uhrzeit(ITermin termin) =>
             termin.Ende is { } ende

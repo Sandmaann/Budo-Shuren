@@ -71,35 +71,11 @@ namespace BudoShurenWebsite.Controllers
                                 var fileName = Path.GetFileName(file.FileName);
                                 var contentType = file.ContentType;
 
-                                using (var stream = new MemoryStream())
+                                await using (var stream = file.OpenReadStream())
                                 {
-                                    await file.OpenReadStream().CopyToAsync(stream);
-                                    stream.Seek(0, SeekOrigin.Begin);
-
-                                    using (var bild = Image.Load(stream))
-                                    {
-                                        if (bild.Height > maximaleBildHoehe || bild.Width > maximaleBildBreite)
-                                        {
-                                            bild.Mutate(x => x.Resize(new ResizeOptions
-                                            {
-                                                Mode = ResizeMode.Max,
-                                                Size = new Size(maximaleBildBreite, maximaleBildHoehe)
-                                            }));
-                                        }
-
-                                        var encoder = new JpegEncoder
-                                        {
-                                            Quality = CalculateQualityByDimensions(bild.Width, bild.Height)
-                                        };
-
-                                        await using (var outputStream = new MemoryStream())
-                                        {
-                                            await bild.SaveAsync(outputStream, encoder);
-                                            var imageData = outputStream.ToArray();
-                                            var imageId = await imageService.UploadImageAsync(fileName, imageData, contentType);
-                                            uploadedFiles.Add(new { FileName = fileName, Id = imageId });
-                                        }
-                                    }
+                                    var imageData = await BildKomprimierung.AlsJpegAsync(stream);
+                                    var imageId = await imageService.UploadImageAsync(fileName, imageData, contentType);
+                                    uploadedFiles.Add(new { FileName = fileName, Id = imageId });
                                 }
                             }
                             catch (Exception ex)
@@ -135,21 +111,6 @@ namespace BudoShurenWebsite.Controllers
             };
 
             return Ok(successResponse);
-        }
-
-        // Und füge diese Helper-Methode hinzu:
-        private int CalculateQualityByDimensions(int width, int height)
-        {
-            var pixelCount = (long)width * height;
-
-            // Je größer das Bild, desto stärker komprimieren
-            return pixelCount switch
-            {
-                > 2000000 => 70,      // Großes Bild (z.B. 1920x1080) → 70%
-                > 1000000 => 75,      // Mittleres Bild → 75%
-                > 500000 => 85,      // Kleineres Bild → 85%
-                _ => 90               // Sehr kleines Bild → 90%
-            };
         }
 
         [HttpPost("[action]")]

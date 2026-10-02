@@ -22,6 +22,12 @@ public class TerminTextTests
     }
 
     [Fact]
+    public void Zeitpunkt_fuer_Fristen()
+    {
+        TerminText.Zeitpunkt(new DateTime(2026, 10, 9, 18, 0, 0)).ShouldBe("Freitag, 9. Oktober 2026, 18:00 Uhr");
+    }
+
+    [Fact]
     public void Uhrzeit_mit_und_ohne_Ende()
     {
         TerminText.Uhrzeit(Termin(14, 10, 17)).ShouldBe("10:00 – 17:00 Uhr");
