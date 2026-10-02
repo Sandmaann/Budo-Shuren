@@ -3,16 +3,32 @@
 @using Syncfusion.Blazor.Calendars
 @using Syncfusion.Blazor.Buttons
 @using System.Globalization
+@using BudoShurenWebsite.Services.Veranstaltungen
 
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject UserService UserService
 @inject ILogger<Kalender> Logger
+@inject NavigationManager NavigationManager
 
 <div class="font-ptsans -mx-10 md:mx-0 lg:-mx-32">
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
         <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
+    }
+
+    @* Termine von Veranstaltungen sind hier schreibgeschützt; ein Klick zeigt, wo sie gepflegt werden *@
+    @if (IsEditable && _veranstaltungsTermin is { VeranstaltungSlug: { } slug, VeranstaltungId: { } veranstaltungId } termin)
+    {
+        <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded border border-gray-300 bg-gray-50 p-3 text-sm">
+            <span>„@termin.Subject“ gehört zu einer Veranstaltung und wird dort gepflegt.</span>
+            @if (UserService.IsAdmin || UserService.IsAbteilungsleiter)
+            {
+                <a href="@VeranstaltungLinks.UebersichtUrl("", veranstaltungId)" class="font-bold underline">Veranstaltung verwalten</a>
+            }
+            <a href="@VeranstaltungLinks.Veranstaltung("", slug)" target="_blank" class="underline">Öffentliche Seite ↗</a>
+            <button type="button" class="ml-auto" @onclick="() => _veranstaltungsTermin = null" aria-label="Hinweis schließen">✕</button>
+        </div>
     }
 
     <SfSchedule @ref="scheduleObj"
@@ -27,6 +43,7 @@
                 AllowDragAndDrop="false"
                 CurrentViewChanged="@OnCurrentViewChanged"
                 ShowTimeIndicator="false">
+        <ScheduleEvents TValue="AppointmentData" OnEventClick="VeranstaltungsTerminAngeklickt" OnEventDoubleClick="ZurVeranstaltung" />
         <ScheduleQuickInfoTemplates TemplateType="TemplateType.Event">
             <HeaderTemplate>
                 @{
@@ -55,6 +72,10 @@
                 {
                     <div>
                         <div class="">Abteilung: @((context as AppointmentData)?.Abteilung)</div>
+                        @if ((context as AppointmentData)?.VeranstaltungSlug is { } slug)
+                        {
+                            <a href="@VeranstaltungLinks.Veranstaltung("", slug)" class="knopf-primaer mt-3">Zur Veranstaltung und Anmeldung</a>
+                        }
                     </div>
                 }
             </FooterTemplate>
@@ -430,6 +451,19 @@
             ErrorMessage = ex.Message;
             Logger.LogError(ex, "Fehler beim Laden des Kalenders");
         }
+    }
+
+    /// <summary>Zuletzt angeklickter Termin einer Veranstaltung (nur "Kalender verwalten").</summary>
+    private AppointmentData? _veranstaltungsTermin;
+
+    private void VeranstaltungsTerminAngeklickt(EventClickArgs<AppointmentData> args) =>
+        _veranstaltungsTermin = args.Event?.VeranstaltungSlug is null ? null : args.Event;
+
+    /// <summary>Doppelklick auf einen Veranstaltungstermin im öffentlichen Kalender führt direkt zur Anmeldung.</summary>
+    private void ZurVeranstaltung(EventClickArgs<AppointmentData> args)
+    {
+        if (!IsEditable && args.Event?.VeranstaltungSlug is { } slug)
+            NavigationManager.NavigateTo(VeranstaltungLinks.Veranstaltung("", slug));
     }
 
     private async void CloseQuickInfo()

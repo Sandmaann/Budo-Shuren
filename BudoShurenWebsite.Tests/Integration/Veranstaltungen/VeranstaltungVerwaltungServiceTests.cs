@@ -135,6 +135,20 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         ersteller.UserId.ShouldBe(_admin.UserId);
         ersteller.Ereignisse.ShouldBe(BenachrichtigungEreignisse.Alle);
         (await KalenderAsync()).ShouldBeEmpty("Entwürfe stehen nicht im Kalender");
+        v.PrivateVeranstaltung.ShouldBeTrue("Hinweis \"private Veranstaltung\" ist Standard");
+    }
+
+    [DatenbankFact]
+    public async Task Hinweis_private_Veranstaltung_laesst_sich_abschalten()
+    {
+        var id = await AnlegenAsync(Eingabe());
+        var eingabe = (await Service.EingabeLadenAsync(id, _admin, Abbruch)).ShouldNotBeNull();
+        eingabe.PrivateVeranstaltung.ShouldBeTrue();
+
+        eingabe.PrivateVeranstaltung = false;
+        (await Service.SpeichernAsync(eingabe, _admin, Abbruch)).Fehler.ShouldBeEmpty();
+
+        (await Service.EingabeLadenAsync(id, _admin, Abbruch))!.PrivateVeranstaltung.ShouldBeFalse();
     }
 
     [DatenbankFact]
@@ -155,28 +169,31 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
     }
 
     [DatenbankFact]
-    public async Task Abteilungsleiter_nur_fuer_die_eigene_Abteilung()
+    public async Task Abteilungsleiter_fuer_die_eigene_Abteilung_und_den_Gesamtverein()
     {
         (await Service.SpeichernAsync(Eingabe(abteilung: "Bujinkan"), _aikidoLeiter, Abbruch)).Erfolgreich.ShouldBeFalse();
-        (await Service.SpeichernAsync(Eingabe(abteilung: null), _aikidoLeiter, Abbruch)).Erfolgreich.ShouldBeFalse("Gesamtverein nur für Admins");
 
         var eigene = await AnlegenAsync(Eingabe("Aikido-Lehrgang", "Aikido"), _aikidoLeiter);
+        var verein = await AnlegenAsync(Eingabe("Sommerfest", abteilung: null), _aikidoLeiter);
         var fremde = await AnlegenAsync(Eingabe("Bujinkan-Seminar", "Bujinkan"));
 
-        (await Service.ListeAsync(_aikidoLeiter, mitArchivierten: false, Abbruch)).Select(e => e.Id).ShouldBe([eigene]);
+        (await Service.ListeAsync(_aikidoLeiter, mitArchivierten: false, Abbruch)).Select(e => e.Id).ShouldBe([eigene, verein], ignoreOrder: true);
+        (await Service.EingabeLadenAsync(verein, _aikidoLeiter, Abbruch)).ShouldNotBeNull();
+        (await Service.VeroeffentlichenAsync(verein, _aikidoLeiter, Abbruch)).Erfolgreich.ShouldBeTrue();
         (await Service.EingabeLadenAsync(fremde, _aikidoLeiter, Abbruch)).ShouldBeNull();
         (await Service.VeroeffentlichenAsync(fremde, _aikidoLeiter, Abbruch)).Erfolgreich.ShouldBeFalse();
-        (await Service.ListeAsync(_admin, mitArchivierten: false, Abbruch)).Count.ShouldBe(2);
+        (await Service.ListeAsync(_admin, mitArchivierten: false, Abbruch)).Count.ShouldBe(3);
         (await Service.AbteilungenAsync(_aikidoLeiter, Abbruch)).Select(a => a.Id).ShouldBe(["Aikido"]);
     }
 
     [DatenbankFact]
-    public async Task Abteilungsleiter_ohne_Abteilung_sieht_nichts()
+    public async Task Abteilungsleiter_ohne_Abteilung_sieht_nur_den_Gesamtverein()
     {
-        await AnlegenAsync(Eingabe());
+        await AnlegenAsync(Eingabe("Aikido-Lehrgang", "Aikido"));
+        var verein = await AnlegenAsync(Eingabe("Sommerfest", abteilung: null));
         var ohneAbteilung = _aikidoLeiter with { Abteilung = null };
 
-        (await Service.ListeAsync(ohneAbteilung, mitArchivierten: true, Abbruch)).ShouldBeEmpty();
+        (await Service.ListeAsync(ohneAbteilung, mitArchivierten: true, Abbruch)).Select(e => e.Id).ShouldBe([verein]);
     }
 
     [DatenbankFact]
@@ -205,6 +222,24 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         var kalender = await KalenderAsync();
         kalender.Select(a => a.StartTime).ShouldBe([new DateTime(2026, 11, 14, 10, 0, 0), new DateTime(2026, 11, 15, 9, 0, 0)]);
         kalender.ShouldAllBe(a => a.VeranstaltungsTagId != null && a.Abteilung == "Aikido" && a.Subject == "Herbstseminar");
+
+        // Der Kalender bekommt beim Lesen Id und Slug für die Links zur Veranstaltung
+        await using var kontext = Datenbank.NeuerKontext();
+        var eintraege = await kontext.Appointments.ToListAsync(Abbruch);
+        eintraege.Add(new AppointmentData { Subject = "Training" });
+        await KalenderAbgleich.VeranstaltungenZuordnenAsync(kontext, eintraege, Abbruch);
+        eintraege.Where(a => a.VeranstaltungsTagId != null).ShouldAllBe(a => a.VeranstaltungId == id && a.VeranstaltungSlug == "herbstseminar");
+        eintraege.Single(a => a.Subject == "Training").VeranstaltungSlug.ShouldBeNull();
+    }
+
+    [DatenbankFact]
+    public async Task Archivierter_Entwurf_kommt_nicht_in_den_Kalender()
+    {
+        var id = await AnlegenAsync(Eingabe());
+
+        (await Service.ArchivierenAsync(id, _admin, Abbruch)).Fehler.ShouldBeEmpty();
+
+        (await KalenderAsync()).ShouldBeEmpty("nie veröffentlicht, also auch nicht als Rückblick");
     }
 
     [DatenbankFact]
@@ -424,14 +459,13 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
     }
 
     [DatenbankFact]
-    public async Task Liste_zaehlt_Anmeldungen_Personen_und_ungesehene_Aenderungen()
+    public async Task Liste_zaehlt_Teilnehmer_und_ungesehene_Aenderungen()
     {
         var id = await AnlegenAsync(Eingabe());
         await AnmeldungHinzufuegenAsync(id);
 
         var eintrag = (await Service.ListeAsync(_admin, mitArchivierten: false, Abbruch)).ShouldHaveSingleItem();
 
-        eintrag.AktiveAnmeldungen.ShouldBe(1);
         eintrag.BestaetigtePersonen.ShouldBe(5);
         eintrag.UngeseheneAenderungen.ShouldBe(1);
         eintrag.ErsterTag.ShouldBe(new DateOnly(2026, 11, 14));
@@ -465,7 +499,7 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         (await Service.EmpfaengerEntfernenAsync(id, kasse.Id, _admin, Abbruch)).Fehler.ShouldBeEmpty();
         (await Service.EmpfaengerAsync(id, _admin, Abbruch)).Count.ShouldBe(2);
 
-        (await Service.EmpfaengerHinzufuegenAsync(id, null, "y@example.org", null, _aikidoLeiter, Abbruch)).Erfolgreich.ShouldBeFalse("Gesamtverein: nur Admins");
+        (await Service.EmpfaengerHinzufuegenAsync(id, null, "y@example.org", null, _aikidoLeiter, Abbruch)).Fehler.ShouldBeEmpty("Gesamtverein: auch Abteilungsleiter");
     }
 
     [DatenbankFact]

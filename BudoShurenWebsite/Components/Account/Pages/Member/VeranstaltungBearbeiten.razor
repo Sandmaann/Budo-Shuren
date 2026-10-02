@@ -17,10 +17,10 @@
         <SectionBanner Titel="@(Id.HasValue ? "Veranstaltung bearbeiten" : "Neue Veranstaltung")" />
 
         <div class="font-ptsans mb-4 flex gap-4 text-sm">
-            <a href="/Account/Member/Veranstaltungen" class="hover:underline">← Alle Veranstaltungen</a>
+            <a href="Account/Member/Veranstaltungen" class="hover:underline">← Alle Veranstaltungen</a>
             @if (Id is { } uebersichtId)
             {
-                <a href="@($"/Account/Member/Veranstaltungen/{uebersichtId}")" class="hover:underline">Teilnehmer und Übersicht →</a>
+                <a href="@($"Account/Member/Veranstaltungen/{uebersichtId}")" class="hover:underline">Teilnehmer und Übersicht →</a>
             }
         </div>
 
@@ -42,29 +42,15 @@
                 Status: <span class="font-bold">@_eingabe.Status.Beschreibung()</span>
             </div>
 
-            @if (_terminGeaendert)
+            @* Rückmeldungen stehen dort, wo die Seite nach der Aktion steht: an den Buttons unten,
+               nur nach dem ersten Speichern (Wechsel auf die neue Adresse, Seite springt nach oben) hier *@
+            @if (_meldungOben && _meldungen.Count > 0)
             {
-                <div class="font-ptsans mb-4 rounded border border-amber-500 bg-amber-50 p-3 text-sm">
-                    Termin oder Ort haben sich geändert. Teilnehmer informieren?
-                    <a href="@($"/Account/Member/Veranstaltungen/{Id}?vorlage=termin")" class="ml-1 font-bold hover:underline">Rundmail mit den neuen Angaben vorbereiten →</a>
-                </div>
-            }
-
-            @if (_meldungen.Count > 0)
-            {
-                <div class="mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">
-                    <ul class="font-ptsans list-inside list-disc">
-                        @foreach (var meldung in _meldungen)
-                        {
-                            <li>@meldung</li>
-                        }
-                    </ul>
-                </div>
+                @Meldungen
             }
 
             <EditForm Model="_eingabe" OnValidSubmit="SpeichernAsync" FormName="veranstaltung-bearbeiten">
                 <DataAnnotationsValidator />
-                <ValidationSummary class="font-ptsans mb-4 text-sm text-red-700" />
                 <p class="@Hinweis mb-4">Felder mit * sind Pflichtfelder.</p>
 
                 <div class="space-y-6">
@@ -108,11 +94,8 @@
                             </div>
                             <div>
                                 <label class="@Label">Abteilung</label>
-                                <InputSelect @bind-Value="_eingabe.AbteilungId" class="@Feld" disabled="@(!_benutzer.IstAdmin)">
-                                    @if (_benutzer.IstAdmin)
-                                    {
-                                        <option value="">Gesamtverein</option>
-                                    }
+                                <InputSelect @bind-Value="_eingabe.AbteilungId" class="@Feld">
+                                    <option value="">Gesamtverein</option>
                                     @foreach (var a in _abteilungen)
                                     {
                                         <option value="@a.Id">@a.Name</option>
@@ -231,6 +214,10 @@
                                     </InputSelect>
                                 </div>
                             </div>
+                            <label class="font-ptsans flex cursor-pointer items-center gap-2 text-sm">
+                                <InputCheckbox @bind-Value="_eingabe.PrivateVeranstaltung" />
+                                Private Veranstaltung: auf der Seite den Hinweis „Dies ist eine private Veranstaltung.“ anzeigen
+                            </label>
                             <div class="grid gap-4 md:grid-cols-3">
                                 @if (_eingabe.Teilnahmemodus == Teilnahmemodus.EinzelneTage)
                                 {
@@ -310,7 +297,19 @@
                         </div>
                     </details>
 
-                    <!-- Aktionen -->
+                    <!-- Aktionen, mit den Rückmeldungen direkt darüber -->
+                    <ValidationSummary class="font-ptsans text-sm text-red-700" />
+                    @if (!_meldungOben && _meldungen.Count > 0)
+                    {
+                        @Meldungen
+                    }
+                    @if (_terminGeaendert)
+                    {
+                        <div class="font-ptsans rounded border border-amber-500 bg-amber-50 p-3 text-sm">
+                            Termin oder Ort haben sich geändert. Teilnehmer informieren?
+                            <a href="@($"Account/Member/Veranstaltungen/{Id}?vorlage=termin")" class="ml-1 font-bold hover:underline">Rundmail mit den neuen Angaben vorbereiten →</a>
+                        </div>
+                    }
                     <div class="flex flex-wrap gap-3">
                         <button type="submit" disabled="@_beschaeftigt"
                                 class="font-ptsans rounded border border-black px-4 py-2 text-sm tracking-wider hover:bg-gray-100 disabled:opacity-50">
@@ -373,6 +372,7 @@
     private string? _ladeFehler;
     private List<string> _meldungen = [];
     private bool _istFehler;
+    private bool _meldungOben;
     private bool _beschaeftigt;
     private bool _loeschenBestaetigen;
 
@@ -440,6 +440,7 @@
     private async Task<VerwaltungsErgebnis> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung)
     {
         _beschaeftigt = true;
+        _meldungOben = false;
         try
         {
             var ergebnis = await aktion();
@@ -487,7 +488,11 @@
             return;
 
         if (Id is null)
-            NavigationManager.NavigateTo($"/Account/Member/Veranstaltungen/Bearbeiten/{ergebnis.Id}");
+        {
+            // Der Seitenwechsel springt nach oben, die Rückmeldung muss mit
+            _meldungOben = true;
+            NavigationManager.NavigateTo($"Account/Member/Veranstaltungen/Bearbeiten/{ergebnis.Id}");
+        }
         else
             await EingabeLadenAsync();
     }
@@ -499,11 +504,20 @@
             await EingabeLadenAsync();
     }
 
+    private RenderFragment Meldungen => @<div class="mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")" role="status">
+        <ul class="font-ptsans list-inside list-disc">
+            @foreach (var meldung in _meldungen)
+            {
+                <li>@meldung</li>
+            }
+        </ul>
+    </div>;
+
     private async Task LoeschenAsync()
     {
         var ergebnis = await AusfuehrenAsync(() => Verwaltung.LoeschenAsync(Id!.Value, _benutzer!), "Gelöscht.");
         _loeschenBestaetigen = false;
         if (ergebnis.Erfolgreich)
-            NavigationManager.NavigateTo("/Account/Member/Veranstaltungen");
+            NavigationManager.NavigateTo("Account/Member/Veranstaltungen");
     }
 }

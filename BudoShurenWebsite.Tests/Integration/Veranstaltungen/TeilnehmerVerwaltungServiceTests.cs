@@ -118,9 +118,11 @@ public class TeilnehmerVerwaltungServiceTests(SqlServerFixture datenbank) : Date
     public async Task Fremde_Abteilung_sieht_nichts()
     {
         await AnmeldungAnlegenAsync("max@example.org");
-        var leiter = new VerwaltungsBenutzer("x", "Leiter", IstAdmin: false, IstAbteilungsleiter: true, Abteilung: "Aikido");
+        await using (var kontext = Datenbank.NeuerKontext())
+            await kontext.Veranstaltungen.Where(v => v.Id == _v.Id).ExecuteUpdateAsync(s => s.SetProperty(v => v.AbteilungId, "Aikido"), Abbruch);
+        var leiter = new VerwaltungsBenutzer("x", "Leiter", IstAdmin: false, IstAbteilungsleiter: true, Abteilung: "Bujinkan");
 
-        (await Service.UebersichtAsync(_v.Id, leiter, Abbruch)).ShouldBeNull("Gesamtverein nur für Admins");
+        (await Service.UebersichtAsync(_v.Id, leiter, Abbruch)).ShouldBeNull();
         (await Service.CsvExportAsync(_v.Id, leiter, Abbruch)).ShouldBeNull();
         (await Service.NotizSpeichernAsync(_v.Id, 1, "x", leiter, Abbruch)).Erfolgreich.ShouldBeFalse();
     }

@@ -143,7 +143,7 @@ public class VeranstaltungKommunikationServiceTests(SqlServerFixture datenbank) 
         (await Service.RundmailSendenAsync(_v.Id, "Info", "Text", false, Basis, _admin, Abbruch)).Fehler.ShouldBeEmpty();
 
         (await MailsAsync()).Select(m => m.An).ShouldBe(["max@example.org"]);
-        var fremd = new VerwaltungsBenutzer("x", "Leiter", false, true, "Aikido");
+        var fremd = new VerwaltungsBenutzer("x", "Editor", false, false, "Aikido"); // ohne Verwaltungsrechte
         (await Service.RundmailSendenAsync(_v.Id, "Info", "Text", false, Basis, fremd, Abbruch)).Erfolgreich.ShouldBeFalse();
     }
 

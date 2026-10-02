@@ -17,7 +17,12 @@
         <div class="font-yuji text-sm font-normal leading-tight tracking-wider text-black">Interesse? <br />Dann schreibe mir doch gerne eine Nachricht!</div>
     }
 
-    <StatusMessage Message="@errorMessage" />
+    @* Statisch eingebunden (z. B. Aikido) lädt das Absenden die Seite neu und sie steht oben: dort zeigt die Seite
+       die Rückmeldung (OnSend). Interaktiv (z. B. Kontakt) bleibt die Seite stehen: Rückmeldung unter "Senden". *@
+    @if (!RendererInfo.IsInteractive)
+    {
+        <StatusMessage Message="@errorMessage" />
+    }
     <EditForm Model="Input" method="post" OnValidSubmit="SubmitNachricht" FormName="nachricht" class="flex h-full flex-col">
         <DataAnnotationsValidator />
         <ValidationSummary class="mt-8 text-error" role="alert" />
@@ -55,7 +60,7 @@
                                 </div>
                             </ValueTemplate>
                         </DropDownListTemplates>
-                        <DropDownListFieldSettings Text="Name" Value="Name"></DropDownListFieldSettings>
+                        <DropDownListFieldSettings Text="Name" Value="ID"></DropDownListFieldSettings>
                     </SfDropDownList>
                 </div>
                 <ValidationMessage For="() => Input.SelectedAbteilung" class="text-error" />
@@ -81,6 +86,16 @@
                 <span class="text-center text-white">Senden</span>
             </button>
         </div>
+        @if (RendererInfo.IsInteractive)
+        {
+            <div class="mt-4">
+                <StatusMessage ShowAsError="true" Message="@errorMessage" />
+                @if (_gesendet)
+                {
+                    <StatusMessage ShowAsError="false" Message="Deine Nachricht wurde erfolgreich versendet!" />
+                }
+            </div>
+        }
     </EditForm>
 </div>
 
@@ -128,6 +143,7 @@
 
 @code {
     private string? errorMessage;
+    private bool _gesendet;
 
 
     [Parameter]
@@ -157,7 +173,7 @@
 
         using var context = DbContextFactory.CreateDbContext();
         Abteilungen = await context.Abteilungen.ToListAsync();
-        if (Abteilungen.FirstOrDefault(x => x.ID == Abteilung) is Abteilung auswahl)
+        if (Abteilungen.FirstOrDefault(x => x.Passt(Abteilung)) is Abteilung auswahl)
         {
             Input.SelectedAbteilung = auswahl?.ID ?? "";
         }
@@ -165,6 +181,8 @@
 
     public async Task SubmitNachricht()
     {
+        errorMessage = null;
+        _gesendet = false;
         try
         {
             // Überprüfen, ob das Honeypot-Feld ausgefüllt ist
@@ -175,7 +193,7 @@
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(Input.SelectedAbteilung) && Abteilungen.FirstOrDefault(x => x.ID == Input.SelectedAbteilung) is Abteilung abteilung)
+            if (Abteilungen.FirstOrDefault(x => x.ID == Input.SelectedAbteilung) is Abteilung abteilung)
             {
                 string nachricht = Input.Text;
                 string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
@@ -199,7 +217,7 @@
 
                 //E-Mail an Abteilungsleiter senden
                 var users = await UserManager.GetUsersInRoleAsync(Roles.Abteilungsleiter);
-                users = users.Where(x => x.Abteilung == abteilung?.Name).ToList();
+                users = users.Where(x => abteilung.Passt(x.Abteilung)).ToList();
 
                 foreach (var user in users)
                 {
@@ -240,18 +258,32 @@
                     Logger.LogError(ex, "Fehler beim Zählen eines Besuchers (Interesse Formular)");
                 }
 
-                await OnSend.InvokeAsync(true);
+                await RueckmeldenAsync(true);
 
                 Input.Text = string.Empty;
                 Input.Email = string.Empty;
+            }
+            else
+            {
+                // Ohne Abteilung gibt es keinen Empfänger (früher brach das Formular hier ohne jede Meldung ab)
+                errorMessage = "Bitte wähle aus, an wen deine Nachricht gehen soll.";
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Fehler beim Senden der Nachricht");
             errorMessage = "Die Nachricht konnte leider nicht versendet werden! Du kannst auch direkt an info@budo-shuren-dojo.de schreiben. In unserem Impressum findest du auch die einzelnen Kontaktdaten der Abteilungsleiter.";
-            await OnSend.InvokeAsync(false);
+            await RueckmeldenAsync(false);
         }
+    }
+
+    /// <summary>Interaktiv zeigt das Formular die Rückmeldung selbst unter dem Button, statisch die Seite oben (OnSend).</summary>
+    private async Task RueckmeldenAsync(bool erfolgreich)
+    {
+        if (RendererInfo.IsInteractive)
+            _gesendet = erfolgreich;
+        else
+            await OnSend.InvokeAsync(erfolgreich);
     }
 
     private sealed class InputModel

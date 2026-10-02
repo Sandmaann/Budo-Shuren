@@ -48,6 +48,14 @@ namespace BudoShurenWebsite.Models
         [NotMapped]
         public bool IsReadonly => VeranstaltungsTagId != null;
 
+        /// <summary>Nur beim Lesen für den Kalender gefüllt (KalenderAbgleich.VeranstaltungenZuordnenAsync), für Links zur Veranstaltung.</summary>
+        [NotMapped]
+        public int? VeranstaltungId { get; set; }
+
+        /// <inheritdoc cref="VeranstaltungId"/>
+        [NotMapped]
+        public string? VeranstaltungSlug { get; set; }
+
         [NotMapped]
         public string PrimaryColor
         {

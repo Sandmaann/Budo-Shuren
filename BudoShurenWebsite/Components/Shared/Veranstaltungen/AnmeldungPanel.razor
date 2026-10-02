@@ -14,16 +14,6 @@
         <button type="button" class="px-2 text-xl leading-none" title="Schließen" @onclick="OnSchliessen">×</button>
     </div>
 
-    @if (_meldungen.Count > 0)
-    {
-        <div class="mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">
-            @foreach (var m in _meldungen)
-            {
-                <div>@m</div>
-            }
-        </div>
-    }
-
     @if (_nichtGefunden)
     {
         <p class="text-sm">Die Anmeldung wurde nicht gefunden.</p>
@@ -44,6 +34,10 @@
                 <button type="submit" disabled="@_beschaeftigt" class="@KnopfPrimaer">Speichern</button>
                 <button type="button" class="@Knopf" @onclick="() => _bearbeiten = null">Abbrechen</button>
             </div>
+            @if (ZeigeMeldung(MeldungOrt.Bearbeiten))
+            {
+                @Meldungen
+            }
         </EditForm>
     }
     else
@@ -150,11 +144,20 @@
                 </div>
             </div>
         }
+        @* Rückmeldungen stehen bei der Aktion, die sie ausgelöst hat *@
+        @if (ZeigeMeldung(MeldungOrt.Aktionen))
+        {
+            <div class="mt-4">@Meldungen</div>
+        }
 
         <div class="mt-6">
             <label class="mb-1 block text-xs font-bold" for="notiz">Interne Notiz <span class="font-normal text-gray-500">(nur für Organisatoren)</span></label>
             <textarea id="notiz" rows="3" class="w-full rounded border border-gray-300 p-2 text-sm" @bind="_notiz"></textarea>
             <button type="button" class="@Knopf mt-1" disabled="@_beschaeftigt" @onclick="NotizSpeichernAsync">Notiz speichern</button>
+            @if (ZeigeMeldung(MeldungOrt.Notiz))
+            {
+                <div class="mt-2">@Meldungen</div>
+            }
         </div>
 
         <h4 class="mb-2 mt-6 text-sm font-bold tracking-wider">Verlauf</h4>
@@ -203,6 +206,18 @@
     private bool _beschaeftigt;
     private List<string> _meldungen = [];
     private bool _istFehler;
+    private MeldungOrt _meldungOrt;
+
+    private enum MeldungOrt { Bearbeiten, Aktionen, Notiz }
+
+    private bool ZeigeMeldung(MeldungOrt ort) => _meldungOrt == ort && _meldungen.Count > 0;
+
+    private RenderFragment Meldungen => @<div class="rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")" role="status">
+        @foreach (var m in _meldungen)
+        {
+            <div>@m</div>
+        }
+    </div>;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -251,9 +266,10 @@
         _meldungen = [];
     }
 
-    private async Task<bool> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung)
+    private async Task<bool> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung, MeldungOrt ort = MeldungOrt.Aktionen)
     {
         _beschaeftigt = true;
+        _meldungOrt = ort;
         try
         {
             var ergebnis = await aktion();
@@ -275,8 +291,12 @@
     private async Task BearbeitenSpeichernAsync()
     {
         _bearbeiten!.TagIds = _tagWahl.Where(t => t.Gewaehlt).Select(t => t.Id).ToList();
-        if (await AusfuehrenAsync(() => Teilnehmer.BearbeitenAsync(VeranstaltungId, AnmeldungId, _bearbeiten, _benachrichtigen, BasisUrl, Benutzer), "Gespeichert."))
+        if (await AusfuehrenAsync(() => Teilnehmer.BearbeitenAsync(VeranstaltungId, AnmeldungId, _bearbeiten, _benachrichtigen, BasisUrl, Benutzer), "Gespeichert.", MeldungOrt.Bearbeiten))
+        {
+            // Das Formular schließt sich; an seiner Stelle stehen wieder Daten und Aktionen
             _bearbeiten = null;
+            _meldungOrt = MeldungOrt.Aktionen;
+        }
     }
 
     private async Task AblehnenAsync()
@@ -297,5 +317,5 @@
             "Ein neuer Link wurde verschickt; der bisherige gilt nicht mehr.");
 
     private Task NotizSpeichernAsync() =>
-        AusfuehrenAsync(() => Teilnehmer.NotizSpeichernAsync(VeranstaltungId, AnmeldungId, _notiz, Benutzer), "Notiz gespeichert.");
+        AusfuehrenAsync(() => Teilnehmer.NotizSpeichernAsync(VeranstaltungId, AnmeldungId, _notiz, Benutzer), "Notiz gespeichert.", MeldungOrt.Notiz);
 }

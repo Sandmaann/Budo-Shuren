@@ -15,11 +15,13 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         /// <summary>
         /// Öffentliche Veranstaltungen stehen ab der Veröffentlichung im Kalender und bleiben danach als
-        /// Rückblick stehen (abgeschlossen, archiviert). Entwürfe, abgesagte Veranstaltungen und abgesagte Tage nicht.
+        /// Rückblick stehen (abgeschlossen, archiviert). Entwürfe, abgesagte Veranstaltungen und abgesagte Tage nicht,
+        /// ebenso wenig archivierte Entwürfe, die nie veröffentlicht waren.
         /// </summary>
         public static bool GehoertInDenKalender(Veranstaltung veranstaltung, VeranstaltungsTag tag) =>
             veranstaltung.Sichtbarkeit == VeranstaltungSichtbarkeit.Oeffentlich
-            && veranstaltung.Status is VeranstaltungStatus.Veroeffentlicht or VeranstaltungStatus.Abgeschlossen or VeranstaltungStatus.Archiviert
+            && (veranstaltung.Status == VeranstaltungStatus.Veroeffentlicht
+                || veranstaltung.Status is VeranstaltungStatus.Abgeschlossen or VeranstaltungStatus.Archiviert && veranstaltung.ErstmalsVeroeffentlichtUtc is not null)
             && !tag.Abgesagt;
 
         /// <summary>Überträgt die Daten der Veranstaltung und des Tages auf den Kalendereintrag.</summary>
@@ -35,7 +37,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             eintrag.RecurrenceRule = string.Empty;
             eintrag.RecurrenceException = string.Empty;
             eintrag.RecurrenceID = null;
-            eintrag.Description = Beschreibung(veranstaltung);
+            // Der Link zur Veranstaltung steht im Kalender selbst (Kalender.razor), nicht als Text in der Beschreibung
+            eintrag.Description = veranstaltung.Kurzbeschreibung ?? string.Empty;
             eintrag.Abteilung = veranstaltung.Abteilung?.Name ?? veranstaltung.AbteilungId ?? AbteilungGesamtverein;
             eintrag.ShowInWeek = true;
             eintrag.ShowInMonth = true;
@@ -55,13 +58,5 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         /// </summary>
         private static DateTime Ende(VeranstaltungsTag tag) =>
             tag.Ende is { } ende ? tag.Datum.ToDateTime(ende) : tag.Datum.ToDateTime(tag.Beginn).AddMinutes(30);
-
-        private static string Beschreibung(Veranstaltung veranstaltung)
-        {
-            var link = $"Infos und Anmeldung: /veranstaltungen/{veranstaltung.Slug}";
-            return string.IsNullOrWhiteSpace(veranstaltung.Kurzbeschreibung)
-                ? link
-                : $"{veranstaltung.Kurzbeschreibung}\n\n{link}";
-        }
     }
 }

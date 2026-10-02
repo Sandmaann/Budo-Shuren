@@ -37,5 +37,27 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 }
             }
         }
+
+        /// <summary>Ergänzt bei Einträgen von Veranstaltungen Id und Slug der Veranstaltung (für Links im Kalender).</summary>
+        public static async Task VeranstaltungenZuordnenAsync(ApplicationDbContext kontext, IReadOnlyCollection<AppointmentData> eintraege, CancellationToken abbruch = default)
+        {
+            var tagIds = eintraege.Where(e => e.VeranstaltungsTagId != null).Select(e => e.VeranstaltungsTagId!.Value).Distinct().ToList();
+            if (tagIds.Count == 0)
+                return;
+
+            var veranstaltungen = await kontext.VeranstaltungsTage.AsNoTracking()
+                .Where(t => tagIds.Contains(t.Id))
+                .Select(t => new { t.Id, t.VeranstaltungId, t.Veranstaltung!.Slug })
+                .ToDictionaryAsync(t => t.Id, abbruch);
+
+            foreach (var eintrag in eintraege)
+            {
+                if (eintrag.VeranstaltungsTagId is { } tagId && veranstaltungen.TryGetValue(tagId, out var v))
+                {
+                    eintrag.VeranstaltungId = v.VeranstaltungId;
+                    eintrag.VeranstaltungSlug = v.Slug;
+                }
+            }
+        }
     }
 }

@@ -21,7 +21,7 @@
     <div class="mx-10">
         <SectionBanner Titel="@(Id.HasValue ? "Beitrag bearbeiten" : "Neuen Beitrag erstellen")" />
 
-        @if (!string.IsNullOrWhiteSpace(_statusMessage))
+        @if (!_meldungBeiButtons && !string.IsNullOrWhiteSpace(_statusMessage))
         {
             <StatusMessage ShowAsError="@_isError" Message="@_statusMessage" />
         }
@@ -191,6 +191,11 @@
                     </div>
                 </div>
 
+                @* Speichern lässt die Seite stehen: Rückmeldung direkt über den Buttons (Ladefehler bleiben oben) *@
+                @if (_meldungBeiButtons && !string.IsNullOrWhiteSpace(_statusMessage))
+                {
+                    <StatusMessage ShowAsError="@_isError" Message="@_statusMessage" />
+                }
                 <!-- Aktionsbuttons -->
                 <div class="flex flex-wrap gap-3 border-t border-gray-200 pt-6 pb-12">
                     <button type="button" @onclick="Speichern"
@@ -226,6 +231,7 @@
     private bool _isLoading = true;
     private bool _isSaving = false;
     private string _statusMessage = string.Empty;
+    private bool _meldungBeiButtons;
     private bool _isError = false;
     private bool _slugManuallyEdited = false;
 
@@ -328,6 +334,7 @@
 
     private async Task Speichern()
     {
+        _meldungBeiButtons = true;
         if (string.IsNullOrWhiteSpace(_beitrag.Titel))
         {
             _statusMessage = "Bitte gib einen Titel ein.";

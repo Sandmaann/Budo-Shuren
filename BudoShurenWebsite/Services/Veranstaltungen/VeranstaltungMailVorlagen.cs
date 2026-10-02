@@ -221,7 +221,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         private static string Kontakt(Veranstaltung v) =>
             string.IsNullOrWhiteSpace(v.KontaktEmail)
                 ? string.Empty
-                : $"<p>Bei Fragen erreichst du {E(v.KontaktName ?? "die Organisatoren")} unter <a href=\"mailto:{E(v.KontaktEmail)}\" style=\"color:#000000;\">{E(v.KontaktEmail)}</a> oder einfach mit einer Antwort auf diese E-Mail.</p>";
+                : $"<p>Bei Fragen erreichst du {E(v.KontaktName ?? "die Organisatoren")} unter <a href=\"mailto:{E(v.KontaktEmail)}\" style=\"color:#000000;\">{E(v.KontaktEmail)}</a>.</p>";
 
         internal static string Layout(string inhalt) =>
             "<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head>" +

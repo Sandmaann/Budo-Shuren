@@ -68,7 +68,7 @@ public class InhaltsBloeckeEditorTests : BunitContext
             InputFileContent.CreateFromBinary([4], "notiz.txt"));
 
         _bloecke.Single().BildIds.ShouldBe([42]);
-        editor.WaitForAssertion(() => editor.Find("img").GetAttribute("src").ShouldBe("/Account/Member/Filesave/GetImage/42"));
+        editor.WaitForAssertion(() => editor.Find("img").GetAttribute("src").ShouldBe("Account/Member/Filesave/GetImage/42"));
         editor.Markup.ShouldContain("„notiz.txt“ ist kein unterstütztes Bild");
     }
 }

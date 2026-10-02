@@ -18,7 +18,7 @@
     <div class="mx-10">
         <SectionBanner Titel="@(_uebersicht?.Titel ?? "Veranstaltung")" />
 
-        <a href="/Account/Member/Veranstaltungen" class="font-ptsans mb-4 inline-block text-sm hover:underline">← Alle Veranstaltungen</a>
+        <a href="Account/Member/Veranstaltungen" class="font-ptsans mb-4 inline-block text-sm hover:underline">← Alle Veranstaltungen</a>
 
         @if (!Optionen.Value.Aktiviert)
         {
@@ -49,24 +49,14 @@
                     }
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <a href="@($"/Account/Member/Veranstaltungen/Bearbeiten/{v.Id}")" class="@Knopf">Bearbeiten</a>
+                    <a href="@($"Account/Member/Veranstaltungen/Bearbeiten/{v.Id}")" class="@Knopf">Bearbeiten</a>
                     @if (v.Status != VeranstaltungStatus.Entwurf)
                     {
-                        <a href="@VeranstaltungLinks.Veranstaltung("/", v.Slug)" target="_blank" class="@Knopf">Öffentliche Seite ↗</a>
+                        <a href="@VeranstaltungLinks.Veranstaltung("", v.Slug)" target="_blank" class="@Knopf">Öffentliche Seite ↗</a>
                     }
-                    <a href="@($"/Account/Member/Veranstaltungen/{v.Id}/teilnehmer.csv")" target="_blank" download class="@Knopf">Teilnehmerliste (CSV)</a>
+                    <a href="@($"Account/Member/Veranstaltungen/{v.Id}/teilnehmer.csv")" target="_blank" download class="@Knopf">Teilnehmerliste (CSV)</a>
                 </div>
             </div>
-
-            @if (_meldungen.Count > 0)
-            {
-                <div class="font-ptsans mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")">
-                    @foreach (var m in _meldungen)
-                    {
-                        <div>@m</div>
-                    }
-                </div>
-            }
 
             <!-- Kennzahlen -->
             <div class="font-ptsans mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -82,8 +72,13 @@
                 <div class="font-ptsans mb-6 flex flex-wrap items-center gap-3 rounded border border-red-700 bg-red-50 p-3 text-sm">
                     <span><span class="font-bold">Zu erledigen:</span> @v.UngeseheneAenderungen @(v.UngeseheneAenderungen == 1 ? "Anmeldung hat" : "Anmeldungen haben") neue Änderungen.</span>
                     <button type="button" class="@Knopf bg-white" @onclick="NeueAnzeigen">Anzeigen</button>
-                    <button type="button" class="@Knopf bg-white" disabled="@_beschaeftigt" @onclick="() => GesehenAsync(null)">Alle als gesehen markieren</button>
+                    <button type="button" class="@Knopf bg-white" disabled="@_beschaeftigt" @onclick="() => GesehenAsync(null, MeldungOrt.ZuErledigen)">Alle als gesehen markieren</button>
                 </div>
+            }
+            @* Rückmeldungen stehen jeweils bei der Aktion, die sie ausgelöst hat (die Seite scrollt dabei nicht) *@
+            @if (ZeigeMeldung(MeldungOrt.ZuErledigen))
+            {
+                @Meldungen
             }
 
             <!-- Termine, nach Datum gruppiert -->
@@ -146,6 +141,10 @@
                     </div>
                 </div>
             }
+            @if (ZeigeMeldung(MeldungOrt.Absage))
+            {
+                @Meldungen
+            }
 
             <!-- Tabs -->
             <div class="font-ptsans mb-4 flex flex-wrap gap-1 border-b border-gray-300 text-sm">
@@ -160,9 +159,13 @@
             @switch (_tab)
             {
                 case Tab.Teilnehmer:
+                    @if (ZeigeMeldung(MeldungOrt.Teilnehmer))
+                    {
+                        @Meldungen
+                    }
                     <TeilnehmerTabelle Teilnehmer="v.Teilnehmer" Tage="v.Tage" Teilnahmemodus="v.Teilnahmemodus"
                                        @bind-Filter="_filter" AusgewaehltId="_offeneAnmeldung"
-                                       OnOeffnen="Oeffnen" OnAuswahlGesehen="ids => GesehenAsync(ids)" />
+                                       OnOeffnen="Oeffnen" OnAuswahlGesehen="ids => GesehenAsync(ids, MeldungOrt.Teilnehmer)" />
                     break;
 
                 case Tab.Aenderungen:
@@ -186,6 +189,10 @@
                         </label>
                         <button type="submit" disabled="@_beschaeftigt"
                                 class="rounded border border-black bg-black px-4 py-2 text-xs text-white disabled:opacity-50">Anmelden</button>
+                        @if (ZeigeMeldung(MeldungOrt.Manuell))
+                        {
+                            @Meldungen
+                        }
                     </EditForm>
                     break;
             }
@@ -243,6 +250,19 @@
     private bool _beschaeftigt;
     private List<string> _meldungen = [];
     private bool _istFehler;
+    private MeldungOrt _meldungOrt;
+
+    /// <summary>Wo eine Rückmeldung erscheint: bei der Aktion, die sie ausgelöst hat.</summary>
+    private enum MeldungOrt { ZuErledigen, Absage, Teilnehmer, Manuell }
+
+    private bool ZeigeMeldung(MeldungOrt ort) => _meldungOrt == ort && _meldungen.Count > 0;
+
+    private RenderFragment Meldungen => @<div class="font-ptsans mb-4 rounded border p-3 text-sm @(_istFehler ? "border-red-700 bg-red-50" : "border-green-700 bg-green-50")" role="status">
+        @foreach (var m in _meldungen)
+        {
+            <div>@m</div>
+        }
+    </div>;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -307,9 +327,10 @@
         _meldungen = [];
     }
 
-    private async Task<bool> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung)
+    private async Task<bool> AusfuehrenAsync(Func<Task<VerwaltungsErgebnis>> aktion, string erfolgsMeldung, MeldungOrt ort)
     {
         _beschaeftigt = true;
+        _meldungOrt = ort;
         try
         {
             var ergebnis = await aktion();
@@ -326,17 +347,17 @@
     }
 
     /// <param name="ids">null = alle Anmeldungen der Veranstaltung.</param>
-    private Task GesehenAsync(IReadOnlyCollection<int>? ids) =>
-        AusfuehrenAsync(() => TeilnehmerVerwaltung.AlsGesehenMarkierenAsync(Id, ids, _benutzer!), "Als gesehen markiert.");
+    private Task GesehenAsync(IReadOnlyCollection<int>? ids, MeldungOrt ort) =>
+        AusfuehrenAsync(() => TeilnehmerVerwaltung.AlsGesehenMarkierenAsync(Id, ids, _benutzer!), "Als gesehen markiert.", ort);
 
     private async Task AbsagenAsync()
     {
         var absage = _absage!;
         var erfolg = absage.TagId is { } tagId
             ? await AusfuehrenAsync(() => Kommunikation.TagAbsagenAsync(Id, tagId, absage.Zusatz, NavigationManager.BaseUri, _benutzer!),
-                "Der Termin ist abgesagt; die Betroffenen werden informiert.")
+                "Der Termin ist abgesagt; die Betroffenen werden informiert.", MeldungOrt.Absage)
             : await AusfuehrenAsync(() => Kommunikation.AbsagenAsync(Id, absage.Zusatz, NavigationManager.BaseUri, _benutzer!),
-                "Die Veranstaltung ist abgesagt; alle Angemeldeten werden informiert.");
+                "Die Veranstaltung ist abgesagt; alle Angemeldeten werden informiert.", MeldungOrt.Absage);
         if (erfolg)
             _absage = null;
     }
@@ -346,7 +367,7 @@
         _manuell.TagIds = _manuellTage.Where(t => t.Gewaehlt).Select(t => t.Id).ToList();
         var name = $"{_manuell.Vorname} {_manuell.Nachname}".Trim();
         if (await AusfuehrenAsync(() => TeilnehmerVerwaltung.ManuellAnmeldenAsync(Id, _manuell, _manuellBenachrichtigen, NavigationManager.BaseUri, _benutzer!),
-                $"{name} ist angemeldet."))
+                $"{name} ist angemeldet.", MeldungOrt.Manuell))
             ManuellZuruecksetzen();
     }
 

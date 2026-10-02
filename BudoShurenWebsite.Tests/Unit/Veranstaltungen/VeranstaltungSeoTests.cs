@@ -17,7 +17,7 @@ public class VeranstaltungSeoTests
         params TagAnzeige[] tage) =>
         new("Herbst <seminar>", "herbstseminar", "Zwei Tage Aikido",
             bilder is null ? [] : [new InhaltsBlockAnzeige(VeranstaltungBlockTyp.BilderGalerie, "", 3, null, bilder)],
-            ort, "Ulmer Str. 178, Augsburg", null, null, null, null, status, sichtbarkeit, AnmeldeZustand.Offen, null, null,
+            ort, "Ulmer Str. 178, Augsburg", null, null, null, null, status, sichtbarkeit, true, AnmeldeZustand.Offen, null, null,
             Teilnahmemodus.NurGesamt, 1, 0, true, FormularFeldModus.Aus, FormularFeldModus.Aus, FormularFeldModus.Aus, FormularFeldModus.Aus,
             tage.Length > 0 ? tage :
             [

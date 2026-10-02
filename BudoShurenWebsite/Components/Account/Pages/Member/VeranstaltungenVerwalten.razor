@@ -49,7 +49,7 @@
                                 <th class="px-2 py-2">Veranstaltung</th>
                                 <th class="px-2 py-2">Termin</th>
                                 <th class="px-2 py-2">Status</th>
-                                <th class="px-2 py-2 text-right" title="Aktive Anmeldungen / bestätigte Personen inkl. Begleitung">Anmeldungen</th>
+                                <th class="px-2 py-2 text-right" title="Bestätigte Personen inklusive Begleitpersonen">Teilnehmer</th>
                                 <th class="px-2 py-2"></th>
                             </tr>
                         </thead>
@@ -64,7 +64,7 @@
                                     <td class="whitespace-nowrap px-2 py-2">@Zeitraum(e)</td>
                                     <td class="px-2 py-2">@e.Status.Beschreibung()</td>
                                     <td class="whitespace-nowrap px-2 py-2 text-right">
-                                        @e.AktiveAnmeldungen / @e.BestaetigtePersonen
+                                        @e.BestaetigtePersonen
                                         @if (e.UngeseheneAenderungen > 0)
                                         {
                                             <span class="ml-1 rounded bg-red-700 px-1.5 py-0.5 text-xs text-white"
@@ -113,11 +113,11 @@
         await LadenAsync();
     }
 
-    private void NeueVeranstaltung() => NavigationManager.NavigateTo("/Account/Member/Veranstaltungen/Bearbeiten");
+    private void NeueVeranstaltung() => NavigationManager.NavigateTo("Account/Member/Veranstaltungen/Bearbeiten");
 
-    private static string BearbeitenLink(int id) => $"/Account/Member/Veranstaltungen/Bearbeiten/{id}";
+    private static string BearbeitenLink(int id) => $"Account/Member/Veranstaltungen/Bearbeiten/{id}";
 
-    private static string UebersichtLink(int id) => $"/Account/Member/Veranstaltungen/{id}";
+    private static string UebersichtLink(int id) => $"Account/Member/Veranstaltungen/{id}";
 
     private static string Zeitraum(VeranstaltungListenEintrag e) => (e.ErsterTag, e.LetzterTag) switch
     {

@@ -78,6 +78,7 @@ public class RundmailBereichTests : BunitContext
         Knopf(bereich, "Jetzt senden").Click();
 
         bereich.Markup.ShouldContain("Die Rundmail ist unterwegs.");
+        bereich.Markup.IndexOf("Die Rundmail ist unterwegs.").ShouldBeGreaterThan(bereich.Markup.IndexOf("Testmail an mich"), "Rückmeldung unter den Buttons");
         bereich.Find("#rundmail-betreff").GetAttribute("value").ShouldBeNullOrEmpty();
         _service.Received(2).NachrichtenAsync(VeranstaltungId, Admin, Arg.Any<CancellationToken>());
     }

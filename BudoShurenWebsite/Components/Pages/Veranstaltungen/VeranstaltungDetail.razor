@@ -52,11 +52,11 @@
         @if (_v is null)
         {
             <Standardtext Text="Diese Veranstaltung gibt es nicht (mehr)." />
-            <a href="/veranstaltungen" class="font-ptsans text-sm underline">Alle Veranstaltungen</a>
+            <a href="veranstaltungen" class="font-ptsans text-sm underline">Alle Veranstaltungen</a>
         }
         else
         {
-            <a href="/veranstaltungen" class="font-ptsans text-sm hover:underline">← Alle Veranstaltungen</a>
+            <a href="veranstaltungen" class="font-ptsans text-sm hover:underline">← Alle Veranstaltungen</a>
 
             <!-- Kopf: wie die übrigen Seiten ohne Kasten, Titel in Yuji -->
             <div class="mt-8">
@@ -71,9 +71,39 @@
                 }
             </div>
 
+            @if (_v.PrivateVeranstaltung)
+            {
+                <p class="font-ptsans mt-6 border-l-4 border-gray-400 py-2 pl-4 text-sm tracking-wider">Dies ist eine private Veranstaltung.</p>
+            }
+
             @if (_v.Status == VeranstaltungStatus.Abgesagt)
             {
                 <p class="font-ptsans mt-6 border-l-4 border-red-700 py-2 pl-4 text-sm font-bold tracking-wider">Diese Veranstaltung wurde abgesagt.</p>
+            }
+
+            @* Nach dem Absenden lädt die Seite neu und steht oben, deshalb steht die Rückmeldung hier und nicht am Formular *@
+            @if (_erfolgFuer is not null)
+            {
+                <div class="font-ptsans mt-6 rounded border border-green-700 bg-green-50 p-4 text-sm">
+                    @if (_v.DoubleOptIn)
+                    {
+                        <p class="font-bold">Fast geschafft!</p>
+                        <p class="mt-1">Wir haben dir eine E-Mail an <strong>@_erfolgFuer</strong> geschickt. Bitte bestätige deine Anmeldung über den Link darin. Erst dann ist sie gültig.</p>
+                        @* Gleiche Meldung für neue und schon bestehende Anmeldungen, damit niemand herausfinden kann, welche Adressen angemeldet sind *@
+                        <p class="mt-1">Warst du schon angemeldet, findest du in der E-Mail stattdessen den Link zu deiner bestehenden Anmeldung.</p>
+                    }
+                    else
+                    {
+                        <p class="font-bold">Danke!</p>
+                        <p class="mt-1">Wir haben dir eine E-Mail an <strong>@_erfolgFuer</strong> mit allen Details und einem Link zum Ändern deiner Anmeldung geschickt.</p>
+                        <p class="mt-1">Warst du schon angemeldet, bleibt deine bestehende Anmeldung unverändert; Änderungen machst du über den Link in der E-Mail.</p>
+                    }
+                    <p class="mt-2 text-xs text-gray-600">Keine E-Mail bekommen? Bitte schau auch im Spam-Ordner nach.</p>
+                </div>
+            }
+            else if (_meldung is not null)
+            {
+                <p class="font-ptsans mt-6 rounded border border-red-700 bg-red-50 p-3 text-sm">@_meldung</p>
             }
 
             <!-- Das Wichtigste auf einen Blick -->
@@ -127,7 +157,7 @@
                         <p>@AnmeldeStand</p>
                         @if (AnmeldungMoeglich)
                         {
-                            <a href="#anmeldung" class="knopf-primaer mt-3">Zur Anmeldung</a>
+                            <a href="@($"{VeranstaltungLinks.Veranstaltung("", Slug)}#anmeldung")" class="knopf-primaer mt-3">Zur Anmeldung</a>
                         }
                     </dd>
                 </div>
@@ -149,24 +179,17 @@
                 <SectionBanner Titel="Anmeldung" />
                 <p class="font-ptsans -mt-6 mb-6 text-xs text-gray-600">
                     Schon angemeldet? Über den Link aus deiner Bestätigungs-E-Mail kannst du deine Anmeldung ändern.
-                    <a href="/veranstaltungen/link-anfordern" class="underline">Link verloren?</a>
+                    <a href="veranstaltungen/link-anfordern" class="underline">Link verloren?</a>
+                    @if (_v.KontaktEmail is not null)
+                    {
+                        <br />
+                        @:Probleme mit der Anmeldung? Schreib an <a href="mailto:@_v.KontaktEmail" class="break-all underline">@_v.KontaktEmail</a>.
+                    }
                 </p>
 
                 @if (_erfolgFuer is not null)
                 {
-                    <div class="font-ptsans rounded border border-green-700 bg-green-50 p-4 text-sm">
-                        @if (_v.DoubleOptIn)
-                        {
-                            <p class="font-bold">Fast geschafft!</p>
-                            <p class="mt-1">Wir haben dir eine E-Mail an <strong>@_erfolgFuer</strong> geschickt. Bitte bestätige deine Anmeldung über den Link darin. Erst dann ist sie gültig.</p>
-                        }
-                        else
-                        {
-                            <p class="font-bold">Danke!</p>
-                            <p class="mt-1">Wir haben dir eine E-Mail an <strong>@_erfolgFuer</strong> mit allen Details und einem Link zum Ändern deiner Anmeldung geschickt.</p>
-                        }
-                        <p class="mt-2 text-xs text-gray-600">Keine E-Mail bekommen? Bitte schau auch im Spam-Ordner nach.</p>
-                    </div>
+                    <Standardtext Text="Deine Anmeldung ist abgeschickt. Alles Weitere steht in der E-Mail, siehe Hinweis oben." />
                 }
                 else if (!AnmeldungMoeglich)
                 {
@@ -174,10 +197,6 @@
                 }
                 else
                 {
-                    @if (_meldung is not null)
-                    {
-                        <p class="font-ptsans mb-4 rounded border border-red-700 bg-red-50 p-3 text-sm">@_meldung</p>
-                    }
                     @if (_v.AnmeldungBis is { } bis)
                     {
                         <p class="font-ptsans mb-4 text-xs text-gray-600">Anmeldeschluss: @TerminText.Zeitpunkt(bis)</p>
@@ -205,7 +224,7 @@
                                     <span>
                                         Ich bin einverstanden, dass meine Angaben zur Organisation dieser Veranstaltung gespeichert und verarbeitet werden.
                                         Welche Daten das sind, wer sie sieht und wann wir sie löschen, steht in der
-                                        <a href="/Impressum#datenschutz-veranstaltungen" target="_blank" class="underline">Datenschutzerklärung</a>. *
+                                        <a href="Impressum#datenschutz-veranstaltungen" target="_blank" class="underline">Datenschutzerklärung</a>. *
                                     </span>
                                 </label>
                                 @FehlerText(nameof(AnmeldeEingabe.DatenschutzAkzeptiert))
@@ -299,7 +318,7 @@
                 break;
             case AnmeldeErgebnisArt.Ungueltig:
                 _fehler = ergebnis.Fehler;
-                _meldung = "Bitte prüfe deine Angaben.";
+                _meldung = "Bitte prüfe deine Angaben im Anmeldeformular unten.";
                 break;
             case AnmeldeErgebnisArt.Ausgebucht:
                 _meldung = ergebnis.VolleTage.Count == 0

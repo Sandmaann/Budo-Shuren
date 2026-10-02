@@ -40,7 +40,7 @@ Version 2.1.0.0 (Oktober 2026): Modul "Veranstaltungen"
 - Selbstverwaltung über einen persönlichen Link: Daten ändern, umbuchen, abmelden
 - Übersicht für Organisatoren: Teilnehmerliste mit Änderungen, ablehnen, manuell anmelden, CSV, Rundmails, Tag absagen
 - Benachrichtigungen an Organisatoren und weitere Adressen (sofort oder als Tageszusammenfassung)
-- Admins verwalten alle Veranstaltungen, Abteilungsleiter die ihrer Abteilung
+- Admins verwalten alle Veranstaltungen, Abteilungsleiter die ihrer Abteilung und die des Gesamtvereins
 - Eingeschaltet wird das Modul auf dem Server mit `Veranstaltungen:Aktiviert = true` in der `appsettings.json` (Standard: aus)
 
 Letzte Änderungen 20.08.2026

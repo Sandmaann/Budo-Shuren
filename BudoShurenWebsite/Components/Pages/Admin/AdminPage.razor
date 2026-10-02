@@ -28,11 +28,6 @@
             Website-Version: <strong>@AppVersion.Text</strong>
         </p>
 
-        @if (!string.IsNullOrWhiteSpace(statusMessage))
-        {
-            <StatusMessage ShowAsError="@showError" Message="@statusMessage" />
-        }
-
         <div class="mb-10 border border-black p-6">
             <h3 class="font-yuji mb-4 text-xl">Systemzustand</h3>
 
@@ -66,6 +61,7 @@
                     class="font-yuji h-10 transform bg-primary px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90 disabled:opacity-50">
                 Jetzt prüfen
             </button>
+            @Meldung(Bereich.Systemzustand)
         </div>
 
         <div class="mb-10 border border-black p-6">
@@ -96,6 +92,7 @@
                     class="font-yuji h-10 transform bg-primary px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90 disabled:opacity-50">
                 Migration ausführen
             </button>
+            @Meldung(Bereich.Migration)
         </div>
 
         <div class="border border-black p-6">
@@ -110,6 +107,7 @@
                     class="font-yuji h-10 transform bg-error px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90 disabled:opacity-50">
                 App stoppen
             </button>
+            @Meldung(Bereich.Stoppen)
         </div>
     </div>
 
@@ -216,6 +214,19 @@
     private HealthReport? systemzustand;
     private bool showError;
     private string? statusMessage;
+
+    /// <summary>Die Seite scrollt bei den Aktionen nicht: die Rückmeldung steht im Bereich des geklickten Buttons.</summary>
+    private enum Bereich { Systemzustand, Migration, Stoppen }
+
+    private Bereich meldungBereich;
+
+    private RenderFragment Meldung(Bereich bereich) => __builder =>
+    {
+        if (meldungBereich == bereich && !string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <div class="mt-4"><StatusMessage ShowAsError="@showError" Message="@statusMessage" /></div>
+        }
+    };
     private List<string> pendingMigrations = [];
 
     // Metrics for different time periods
@@ -269,6 +280,8 @@
 
     private async Task SystemzustandPruefenAsync()
     {
+        meldungBereich = Bereich.Systemzustand;
+        statusMessage = null;
         isBusy = true;
         try
         {
@@ -300,6 +313,7 @@
 
     private async Task RunMigrationAsync()
     {
+        meldungBereich = Bereich.Migration;
         if (!await EnsureAdminAsync())
         {
             return;
@@ -340,6 +354,7 @@
 
     private async Task StopApplicationAsync()
     {
+        meldungBereich = Bereich.Stoppen;
         if (!await EnsureAdminAsync())
         {
             return;

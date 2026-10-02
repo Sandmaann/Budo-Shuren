@@ -26,9 +26,10 @@ public class VeranstaltungRechteTests
     [InlineData("aikido-id", "Aikido", "Aikido", true)]     // Konto speichert den Namen (Registrierung)
     [InlineData("aikido-id", "Aikido", "AIKIDO", true)]     // Groß-/Kleinschreibung egal
     [InlineData("bujinkan", "Bujinkan", "Aikido", false)]   // fremde Abteilung
-    [InlineData(null, null, "Aikido", false)]               // Gesamtverein nur für Admins
+    [InlineData(null, null, "Aikido", true)]                // Gesamtverein
+    [InlineData(null, null, null, true)]                    // Gesamtverein auch ohne Abteilung im Konto
     [InlineData("aikido-id", "Aikido", null, false)]        // Konto ohne Abteilung
-    public void Abteilungsleiter_nur_eigene_Abteilung(string? abteilungId, string? abteilungName, string? kontoAbteilung, bool erwartet)
+    public void Abteilungsleiter_eigene_Abteilung_und_Gesamtverein(string? abteilungId, string? abteilungName, string? kontoAbteilung, bool erwartet)
     {
         VeranstaltungRechte.DarfVerwalten(Leiter(kontoAbteilung), abteilungId, abteilungName).ShouldBe(erwartet);
     }

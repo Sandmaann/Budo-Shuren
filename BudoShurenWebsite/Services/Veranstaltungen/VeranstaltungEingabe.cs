@@ -64,6 +64,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         public bool DoubleOptIn { get; set; } = true;
 
+        public bool PrivateVeranstaltung { get; set; } = true;
+
         public FormularFeldModus TelefonFeld { get; set; } = FormularFeldModus.Optional;
 
         public FormularFeldModus VereinFeld { get; set; } = FormularFeldModus.Optional;

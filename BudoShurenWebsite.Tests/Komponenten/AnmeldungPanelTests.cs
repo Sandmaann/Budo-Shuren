@@ -114,6 +114,7 @@ public class AnmeldungPanelTests : BunitContext
         Klick(panel, "Ablehnung zurücknehmen");
 
         panel.Markup.ShouldContain("Kein Platz mehr frei.");
+        panel.Markup.IndexOf("Kein Platz mehr frei.").ShouldBeGreaterThan(panel.Markup.IndexOf("Ablehnung zurücknehmen"));
         _service.Received(1).DetailAsync(VeranstaltungId, AnmeldungId, Admin, Arg.Any<CancellationToken>());
         _geaendert.ShouldBe(0);
     }
@@ -153,5 +154,7 @@ public class AnmeldungPanelTests : BunitContext
         Klick(panel, "Notiz speichern");
 
         panel.Markup.ShouldContain("Notiz gespeichert.");
+        // Rückmeldung beim Button, nicht oben im Dialog
+        panel.Markup.IndexOf("Notiz gespeichert.").ShouldBeGreaterThan(panel.Markup.IndexOf("Notiz speichern"));
     }
 }

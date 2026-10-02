@@ -135,6 +135,8 @@ public class VeranstaltungMailVorlagenTests
         mit.Html.ShouldContain("Nur &lt;b&gt;Mitglieder&lt;/b&gt;");
         ohne.Html.ShouldNotContain("border-left:3px solid #ccc;padding-left:12px;\">");
         ohne.Html.ShouldContain("mailto:seminar@example.org");
+        // Absender ist die System-Adresse (noreply); auf "antworte auf diese Mail" verweisen wir deshalb nicht
+        ohne.Html.ShouldNotContain("Antwort auf diese");
     }
 
     [Fact]

@@ -49,6 +49,9 @@ namespace BudoShurenWebsite.Models.Veranstaltungen
 
         public VeranstaltungSichtbarkeit Sichtbarkeit { get; set; } = VeranstaltungSichtbarkeit.Oeffentlich;
 
+        /// <summary>Zeigt auf der öffentlichen Seite den Hinweis "Dies ist eine private Veranstaltung".</summary>
+        public bool PrivateVeranstaltung { get; set; } = true;
+
         /// <summary>Gesetzt bei der ersten Veröffentlichung; danach ist der Slug gesperrt.</summary>
         public DateTime? ErstmalsVeroeffentlichtUtc { get; set; }
 

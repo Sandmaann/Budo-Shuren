@@ -120,9 +120,10 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
 
         var html = await client.GetStringAsync("/veranstaltungen", Abbruch);
 
-        html.ShouldContain("/veranstaltungen/oeffentlich");
-        html.ShouldNotContain("/veranstaltungen/geheim");
-        html.ShouldNotContain("/veranstaltungen/entwurf");
+        html.ShouldContain("href=\"veranstaltungen/oeffentlich\"");
+        html.ShouldNotContain("veranstaltungen/geheim");
+        html.ShouldNotContain("veranstaltungen/entwurf");
+        ModulLinks.SollenRelativSein(html);
     }
 
     [DatenbankFact]
@@ -140,7 +141,10 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         var html = await client.GetStringAsync("/veranstaltungen/herbstseminar", Abbruch);
 
         html.IndexOf("Erster <strong>Text</strong>").ShouldBeLessThan(html.IndexOf("galerie-raster"), "Reihenfolge der Bausteine");
-        html.ShouldContain($"src=\"/Account/Member/Filesave/GetImage/{bildId}\"");
+        html.ShouldContain($"src=\"Account/Member/Filesave/GetImage/{bildId}\"");
+        // "Zur Anmeldung" springt auf dieser Seite zum Formular, auch wenn die Website in einem Unterverzeichnis läuft
+        html.ShouldContain("href=\"veranstaltungen/herbstseminar#anmeldung\"");
+        ModulLinks.SollenRelativSein(html);
         html.ShouldContain("Training &lt;2025&gt;");
         html.ShouldContain("<link rel=\"canonical\" href=\"https://www.budo-shuren-dojo.de/veranstaltungen/herbstseminar\"");
         html.ShouldContain($"<meta property=\"og:image\" content=\"https://www.budo-shuren-dojo.de/Account/Member/Filesave/GetImage/{bildId}\"");
@@ -176,6 +180,12 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         html.ShouldContain("<strong>Programm</strong>");
         html.ShouldNotContain("<script>alert");
         html.ShouldContain("name=\"_handler\" value=\"anmeldung\"");
+        html.ShouldContain("Dies ist eine private Veranstaltung.");
+        html.ShouldContain("Probleme mit der Anmeldung? Schreib an <a href=\"mailto:seminar@example.org\"");
+
+        await using (var kontext = Datenbank.NeuerKontext())
+            await kontext.Veranstaltungen.ExecuteUpdateAsync(s => s.SetProperty(v => v.PrivateVeranstaltung, false), Abbruch);
+        (await client.GetStringAsync("/veranstaltungen/herbstseminar", Abbruch)).ShouldNotContain("private Veranstaltung");
 
         (await client.GetAsync("/veranstaltungen/geheim", Abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await client.GetAsync("/veranstaltungen/entwurf", Abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -224,9 +234,31 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
 
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain("Fast geschafft");
+        // Nach dem Absenden steht die Seite oben: die Rückmeldung auch
+        html.IndexOf("Fast geschafft").ShouldBeLessThan(html.IndexOf("id=\"anmeldung\""));
         await using var kontext = Datenbank.NeuerKontext();
         (await kontext.Anmeldungen.SingleAsync(Abbruch)).Status.ShouldBe(AnmeldungStatus.Unbestaetigt);
         (await kontext.EmailAusgang.SingleAsync(Abbruch)).Html.ShouldContain("http://localhost/veranstaltungen/bestaetigen/");
+    }
+
+    [DatenbankFact]
+    public async Task Erneute_Anmeldung_derselben_Adresse_bekommt_dieselbe_zutreffende_Meldung()
+    {
+        await AnlegenAsync();
+        await using var app = App();
+        using var client = app.CreateClient();
+        await AnmeldenUeberFormularAsync(client, TimeSpan.FromSeconds(10));
+        await using (var kontext = Datenbank.NeuerKontext())
+            await kontext.Anmeldungen.ExecuteUpdateAsync(s => s.SetProperty(a => a.Status, AnmeldungStatus.Angemeldet), Abbruch);
+
+        var (status, html) = await AnmeldenUeberFormularAsync(client, TimeSpan.FromSeconds(10));
+
+        status.ShouldBe(HttpStatusCode.OK);
+        html.ShouldContain("Fast geschafft");
+        html.ShouldContain("Warst du schon angemeldet, findest du in der E-Mail stattdessen den Link zu deiner bestehenden Anmeldung.");
+        await using var pruefen = Datenbank.NeuerKontext();
+        (await pruefen.Anmeldungen.SingleAsync(Abbruch)).Status.ShouldBe(AnmeldungStatus.Angemeldet);
+        (await pruefen.EmailAusgang.OrderBy(m => m.Id).LastAsync(Abbruch)).Html.ShouldContain("http://localhost/veranstaltungen/meine-anmeldung/");
     }
 
     [DatenbankFact]
@@ -239,6 +271,7 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         var (_, html) = await AnmeldenUeberFormularAsync(client, TimeSpan.FromSeconds(10), f => f["Formular.Eingabe.Vorname"] = "");
 
         html.ShouldContain("Bitte gib deinen Vornamen an.");
+        html.IndexOf("Bitte prüfe deine Angaben").ShouldBeLessThan(html.IndexOf("id=\"anmeldung\""));
         html.ShouldNotContain("Fast geschafft");
         (await AnmeldungenAsync()).ShouldBe(0);
     }

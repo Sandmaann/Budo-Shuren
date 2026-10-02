@@ -39,5 +39,5 @@ else if (Block.BildIds.Count > 0)
     private int Spalten => Math.Clamp(Block.BilderProReihe, 1, 6);
 
     // Relativ zur Website; absolute Adressen (Suchmaschinen, Link-Vorschau) baut VeranstaltungSeo mit der Basis-URL
-    private static string BildUrl(int id) => VeranstaltungSeo.BildUrl("/", id);
+    private static string BildUrl(int id) => VeranstaltungSeo.BildUrl("", id);
 }

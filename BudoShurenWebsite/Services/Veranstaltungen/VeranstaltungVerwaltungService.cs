@@ -18,7 +18,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         DateOnly? ErsterTag,
         DateOnly? LetzterTag,
         string? Abteilung,
-        int AktiveAnmeldungen,
         int BestaetigtePersonen,
         int UngeseheneAenderungen);
 
@@ -139,10 +138,11 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
             if (!benutzer.IstAdmin)
             {
-                // Ohne Abteilung im Konto darf ein Abteilungsleiter nichts verwalten (sonst träfe "AbteilungId == null" den Gesamtverein)
-                if (string.IsNullOrWhiteSpace(benutzer.Abteilung))
-                    return [];
-                abfrage = abfrage.Where(v => v.AbteilungId == benutzer.Abteilung || v.Abteilung!.Name == benutzer.Abteilung);
+                // Wie VeranstaltungRechte.DarfVerwalten: Gesamtverein und, falls im Konto hinterlegt, die eigene Abteilung
+                var eigene = benutzer.Abteilung;
+                abfrage = string.IsNullOrWhiteSpace(eigene)
+                    ? abfrage.Where(v => v.AbteilungId == null)
+                    : abfrage.Where(v => v.AbteilungId == null || v.AbteilungId == eigene || v.Abteilung!.Name == eigene);
             }
 
             var eintraege = await abfrage
@@ -154,7 +154,6 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     v.Tage.Where(t => !t.Abgesagt).Min(t => (DateOnly?)t.Datum),
                     v.Tage.Where(t => !t.Abgesagt).Max(t => (DateOnly?)t.Datum),
                     v.Abteilung != null ? v.Abteilung.Name : null,
-                    v.Anmeldungen.Count(a => a.Status == AnmeldungStatus.Unbestaetigt || a.Status == AnmeldungStatus.Angemeldet || a.Status == AnmeldungStatus.Warteliste),
                     v.Anmeldungen.Where(a => a.Status == AnmeldungStatus.Angemeldet).Sum(a => 1 + a.AnzahlBegleitpersonen),
                     v.Anmeldungen.Count(a => a.Ereignisse.Any(e => e.Akteur != EreignisAkteur.Admin && (a.AdminGesehenUtc == null || e.ZeitpunktUtc > a.AdminGesehenUtc)))))
                 .ToListAsync(abbruch);
@@ -178,7 +177,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         {
             var eingabe = new VeranstaltungEingabe { KontaktName = benutzer.Anzeigename };
 
-            // Abteilungsleiter legen immer für die eigene Abteilung an
+            // Abteilungsleiter starten mit der eigenen Abteilung; "Gesamtverein" können sie selbst wählen
             if (!benutzer.IstAdmin)
                 eingabe.AbteilungId = (await AbteilungenAsync(benutzer, abbruch)).FirstOrDefault()?.Id;
 
@@ -227,6 +226,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                 MaxTeilnehmerVorgabe = v.MaxTeilnehmerVorgabe,
                 MaxBegleitpersonen = v.MaxBegleitpersonen,
                 DoubleOptIn = v.DoubleOptIn,
+                PrivateVeranstaltung = v.PrivateVeranstaltung,
                 TelefonFeld = v.TelefonFeld,
                 VereinFeld = v.VereinFeld,
                 GraduierungFeld = v.GraduierungFeld,
@@ -771,6 +771,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             v.MaxTeilnehmerVorgabe = e.MaxTeilnehmerVorgabe;
             v.MaxBegleitpersonen = e.MaxBegleitpersonen;
             v.DoubleOptIn = e.DoubleOptIn;
+            v.PrivateVeranstaltung = e.PrivateVeranstaltung;
             v.TelefonFeld = e.TelefonFeld;
             v.VereinFeld = e.VereinFeld;
             v.GraduierungFeld = e.GraduierungFeld;

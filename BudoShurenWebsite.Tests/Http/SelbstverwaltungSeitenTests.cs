@@ -95,7 +95,8 @@ public class SelbstverwaltungSeitenTests(SqlServerFixture datenbank) : Datenbank
         var html = await client.GetStringAsync($"/veranstaltungen/meine-anmeldung/{AnmeldeToken.Erzeugen().Klartext}", Abbruch);
 
         html.ShouldContain("Link ungültig");
-        html.ShouldContain("/veranstaltungen/link-anfordern");
+        html.ShouldContain("href=\"veranstaltungen/link-anfordern\"");
+        ModulLinks.SollenRelativSein(html);
     }
 
     [DatenbankFact]

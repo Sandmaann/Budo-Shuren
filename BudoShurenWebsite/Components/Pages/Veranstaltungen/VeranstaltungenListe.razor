@@ -31,7 +31,7 @@
                 @foreach (var e in _eintraege)
                 {
                     <li class="rounded border border-gray-200 p-4 hover:bg-gray-50">
-                        <a href="@($"/veranstaltungen/{Uri.EscapeDataString(e.Slug)}")" class="block">
+                        <a href="@VeranstaltungLinks.Veranstaltung("", e.Slug)" class="block">
                             <p class="font-ptsans text-xs uppercase tracking-wider text-gray-600">
                                 @TerminText.Zeitraum([e.ErsterTag, e.LetzterTag])@(e.Ort is null ? "" : $" · {e.Ort}")@(e.Abteilung is null ? "" : $" · {e.Abteilung}")
                             </p>

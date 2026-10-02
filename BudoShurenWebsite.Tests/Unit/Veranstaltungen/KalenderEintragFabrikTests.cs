@@ -12,13 +12,15 @@ public class KalenderEintragFabrikTests
 
     private static Veranstaltung Veranstaltung(
         VeranstaltungStatus status = VeranstaltungStatus.Veroeffentlicht,
-        VeranstaltungSichtbarkeit sichtbarkeit = VeranstaltungSichtbarkeit.Oeffentlich) => new()
+        VeranstaltungSichtbarkeit sichtbarkeit = VeranstaltungSichtbarkeit.Oeffentlich,
+        bool warVeroeffentlicht = true) => new()
     {
         Titel = "Herbstseminar",
         Slug = "herbstseminar",
         Ort = "Dojo",
         Status = status,
-        Sichtbarkeit = sichtbarkeit
+        Sichtbarkeit = sichtbarkeit,
+        ErstmalsVeroeffentlichtUtc = warVeroeffentlicht && status != VeranstaltungStatus.Entwurf ? Jetzt : null
     };
 
     private static VeranstaltungsTag Tag(bool abgesagt = false, string? titel = null) => new()
@@ -42,6 +44,14 @@ public class KalenderEintragFabrikTests
         KalenderEintragFabrik.GehoertInDenKalender(Veranstaltung(status), Tag()).ShouldBe(erwartet);
     }
 
+    [Theory]
+    [InlineData(VeranstaltungStatus.Archiviert)]
+    [InlineData(VeranstaltungStatus.Abgeschlossen)]
+    public void Nie_veroeffentlichte_Entwuerfe_kommen_auch_archiviert_nicht_in_den_Kalender(VeranstaltungStatus status)
+    {
+        KalenderEintragFabrik.GehoertInDenKalender(Veranstaltung(status, warVeroeffentlicht: false), Tag()).ShouldBeFalse();
+    }
+
     [Fact]
     public void Nur_per_Link_sichtbare_Veranstaltungen_und_abgesagte_Tage_nicht()
     {
@@ -50,7 +60,7 @@ public class KalenderEintragFabrikTests
     }
 
     [Fact]
-    public void Neuer_Eintrag_uebernimmt_Termin_Ort_Link_und_Verknuepfung()
+    public void Neuer_Eintrag_uebernimmt_Termin_Ort_Kurzbeschreibung_und_Verknuepfung()
     {
         var eintrag = new AppointmentData();
 
@@ -62,7 +72,7 @@ public class KalenderEintragFabrikTests
         eintrag.Location.ShouldBe("Dojo");
         eintrag.StartTime.ShouldBe(new DateTime(2026, 11, 14, 10, 0, 0));
         eintrag.EndTime.ShouldBe(new DateTime(2026, 11, 14, 16, 30, 0));
-        eintrag.Description.ShouldContain("/veranstaltungen/herbstseminar");
+        eintrag.Description.ShouldBeEmpty("ohne Kurzbeschreibung; der Link steht im Kalender, nicht im Text");
         eintrag.Abteilung.ShouldBe(KalenderEintragFabrik.AbteilungGesamtverein);
         eintrag.ShowInMonth.ShouldBeTrue();
         eintrag.Created.ShouldBe(Jetzt);

@@ -24,8 +24,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
     }
 
     /// <summary>
-    /// Wer Veranstaltungen verwalten darf: Admins alle, Abteilungsleiter nur die ihrer eigenen Abteilung.
-    /// Veranstaltungen ohne Abteilung (Gesamtverein) verwalten nur Admins.
+    /// Wer Veranstaltungen verwalten darf: Admins alle, Abteilungsleiter die ihrer eigenen Abteilung
+    /// und die des Gesamtvereins (ohne Abteilung).
     /// </summary>
     public static class VeranstaltungRechte
     {
@@ -36,7 +36,11 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         {
             if (benutzer.IstAdmin)
                 return true;
-            if (!benutzer.IstAbteilungsleiter || string.IsNullOrWhiteSpace(benutzer.Abteilung))
+            if (!benutzer.IstAbteilungsleiter)
+                return false;
+            if (string.IsNullOrWhiteSpace(abteilungId))
+                return true;
+            if (string.IsNullOrWhiteSpace(benutzer.Abteilung))
                 return false;
 
             // ApplicationUser.Abteilung enthält bei der Registrierung den Namen, an anderen Stellen die Id

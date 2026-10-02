@@ -1,5 +1,6 @@
 ﻿@using Syncfusion.Blazor;
 @using Syncfusion.Blazor.Data;
+@using BudoShurenWebsite.Services.Veranstaltungen
 
 @inherits DataAdaptor<AppointmentData>
 
@@ -39,17 +40,21 @@
             if (Abteilung != null && IsWeek != null)
             {
                 using var context = contextFactory.CreateDbContext();
+                List<AppointmentData> eintraege;
                 if (Abteilung == "Alle")
                 {
-                    DataSource = await context.Appointments.Where(x => (IsWeek == true && x.ShowInWeek) || IsWeek == false && x.ShowInMonth).ToListAsync();
+                    eintraege = await context.Appointments.Where(x => (IsWeek == true && x.ShowInWeek) || IsWeek == false && x.ShowInMonth).ToListAsync();
                 }
                 else
                 {
-                    DataSource = await context.Appointments.Where(x =>
+                    eintraege = await context.Appointments.Where(x =>
                         (x.Abteilung == Abteilung || x.Abteilung == "Verein") &&
                         ((IsWeek == true && x.ShowInWeek) || IsWeek == false && x.ShowInMonth)
                     ).ToListAsync();
                 }
+                // Für die Links von Veranstaltungsterminen zur Veranstaltung
+                await KalenderAbgleich.VeranstaltungenZuordnenAsync(context, eintraege);
+                DataSource = eintraege;
             }
             else
                 return new List<AppointmentData>();
