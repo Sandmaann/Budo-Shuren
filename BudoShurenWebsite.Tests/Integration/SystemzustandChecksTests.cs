@@ -111,11 +111,18 @@ public class SystemzustandChecksTests(SqlServerFixture datenbank) : DatenbankTes
     public async Task Mail_Warteschlange_ueberfaellig_ist_ungesund_fehlgeschlagen_eingeschraenkt()
     {
         var check = new MailWarteschlangeCheck(Fabrik, _zeit);
-        EmailAusgang Mail(EmailStatus status, DateTime faelligAb) =>
-            new() { An = "x@example.org", Betreff = "B", Html = "H", Status = status, ErstelltUtc = faelligAb, FaelligAbUtc = faelligAb };
+        EmailAusgang Mail(EmailStatus status, DateTime faelligAb, int versuche = 0) =>
+            new() { An = "x@example.org", Betreff = "B", Html = "H", Status = status, Versuche = versuche, ErstelltUtc = faelligAb, FaelligAbUtc = faelligAb };
 
         await SpeichernAsync(Mail(EmailStatus.Wartend, Jetzt.AddMinutes(-5)));
         (await PruefenAsync(check)).Status.ShouldBe(HealthStatus.Healthy);
+
+        // SMTP nicht erreichbar: der Versand verschiebt die Mail nach hinten, sie liegt also nicht fest, wird aber gemeldet
+        await SpeichernAsync(Mail(EmailStatus.Wartend, Jetzt.AddMinutes(10), versuche: 2));
+        var wiederholung = await PruefenAsync(check);
+        wiederholung.Status.ShouldBe(HealthStatus.Degraded);
+        wiederholung.Data["wiederholung"].ShouldBe(1);
+        wiederholung.Description.ShouldNotBeNull().ShouldContain("1 Mail(s) werden nach einem Fehler erneut versucht");
 
         await SpeichernAsync(Mail(EmailStatus.Fehlgeschlagen, Jetzt.AddDays(-1)), Mail(EmailStatus.Fehlgeschlagen, Jetzt.AddDays(-10)));
         var eingeschraenkt = await PruefenAsync(check);

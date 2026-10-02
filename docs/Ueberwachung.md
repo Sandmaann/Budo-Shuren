@@ -23,7 +23,7 @@ Anonym ist nichts erreichbar: Ohne Admin-Login und ohne passenden Token kommt `4
 |---|---|---|
 | Datenbank | keine Verbindung | ausstehende Migrationen |
 | Hintergrunddienste | ein Dienst hat sich nicht gemeldet oder hängt (kein Durchlauf in der erwarteten Zeit) | letzter Durchlauf mit Fehler, oder Dienst per Schalter abgeschaltet |
-| Mail-Warteschlange | fällige Mails liegen länger als 30 Minuten | in den letzten 7 Tagen endgültig fehlgeschlagene Mails |
+| Mail-Warteschlange | fällige Mails liegen länger als 30 Minuten (Versand steht) | Mails werden nach einem Fehler erneut versucht (z. B. SMTP nicht erreichbar), oder in den letzten 7 Tagen endgültig fehlgeschlagene Mails |
 
 Erwartete Abstände der Hintergrunddienste:
 - Mailversand: etwa 31 Minuten
