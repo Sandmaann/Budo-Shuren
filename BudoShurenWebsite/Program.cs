@@ -283,6 +283,37 @@ namespace BudoShurenWebsite
             }
         }
 
+        /// <summary>
+        /// Legt die Tabelle DataProtectionKeys per Migration an, falls sie fehlt (z. B. bei einer neuen Datenbank).
+        /// Ist sie schon da, wird die Migration übersprungen: Auf älteren Datenbanken und in den Tests wurde
+        /// die Tabelle ohne Eintrag in der Migrationshistorie angelegt, Migrate() würde dort an CREATE TABLE scheitern.
+        /// </summary>
+        private static void DataProtectionTabelleSicherstellen(IServiceProvider services, Logger logger)
+        {
+            try
+            {
+                var keyContext = services.GetRequiredService<DataProtectionKeyContext>();
+                var vorhanden = keyContext.Database
+                    .SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM sys.tables WHERE name = 'DataProtectionKeys'")
+                    .Single() > 0;
+
+                if (vorhanden)
+                {
+                    logger.Info("Tabelle DataProtectionKeys vorhanden, Migration übersprungen");
+                    return;
+                }
+
+                keyContext.Database.Migrate();
+                logger.Info("Tabelle DataProtectionKeys per Migration angelegt");
+                Console.WriteLine("Tabelle DataProtectionKeys per Migration angelegt");
+            }
+            catch (Exception ex)
+            {
+                logger.Log(NLog.LogLevel.Error, ex, "Fehler beim Anlegen der Tabelle DataProtectionKeys");
+                Console.WriteLine("Fehler beim Anlegen der Tabelle DataProtectionKeys: " + ex.Message);
+            }
+        }
+
         private static void MigrateDatabase(WebApplication host, Logger logger)
         {
             using var scope = host.Services.CreateScope();
@@ -306,6 +337,8 @@ namespace BudoShurenWebsite
                 Console.WriteLine("Fehler beim Ausführen der Datenbankmigration: " + ex.Message);
             }
 
+            DataProtectionTabelleSicherstellen(services, logger);
+
             try
             {
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
@@ -316,6 +349,36 @@ namespace BudoShurenWebsite
             {
                 logger.Log(NLog.LogLevel.Error, ex, "Fehler beim Initialisieren der Rollen");
                 Console.WriteLine("Fehler beim Initialisieren der Rollen: " + ex.Message);
+            }
+
+            AdminSicherstellen(services, host.Configuration, logger);
+        }
+
+        /// <summary>Legt einen Admin aus "AdminStart" an, falls es keinen gibt (siehe AdminBenutzerAnlage).</summary>
+        private static void AdminSicherstellen(IServiceProvider services, IConfiguration konfiguration, Logger logger)
+        {
+            try
+            {
+                var optionen = konfiguration.GetSection(AdminStartOptionen.Abschnitt).Get<AdminStartOptionen>() ?? new AdminStartOptionen();
+                var ergebnis = AdminBenutzerAnlage.SicherstellenAsync(
+                    services.GetRequiredService<UserManager<ApplicationUser>>(),
+                    optionen,
+                    services.GetRequiredService<TimeProvider>()).GetAwaiter().GetResult();
+
+                var stufe = ergebnis.Status switch
+                {
+                    AdminAnlageStatus.Fehler => NLog.LogLevel.Error,
+                    AdminAnlageStatus.NichtKonfiguriert => NLog.LogLevel.Warn,
+                    _ => NLog.LogLevel.Info
+                };
+                logger.Log(stufe, ergebnis.Meldung);
+                if (ergebnis.Status != AdminAnlageStatus.AdminVorhanden)
+                    Console.WriteLine(ergebnis.Meldung);
+            }
+            catch (Exception ex)
+            {
+                logger.Log(NLog.LogLevel.Error, ex, "Fehler beim Anlegen des Admins");
+                Console.WriteLine("Fehler beim Anlegen des Admins: " + ex.Message);
             }
         }
 

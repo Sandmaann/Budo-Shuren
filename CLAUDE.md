@@ -36,6 +36,8 @@ The connection string in `appsettings.json` points to a local named SQL Server i
 
 ```sh
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost\SQLEXPRESS;Database=BudoShurenDev;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+dotnet user-secrets set "AdminStart:Email" "<email>"        # first admin on a new DB, see Architecture/Startup
+dotnet user-secrets set "AdminStart:Passwort" "<password>"
 ```
 
 ## Tests
@@ -53,11 +55,11 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
 - With `ASPNETCORE_ENVIRONMENT=Test`, `Program.cs` configures NLog in code (warnings to the console) instead of loading `nlog.config`, so tests and `dotnet ef` never log to BetterStack. Don't switch this to a config file: if the file is missing, NLog silently falls back to `nlog.config`.
 - GitHub Actions (`.github/workflows/tests.yml`) runs all tests including integration tests on every PR and push to `main`.
 - `ModellTests` fails if the EF model changed without a migration.
-- `DataProtectionKeyContext` has no migrations; the test fixture creates the `DataProtectionKeys` table itself.
+- The test fixture creates the `DataProtectionKeys` table itself (without a migration history entry).
 
 ## Architecture
 
-- **Startup (`Program.cs`)**: registers all services, then on every start runs `Database.Migrate()` and seeds the roles from `Global/Roles.cs` (Admin, Abteilungsleiter, Editor, Mitglied, Gast). Culture is forced to `de-DE`. Logging is NLog (`nlog.config`, BetterStack target), not the default providers.
+- **Startup (`Program.cs`)**: registers all services, then on every start runs `Database.Migrate()`, creates the `DataProtectionKeys` table via the `DataProtectionKeyContext` migration only if it is missing (older DBs have it without history entry), and seeds the roles from `Global/Roles.cs` (Admin, Abteilungsleiter, Editor, Mitglied, Gast). If no user has the Admin role, `Services/AdminBenutzerAnlage` creates one from the config section `AdminStart` (`Email`, `Passwort`; set via user secrets, never in `appsettings.json`) or promotes an existing user with that email; without that section it only logs a warning. Culture is forced to `de-DE`. Logging is NLog (`nlog.config`, BetterStack target), not the default providers.
 - **Authorization**: Identity with `RequireConfirmedAccount`. Policies: `Aktiviert` (custom `VerifiedUserHandler` — checks `ApplicationUser.Verified`, i.e. admin-approved), `NotGuest`, `AdminOnly`. Member/admin management pages live under `Components/Account/Pages/Member/` (route prefix `/Account/Member/...`); `Ausgemustert/` holds retired Identity pages.
 - **Data access**: `ApplicationDbContext` is registered both as a factory and scoped. Syncfusion components (`SfGrid`, `SfSchedule`) get their data through custom `DataAdaptor` subclasses in `Data/*Adaptor.cs`, which do search/sort/paging in memory via `DataOperations`. Separate `DataProtectionKeyContext` persists data-protection keys in the DB.
 - **Mail** (`Services/Mail/`): all SMTP traffic goes through `IMailTransport` (`MailKitTransport`, credentials from the `EmailSettings` row with `IsMain`; sender is always that system address). Two ways to send:

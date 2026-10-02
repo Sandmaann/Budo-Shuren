@@ -78,8 +78,8 @@ public sealed class SqlServerFixture : IAsyncLifetime
     }
 
     /// <summary>
-    /// Für DataProtectionKeyContext gibt es keine Migration. Auf einer frischen Datenbank
-    /// fehlt die Tabelle DataProtectionKeys deshalb und wird hier angelegt.
+    /// Auf einer frischen Datenbank fehlt die Tabelle DataProtectionKeys, bis die App sie beim Start
+    /// anlegt. Tests ohne App-Start brauchen sie trotzdem, deshalb wird sie hier angelegt.
     /// </summary>
     private async Task DataProtectionTabelleAnlegenAsync()
     {
