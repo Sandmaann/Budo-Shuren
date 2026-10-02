@@ -105,8 +105,6 @@
             <Standardtext Text="Falls Sie vermuten, dass von dieser Website aus eines Ihrer Schutzrechte verletzt wird, teilen Sie dies bitte umgehend per E-Mail an info [ad] iwama - aikido - augsburg [punkt] de mit, damit zügig Abhilfe geschafft werden kann.﻿" />
             <br />
             <Standardtext Text="Unsere Webseite enthält Links zu externen Webseiten Dritter sowie eingebettete YouTube-Videos, auf deren Inhalte wir keinen Einfluss haben. Für die Inhalte der verlinkten Seiten und Videos ist stets der jeweilige Anbieter oder Betreiber verantwortlich. Wir übernehmen keine Haftung für die Richtigkeit, Vollständigkeit oder Verfügbarkeit dieser Inhalte. Zum Zeitpunkt der Verlinkung wurden die externen Inhalte auf mögliche Rechtsverstöße überprüft, illegale Inhalte waren zu diesem Zeitpunkt nicht erkennbar." />
-            <br />
-            <Standardtext Text="@version" />
         </div>
 
         <SectionBanner Titel="Urheber- und Nutzungsrechte" />
@@ -129,11 +127,14 @@
             <br />
             <Weiterleitung Link="https://www.genialpersonal.de/" Text="GenialPersonal - Eine geniale Personalsoftware" NewWindow="true" />
         </div>
+
+        <div class="mt-10">
+            <Standardtext Text="@($"Website-Version {AppVersion.Text}")" />
+        </div>
     </div>
 </div>
 
 @code {
-    private string version = string.Empty;
     private bool IsLoading { get; set; } = false;
     private string ErrorMessage { get; set; } = string.Empty;
 
@@ -148,11 +149,6 @@
         Telefon = "",
         SortOrder = 0,
     };
-
-    protected override void OnInitialized()
-    {
-        version = "Version: " + System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ?? "unbekannt";
-    }
 
     protected override void OnAfterRender(bool firstRender)
     {

@@ -1,10 +1,12 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Models;
 using BudoShurenWebsite.Models.Enums;
 using BudoShurenWebsite.Models.Veranstaltungen;
 using BudoShurenWebsite.Services.Veranstaltungen;
 using BudoShurenWebsite.Tests.Infrastruktur;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
 
@@ -178,6 +180,37 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         (await client.GetAsync("/veranstaltungen/geheim", Abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await client.GetAsync("/veranstaltungen/entwurf", Abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.GetAsync("/veranstaltungen/gibt-es-nicht", Abbruch)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [DatenbankFact]
+    public async Task Eingeloggte_Benutzer_bekommen_Name_und_Email_vorbelegt()
+    {
+        await AnlegenAsync();
+        await using var app = App();
+        string userId;
+        using (var scope = app.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = new ApplicationUser { UserName = "mitglied", Email = "mitglied@example.org", Vorname = "Mia", Name = "Mitglied", Verified = true };
+            (await userManager.CreateAsync(user)).Succeeded.ShouldBeTrue();
+            userId = user.Id;
+        }
+
+        using var gast = app.CreateClient();
+        var gastAntwort = await gast.GetAsync("/veranstaltungen/herbstseminar", Abbruch);
+        (await gastAntwort.Content.ReadAsStringAsync(Abbruch)).ShouldNotContain("mitglied@example.org");
+
+        using var mitglied = app.CreateClient();
+        mitglied.DefaultRequestHeaders.Add(TestAnmeldung.Header, userId);
+        var antwort = await mitglied.GetAsync("/veranstaltungen/herbstseminar", Abbruch);
+        var html = await antwort.Content.ReadAsStringAsync(Abbruch);
+
+        antwort.StatusCode.ShouldBe(HttpStatusCode.OK);
+        html.ShouldContain("value=\"Mia\"");
+        html.ShouldContain("value=\"Mitglied\"");
+        html.ShouldContain("value=\"mitglied@example.org\"");
+        // Persönliche Daten in der Seite: sie darf nicht gecacht werden (setzt Antiforgery)
+        antwort.Headers.CacheControl.ShouldNotBeNull().NoStore.ShouldBeTrue();
     }
 
     [DatenbankFact]

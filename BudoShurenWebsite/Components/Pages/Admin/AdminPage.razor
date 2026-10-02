@@ -21,6 +21,10 @@
     <div class="mx-10">
         <SectionBanner Titel="Administration" />
 
+        <p class="font-ptsans mb-4 text-sm tracking-wider text-black">
+            Website-Version: <strong>@AppVersion.Text</strong>
+        </p>
+
         @if (!string.IsNullOrWhiteSpace(statusMessage))
         {
             <StatusMessage ShowAsError="@showError" Message="@statusMessage" />

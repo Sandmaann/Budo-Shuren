@@ -1,4 +1,5 @@
 using System.Net;
+using BudoShurenWebsite.Global;
 using BudoShurenWebsite.Tests.Infrastruktur;
 
 namespace BudoShurenWebsite.Tests.Http;
@@ -27,5 +28,16 @@ public class AppStartTests(SqlServerFixture datenbank) : DatenbankTest(datenbank
 
         ziele.ShouldNotBeEmpty("die NLog-Konfiguration für die Umgebung Test wurde nicht geladen");
         ziele.ShouldNotContain(ziel => ziel.GetType().FullName!.Contains("BetterStack"));
+    }
+
+    [DatenbankFact]
+    public async Task Impressum_zeigt_die_Version_der_Website()
+    {
+        await using var app = new TestWebAppFactory(Datenbank.Verbindung);
+        using var client = app.CreateClient();
+
+        var html = await client.GetStringAsync("/Impressum", TestContext.Current.CancellationToken);
+
+        html.ShouldContain($"Website-Version {AppVersion.Text}");
     }
 }

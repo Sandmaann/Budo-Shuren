@@ -4,6 +4,7 @@
 @using BudoShurenWebsite.Components.Shared.Veranstaltungen
 @using BudoShurenWebsite.Models.Enums
 @using BudoShurenWebsite.Services.Veranstaltungen
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.RateLimiting
 
 @attribute [EnableRateLimiting(VeranstaltungRateLimit.Formulare)]
@@ -13,6 +14,7 @@
 @inject FormularSchutz Schutz
 @inject IOptions<VeranstaltungenOptionen> Optionen
 @inject NavigationManager NavigationManager
+@inject UserManager<ApplicationUser> UserManager
 
 <PageTitle>@(_v?.Titel ?? "Veranstaltung") | Budo Shuren Dojo</PageTitle>
 @if (_v is not null)
@@ -259,7 +261,21 @@
         Formular.Tage = Formular.Tage.Where(w => _v.AktiveTage.Any(t => t.Id == w.Id)).ToList();
 
         if (HttpContext is null || !HttpMethods.IsPost(HttpContext.Request.Method))
+        {
             Formular.Zeitstempel = Schutz.Zeitstempel();
+            await KontoDatenVorbelegenAsync(Formular.Eingabe);
+        }
+    }
+
+    /// <summary>Eingeloggte Benutzer: Name und E-Mail aus dem Konto vorbelegen (nur beim Laden, nicht nach dem Absenden).</summary>
+    private async Task KontoDatenVorbelegenAsync(AnmeldeEingabe eingabe)
+    {
+        if (HttpContext?.User.Identity?.IsAuthenticated != true
+            || await UserManager.GetUserAsync(HttpContext.User) is not { } benutzer)
+            return;
+
+        // Gecacht wird die Seite nicht: wegen des Antiforgery-Tokens im Formular setzt ASP.NET "no-store"
+        AnmeldeVorbelegung.Uebernehmen(eingabe, benutzer);
     }
 
     private async Task AbsendenAsync()
