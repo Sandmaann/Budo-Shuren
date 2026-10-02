@@ -26,11 +26,12 @@ namespace BudoShurenWebsite.Services
 
         /// <summary>
         /// Speichert einen Beitrag (neu oder Update).
+        /// Übernimmt neu hochgeladene Bilder und löscht die Bilddaten entfernter Bilder.
         /// </summary>
         Task Speichern(AktuellesBeitrag beitrag);
 
         /// <summary>
-        /// Löscht einen Beitrag.
+        /// Löscht einen Beitrag samt seinen Bilddaten (sofern nicht anderswo verwendet).
         /// </summary>
         Task Loeschen(int id);
 

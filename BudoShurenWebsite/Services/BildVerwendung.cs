@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 namespace BudoShurenWebsite.Services
 {
     /// <summary>
-    /// Wo die Website Bilder (DbImage) verwendet, und das Übernehmen vorläufiger Uploads (DbImage.VorlaeufigSeitUtc).
+    /// Wo die Website Bilder (DbImage) verwendet, das Übernehmen vorläufiger Uploads (DbImage.VorlaeufigSeitUtc)
+    /// und das Löschen nicht mehr verwendeter Bilder.
     /// Die Editoren von Aktuelles und Veranstaltungen laden Bilder sofort hoch, verwendet werden sie erst mit dem Speichern.
     /// </summary>
     public static class BildVerwendung
@@ -19,6 +20,20 @@ namespace BudoShurenWebsite.Services
                 .Concat(kontext.WissenBloecke.Where(w => w.BildId != null).Select(w => w.BildId!.Value))
                 .Concat(kontext.AktuellesBilder.Select(a => a.BildId))
                 .Concat(kontext.VeranstaltungBilder.Where(b => b.Block!.VeranstaltungId != ohneVeranstaltungId).Select(b => b.BildId));
+
+        /// <summary>
+        /// Löscht die Bilddaten, sofern nirgends mehr auf sie verwiesen wird (nach dem Speichern bzw. Löschen des Inhalts aufrufen).
+        /// Prüfung und Löschen in einer Anweisung: bei Aktuelles würde das Löschen eines verwendeten Bildes die Verwendung mitlöschen (Cascade).
+        /// </summary>
+        public static async Task UnverwendeteLoeschenAsync(ApplicationDbContext kontext, IReadOnlyCollection<int> bildIds, CancellationToken abbruch = default)
+        {
+            if (bildIds.Count == 0)
+                return;
+            var verwendet = VerwendeteBildIds(kontext);
+            await kontext.Images
+                .Where(i => bildIds.Contains(i.Id) && !verwendet.Contains(i.Id))
+                .ExecuteDeleteAsync(abbruch);
+        }
 
         /// <summary>
         /// Markiert die Bilder als gespeichert, damit BildAufraeumJob sie nicht mehr löscht.

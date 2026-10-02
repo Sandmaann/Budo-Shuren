@@ -70,8 +70,11 @@ namespace BudoShurenWebsite.Services
 
         public async Task Speichern(AktuellesBeitrag beitrag)
         {
-            // Eine Transaktion: die neu hochgeladenen Bilder gelten genau dann als gespeichert, wenn der Beitrag gespeichert ist
+            // Eine Transaktion: Bilder gelten genau dann als gespeichert bzw. werden genau dann gelöscht, wenn der Beitrag gespeichert ist
             await using var transaktion = await _context.Database.BeginTransactionAsync();
+
+            // Stand in der Datenbank, nicht im bearbeiteten Objekt: daraus ergibt sich, welche Bilder entfernt wurden
+            var bisherigeBildIds = beitrag.Id == 0 ? [] : await BildIdsAsync(beitrag.Id);
 
             if (beitrag.Id == 0)
             {
@@ -85,7 +88,9 @@ namespace BudoShurenWebsite.Services
             }
 
             await _context.SaveChangesAsync();
-            await BildVerwendung.AlsGespeichertMarkierenAsync(_context, beitrag.Bloecke.SelectMany(b => b.Bilder).Select(b => b.BildId).Distinct().ToList());
+            var bildIds = beitrag.Bloecke.SelectMany(b => b.Bilder).Select(b => b.BildId).Distinct().ToList();
+            await BildVerwendung.AlsGespeichertMarkierenAsync(_context, bildIds);
+            await BilderLoeschenAsync(bisherigeBildIds.Except(bildIds).ToList());
             await transaktion.CommitAsync();
         }
 
@@ -94,9 +99,26 @@ namespace BudoShurenWebsite.Services
             var beitrag = await _context.AktuellesBeitraege.FindAsync(id);
             if (beitrag != null)
             {
+                await using var transaktion = await _context.Database.BeginTransactionAsync();
+                var bildIds = await BildIdsAsync(id);
+                // Blöcke und ihre Bildzuordnungen löscht die Datenbank mit (Cascade), die Bilddaten danach BilderLoeschenAsync
                 _context.AktuellesBeitraege.Remove(beitrag);
                 await _context.SaveChangesAsync();
+                await BilderLoeschenAsync(bildIds);
+                await transaktion.CommitAsync();
             }
+        }
+
+        private Task<List<int>> BildIdsAsync(int beitragId) =>
+            _context.AktuellesBilder.Where(b => b.Block!.BeitragId == beitragId).Select(b => b.BildId).Distinct().ToListAsync();
+
+        /// <summary>Löscht die Bilddaten entfernter Bilder, sofern sie nirgends mehr verwendet werden.</summary>
+        private async Task BilderLoeschenAsync(IReadOnlyCollection<int> bildIds)
+        {
+            await BildVerwendung.UnverwendeteLoeschenAsync(_context, bildIds);
+            // Der Kontext lebt so lange wie die Seite: gelöschte Bilder nicht weiter verfolgen
+            foreach (var eintrag in _context.ChangeTracker.Entries<DbImage>().Where(e => bildIds.Contains(e.Entity.Id)).ToList())
+                eintrag.State = EntityState.Detached;
         }
 
         public async Task<bool> SlugExists(string slug, int? excludeId = null)

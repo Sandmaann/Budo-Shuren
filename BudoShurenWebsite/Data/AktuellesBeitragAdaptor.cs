@@ -10,15 +10,18 @@ namespace BudoShurenWebsite.Data
     {
         private readonly UserService _userService;
         private readonly ApplicationDbContext _dbContext;
+        private readonly IAktuellesService _aktuellesService;
         private readonly ILogger<AktuellesBeitragAdaptor> _logger;
 
         public AktuellesBeitragAdaptor(
             UserService userService,
             ApplicationDbContext dbContext,
+            IAktuellesService aktuellesService,
             ILogger<AktuellesBeitragAdaptor> logger)
         {
             _userService = userService;
             _dbContext = dbContext;
+            _aktuellesService = aktuellesService;
             _logger = logger;
         }
 
@@ -86,12 +89,8 @@ namespace BudoShurenWebsite.Data
                     throw new Exception("Ungültige ID");
                 }
 
-                var entity = await _dbContext.AktuellesBeitraege.FindAsync(id);
-                if (entity != null)
-                {
-                    _dbContext.AktuellesBeitraege.Remove(entity);
-                    await _dbContext.SaveChangesAsync();
-                }
+                // Über den Service, damit auch die Bilddaten des Beitrags gelöscht werden
+                await _aktuellesService.Loeschen(id);
 
                 return value;
             }
