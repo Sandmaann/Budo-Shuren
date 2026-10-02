@@ -329,7 +329,7 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
                     return VerwaltungsErgebnis.MitFehlern(pruefung);
             }
 
-            return await SpeichernMitKalenderAsync(kontext, v, abbruch);
+            return await SpeichernMitKalenderAsync(kontext, v, abbruch, GalerieBildIds(eingabe.Bloecke));
         }
 
         public async Task<VerwaltungsErgebnis> VeroeffentlichenAsync(int id, VerwaltungsBenutzer benutzer, CancellationToken abbruch = default)
@@ -540,7 +540,8 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
             }
 
             await using var kontext = await _dbFactory.CreateDbContextAsync(abbruch);
-            var bild = new DbImage { Title = Path.GetFileName(dateiname), ImageData = jpeg, ContentType = "image/jpeg", CreatedAt = JetztUtc };
+            // Vorläufig bis zum Speichern der Veranstaltung, sonst räumt BildAufraeumJob es weg
+            var bild = new DbImage { Title = Path.GetFileName(dateiname), ImageData = jpeg, ContentType = "image/jpeg", CreatedAt = JetztUtc, VorlaeufigSeitUtc = JetztUtc };
             kontext.Images.Add(bild);
             await kontext.SaveChangesAsync(abbruch);
             return VerwaltungsErgebnis.Ok(bild.Id);
@@ -695,19 +696,19 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         }
 
         /// <summary>
-        /// Schreibt die Bausteine neu. Neue Bilder müssen frisch hochgeladen sein (nirgends sonst verwendet): sonst ließe sich
-        /// über die öffentliche Seite jedes Bild der Website freigeben. Entfernte Bilder werden samt Bilddaten gelöscht.
+        /// Schreibt die Bausteine neu. Neue Bilder müssen frisch hochgeladen sein (noch vorläufig und nirgends sonst verwendet):
+        /// sonst ließe sich über die öffentliche Seite jedes Bild der Website freigeben. Entfernte Bilder werden samt Bilddaten gelöscht.
         /// </summary>
         private static async Task<string?> BloeckeUebernehmenAsync(ApplicationDbContext kontext, Veranstaltung v, IReadOnlyList<BlockEingabe> eingaben, CancellationToken abbruch)
         {
             var alte = v.Bloecke.SelectMany(b => b.Bilder).Select(b => b.BildId).ToHashSet();
-            var neue = eingaben.Where(b => b.Typ == VeranstaltungBlockTyp.BilderGalerie).SelectMany(b => b.BildIds).ToHashSet();
+            var neue = GalerieBildIds(eingaben).ToHashSet();
 
             var hinzugekommen = neue.Except(alte).ToList();
             if (hinzugekommen.Count > 0)
             {
-                var vorhanden = await kontext.Images.CountAsync(i => hinzugekommen.Contains(i.Id), abbruch);
-                var verwendet = await VerwendeteBildIds(kontext, ohneVeranstaltungId: null).AnyAsync(id => hinzugekommen.Contains(id), abbruch);
+                var vorhanden = await kontext.Images.CountAsync(i => hinzugekommen.Contains(i.Id) && i.VorlaeufigSeitUtc != null, abbruch);
+                var verwendet = await BildVerwendung.VerwendeteBildIds(kontext).AnyAsync(id => hinzugekommen.Contains(id), abbruch);
                 if (vorhanden != hinzugekommen.Count || verwendet)
                     return "Ein Bild gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden und das Bild erneut hochladen.";
             }
@@ -742,18 +743,13 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         {
             if (bildIds.Count == 0)
                 return;
-            var nochVerwendet = await VerwendeteBildIds(kontext, veranstaltungId).Where(id => bildIds.Contains(id)).ToListAsync(abbruch);
+            var nochVerwendet = await BildVerwendung.VerwendeteBildIds(kontext, veranstaltungId).Where(id => bildIds.Contains(id)).ToListAsync(abbruch);
             var loeschen = await kontext.Images.Where(i => bildIds.Contains(i.Id) && !nochVerwendet.Contains(i.Id)).ToListAsync(abbruch);
             kontext.Images.RemoveRange(loeschen);
         }
 
-        /// <summary>Alle Bilder, auf die Inhalte der Website verweisen (ohne die Galerien der angegebenen Veranstaltung).</summary>
-        private static IQueryable<int> VerwendeteBildIds(ApplicationDbContext kontext, int? ohneVeranstaltungId) =>
-            kontext.Galerie.Where(g => g.DbImageId != null).Select(g => g.DbImageId!.Value)
-                .Concat(kontext.Neuigkeiten.Where(n => n.DbImageId != null).Select(n => n.DbImageId!.Value))
-                .Concat(kontext.WissenBloecke.Where(w => w.BildId != null).Select(w => w.BildId!.Value))
-                .Concat(kontext.AktuellesBilder.Select(a => a.BildId))
-                .Concat(kontext.VeranstaltungBilder.Where(b => b.Block!.VeranstaltungId != ohneVeranstaltungId).Select(b => b.BildId));
+        private static List<int> GalerieBildIds(IEnumerable<BlockEingabe> bloecke) =>
+            bloecke.Where(b => b.Typ == VeranstaltungBlockTyp.BilderGalerie).SelectMany(b => b.BildIds).Distinct().ToList();
 
         private static void FelderUebernehmen(Veranstaltung v, VeranstaltungEingabe e, string slug)
         {
@@ -788,12 +784,14 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         /// Speichert die Veranstaltung und gleicht danach die Kalendereinträge ab (dafür werden die Ids neuer Tage gebraucht),
         /// beides in einer Transaktion. Erkennt gleichzeitige Änderungen über die RowVersion.
         /// </summary>
-        private async Task<VerwaltungsErgebnis> SpeichernMitKalenderAsync(ApplicationDbContext kontext, Veranstaltung v, CancellationToken abbruch)
+        /// <param name="bildIds">Bilder der gespeicherten Galerien: sind danach nicht mehr vorläufig (BildVerwendung).</param>
+        private async Task<VerwaltungsErgebnis> SpeichernMitKalenderAsync(ApplicationDbContext kontext, Veranstaltung v, CancellationToken abbruch, IReadOnlyCollection<int>? bildIds = null)
         {
             try
             {
                 await using var transaktion = await kontext.Database.BeginTransactionAsync(abbruch);
                 await kontext.SaveChangesAsync(abbruch);
+                await BildVerwendung.AlsGespeichertMarkierenAsync(kontext, bildIds ?? [], abbruch);
 
                 await kontext.Entry(v).Reference(x => x.Abteilung).LoadAsync(abbruch);
                 await KalenderAbgleich.AbgleichenAsync(kontext, v, Ortszeit.Jetzt(_zeit), abbruch);

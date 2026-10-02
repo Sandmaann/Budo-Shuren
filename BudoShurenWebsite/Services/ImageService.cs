@@ -14,14 +14,17 @@ namespace BudoShurenWebsite.Services
             _context = context;
         }
 
-        public async Task<int> UploadImageAsync(string title, byte[] imageData, string contentType)
+        /// <param name="vorlaeufig">Bild aus einem Editor, der erst beim Speichern übernimmt (DbImage.VorlaeufigSeitUtc).</param>
+        public async Task<int> UploadImageAsync(string title, byte[] imageData, string contentType, bool vorlaeufig = false)
         {
+            var jetzt = DateTime.UtcNow;
             var image = new DbImage
             {
                 Title = title,
                 ImageData = imageData,
                 ContentType = contentType,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = jetzt,
+                VorlaeufigSeitUtc = vorlaeufig ? jetzt : null
             };
 
             _context.Images.Add(image);

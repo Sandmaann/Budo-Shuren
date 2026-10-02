@@ -88,6 +88,9 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<WissenService>();
                 builder.Services.AddScoped<SlugService>();
                 builder.Services.AddScoped<IAktuellesService, AktuellesService>();
+                //Nie gespeicherte Bilder aus den Editoren (Aktuelles, Veranstaltungen) aufraeumen, siehe BildAufraeumJob
+                builder.Services.AddSingleton<BildAufraeumJob>();
+                builder.Services.AddHostedService<BildAufraeumHostedService>();
 
                 //Mailversand: SMTP-Transport, Warteschlange und Hintergrundversand (siehe Services/Mail)
                 builder.Services.AddSingleton(TimeProvider.System);

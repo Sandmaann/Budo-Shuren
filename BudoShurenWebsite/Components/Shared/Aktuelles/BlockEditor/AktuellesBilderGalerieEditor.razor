@@ -23,7 +23,8 @@
                     AllowedExtensions=".png, .jpg, .jpeg, .webp"
                     MaxFileSize=5242880
                     AutoUpload="true">
-            <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save"
+            @* vorlaeufig: erst "Speichern" des Beitrags übernimmt die Bilder, sonst räumt BildAufraeumJob sie auf *@
+            <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save?vorlaeufig=true"
                                    RemoveUrl="Account/Member/Filesave/Remove">
             </UploaderAsyncSettings>
             <UploaderEvents FileSelected="SelectHandler"

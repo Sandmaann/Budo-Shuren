@@ -32,6 +32,8 @@ public sealed class TestWebAppFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("Veranstaltungen__Aktiviert", veranstaltungenAktiviert ? "true" : "false");
         // Benachrichtigungs- und Wartungs-Job ebenso: Tests rufen sie direkt auf
         Environment.SetEnvironmentVariable("Veranstaltungen__HintergrundJobsAktiviert", "false");
+        // Ebenso das Aufräumen nicht gespeicherter Bilder (BildAufraeumJob)
+        Environment.SetEnvironmentVariable("BildAufraeumen__Aktiviert", "false");
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

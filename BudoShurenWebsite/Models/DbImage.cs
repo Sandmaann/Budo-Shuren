@@ -11,6 +11,12 @@ namespace BudoShurenWebsite.Models
         public string ContentType { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        /// <summary>
+        /// Gesetzt (UTC), solange ein in einem Editor hochgeladenes Bild noch nicht gespeichert ist (Aktuelles, Veranstaltungen).
+        /// Beim Speichern wird es geleert; BildAufraeumJob löscht Bilder, die zu lange vorläufig bleiben. Null bei allen übrigen Bildern.
+        /// </summary>
+        public DateTime? VorlaeufigSeitUtc { get; set; }
+
 
         //// Navigation properties
         //public ICollection<GalerieEintrag> GalerieEinträge { get; set; } = new List<GalerieEintrag>();

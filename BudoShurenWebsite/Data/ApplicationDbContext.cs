@@ -24,6 +24,8 @@ namespace BudoShurenWebsite.Data
             // Set the table name and unique index for the GalerieEintrag entity
             builder.Entity<DbImage>().ToTable("Images");
             builder.Entity<DbImage>().HasIndex(u => u.Id).IsUnique();
+            // Für BildAufraeumJob: nur die wenigen vorläufigen Uploads
+            builder.Entity<DbImage>().HasIndex(u => u.VorlaeufigSeitUtc).HasFilter("[VorlaeufigSeitUtc] IS NOT NULL");
 
             // Set the primary key for the Neuigkeit entity
             builder.Entity<Neuigkeit>().HasKey(u => u.ID);

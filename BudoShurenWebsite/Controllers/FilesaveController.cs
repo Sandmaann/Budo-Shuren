@@ -41,9 +41,10 @@ namespace BudoShurenWebsite.Controllers
         /// 
         /// </summary>
         /// <param name="UploadFiles">ACHTUNG: dieser Name MUSS die ID des SfUploaders sein!!</param>
+        /// <param name="vorlaeufig">true bei Editoren, die erst beim Speichern übernehmen (Aktuelles): nie gespeicherte Bilder räumt BildAufraeumJob auf.</param>
         /// <returns></returns>
         [HttpPost("[action]")]
-        public async Task<IActionResult> Save(IList<IFormFile> UploadFiles)
+        public async Task<IActionResult> Save(IList<IFormFile> UploadFiles, [FromQuery] bool vorlaeufig = false)
         {
             var maxAllowedFiles = 100;
             long maxFileSize = 1024 * 1024 * 5;
@@ -74,7 +75,7 @@ namespace BudoShurenWebsite.Controllers
                                 await using (var stream = file.OpenReadStream())
                                 {
                                     var imageData = await BildKomprimierung.AlsJpegAsync(stream);
-                                    var imageId = await imageService.UploadImageAsync(fileName, imageData, contentType);
+                                    var imageId = await imageService.UploadImageAsync(fileName, imageData, contentType, vorlaeufig);
                                     uploadedFiles.Add(new { FileName = fileName, Id = imageId });
                                 }
                             }

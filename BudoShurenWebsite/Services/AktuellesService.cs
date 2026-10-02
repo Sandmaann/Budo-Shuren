@@ -70,6 +70,9 @@ namespace BudoShurenWebsite.Services
 
         public async Task Speichern(AktuellesBeitrag beitrag)
         {
+            // Eine Transaktion: die neu hochgeladenen Bilder gelten genau dann als gespeichert, wenn der Beitrag gespeichert ist
+            await using var transaktion = await _context.Database.BeginTransactionAsync();
+
             if (beitrag.Id == 0)
             {
                 beitrag.Erstellt = DateTime.Now;
@@ -82,6 +85,8 @@ namespace BudoShurenWebsite.Services
             }
 
             await _context.SaveChangesAsync();
+            await BildVerwendung.AlsGespeichertMarkierenAsync(_context, beitrag.Bloecke.SelectMany(b => b.Bilder).Select(b => b.BildId).Distinct().ToList());
+            await transaktion.CommitAsync();
         }
 
         public async Task Loeschen(int id)

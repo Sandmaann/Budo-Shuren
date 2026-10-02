@@ -251,10 +251,17 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         return await kontext.Images.Select(i => i.Id).ToListAsync(Abbruch);
     }
 
+    /// <summary>Bilder, die noch auf das Speichern warten (sonst räumt BildAufraeumJob sie auf).</summary>
+    private async Task<List<int>> VorlaeufigeBildIdsAsync()
+    {
+        await using var kontext = Datenbank.NeuerKontext();
+        return await kontext.Images.Where(i => i.VorlaeufigSeitUtc != null).Select(i => i.Id).ToListAsync(Abbruch);
+    }
+
     [DatenbankFact]
     public async Task Bausteine_werden_gespeichert_und_entfernte_Bilder_geloescht()
     {
-        var (erstes, zweites) = (await HochladenAsync(), await HochladenAsync());
+        var (erstes, zweites, nieGespeichert) = (await HochladenAsync(), await HochladenAsync(), await HochladenAsync());
         var eingabe = Eingabe();
         eingabe.Bloecke =
         [
@@ -262,6 +269,7 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
             new BlockEingabe { Typ = VeranstaltungBlockTyp.BilderGalerie, BilderProReihe = 2, BildUnterschrift = " Training ", BildIds = [zweites, erstes] }
         ];
         var id = await AnlegenAsync(eingabe);
+        (await VorlaeufigeBildIdsAsync()).ShouldBe([nieGespeichert], "gespeicherte Bilder sind nicht mehr vorläufig");
 
         var geladen = (await Service.EingabeLadenAsync(id, _admin, Abbruch))!;
         geladen.Bloecke.Select(b => b.Typ).ShouldBe([VeranstaltungBlockTyp.MarkdownText, VeranstaltungBlockTyp.BilderGalerie]);
@@ -276,10 +284,10 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
 
         var danach = (await Service.EingabeLadenAsync(id, _admin, Abbruch))!;
         danach.Bloecke.Select(b => b.Typ).ShouldBe([VeranstaltungBlockTyp.BilderGalerie, VeranstaltungBlockTyp.MarkdownText]);
-        (await BildIdsAsync()).ShouldBe([zweites], "die Bilddaten des entfernten Bildes sind gelöscht");
+        (await BildIdsAsync()).ShouldBe([zweites, nieGespeichert], "die Bilddaten des entfernten Bildes sind gelöscht");
 
         (await Service.LoeschenAsync(id, _admin, Abbruch)).Fehler.ShouldBeEmpty();
-        (await BildIdsAsync()).ShouldBeEmpty("mit dem Entwurf verschwinden auch seine Bilder");
+        (await BildIdsAsync()).ShouldBe([nieGespeichert], "mit dem Entwurf verschwinden auch seine Bilder");
     }
 
     [DatenbankFact]
@@ -297,7 +305,17 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
         }
         var fremdesBild = (await BildIdsAsync()).Single();
 
-        foreach (var bildId in new[] { fremdesBild, 999_999 })
+        // Unverwendet, aber nicht frisch hochgeladen (z. B. ein Upload der Galerie-Verwaltung): ebenfalls nicht
+        int altesBild;
+        await using (var kontext = Datenbank.NeuerKontext())
+        {
+            var bild = new DbImage { Title = "alt.jpg", ImageData = [1], ContentType = "image/jpeg", CreatedAt = _zeit.GetUtcNow().UtcDateTime };
+            kontext.Images.Add(bild);
+            await kontext.SaveChangesAsync(Abbruch);
+            altesBild = bild.Id;
+        }
+
+        foreach (var bildId in new[] { fremdesBild, altesBild, 999_999 })
         {
             var eingabe = Eingabe();
             eingabe.Bloecke = [new BlockEingabe { Typ = VeranstaltungBlockTyp.BilderGalerie, BildIds = [bildId] }];
@@ -311,7 +329,11 @@ public class VeranstaltungVerwaltungServiceTests(SqlServerFixture datenbank) : D
     {
         var id = await HochladenAsync();
         await using (var kontext = Datenbank.NeuerKontext())
-            (await kontext.Images.SingleAsync(i => i.Id == id, Abbruch)).ContentType.ShouldBe("image/jpeg");
+        {
+            var bild = await kontext.Images.SingleAsync(i => i.Id == id, Abbruch);
+            bild.ContentType.ShouldBe("image/jpeg");
+            bild.VorlaeufigSeitUtc.ShouldBe(_zeit.GetUtcNow().UtcDateTime, "bis zum Speichern der Veranstaltung");
+        }
 
         var ergebnis = await Service.BildHochladenAsync(new MemoryStream("kein Bild"u8.ToArray()), "notiz.png", _admin, Abbruch);
 
