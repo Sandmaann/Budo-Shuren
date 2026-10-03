@@ -60,7 +60,7 @@
                                 </div>
                             </ValueTemplate>
                         </DropDownListTemplates>
-                        <DropDownListFieldSettings Text="Name" Value="ID"></DropDownListFieldSettings>
+                        <DropDownListFieldSettings Text="Name" Value="Name"></DropDownListFieldSettings>
                     </SfDropDownList>
                 </div>
                 <ValidationMessage For="() => Input.SelectedAbteilung" class="text-error" />
@@ -173,9 +173,9 @@
 
         using var context = DbContextFactory.CreateDbContext();
         Abteilungen = await context.Abteilungen.ToListAsync();
-        if (Abteilungen.FirstOrDefault(x => x.Passt(Abteilung)) is Abteilung auswahl)
+        if (Abteilungen.FirstOrDefault(x => x.Name == Abteilung) is Abteilung auswahl)
         {
-            Input.SelectedAbteilung = auswahl?.ID ?? "";
+            Input.SelectedAbteilung = auswahl.Name ?? "";
         }
     }
 
@@ -193,7 +193,8 @@
                 return;
             }
 
-            if (Abteilungen.FirstOrDefault(x => x.ID == Input.SelectedAbteilung) is Abteilung abteilung)
+            // Die Abteilung wird hier überall über den Namen angegeben (Auswahl, Seiten-Parameter, ApplicationUser.Abteilung)
+            if (Abteilungen.FirstOrDefault(x => x.Name == Input.SelectedAbteilung) is Abteilung abteilung)
             {
                 string nachricht = Input.Text;
                 string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
@@ -217,7 +218,7 @@
 
                 //E-Mail an Abteilungsleiter senden
                 var users = await UserManager.GetUsersInRoleAsync(Roles.Abteilungsleiter);
-                users = users.Where(x => abteilung.Passt(x.Abteilung)).ToList();
+                users = users.Where(x => x.Abteilung == abteilung.Name).ToList();
 
                 foreach (var user in users)
                 {
