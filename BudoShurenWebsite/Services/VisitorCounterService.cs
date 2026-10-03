@@ -31,19 +31,36 @@ namespace BudoShurenWebsite.Services
 
         public async Task AddVisitorAsync(string? visitorId, string pageName)
         {
+            var besucher = BesucherErmitteln(visitorId);
+            if (besucher.IstBot)
+                return;
+            await BesuchSpeichernAsync(besucher.VisitorId, pageName);
+        }
+
+        /// <summary>
+        /// Erkennt Bots und legt fest, unter welcher Id der Besuch gezählt wird; neue Besucher bekommen das Cookie.
+        /// Greift auf Anfrage und Antwort zu und muss deshalb in der Anfrage selbst laufen, nie in einem Hintergrund-Task:
+        /// der HttpContext verträgt keinen gleichzeitigen Zugriff (die Seite setzt währenddessen eigene Header).
+        /// </summary>
+        /// <param name="visitorId">Feste Id statt des Cookies (z. B. die E-Mail-Adresse beim Interesse-Formular).</param>
+        public (bool IstBot, string? VisitorId) BesucherErmitteln(string? visitorId = null)
+        {
             try
             {
                 if (CheckForBot())
                 {
                     _logger.LogDebug("Bot detected, not counting visit.");
-                    return;
+                    return (true, null);
                 }
+
+                var context = _httpContextAccessor.HttpContext;
+                if (string.IsNullOrEmpty(visitorId))
+                    visitorId = context?.Request.Cookies[VisitorCookieName];
 
                 if (string.IsNullOrEmpty(visitorId))
                 {
                     visitorId = Guid.NewGuid().ToString();
                     // Set the cookie in the response
-                    var context = _httpContextAccessor.HttpContext;
                     context?.Response.Cookies.Append(VisitorCookieName, visitorId, new CookieOptions
                     {
                         Expires = DateTime.UtcNow.AddYears(1),
@@ -60,7 +77,12 @@ namespace BudoShurenWebsite.Services
             {
                 _logger.LogWarning(ex, "Failed to add visit to database 2");
             }
+            return (false, visitorId);
+        }
 
+        /// <summary>Speichert den Besuch. Braucht keinen HttpContext und darf im Hintergrund laufen.</summary>
+        public async Task BesuchSpeichernAsync(string? visitorId, string pageName)
+        {
             try
             {
                 // Normalize the pageName

@@ -28,8 +28,6 @@
     [AllowNull]
     [Inject] private ILogger<MainLayout> Logger { get; set; }
     [AllowNull]
-    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; }
-    [AllowNull]
     [Inject] private NavigationManager NavigationManager { get; set; }
 
     protected override Task OnInitializedAsync()
@@ -37,15 +35,17 @@
         try
         {
             var pageName = NavigationManager.Uri.Replace(NavigationManager.BaseUri, string.Empty);
-            var context = HttpContextAccessor.HttpContext;
-            var visitorId = context?.Request.Cookies["VisitorId"];
+            // Bot-Erkennung und Cookie noch in der Anfrage: der HttpContext verträgt keinen Zugriff aus dem Hintergrund-Task
+            var besucher = VisitorCounter.BesucherErmitteln();
+            if (besucher.IstBot)
+                return Task.CompletedTask;
 
-            // Start the visitor counting task in the background
+            // Im Hintergrund nur der Datenbankzugriff, damit die Seite nicht darauf wartet
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await VisitorCounter.AddVisitorAsync(visitorId, pageName);
+                    await VisitorCounter.BesuchSpeichernAsync(besucher.VisitorId, pageName);
                 }
                 catch (Exception ex)
                 {
