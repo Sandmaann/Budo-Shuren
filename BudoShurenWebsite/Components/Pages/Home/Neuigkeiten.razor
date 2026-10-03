@@ -55,7 +55,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div class="neuigkeit-inhalt">
                         <img class="neuigkeit-bild @(neuigkeit.BildHochkant ? "hochkant" : "")"
                              src="@GetImageUrl(neuigkeit.DbImageId)"
                              loading="@Ladeart(neuigkeit)"
@@ -64,9 +64,13 @@
                              title="@neuigkeit.Quellenangabe"
                              onerror="this.onerror=null;this.src='/images/missingimage.jpg';" />
 
-                        <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                        <p class="neuigkeit-text font-ptsans text-sm font-normal tracking-wider text-black">
                             @neuigkeit.Beschreibung
                         </p>
+                    </div>
+                    @* Hält nur die Höhe wie im Karussell; aufklappen lässt sich der Text erst dort *@
+                    <div class="neuigkeit-mehr font-ptsans text-sm tracking-wider" aria-hidden="true">
+                        <span class="underline">Weiterlesen</span>
                     </div>
 
                     @if (!string.IsNullOrWhiteSpace(neuigkeit.Link))
@@ -92,7 +96,8 @@
     {
         @if (NeuigkeitenData is { Count: > 0 } && string.IsNullOrWhiteSpace(ErrorMessage))
         {
-            <SfCarousel ShowIndicators="true" AutoPlay="true">
+            @* Solange eine Neuigkeit aufgeklappt ist, wird nicht automatisch weitergeblättert *@
+            <SfCarousel ShowIndicators="true" AutoPlay="@(_aufgeklappt is null)" @bind-SelectedIndex="_folie" @bind-SelectedIndex:after="Zuklappen">
                 <ChildContent>
                     @foreach (var neuigkeit in NeuigkeitenData)
                     {
@@ -119,7 +124,7 @@
                                     </div>
                                 </div>
 
-                                <div>
+                                <div class="neuigkeit-inhalt @(IstOffen(neuigkeit) ? "offen" : "")">
                                     @* Ersatzbild per JavaScript wie in der vorgerenderten Liste: kein Umweg über den Server je Bild *@
                                     <img class="neuigkeit-bild @(neuigkeit.BildHochkant ? "hochkant" : "")"
                                          src="@GetImageUrl(neuigkeit.DbImageId)"
@@ -129,9 +134,14 @@
                                          title="@neuigkeit.Quellenangabe"
                                          onerror="this.onerror=null;this.src='/images/missingimage.jpg';" />
 
-                                    <p class="font-ptsans text-sm font-normal tracking-wider text-black">
+                                    <p class="neuigkeit-text font-ptsans text-sm font-normal tracking-wider text-black">
                                         @neuigkeit.Beschreibung
                                     </p>
+                                </div>
+                                <div class="neuigkeit-mehr font-ptsans text-sm tracking-wider">
+                                    <button type="button" class="underline" aria-expanded="@(IstOffen(neuigkeit) ? "true" : "false")" @onclick="() => Umschalten(neuigkeit)">
+                                        @(IstOffen(neuigkeit) ? "Weniger anzeigen" : "Weiterlesen")
+                                    </button>
                                 </div>
 
                                 @if (!string.IsNullOrWhiteSpace(neuigkeit.Link))
@@ -197,6 +207,63 @@
 
             .neuigkeit-bild.hochkant {
                 width: 18rem;
+            }
+    }
+
+    /* Lange Texte werden gekürzt, damit eine einzelne lange Neuigkeit nicht alle Folien hoch macht ("Weiterlesen"
+       klappt sie auf). Schmal: 8 Zeilen Text. Ab "md": so hoch wie ein Hochkant-Bild samt Abstand.
+       script.js setzt data-passt, wo nichts abgeschnitten ist: dort kein Verlauf, kein Knopf. */
+    .neuigkeit-inhalt {
+        display: flow-root;
+        position: relative;
+    }
+
+        .neuigkeit-inhalt:not(.offen) .neuigkeit-text {
+            max-height: 10rem;
+            overflow: hidden;
+        }
+
+        .neuigkeit-inhalt:not(.offen):not([data-passt])::after {
+            content: "";
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 2.5rem;
+            background: linear-gradient(rgba(255, 255, 255, 0), #fff);
+            pointer-events: none;
+        }
+
+    .neuigkeit-mehr {
+        margin-top: 0.5rem;
+    }
+
+    .neuigkeit-inhalt[data-passt]:not(.offen) + .neuigkeit-mehr {
+        display: none;
+    }
+
+    @@media (min-width: 768px) {
+        .neuigkeit-inhalt:not(.offen) {
+            max-height: 26.5rem;
+            overflow: hidden;
+        }
+
+            /* Hier kürzt der Rahmen, nicht der Absatz: mit overflow liefe der Text nicht mehr um das Bild */
+            .neuigkeit-inhalt:not(.offen) .neuigkeit-text {
+                max-height: none;
+                overflow: visible;
+            }
+    }
+
+    /* Ohne JavaScript lässt sich nichts aufklappen: alles ungekürzt zeigen. Nicht im noscript-Block oben, denn
+       dessen Stile gelten auch mit JavaScript, sobald Blazor die Seite übernommen hat. */
+    @@media (scripting: none) {
+        .neuigkeit-inhalt:not(.offen),
+        .neuigkeit-inhalt:not(.offen) .neuigkeit-text {
+            max-height: none;
+        }
+
+            .neuigkeit-inhalt:not(.offen):not([data-passt])::after,
+            .neuigkeit-inhalt + .neuigkeit-mehr {
+                display: none;
             }
     }
 
@@ -294,6 +361,8 @@
     private const int Schwellenwert = 5;
 
     private bool _interactiveReady;
+    private int _folie;
+    private Neuigkeit? _aufgeklappt;
     private string ErrorMessage { get; set; } = string.Empty;
 
     /// <summary>
@@ -329,6 +398,13 @@
 
         return Task.CompletedTask;
     }
+
+    private bool IstOffen(Neuigkeit neuigkeit) => ReferenceEquals(_aufgeklappt, neuigkeit);
+
+    private void Umschalten(Neuigkeit neuigkeit) => _aufgeklappt = IstOffen(neuigkeit) ? null : neuigkeit;
+
+    // Beim Blättern klappt die Neuigkeit wieder zu
+    private void Zuklappen() => _aufgeklappt = null;
 
     private async Task<List<Neuigkeit>?> LoadNeuigkeiten()
     {
