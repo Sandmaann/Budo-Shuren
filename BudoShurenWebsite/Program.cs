@@ -258,6 +258,7 @@ namespace BudoShurenWebsite
 
                 app.UseHttpsRedirection();
                 app.UseStaticFiles();
+                app.UseZuVieleAnfragenSeite();
                 app.UseRateLimiter();
                 app.UseAntiforgery();
                 app.UseSession();

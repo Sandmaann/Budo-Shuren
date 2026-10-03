@@ -356,13 +356,42 @@ public class VeranstaltungSeitenTests(SqlServerFixture datenbank) : DatenbankTes
         await using var app = App();
         using var client = app.CreateClient();
         var url = $"/veranstaltungen/bestaetigen/{AnmeldeToken.Erzeugen().Klartext}";
+        // So schickt der Browser die Formulare ab (EditForm mit Enhance)
+        client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "text/html; blazor-enhanced-nav=on");
 
-        var statuscodes = new List<HttpStatusCode>();
+        var antworten = new List<HttpResponseMessage>();
         for (var i = 0; i <= VeranstaltungRateLimit.ErlaubteAnfragen; i++)
-            statuscodes.Add((await client.PostAsync(url, new FormUrlEncodedContent([]), Abbruch)).StatusCode);
+            antworten.Add(await client.PostAsync(url, new FormUrlEncodedContent([]), Abbruch));
 
-        statuscodes.Take(VeranstaltungRateLimit.ErlaubteAnfragen).ShouldNotContain(HttpStatusCode.TooManyRequests);
-        statuscodes.Last().ShouldBe(HttpStatusCode.TooManyRequests);
+        antworten.Take(VeranstaltungRateLimit.ErlaubteAnfragen).Select(a => a.StatusCode).ShouldNotContain(HttpStatusCode.TooManyRequests);
+        var abgelehnt = antworten.Last();
+        abgelehnt.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+        abgelehnt.Headers.RetryAfter!.Delta!.Value.ShouldBeInRange(TimeSpan.FromSeconds(1), VeranstaltungRateLimit.Zeitfenster);
+        abgelehnt.Headers.CacheControl!.NoStore.ShouldBeTrue("der Link zurück enthält das Token");
+        abgelehnt.Headers.GetValues("blazor-enhanced-nav").ShouldBe(["allow"], "sonst zeigt blazor.web.js statt der Seite nur eine Fehlerzeile");
+        abgelehnt.Content.Headers.ContentType!.MediaType.ShouldBe("text/html");
+
+        // Statt einer leeren Antwort eine Seite, die erklärt, was los ist
+        var html = await abgelehnt.Content.ReadAsStringAsync(Abbruch);
+        html.ShouldContain("Zu viele Anfragen");
+        html.ShouldContain("Deine letzte Eingabe wurde nicht übernommen");
+        html.ShouldContain("Minute");
+        html.ShouldContain($"href=\"{url.TrimStart('/')}\"");
+        html.ShouldContain("<footer", customMessage: "mit dem Layout der Website");
+        ModulLinks.SollenRelativSein(html);
+
         (await client.GetAsync(url, Abbruch)).StatusCode.ShouldBe(HttpStatusCode.OK, "Seiten aufrufen ist nicht begrenzt");
+    }
+
+    [DatenbankFact]
+    public async Task Hinweisseite_zu_vielen_Anfragen_gibt_es_nur_nach_einer_Ablehnung()
+    {
+        await using var app = App();
+        using var client = app.CreateClient();
+
+        var antwort = await client.GetAsync(VeranstaltungRateLimit.HinweisSeite, Abbruch);
+
+        antwort.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await antwort.Content.ReadAsStringAsync(Abbruch)).ShouldNotContain("Zu viele Anfragen</h2>");
     }
 }

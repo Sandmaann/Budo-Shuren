@@ -1,0 +1,66 @@
+@page "/zu-viele-anfragen"
+@* Wird nicht verlinkt: VeranstaltungRateLimit zeigt diese Seite anstelle einer abgelehnten Anfrage (Status 429).
+   Statisches Rendern (kein @rendermode). *@
+
+@using BudoShurenWebsite.Services.Veranstaltungen
+
+<PageTitle>Zu viele Anfragen | Budo Shuren Dojo</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow">
+</HeadContent>
+
+<Headline Titel="武道" Untertitel="Veranstaltungen" Anekdote="" />
+
+<div class="container mx-auto max-w-screen-md">
+    <div class="font-ptsans mx-10 mb-12 text-sm">
+        @if (_ablehnung is null)
+        {
+            <Standardtext Text="Diese Seite gibt es nicht." />
+        }
+        else
+        {
+            <h2 class="font-yuji mb-3 text-2xl font-bold">Zu viele Anfragen</h2>
+            <p class="mb-3">Von deinem Internetanschluss wurden in kurzer Zeit sehr viele Formulare abgeschickt. Zum Schutz vor Missbrauch nehmen wir deshalb für kurze Zeit keine weiteren an.</p>
+            <p class="mb-3"><strong>Deine letzte Eingabe wurde nicht übernommen.</strong> Bitte versuch es @WartezeitText noch einmal.</p>
+            <a href="@Zurueck" class="inline-block underline">Zurück zur vorherigen Seite</a>
+            <p class="mt-4 text-xs text-gray-600">Klappt es danach immer noch nicht? Dann <a href="Kontakt" class="underline">schreib uns</a>.</p>
+        }
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private RateLimitAblehnung? _ablehnung;
+
+    // Relativ zum <base href>
+    private string Zurueck => _ablehnung!.Pfad.TrimStart('/');
+
+    private string WartezeitText => _ablehnung!.Wartezeit is { } zeit
+        ? Math.Ceiling(zeit.TotalMinutes) switch
+        {
+            <= 1 => "in etwa einer Minute",
+            var minuten => $"in etwa {minuten:0} Minuten"
+        }
+        : "in ein paar Minuten";
+
+    protected override void OnInitialized()
+    {
+        _ablehnung = HttpContext?.Features.Get<RateLimitAblehnung>();
+
+        if (HttpContext is null)
+            return;
+
+        if (_ablehnung is null)
+        {
+            // Direkt aufgerufen
+            if (!HttpContext.Response.HasStarted)
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        // Der Link zurück kann ein Token enthalten
+        VeranstaltungLinks.SicherheitsHeaderSetzen(HttpContext.Response);
+    }
+}

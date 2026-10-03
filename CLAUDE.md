@@ -74,7 +74,7 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
   - Times: domain dates and deadlines are local time (Europe/Berlin, see `Global/Ortszeit`); technical timestamps end in `Utc`.
   - Public pages (`Components/Pages/Veranstaltungen/`) are static SSR, so don't add `@rendermode` to them:
     - Forms post via `[SupplyParameterFromForm]` and antiforgery.
-    - `[EnableRateLimiting(VeranstaltungRateLimit.Formulare)]` limits POSTs per IP.
+    - `[EnableRateLimiting(VeranstaltungRateLimit.Formulare)]` limits POSTs per IP. A rejected request keeps status 429 and gets the page `Pages/ZuVieleAnfragen.razor` (re-executed as GET by `UseZuVieleAnfragenSeite`, which must stay before `UseRateLimiter`).
     - `FormularSchutz` provides a honeypot plus a minimum fill time.
   - Links in mails carry a token. Only its SHA-256 hash is stored (`AnmeldeToken`).
     - Opening a link (GET) must never change anything, because mail scanners open them. Actions run only on a POST from a button on the page.
