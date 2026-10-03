@@ -80,6 +80,15 @@ namespace BudoShurenWebsite.Models
         public DbImage? DbImage { get; set; }
 
 
+        /// <summary>
+        /// Maße der Kachel, um ihren Platz freizuhalten, bevor das Bild geladen ist (BildVariantenService.KachelMasseSetzenAsync).
+        /// Null, solange die Maße des Bildes noch nicht bekannt sind.
+        /// </summary>
+        [NotMapped]
+        public int? KachelBreite { get; set; }
+        [NotMapped]
+        public int? KachelHoehe { get; set; }
+
         [NotMapped]
         public bool IsLoading { get; set; } = true;
         [NotMapped]

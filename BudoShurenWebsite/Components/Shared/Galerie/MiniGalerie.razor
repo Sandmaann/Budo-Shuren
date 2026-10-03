@@ -5,6 +5,7 @@
 @using BudoShurenWebsite.Data
 
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject BildVariantenService BildVarianten
 @inject ILogger<MiniGalerie> Logger
 
 <div class="z-10 mx-10 mt-5">
@@ -20,7 +21,8 @@
             </Placeholder>
             <EmptyContent>
                 <div class="flex justify-center">
-                    @if (IsLoading)
+                    @* Auch vor dem Laden (vorgerenderte Seite) den Spinner zeigen, nicht "Keine Einträge gefunden" *@
+                    @if (IsLoading || !_geladen)
                     {
                         <Spinner Text="Einen Moment, die Bilder werden geladen ..." />
                     }
@@ -91,6 +93,7 @@
     public GalerieTyp Typ { get; set; } = GalerieTyp.None;
 
     private bool IsLoading { get; set; } = false;
+    private bool _geladen;
     private ICollection<GalerieGruppe> Gruppen { get; set; } = new List<GalerieGruppe>();
     private string ErrorMessage { get; set; } = string.Empty;
     private bool paramsSet = false;
@@ -136,6 +139,7 @@
             .ToListAsync();
 
             einträge = einträge.Where(x => x.Typ.HasFlag(Typ)).ToList();
+            await BildVarianten.KachelMasseSetzenAsync(einträge);
             var groups = einträge.GroupBy(eintrag =>
                 new { eintrag.Titel, Datum = eintrag.ImageDate?.Date });
 
@@ -168,6 +172,7 @@
         finally
         {
             IsLoading = false;
+            _geladen = true;
             StateHasChanged();
         }
     }

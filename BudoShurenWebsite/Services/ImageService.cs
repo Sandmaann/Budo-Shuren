@@ -58,28 +58,41 @@ namespace BudoShurenWebsite.Services
             return false;
         }
 
-        public async Task<DbImage> GetImageAsync(int id)
+        /// <summary>Angaben zu einem Bild ohne die Bilddaten: reicht für ETag und Cache-Header.</summary>
+        public async Task<BildKopf?> GetBildKopfAsync(int id)
         {
-            return await _context.Images.FindAsync(id);
+            return await _context.Images
+                .Where(x => x.Id == id)
+                .Select(x => new BildKopf(x.ContentType, x.CreatedAt))
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<byte[]?> GetImageDataAsync(int id)
+        {
+            return await _context.Images
+                .Where(x => x.Id == id)
+                .Select(x => x.ImageData)
+                .FirstOrDefaultAsync();
+        }
+
+        /// <summary>Bilder der Galerie sollen nicht in der Bildersuche erscheinen (auch wenn sie öffentlich sind).</summary>
+        public async Task<bool> IstGalerieBildAsync(int id)
+        {
+            return await _context.Galerie.AnyAsync(x => x.DbImageId == id);
         }
 
         public async Task<bool> AllowAnonymous(int id)
         {
             //Prüfen ob es eine neuigkeit ist
-            var neuigkeit = await _context.Neuigkeiten.FirstOrDefaultAsync(x => x.DbImageId == id);
-            if (neuigkeit != null)
+            if (await _context.Neuigkeiten.AnyAsync(x => x.DbImageId == id))
                 return true;
 
             //Prüfen ob es ein öffentlicher galerie eintrag ist
-            var galerieEintrag = await _context.Galerie.FirstOrDefaultAsync(x => x.DbImageId == id && x.Öffentlich);
-            if (galerieEintrag != null)
+            if (await _context.Galerie.AnyAsync(x => x.DbImageId == id && x.Öffentlich))
                 return true;
 
             //Prüfen ob es ein Bild in einem veröffentlichten Wissens-Beitrag ist
-            var wissenBlock = await _context.WissenBloecke
-                .Include(b => b.Beitrag)
-                .FirstOrDefaultAsync(b => b.BildId == id && b.Beitrag != null && b.Beitrag.Veroeffentlicht);
-            if (wissenBlock != null)
+            if (await _context.WissenBloecke.AnyAsync(b => b.BildId == id && b.Beitrag != null && b.Beitrag.Veroeffentlicht))
                 return true;
 
             //Prüfen ob es ein Bild einer erreichbaren Veranstaltung ist (gleiche Regel wie die Veranstaltungsseite)
@@ -90,4 +103,6 @@ namespace BudoShurenWebsite.Services
             return false;
         }
     }
+
+    public sealed record BildKopf(string ContentType, DateTime CreatedAt);
 }

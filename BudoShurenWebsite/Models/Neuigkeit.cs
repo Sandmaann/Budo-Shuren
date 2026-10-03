@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace BudoShurenWebsite.Models
 {
@@ -26,6 +27,10 @@ namespace BudoShurenWebsite.Models
         public DateTime? Ablaufdatum { get; set; }
         public bool IstStandardneuigkeit { get; set; } = false;
 
+        /// <summary>Für das feste Bildformat auf der Startseite (BildZuschnitt); wird beim Laden dort gesetzt.</summary>
+        [NotMapped]
+        public bool BildHochkant { get; set; }
+
         [NotMapped]
         public bool IsLoading { get; set; } = true;
         [NotMapped]
@@ -46,6 +51,7 @@ namespace BudoShurenWebsite.Models
         }
 
         [NotMapped]
+        [JsonIgnore] // Neuigkeiten werden als JSON an die interaktive Seite übergeben (Home/Neuigkeiten.razor)
         public Action? StateHasChanged { get; set; }
     }
 }

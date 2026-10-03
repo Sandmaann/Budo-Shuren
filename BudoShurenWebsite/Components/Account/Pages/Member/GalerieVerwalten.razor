@@ -15,6 +15,7 @@
 @inject IJSRuntime JSRuntime
 @inject IHostEnvironment environment
 @inject ApplicationDbContext DbContext
+@inject BildVariantenService BildVarianten
 @inject ILogger<GalerieVerwalten> Logger
 
 <div class="">
@@ -651,6 +652,7 @@
             await Task.Delay(10);
 
             var einträge = await DbContext.Galerie.ToListAsync();
+            await BildVarianten.KachelMasseSetzenAsync(einträge);
             // einträge.ForEach(x => x.EnvironmentPath = environment.ContentRootPath);
 
             var groups = einträge.GroupBy(eintrag => new DateTime(eintrag.SortDate?.Year ?? 1, eintrag.SortDate?.Month ?? 1, 1));

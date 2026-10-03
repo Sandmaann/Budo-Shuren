@@ -84,6 +84,7 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<UserService>();
                 builder.Services.AddScoped<EmailSender>();
                 builder.Services.AddScoped<ImageService>();
+                builder.Services.AddSingleton<BildVariantenService>();
                 //builder.Services.AddSingleton<IImageUploadService, ImageUploadService>();
                 builder.Services.AddScoped<VisitorCounterService>();
                 builder.Services.AddScoped<WissenService>();

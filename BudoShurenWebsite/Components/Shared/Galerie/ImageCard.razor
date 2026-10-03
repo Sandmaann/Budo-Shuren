@@ -4,28 +4,20 @@
 
 
 <div class="h-min w-full select-none bg-gray-100 @(OnImageClicked.HasDelegate ? "cursor-pointer" : "")" @onclick="OnClick" @onpointerdown="MouseDown" @onpointerup="MouseUp">
-    <div class="relative">
-
-        @if (isLoading)
-        {
-            <div class="m-8">
-                <Spinner />
-            </div>
-        }
+    @* Der Platz der Kachel ist über width/height reserviert, solange das Bild lädt (graue Fläche). Sind die Maße
+       noch nicht bekannt, hält eine Mindesthöhe den Platz frei. Bewusst ohne @onload/@onerror: das Laden der Bilder
+       braucht so keine Nachricht an den Server je Kachel. *@
+    <div class="relative" style="@(Eintrag.KachelHoehe is null ? "min-height: 6rem" : null)">
         <img oncontextmenu="@(Eintrag.DisableHover ? "" : "return false;")"
              class="object-cover transition-all duration-500 ease-in-out @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")"
              loading="lazy"
              src="@GetImageUrl(Eintrag.DbImageId)"
+             width="@Eintrag.KachelBreite"
+             height="@Eintrag.KachelHoehe"
              title="@Eintrag.Titel"
              alt="@Eintrag.Untertitel"
-             @onload="OnImageLoaded"
-             @onerror="OnImageError" />
-        @if (showErrorImage)
-        {
-            <img src="/images/missingimage.jpg"
-                 class="object-cover transition-all duration-500 ease-in-out @(Eintrag.IsSelected ? "transform scale-85 rounded-md" : "transform scale-100")"
-                 alt="Fehler beim Laden des Bildes" />
-        }
+             onload="this.parentElement.style.minHeight='';"
+             onerror="this.onerror=null;this.src='/images/missingimage.jpg';" />
 
         @if (Eintrag.IsSelected)
         {
@@ -82,9 +74,6 @@
     [Parameter]
     public EventCallback<GalerieEintrag> OnImageClicked { get; set; }
 
-    private bool isLoading { get; set; } = true;
-    private bool showErrorImage { get; set; } = false;
-
     bool checkClicked = false;
     bool detailClicked = false;
 
@@ -94,18 +83,6 @@
 
     private Timer? timer;
     private bool timerFired = false;
-
-    private void OnImageLoaded()
-    {
-        isLoading = false;
-        StateHasChanged();
-    }
-    private void OnImageError()
-    {
-        isLoading = false;
-        showErrorImage = true;
-        StateHasChanged();
-    }
 
     void MouseDown()
     {
@@ -232,11 +209,12 @@
         }
     }
 
+    // Kacheln zeigen die verkleinerte Fassung (BildVariantenService), die große Ansicht das Original
     private string GetImageUrl(int? dbImageId)
     {
         if (dbImageId.HasValue)
         {
-            return $"/Account/Member/Filesave/GetImage/{dbImageId.Value}";
+            return $"/Account/Member/Filesave/GetImage/{dbImageId.Value}?variante=galeriekachel";
         }
         return "/images/missingimage.jpg";
     }

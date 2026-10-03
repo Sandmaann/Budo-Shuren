@@ -27,6 +27,15 @@ namespace BudoShurenWebsite.Data
             // Für BildAufraeumJob: nur die wenigen vorläufigen Uploads
             builder.Entity<DbImage>().HasIndex(u => u.VorlaeufigSeitUtc).HasFilter("[VorlaeufigSeitUtc] IS NOT NULL");
 
+            // Verkleinerte Fassungen: je Bild und Art höchstens eine; mit dem Bild werden sie gelöscht
+            builder.Entity<BildVariante>().ToTable("BildVarianten");
+            builder.Entity<BildVariante>().HasIndex(v => new { v.BildId, v.Art }).IsUnique();
+            builder.Entity<BildVariante>()
+                .HasOne<DbImage>()
+                .WithMany()
+                .HasForeignKey(v => v.BildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Set the primary key for the Neuigkeit entity
             builder.Entity<Neuigkeit>().HasKey(u => u.ID);
             // Set the table name and unique index for the GalerieEintrag entity
@@ -282,6 +291,7 @@ namespace BudoShurenWebsite.Data
         public DbSet<Abteilung> Abteilungen { get; set; }
         public DbSet<Visit> Visits { get; set; }
         public DbSet<DbImage> Images { get; set; }
+        public DbSet<BildVariante> BildVarianten { get; set; }
         public DbSet<WissenKategorie> WissenKategorien { get; set; }
         public DbSet<WissenBeitrag> WissenBeitraege { get; set; }
         public DbSet<WissenBlock> WissenBloecke { get; set; }

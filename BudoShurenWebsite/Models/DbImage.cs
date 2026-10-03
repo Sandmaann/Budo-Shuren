@@ -17,6 +17,13 @@ namespace BudoShurenWebsite.Models
         /// </summary>
         public DateTime? VorlaeufigSeitUtc { get; set; }
 
+        /// <summary>
+        /// Maße in Pixeln, wie der Browser das Bild zeigt (BildVariantenService.SichtbareMasse). Null bei Bildern,
+        /// die vor Einführung der Spalten gespeichert wurden; BildVariantenService trägt sie bei Bedarf nach.
+        /// </summary>
+        public int? Breite { get; set; }
+        public int? Hoehe { get; set; }
+
 
         //// Navigation properties
         //public ICollection<GalerieEintrag> GalerieEinträge { get; set; } = new List<GalerieEintrag>();

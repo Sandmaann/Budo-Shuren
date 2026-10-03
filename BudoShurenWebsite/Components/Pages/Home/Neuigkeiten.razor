@@ -4,16 +4,32 @@
 @using Syncfusion.Blazor.Buttons
 
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject BildVariantenService BildVarianten
 
-<div class="-mx-10 md:-mx-20">
+<div class="neuigkeiten-rahmen -mx-10 md:-mx-20">
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
         <StatusMessage ShowAsError="true" Message="@ErrorMessage" />
     }
-    else if (!_interactiveReady)
+    else if (NeuigkeitenData is null)
+    {
+        @* Nur wenn der vorgerenderte Stand nicht übernommen werden konnte: die Daten werden noch geladen *@
+        <Spinner />
+    }
+    else
     {
         @if (NeuigkeitenData.Any())
         {
+            @* Vorgerenderte Liste: alle Neuigkeiten stehen für Suchmaschinen im HTML, sichtbar ist wie im Karussell
+               nur die erste. Die Liste bleibt auch unter dem Karussell stehen und hält die Höhe, damit die Seite
+               beim Umschalten nicht springt (siehe Stile unten). Ohne JavaScript sind alle Neuigkeiten sichtbar. *@
+            <noscript>
+                <style>
+                    .neuigkeiten-stapel { display: block; }
+                    .neuigkeiten-stapel > article { visibility: visible; }
+                </style>
+            </noscript>
+            <div class="neuigkeiten-stapel @(_interactiveReady ? "abgeloest" : "")">
             @foreach (var neuigkeit in NeuigkeitenData)
             {
                 <article class="mx-10 mb-10 md:mx-20">
@@ -40,9 +56,10 @@
                     </div>
 
                     <div>
-                        <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
+                        <img class="neuigkeit-bild @(neuigkeit.BildHochkant ? "hochkant" : "")"
                              src="@GetImageUrl(neuigkeit.DbImageId)"
-                             loading="lazy"
+                             loading="@Ladeart(neuigkeit)"
+                             fetchpriority="@Prioritaet(neuigkeit)"
                              alt="@neuigkeit.Titel"
                              title="@neuigkeit.Quellenangabe"
                              onerror="this.onerror=null;this.src='/images/missingimage.jpg';" />
@@ -60,6 +77,7 @@
                     }
                 </article>
             }
+            </div>
         }
         else
         {
@@ -70,9 +88,9 @@
             </div>
         }
     }
-    else
+    @if (_interactiveReady)
     {
-        @if (NeuigkeitenData.Any())
+        @if (NeuigkeitenData is { Count: > 0 } && string.IsNullOrWhiteSpace(ErrorMessage))
         {
             <SfCarousel ShowIndicators="true" AutoPlay="true">
                 <ChildContent>
@@ -102,25 +120,14 @@
                                 </div>
 
                                 <div>
-                                    @if (neuigkeit.IsLoading)
-                                    {
-                                        <Spinner />
-                                    }
-
-                                    <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
+                                    @* Ersatzbild per JavaScript wie in der vorgerenderten Liste: kein Umweg über den Server je Bild *@
+                                    <img class="neuigkeit-bild @(neuigkeit.BildHochkant ? "hochkant" : "")"
                                          src="@GetImageUrl(neuigkeit.DbImageId)"
-                                         loading="lazy"
+                                         loading="@Ladeart(neuigkeit)"
+                                         fetchpriority="@Prioritaet(neuigkeit)"
                                          alt="@neuigkeit.Titel"
                                          title="@neuigkeit.Quellenangabe"
-                                         @onload="neuigkeit.OnImageLoaded"
-                                         @onerror="neuigkeit.OnImageError" />
-
-                                    @if (neuigkeit.ShowErrorImage)
-                                    {
-                                        <img class="float-right mb-10 ml-4 max-h-96 md:ml-10 md:max-w-112"
-                                             src="/images/missingimage.jpg"
-                                             alt="@neuigkeit.Titel" />
-                                    }
+                                         onerror="this.onerror=null;this.src='/images/missingimage.jpg';" />
 
                                     <p class="font-ptsans text-sm font-normal tracking-wider text-black">
                                         @neuigkeit.Beschreibung
@@ -161,18 +168,80 @@
                 </NextButtonTemplate>
             </SfCarousel>
         }
-        else
-        {
-            <div class="mx-10 mb-10 md:mx-20">
-                <p class="font-ptsans text-sm font-normal tracking-wider text-black">
-                    Im Moment gibt es keine Neuigkeiten.
-                </p>
-            </div>
-        }
     }
 </div>
 
 <style>
+    /* Bilder in festem Format (Querformat 4:3, Hochformat 3:4), passend zu den Maßen in BildZuschnitt.
+       Der Platz ist damit schon reserviert, bevor das Bild geladen ist. Schmal: Bild über dem Text. */
+    .neuigkeit-bild {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        margin: 0 auto 1.5rem;
+    }
+
+        .neuigkeit-bild.hochkant {
+            width: min(100%, 18rem);
+            aspect-ratio: 3 / 4;
+        }
+
+    /* Ab Tailwind "md": Bild rechts, der Text läuft links daran vorbei */
+    @@media (min-width: 768px) {
+        .neuigkeit-bild {
+            float: right;
+            width: 28rem;
+            margin: 0 0 2.5rem 2.5rem;
+        }
+
+            .neuigkeit-bild.hochkant {
+                width: 18rem;
+            }
+    }
+
+    /* Liste und Karussell liegen in derselben Gitterzelle übereinander, die höhere von beiden bestimmt die Höhe */
+    .neuigkeiten-rahmen {
+        display: grid;
+    }
+
+        .neuigkeiten-rahmen > * {
+            grid-area: 1 / 1;
+            min-width: 0;
+        }
+
+    /* Auch die Neuigkeiten der Liste liegen übereinander: so hoch wie die höchste, wie im Karussell */
+    .neuigkeiten-stapel {
+        display: grid;
+    }
+
+        .neuigkeiten-stapel > article {
+            grid-area: 1 / 1;
+            min-width: 0;
+            display: flow-root;
+            visibility: hidden;
+        }
+
+            .neuigkeiten-stapel > article:first-child {
+                visibility: visible;
+            }
+
+    /* Sobald das Karussell seine Folien hat, übernimmt es; die Liste hält unsichtbar weiter die Höhe.
+       Browser ohne :has() entfernen die Liste stattdessen, wenn das Karussell kommt. */
+    .neuigkeiten-stapel.abgeloest {
+        display: none;
+    }
+
+    @@supports selector(:has(*)) {
+        .neuigkeiten-stapel.abgeloest {
+            display: grid;
+        }
+
+        .neuigkeiten-rahmen:has(.e-carousel-item) .neuigkeiten-stapel > article {
+            visibility: hidden;
+        }
+    }
+
     .e-carousel .e-carousel-navigators .e-btn:active,
     .e-carousel .e-carousel-navigators .e-btn:hover {
         background-color: transparent !important;
@@ -223,20 +292,31 @@
 
 @code {
     private const int Schwellenwert = 5;
-    private static readonly Random _random = new Random();
 
     private bool _interactiveReady;
     private string ErrorMessage { get; set; } = string.Empty;
-    private IEnumerable<Neuigkeit> NeuigkeitenData { get; set; } = new List<Neuigkeit>();
 
+    /// <summary>
+    /// Null, solange nicht geladen. Der vorgerenderte Stand wird an die interaktive Seite übergeben:
+    /// so wird nicht doppelt geladen, und die (zufällige) Reihenfolge bleibt beim Umschalten auf das Karussell gleich.
+    /// </summary>
+    [PersistentState]
+    public List<Neuigkeit>? NeuigkeitenData { get; set; }
+
+    // Verkleinerte, auf das feste Format zugeschnittene Fassung (BildVariantenService)
     private string GetImageUrl(int? dbImageId)
     {
-        return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}" : "/images/missingimage.jpg";
+        return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}?variante=neuigkeit" : "/images/missingimage.jpg";
     }
+
+    // Nur das erste Bild ist beim Laden der Seite sichtbar: sofort und bevorzugt laden, die übrigen erst bei Bedarf
+    private bool IstErste(Neuigkeit neuigkeit) => NeuigkeitenData is [var erste, ..] && ReferenceEquals(erste, neuigkeit);
+    private string Ladeart(Neuigkeit neuigkeit) => IstErste(neuigkeit) ? "eager" : "lazy";
+    private string? Prioritaet(Neuigkeit neuigkeit) => IstErste(neuigkeit) ? "high" : null;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadNeuigkeiten();
+        NeuigkeitenData ??= await LoadNeuigkeiten();
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
@@ -250,7 +330,7 @@
         return Task.CompletedTask;
     }
 
-    private async Task LoadNeuigkeiten()
+    private async Task<List<Neuigkeit>?> LoadNeuigkeiten()
     {
         using var context = DbContextFactory.CreateDbContext();
 
@@ -277,7 +357,7 @@
             var data = echte
 .Concat(standards)
 .GroupBy(x => x.Sortierung)
-.SelectMany(group => group.OrderBy(_ => _random.Next()))
+.SelectMany(group => group.OrderBy(_ => Random.Shared.Next()))
 .ToList();
 
             // var data = echte
@@ -285,18 +365,20 @@
             //     .OrderBy(x => x.Sortierung)
             //     .ToList();
 
-            foreach (var item in data)
+            var masse = await BildVarianten.AbmessungenAsync(data.Where(x => x.DbImageId != null).Select(x => x.DbImageId!.Value).ToList());
+            foreach (var neuigkeit in data)
             {
-                item.StateHasChanged = StateHasChanged;
+                neuigkeit.BildHochkant = neuigkeit.DbImageId is { } bildId
+                    && masse.TryGetValue(bildId, out var m) && BildZuschnitt.IstHochkant(m.Breite, m.Hoehe);
             }
 
-            NeuigkeitenData = data;
             ErrorMessage = string.Empty;
+            return data;
         }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
-            NeuigkeitenData = new List<Neuigkeit>();
+            return null;
         }
     }
 }
