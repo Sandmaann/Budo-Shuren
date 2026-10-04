@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Net;
 using BudoShurenWebsite.Models;
 using BudoShurenWebsite.Tests.Infrastruktur;
@@ -27,14 +28,18 @@ public class BesucherZaehlerTests(SqlServerFixture datenbank) : DatenbankTest(da
             ? cookies.Where(c => c.StartsWith("VisitorId=")).Select(c => c["VisitorId=".Length..].Split(';')[0]).SingleOrDefault()
             : null;
 
-    /// <summary>Der Besuch wird im Hintergrund gespeichert: kurz darauf warten.</summary>
-    private async Task<List<Visit>> BesucheAsync(int erwartet)
+    /// <summary>
+    /// Der Besuch wird im Hintergrund gespeichert: kurz darauf warten.
+    /// Gezählt werden nur die Besuche dieses Tests (<paramref name="eigene"/>): Hintergrund-Tasks früherer Tests
+    /// speichern ihren Besuch manchmal erst, nachdem die Datenbank für diesen Test zurückgesetzt wurde.
+    /// </summary>
+    private async Task<List<Visit>> BesucheAsync(Expression<Func<Visit, bool>> eigene)
     {
         for (var versuch = 0; ; versuch++)
         {
             await using var kontext = Datenbank.NeuerKontext();
-            var besuche = await kontext.Visits.AsNoTracking().OrderBy(v => v.ID).ToListAsync(Abbruch);
-            if (besuche.Count >= erwartet || versuch >= 50)
+            var besuche = await kontext.Visits.AsNoTracking().Where(eigene).OrderBy(v => v.ID).ToListAsync(Abbruch);
+            if (besuche.Count >= 1 || versuch >= 50)
                 return besuche;
             await Task.Delay(100, Abbruch);
         }
@@ -51,8 +56,7 @@ public class BesucherZaehlerTests(SqlServerFixture datenbank) : DatenbankTest(da
         antwort.StatusCode.ShouldBe(HttpStatusCode.OK);
         var besucherId = GesetzteBesucherId(antwort).ShouldNotBeNull();
         Guid.TryParse(besucherId, out _).ShouldBeTrue();
-        var besuch = (await BesucheAsync(1)).ShouldHaveSingleItem();
-        besuch.VisitorID.ShouldBe(besucherId);
+        var besuch = (await BesucheAsync(b => b.VisitorID == besucherId)).ShouldHaveSingleItem();
         besuch.PageName.ShouldBe("Impressum");
     }
 
@@ -66,8 +70,7 @@ public class BesucherZaehlerTests(SqlServerFixture datenbank) : DatenbankTest(da
 
         antwort.StatusCode.ShouldBe(HttpStatusCode.OK);
         GesetzteBesucherId(antwort).ShouldBeNull();
-        var besuch = (await BesucheAsync(1)).ShouldHaveSingleItem();
-        besuch.VisitorID.ShouldBe("bekannt-123");
+        var besuch = (await BesucheAsync(b => b.VisitorID == "bekannt-123")).ShouldHaveSingleItem();
         besuch.PageName.ShouldBe("Home");
     }
 
@@ -77,12 +80,15 @@ public class BesucherZaehlerTests(SqlServerFixture datenbank) : DatenbankTest(da
         using var app = new TestWebAppFactory(Datenbank.Verbindung);
         using var client = app.CreateClient(new() { HandleCookies = false });
 
-        var bot = await client.SendAsync(Anfrage("/Impressum", "Mozilla/5.0 (compatible; Googlebot/2.1)"), Abbruch);
+        // Eine Seite, die nur dieser Test aufruft: so gehören alle Besuche dieser Seite sicher zu ihm
+        var seite = $"veranstaltungen/meine-anmeldung/bot-test-{Guid.NewGuid():N}";
+
+        var bot = await client.SendAsync(Anfrage("/" + seite, "Mozilla/5.0 (compatible; Googlebot/2.1)"), Abbruch);
         // Der Besuch eines Menschen danach zeigt, dass der Hintergrund-Task des Bots (falls es einen gäbe) längst fertig wäre
-        await client.SendAsync(Anfrage("/Impressum", Browser, besucherId: "mensch"), Abbruch);
+        await client.SendAsync(Anfrage("/" + seite, Browser, besucherId: "mensch"), Abbruch);
 
         GesetzteBesucherId(bot).ShouldBeNull();
-        (await BesucheAsync(1)).Select(b => b.VisitorID).ShouldBe(["mensch"]);
+        (await BesucheAsync(b => b.PageName == seite)).Select(b => b.VisitorID).ShouldBe(["mensch"]);
     }
 
     [DatenbankFact]
