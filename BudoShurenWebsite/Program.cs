@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using NLog;
 using NLog.Web;
 using Syncfusion.Blazor;
@@ -172,10 +173,14 @@ namespace BudoShurenWebsite
                     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
                 }
 
-                builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-                    options.UseSqlServer(connectionString));
-                builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                    options.UseSqlServer(connectionString), optionsLifetime: ServiceLifetime.Singleton);
+                // Mit MARS gibt es keine Savepoints. Das ist hier unkritisch: nach einem fehlgeschlagenen SaveChanges
+                // wird die Transaktion immer verworfen und nie weiterverwendet
+                void DatenbankOptionen(DbContextOptionsBuilder options) => options
+                    .UseSqlServer(connectionString)
+                    .ConfigureWarnings(w => w.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
+
+                builder.Services.AddDbContextFactory<ApplicationDbContext>(DatenbankOptionen);
+                builder.Services.AddDbContext<ApplicationDbContext>(DatenbankOptionen, optionsLifetime: ServiceLifetime.Singleton);
 
                 builder.Services.AddDbContext<DataProtectionKeyContext>(options =>
                     options.UseSqlServer(connectionString));
