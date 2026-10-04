@@ -62,36 +62,15 @@ window.saveScrollPositionOnUnload = function (dotnetHelper) {
     pruefen();
 })();
 
-window.neuigkeitenDialogLifecycle =window.neuigkeitenDialogLifecycle || {
-    visibilityHandler: null,
-    pageHideHandler: null,
-
-    register: function (dotNetHelper) {
-        this.unregister();
-
-        this.visibilityHandler = function () {
-            if (document.hidden) {
-                dotNetHelper.invokeMethodAsync("HandlePageHiddenAsync");
-            }
-        };
-
-        this.pageHideHandler = function () {
-            dotNetHelper.invokeMethodAsync("HandlePageHiddenAsync");
-        };
-
-        document.addEventListener("visibilitychange", this.visibilityHandler);
-        window.addEventListener("pagehide", this.pageHideHandler);
-    },
-
-    unregister: function () {
-        if (this.visibilityHandler) {
-            document.removeEventListener("visibilitychange", this.visibilityHandler);
-            this.visibilityHandler = null;
-        }
-
-        if (this.pageHideHandler) {
-            window.removeEventListener("pagehide", this.pageHideHandler);
-            this.pageHideHandler = null;
-        }
+// Bearbeitungsseiten mit Entwurf (EntwurfHinweis.razor): Blazor übernimmt eine Eingabe erst beim Verlassen des Felds.
+// Wer mitten im Feld den Tab wechselt, hätte sie nach einem Neuladen verloren. Deshalb beim Verlassen des Tabs melden.
+document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "hidden" || !document.querySelector("[data-entwurf-sicherung]")) {
+        return;
     }
-};
+    var feld = document.activeElement;
+    // Nicht bei der Dateiauswahl: dort würde "change" denselben Upload noch einmal starten
+    if (feld && ((feld.tagName === "INPUT" && feld.type !== "file") || feld.tagName === "TEXTAREA")) {
+        feld.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+});

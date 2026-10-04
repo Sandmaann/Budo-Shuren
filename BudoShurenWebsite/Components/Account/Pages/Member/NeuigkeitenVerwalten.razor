@@ -1,23 +1,18 @@
-﻿@page "/Account/Member/Neuigkeiten"
+@page "/Account/Member/Neuigkeiten"
 @rendermode InteractiveServer
 @implements IAsyncDisposable
 
-@inject ImageService ImageService
 @inject UserService UserService
-@inject IdentityUserAccessor UserAccessor
-@inject ILogger<Neuigkeit> Logger
-@inject IJSRuntime JSRuntime
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject IEntwurfSpeicher Entwuerfe
+@inject IBildUpload BildUpload
+@inject ILogger<NeuigkeitenVerwalten> Logger
 
 @using BudoShurenWebsite.Data
-@using Microsoft.AspNetCore.Identity
-@using Microsoft.EntityFrameworkCore;
-@using System.Net.Http.Headers
-@using System.Text.Json
-
+@using BudoShurenWebsite.Services.Entwuerfe
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Data
-@using Syncfusion.Blazor
-@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Navigations
 
 <div class="container mx-auto max-w-screen-lg">
     <div class="mx-10">
@@ -25,203 +20,197 @@
         <div class="mb-10">
             <Standardtext Text="Bitte ladet nur Bilder hoch, an denen ihr die Rechte besitzt und bei denen die abgebildeten Personen der Veröffentlichung zugestimmt haben!" />
         </div>
-        <div class="-mx-8 md:mx-0">
 
-            @if (!string.IsNullOrWhiteSpace(errorMessage))
-            {
-                <StatusMessage ShowAsError="true" Message="@errorMessage" />
-            }
-            <SfGrid @ref="grid"
-                    TValue="Neuigkeit"
-                    AllowSorting="true"
-                    AllowPaging="false"
-                    Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Search" })"
-                    Height="100%"
-                    Width="100%">
-                <SfDataManager AdaptorInstance="@typeof(NeuigkeitenAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
-                <GridEvents TValue="Neuigkeit" OnActionFailure="OnActionFailureHandler" OnActionBegin="OnActionBeginHandler" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"></GridEvents>
-                <GridTemplates>
-                    <EmptyRecordTemplate>
-                        @if (IsLoading)
-                        {
-                            <Standardtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
-                        }
-                        else
-                        {
-                            <Standardtext Text="Anscheinend gibt es gerade keine Neuigkeiten!" />
-                        }
-                    </EmptyRecordTemplate>
-                </GridTemplates>
-                <GridEditSettings AllowAdding="@AllowEditing"
-                                  AllowEditing="@AllowEditing"
-                                  AllowDeleting="@AllowDeletion"
-                                  AllowEditOnDblClick="@AllowEditing"
-                                  Mode="@EditMode.Dialog"
-                                  ShowDeleteConfirmDialog="true">
-                    <Template>
-                        @{
-                            var neuigkeit = context as Neuigkeit;
-                        }
-                        <!-- Hinweisbanner nur auf Mobile (md breakpoint) -->
-                        <div class="md:hidden mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                            <p class="text-sm text-yellow-700 font-ptsans">
-                                Achtung: Bei wechsel aus dem Tab heraus geht die Bearbeitung verloren.
-                            </p>
+        @if (_eingabe is not null)
+        {
+            @* Eigenes Formular statt des Dialogs im Grid: sein Stand lässt sich als Entwurf sichern und wiederherstellen *@
+            <div class="mx-auto max-w-screen-md">
+                <h4 class="font-ptsans mb-4 text-sm font-bold tracking-wider">@(_eingabe.Id.HasValue ? "Neuigkeit bearbeiten" : "Neue Neuigkeit")</h4>
+
+                <EntwurfHinweis VomUtc="_entwurfVomUtc" OnVerwerfen="AbbrechenAsync" />
+
+                <EditForm Model="_eingabe" OnValidSubmit="SpeichernAsync" FormName="neuigkeit-bearbeiten">
+                    <DataAnnotationsValidator />
+                    <div class="space-y-4">
+                        <div>
+                            <label class="@Label" for="neuigkeit-titel">Titel *</label>
+                            <InputText id="neuigkeit-titel" @bind-Value="_eingabe.Titel" class="@Feld" />
                         </div>
+                        <div>
+                            <label class="@Label" for="neuigkeit-beschreibung">Beschreibung *</label>
+                            <InputTextArea id="neuigkeit-beschreibung" @bind-Value="_eingabe.Beschreibung" rows="6" class="@Feld" />
+                        </div>
+                        <div>
+                            <label class="@Label" for="neuigkeit-ort">Ort</label>
+                            <InputText id="neuigkeit-ort" @bind-Value="_eingabe.Ort" class="@Feld" />
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label class="@Label" for="neuigkeit-linktext">Linktext (Anzeigetext)</label>
+                                <InputText id="neuigkeit-linktext" @bind-Value="_eingabe.Linktext" class="@Feld" />
+                            </div>
+                            <div>
+                                <label class="@Label" for="neuigkeit-link">Link</label>
+                                <InputText id="neuigkeit-link" @bind-Value="_eingabe.Link" class="@Feld" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="@Label" for="neuigkeit-quelle">Quellenangabe (Bild)</label>
+                            <InputText id="neuigkeit-quelle" @bind-Value="_eingabe.Quellenangabe" class="@Feld" />
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label class="@Label" for="neuigkeit-datum">Datum</label>
+                                <InputDate id="neuigkeit-datum" Type="InputDateType.DateTimeLocal" @bind-Value="_eingabe.Datum" class="@Feld" />
+                            </div>
+                            <div>
+                                <label class="@Label" for="neuigkeit-sortierung">Sortierung</label>
+                                <InputNumber id="neuigkeit-sortierung" @bind-Value="_eingabe.Sortierung" class="@Feld" />
+                            </div>
+                        </div>
+                        <label class="font-ptsans flex cursor-pointer items-center gap-2 text-sm">
+                            <InputCheckbox @bind-Value="_eingabe.IstStandardneuigkeit" />
+                            Standardneuigkeit (kein Ablaufdatum)
+                        </label>
+                        @if (!_eingabe.IstStandardneuigkeit)
+                        {
+                            <div>
+                                <label class="@Label" for="neuigkeit-ablauf">Ablaufdatum (optional)</label>
+                                <InputDate id="neuigkeit-ablauf" Type="InputDateType.DateTimeLocal" @bind-Value="_eingabe.Ablaufdatum" class="@($"{Feld} md:w-1/2")" />
+                            </div>
+                        }
 
                         <div>
-                            <SfTextBox Placeholder="Titel"
-                                       FloatLabelType="FloatLabelType.Always"
-                                       @bind-Value="@neuigkeit.Titel"></SfTextBox>
-                            <ValidationMessage For="@(() => neuigkeit.Titel)" />
-
-                            <div class="">
-                                <SfTextBox Placeholder="Beschreibung"
-                                           FloatLabelType="FloatLabelType.Always"
-                                           Multiline=true
-                                           @bind-Value="@neuigkeit.Beschreibung"></SfTextBox>
-                                <ValidationMessage For="@(() => neuigkeit.Beschreibung)" />
-                            </div>
-                            <div>
-                                <SfTextBox Placeholder="Ort"
-                                           FloatLabelType="FloatLabelType.Always"
-                                           @bind-Value="@neuigkeit.Ort"></SfTextBox>
-                            </div>
-                            <div>
-                                <SfTextBox Placeholder="Linktext (Anzeigetext)"
-                                           FloatLabelType="FloatLabelType.Always"
-                                           @bind-Value="@neuigkeit.Linktext"></SfTextBox>
-                            </div>
-                            <div>
-                                <SfTextBox Placeholder="Link"
-                                           FloatLabelType="FloatLabelType.Always"
-                                           @bind-Value="@neuigkeit.Link"></SfTextBox>
-                            </div>
-                            <div>
-                                <SfTextBox Placeholder="Quellenangabe (Bild)"
-                                           FloatLabelType="FloatLabelType.Always"
-                                           @bind-Value="@neuigkeit.Quellenangabe"></SfTextBox>
-                            </div>
-                            <div>
-                                <SfDateTimePicker Placeholder="Datum"
-                                                  FloatLabelType="FloatLabelType.Always"
-                                                  @bind-Value="@neuigkeit.Datum"></SfDateTimePicker>
-                            </div>
-                            <div>
-                                <SfNumericTextBox Placeholder="Sortierung"
-                                                  FloatLabelType="FloatLabelType.Always"
-                                                  TValue="int"
-                                                  @bind-Value="@neuigkeit.Sortierung"></SfNumericTextBox>
-                            </div>
-                            <div class="my-2">
-                                <label class="font-ptsans tracking-[0.375rem] flex items-center text-sm font-normal leading-tight text-black">
-                                    <InputCheckbox @bind-Value="neuigkeit.IstStandardneuigkeit" class="h-5 w-5" />
-                                    <span class="ml-2">Standardneuigkeit (kein Ablaufdatum)</span>
-                                </label>
-                            </div>
-                            @if (!neuigkeit.IstStandardneuigkeit)
+                            <span class="@Label">Bild @(_eingabe.Id.HasValue ? "" : "*")</span>
+                            @if (_eingabe.DbImageId is { } bildId)
                             {
-                                <div>
-                                    <SfDateTimePicker Placeholder="Ablaufdatum (optional)"
-                                                      FloatLabelType="FloatLabelType.Always"
-                                                      @bind-Value="@neuigkeit.Ablaufdatum"></SfDateTimePicker>
+                                <div class="flex items-center gap-3">
+                                    <img src="@GetImageUrl(bildId)" alt="Vorschau" class="h-32 w-auto rounded border" />
+                                    @if (!_eingabe.Id.HasValue)
+                                    {
+                                        <button type="button" @onclick="BildEntfernenAsync" class="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50">
+                                            Bild entfernen
+                                        </button>
+                                    }
                                 </div>
                             }
-                            @if (IsAddNew)
+                            else if (!_eingabe.Id.HasValue)
                             {
-                                <div class="mt-10">
-                                    <SfUploader @key="uploaderRenderKey"
-                                                @ref="sfUploader"
-                                                ID="UploadFiles"
-                                                AllowedExtensions=".png, .jpg, .jpeg, .webp"
-                                                MaxFileSize="5242880"
-                                                AllowMultiple="false">
-                                        <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save" RemoveUrl="Account/Member/Filesave/Remove"></UploaderAsyncSettings>
-                                        <UploaderEvents FileSelected="SelectHandler"
-                                                        Success="SuccessHandler"
-                                                        OnFailure="OnFailureHandler"
-                                                        OnActionComplete="OnActionCompleteHandler"
-                                                        BeforeUpload="BeforeUploadHandler"></UploaderEvents>
-                                    </SfUploader>
-                                </div>
+                                <BildAuswahl OnHochgeladen="bild => _eingabe.DbImageId = bild.Id" />
                             }
                         </div>
-                    </Template>
-                </GridEditSettings>
 
-                <GridColumns>
-                    <GridColumn Field=@nameof(Neuigkeit.ID) HeaderText="ID" IsPrimaryKey="true" AllowSearching="false" Width="25" Visible="false"></GridColumn>
-
-                    <GridColumn HeaderText="Vorschau" TextAlign="TextAlign.Center" Width="120" AllowEditing=false>
-                        <Template>
-                            @{
-                                var neuigkeit = context as Neuigkeit;
-                                <div class="image">
-                                    <img src="@GetImageUrl(neuigkeit?.DbImageId)" alt="@neuigkeit?.Titel" />
-                                </div>
+                        <ValidationSummary class="font-ptsans text-sm text-red-700" />
+                        @if (!string.IsNullOrWhiteSpace(_formularFehler))
+                        {
+                            <StatusMessage ShowAsError="true" Message="@_formularFehler" />
+                        }
+                        <div class="flex flex-wrap gap-3 border-t border-gray-200 pb-12 pt-6">
+                            <button type="submit" disabled="@_speichert"
+                                    class="font-ptsans rounded border border-black px-5 py-2 text-sm tracking-wider hover:bg-gray-100 disabled:opacity-50">
+                                @(_speichert ? "Speichern..." : "Speichern")
+                            </button>
+                            <button type="button" @onclick="AbbrechenAsync" disabled="@_speichert"
+                                    class="font-ptsans rounded border border-gray-400 px-5 py-2 text-sm tracking-wider hover:bg-gray-50">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        }
+        else
+        {
+            <div class="-mx-8 md:mx-0">
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <StatusMessage ShowAsError="true" Message="@errorMessage" />
+                }
+                <SfGrid @ref="grid"
+                        TValue="Neuigkeit"
+                        AllowSorting="true"
+                        AllowPaging="false"
+                        Toolbar="@Werkzeuge"
+                        Height="100%"
+                        Width="100%">
+                    <SfDataManager AdaptorInstance="@typeof(NeuigkeitenAdaptor)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                    <GridEvents TValue="Neuigkeit" OnActionFailure="OnActionFailureHandler" OnLoad="OnLoadHandler" DataBound="DataBoundHandler"
+                                OnToolbarClick="WerkzeugGeklicktAsync" OnRecordDoubleClick="DoppelklickAsync"></GridEvents>
+                    <GridTemplates>
+                        <EmptyRecordTemplate>
+                            @if (IsLoading)
+                            {
+                                <Standardtext Text="Geduld, die Infos müssen erst von einem Ninja gesammelt werden ..." />
                             }
-                        </Template>
-                    </GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Titel) HeaderText="Titel" AllowSearching="true" Width="120" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules { Required = true })"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true" ValidationRules="@(new Syncfusion.Blazor.Grids.ValidationRules { Required = true })"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Ort) HeaderText="Ort" AllowSearching="true" Width="100"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Datum) HeaderText="Datum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="true" Width="85"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Ablaufdatum) HeaderText="Ablaufdatum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="false" Width="95"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.IstStandardneuigkeit) HeaderText="Standard" DisplayAsCheckBox="true" AllowSearching="false" Width="70"></GridColumn>
-                    <GridColumn Field=@nameof(Neuigkeit.Sortierung) HeaderText="Sort" AllowSearching="true" Width="55"></GridColumn>
-                </GridColumns>
-            </SfGrid>
-        </div>
+                            else
+                            {
+                                <Standardtext Text="Anscheinend gibt es gerade keine Neuigkeiten!" />
+                            }
+                        </EmptyRecordTemplate>
+                    </GridTemplates>
+                    @* Anlegen und Bearbeiten laufen über das Formular oben, das Grid löscht nur noch *@
+                    <GridEditSettings AllowAdding="false"
+                                      AllowEditing="false"
+                                      AllowDeleting="@AllowEditing"
+                                      ShowDeleteConfirmDialog="true">
+                    </GridEditSettings>
+
+                    <GridColumns>
+                        <GridColumn Field=@nameof(Neuigkeit.ID) HeaderText="ID" IsPrimaryKey="true" AllowSearching="false" Width="25" Visible="false"></GridColumn>
+
+                        <GridColumn HeaderText="Vorschau" TextAlign="TextAlign.Center" Width="120" AllowEditing=false>
+                            <Template>
+                                @{
+                                    var neuigkeit = context as Neuigkeit;
+                                    <div class="image">
+                                        <img src="@GetImageUrl(neuigkeit?.DbImageId)" alt="@neuigkeit?.Titel" />
+                                    </div>
+                                }
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field=@nameof(Neuigkeit.Titel) HeaderText="Titel" AllowSearching="true" Width="120"></GridColumn>
+                        <GridColumn Field=@nameof(Neuigkeit.Beschreibung) HeaderText="Inhalt" AllowSearching="true"></GridColumn>
+                        <GridColumn Field=@nameof(Neuigkeit.Ort) HeaderText="Ort" AllowSearching="true" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(Neuigkeit.Datum) HeaderText="Datum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="true" Width="85"></GridColumn>
+                        <GridColumn Field=@nameof(Neuigkeit.Ablaufdatum) HeaderText="Ablaufdatum" Type="Syncfusion.Blazor.Grids.ColumnType.DateTime" Format="dd.MM.yyyy" AllowSearching="false" Width="95"></GridColumn>
+                        <GridColumn Field=@nameof(Neuigkeit.IstStandardneuigkeit) HeaderText="Standard" DisplayAsCheckBox="true" AllowSearching="false" Width="70"></GridColumn>
+                        <GridColumn Field=@nameof(Neuigkeit.Sortierung) HeaderText="Sort" AllowSearching="true" Width="55"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </div>
+        }
     </div>
 </div>
 
 @code {
-    [AllowNull]
-    private SfUploader sfUploader { get; set; }
+    private const string Label = "font-ptsans mb-1 block text-xs font-bold";
+    private const string Feld = "font-ptsans w-full rounded border border-gray-300 p-2 text-sm disabled:bg-gray-100";
+    private const string EntwurfSchluessel = "neuigkeiten";
 
     [AllowNull]
     private SfGrid<Neuigkeit> grid { get; set; }
 
-    private DotNetObjectReference<NeuigkeitenVerwalten>? dotNetReference;
-    private int uploaderRenderKey = 0;
-    private bool isClosingDialogFromLifecycle = false;
-
-
-    private UserWithRoles? user = default!;
-
     private bool AllowEditing { get; set; } = false;
-    private bool AllowDeletion { get; set; } = false;
-    private UploadedFile? _uploadedFile { get; set; }
     private string errorMessage { get; set; } = string.Empty;
     private bool IsLoading { get; set; } = false;
 
-    private Neuigkeit? SelectedEditNeuigkeit;
+    /// <summary>Das offene Formular; null = die Liste wird gezeigt.</summary>
+    private NeuigkeitEingabe? _eingabe;
+    private string? _formularFehler;
+    private bool _speichert;
 
-    public bool IsAddNew { get; set; } = false;
+    // Ungespeicherte Eingaben überstehen ein Neuladen der Seite (Tab-Wechsel auf dem Handy)
+    private EntwurfSicherung<NeuigkeitEingabe>? _sicherung;
+    private DateTime? _entwurfVomUtc;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-
-        if (firstRender)
-        {
-            dotNetReference = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("neuigkeitenDialogLifecycle.register", dotNetReference);
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("neuigkeitenDialogLifecycle.unregister");
-        }
-        catch
-        {
-        }
-
-        dotNetReference?.Dispose();
-    }
+    private List<object> Werkzeuge => AllowEditing
+        ? [
+            new ItemModel { Id = "neuigkeit-neu", Text = "Hinzufügen", TooltipText = "Hinzufügen", PrefixIcon = "e-add" },
+            new ItemModel { Id = "neuigkeit-bearbeiten", Text = "Bearbeiten", TooltipText = "Bearbeiten", PrefixIcon = "e-edit" },
+            "Delete",
+            "Search"
+        ]
+        : ["Search"];
 
     protected override async Task OnInitializedAsync()
     {
@@ -229,31 +218,11 @@
         try
         {
             await UserService.InitializeAsync();
-            user = UserService.CurrentUser;
+            var user = UserService.CurrentUser;
+            AllowEditing = user != null && (Roles.IsAdmin(user.Roles) || Roles.IsAbteilungsleiter(user.Roles) || Roles.IsEditor(user.Roles));
 
-            if (user != null)
-            {
-                if (Roles.IsAdmin(user.Roles))
-                {
-                    AllowEditing = true;
-                    AllowDeletion = true;
-                }
-                else if (Roles.IsAbteilungsleiter(user.Roles))
-                {
-                    AllowEditing = true;
-                    AllowDeletion = true;
-                }
-                else if (Roles.IsEditor(user.Roles))
-                {
-                    AllowEditing = true;
-                    AllowDeletion = true;
-                }
-                else
-                {
-                    AllowEditing = false;
-                    AllowDeletion = false;
-                }
-            }
+            if (AllowEditing && user?.User?.Id is { } benutzerId)
+                await EntwurfUebernehmenAsync(benutzerId);
         }
         catch (Exception ex)
         {
@@ -261,55 +230,127 @@
         }
     }
 
+    /// <summary>War beim letzten Mal ein Formular offen und ungespeichert, öffnet es sich wieder.</summary>
+    private async Task EntwurfUebernehmenAsync(string benutzerId)
+    {
+        _sicherung = new(Entwuerfe, Logger, benutzerId, EntwurfSchluessel, () => _eingabe,
+            e => e.Id is null && e.DbImageId is { } bildId ? [bildId] : []);
+
+        if (await _sicherung.LadenAsync() is { } entwurf)
+        {
+            if (entwurf.Daten.DbImageId is { } bildId && (await Entwuerfe.FehlendeBilderAsync([bildId])).Count > 0)
+                entwurf.Daten.DbImageId = null;
+            _eingabe = entwurf.Daten;
+            _entwurfVomUtc = entwurf.GeaendertUtc;
+        }
+
+        _sicherung.AusgangMerken();
+        // Beim Prerendering gibt es noch nichts zu sichern
+        if (RendererInfo.IsInteractive)
+            _sicherung.Starten(InvokeAsync);
+    }
+
+    private void FormularOeffnen(NeuigkeitEingabe eingabe)
+    {
+        errorMessage = string.Empty;
+        _formularFehler = null;
+        _entwurfVomUtc = null;
+        _eingabe = eingabe;
+        // Gesichert wird erst, wenn sich daran etwas ändert
+        _sicherung?.AusgangMerken();
+    }
+
+    private async Task WerkzeugGeklicktAsync(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        if (!AllowEditing)
+            return;
+
+        if (args.Item.Id == "neuigkeit-neu")
+        {
+            FormularOeffnen(new NeuigkeitEingabe());
+        }
+        else if (args.Item.Id == "neuigkeit-bearbeiten")
+        {
+            if ((await grid.GetSelectedRecordsAsync()).FirstOrDefault() is { } auswahl)
+                FormularOeffnen(NeuigkeitEingabe.Aus(auswahl));
+            else
+                errorMessage = "Bitte zuerst eine Neuigkeit auswählen.";
+        }
+    }
+
+    private void DoppelklickAsync(RecordDoubleClickEventArgs<Neuigkeit> args)
+    {
+        if (AllowEditing && args.RowData is { } neuigkeit)
+            FormularOeffnen(NeuigkeitEingabe.Aus(neuigkeit));
+    }
+
+    private async Task SpeichernAsync()
+    {
+        if (_eingabe is null || !AllowEditing)
+            return;
+
+        _speichert = true;
+        _formularFehler = null;
+        try
+        {
+            await using var kontext = await DbFactory.CreateDbContextAsync();
+            _formularFehler = await _eingabe.SpeichernAsync(kontext, UserService.CurrentUser?.UserName ?? "unbekannt");
+            if (_formularFehler is null)
+                await FormularSchliessenAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Speichern der Neuigkeit");
+            _formularFehler = "Fehler beim Speichern der Neuigkeit: " + ex.Message;
+        }
+        finally
+        {
+            _speichert = false;
+        }
+    }
+
+    /// <summary>Verwirft die Eingaben (auch den Entwurf) und ein für eine neue Neuigkeit hochgeladenes Bild.</summary>
+    private async Task AbbrechenAsync()
+    {
+        if (_eingabe is { Id: null, DbImageId: { } bildId })
+            await BildUpload.VerwerfenAsync([bildId]);
+        await FormularSchliessenAsync();
+    }
+
+    private async Task FormularSchliessenAsync()
+    {
+        if (_sicherung is not null)
+            await _sicherung.LoeschenAsync();
+        _eingabe = null;
+        _entwurfVomUtc = null;
+        _formularFehler = null;
+    }
+
+    private async Task BildEntfernenAsync()
+    {
+        if (_eingabe is { Id: null, DbImageId: { } bildId })
+        {
+            await BildUpload.VerwerfenAsync([bildId]);
+            _eingabe.DbImageId = null;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_sicherung is not null)
+            await _sicherung.DisposeAsync();
+    }
+
     public void OnActionFailureHandler(Syncfusion.Blazor.Grids.FailureEventArgs args)
     {
         errorMessage = args.Error?.Message ?? "Unbekannter Fehler";
     }
 
-    private async Task OnActionBeginHandler(Syncfusion.Blazor.Grids.ActionEventArgs<Neuigkeit> args)
-    {
-        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
-        {
-            if (IsAddNew && sfUploader != null)
-            {
-                var files = await sfUploader.GetFilesDataAsync();
-                if (files.Any())
-                {
-                    await sfUploader.RemoveAsync(files.ToArray());
-                }
-            }
-
-            IsAddNew = false;
-            SelectedEditNeuigkeit = null;
-            return;
-        }
-
-        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
-        {
-            IsAddNew = true;
-            uploaderRenderKey++;
-
-            if (sfUploader != null)
-            {
-                await sfUploader.ClearAllAsync();
-            }
-
-            _uploadedFile = null;
-            SelectedEditNeuigkeit = args.Data;
-            return;
-        }
-
-        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
-        {
-            IsAddNew = false;
-        }
-    }
-
-  
     public void DataBoundHandler()
     {
         IsLoading = false;
     }
+
     public void OnLoadHandler()
     {
         IsLoading = true;
@@ -319,152 +360,6 @@
     {
         return dbImageId.HasValue ? $"/Account/Member/Filesave/GetImage/{dbImageId.Value}" : "/images/missingimage.jpg";
     }
-
-    #region FileUploader
-
-    public void SelectHandler(SelectedEventArgs args)
-    {
-        string selectedfile = args.FilesData[0].Name;
-
-        foreach (var file in args.FilesData)
-        {
-            if (file?.Name == _uploadedFile?.FileName)
-            {
-                this.errorMessage = "Dieses Bild wurde bereits hochgeladen!";
-                return;
-            }
-        }
-        this.errorMessage = string.Empty;
-    }
-
-    public async Task SuccessHandler(SuccessEventArgs args)
-    {
-        try
-        {
-            if (args.Operation == "upload")
-            {
-                var jsonResponse = args.Response.ResponseText;
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-                var uploadResponse = JsonSerializer.Deserialize<UploadResponse>(jsonResponse, options);
-
-                if (uploadResponse != null && uploadResponse.Success)
-                {
-                    foreach (var file in uploadResponse.Files)
-                    {
-                        if (uploadResponse.Files.FirstOrDefault(x => x.FileName == args.File.Name) is UploadedFile uploadedFile)
-                        {
-                            _uploadedFile = uploadedFile;
-                        }
-                        else
-                        {
-                            Logger.LogWarning("Die Datei {FileName} wurde nicht in der Liste der hochgeladenen Dateien gefunden!", args.File.Name);
-                        }
-                    }
-                }
-                else
-                {
-                    errorMessage = "Der Upload war nicht erfolgreich.";
-                }
-            }
-            else if (args.Operation == "remove")
-            {
-                if (_uploadedFile?.Id > 0)
-                {
-                    await ImageService.RemoveImageAsync(_uploadedFile.Id);
-                    _uploadedFile = null;
-                    if (SelectedEditNeuigkeit != null)
-                    {
-                        SelectedEditNeuigkeit.DbImageId = null;
-                    }
-                }
-            }
-            else
-            {
-                errorMessage = $"Die Operation '{args.Operation}' ist hier noch nicht implementiert!";
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Fehler beim Speichern des Bildes im SfUploader");
-            errorMessage = ex.Message;
-        }
-    }
-
-    private void OnFailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
-    {
-        try
-        {
-            _uploadedFile = null;
-            using (JsonDocument doc = JsonDocument.Parse(args.Response.ResponseText))
-            {
-                JsonElement root = doc.RootElement;
-                if (root.TryGetProperty("message", out JsonElement messageElement))
-                {
-                    errorMessage = messageElement.GetString() ?? "Unbekannter Fehler";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Fehler beim Parsen der JSON-Antwort");
-            errorMessage = "Ein unbekannter Fehler ist aufgetreten.";
-        }
-    }
-
-    private async Task OnActionCompleteHandler(Syncfusion.Blazor.Inputs.ActionCompleteEventArgs args)
-    {
-        if (SelectedEditNeuigkeit != null && sfUploader != null)
-        {
-            var files = await sfUploader.GetFilesDataAsync();
-            var file = files.FirstOrDefault();
-            if (file != null && _uploadedFile?.Id > 0 && _uploadedFile.FileName == file.Name)
-            {
-                SelectedEditNeuigkeit.DbImageId = _uploadedFile.Id;
-            }
-        }
-
-        StateHasChanged();
-    }
-
-    private void BeforeUploadHandler(BeforeUploadEventArgs args)
-    {
-        // You can prevent uploading by setting "args.Cancel" to true.
-    }
-
-   
-
-    #endregion
-
-    #region Lifestyle Callback
-
-    [JSInvokable]
-    public async Task HandlePageHiddenAsync()
-    {
-        if (isClosingDialogFromLifecycle || !IsAddNew || grid == null)
-        {
-            return;
-        }
-
-        isClosingDialogFromLifecycle = true;
-
-        try
-        {
-            await grid.CloseEditAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Edit-Dialog konnte beim Verlassen des Tabs nicht geschlossen werden.");
-        }
-        finally
-        {
-            isClosingDialogFromLifecycle = false;
-        }
-    }
-
-    #endregion
 }
 
 @* Für die Icons im SfGrid - damit der Text weg ist *@

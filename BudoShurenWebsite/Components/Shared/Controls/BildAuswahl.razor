@@ -1,0 +1,83 @@
+@*
+    Bild-Upload der Bearbeitungsseiten (ersetzt den SfUploader): lädt die gewählten Bilder sofort hoch (IBildUpload)
+    und meldet jedes einzeln über OnHochgeladen. Was mit dem Bild geschieht, entscheidet die Seite.
+*@
+
+@inject IBildUpload Upload
+
+@* Neuer Schlüssel nach jedem Upload: sonst zeigt das Feld weiter die alte Auswahl an *@
+<InputFile @key="_runde" multiple="@Mehrere" accept=".jpg,.jpeg,.png,.webp" disabled="@(_laedt || Gesperrt)"
+           OnChange="HochladenAsync" class="font-ptsans text-xs" aria-label="@(Mehrere ? "Bilder auswählen" : "Bild auswählen")" />
+<p class="font-ptsans mt-1 text-xs text-gray-500">JPG, PNG oder WebP, höchstens 5 MB je Bild. Große Bilder werden verkleinert.</p>
+@if (_laedt)
+{
+    <p class="font-ptsans mt-1 text-xs" role="status">Wird hochgeladen...</p>
+}
+@if (_fehler is not null)
+{
+    <p class="font-ptsans mt-1 text-xs text-red-700" role="alert">@_fehler</p>
+}
+
+@code {
+    private const int HoechstensAufEinmal = 20;
+
+    [Parameter]
+    public bool Mehrere { get; set; }
+
+    /// <summary>Siehe IBildUpload.HochladenAsync: die Seite muss die Bilder beim Speichern übernehmen (BildVerwendung.AlsGespeichertMarkierenAsync).</summary>
+    [Parameter]
+    public bool Vorlaeufig { get; set; } = true;
+
+    [Parameter]
+    public bool Gesperrt { get; set; }
+
+    [Parameter]
+    public EventCallback<HochgeladenesBild> OnHochgeladen { get; set; }
+
+    private bool _laedt;
+    private string? _fehler;
+    private int _runde;
+
+    private async Task HochladenAsync(InputFileChangeEventArgs e)
+    {
+        _laedt = true;
+        _fehler = null;
+        var probleme = new List<string>();
+        try
+        {
+            foreach (var datei in e.GetMultipleFiles(HoechstensAufEinmal))
+            {
+                if (datei.Size > BildKomprimierung.MaximaleDateigroesse)
+                {
+                    probleme.Add($"„{datei.Name}“ ist größer als 5 MB.");
+                    continue;
+                }
+
+                await using var daten = datei.OpenReadStream(BildKomprimierung.MaximaleDateigroesse);
+                var ergebnis = await Upload.HochladenAsync(daten, datei.Name, Vorlaeufig);
+                if (ergebnis.Bild is { } bild)
+                    await OnHochgeladen.InvokeAsync(bild);
+                else
+                    probleme.Add(ergebnis.Fehler ?? $"„{datei.Name}“ konnte nicht hochgeladen werden.");
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Mehr Dateien auf einmal als erlaubt
+            probleme.Add($"Bitte höchstens {HoechstensAufEinmal} Bilder auf einmal auswählen.");
+        }
+        catch (IOException)
+        {
+            // Verbindung während der Übertragung abgebrochen (z. B. Tab gewechselt)
+            probleme.Add("Die Übertragung wurde unterbrochen. Bitte die Bilder noch einmal auswählen.");
+        }
+        finally
+        {
+            _laedt = false;
+            _runde++;
+        }
+
+        if (probleme.Count > 0)
+            _fehler = string.Join(" ", probleme);
+    }
+}

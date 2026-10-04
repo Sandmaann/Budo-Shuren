@@ -163,6 +163,15 @@ namespace BudoShurenWebsite.Data
             // Abfrage des Versand-Jobs: wartende, fällige Mails nach Priorität
             builder.Entity<EmailAusgang>().HasIndex(m => new { m.Status, m.Prioritaet, m.FaelligAbUtc });
 
+            // BearbeitungsEntwurf configuration (ungespeicherte Bearbeitung, siehe Services/Entwuerfe)
+            builder.Entity<BearbeitungsEntwurf>().ToTable("BearbeitungsEntwuerfe");
+            builder.Entity<BearbeitungsEntwurf>().HasIndex(e => new { e.BenutzerId, e.Schluessel }).IsUnique();
+            builder.Entity<BearbeitungsEntwurf>()
+                .HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(e => e.BenutzerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             KonfiguriereVeranstaltungen(builder);
         }
 
@@ -299,6 +308,7 @@ namespace BudoShurenWebsite.Data
         public DbSet<AktuellesBlock> AktuellesBloecke { get; set; }
         public DbSet<AktuellesBild> AktuellesBilder { get; set; }
         public DbSet<EmailAusgang> EmailAusgang { get; set; }
+        public DbSet<BearbeitungsEntwurf> BearbeitungsEntwuerfe { get; set; }
         public DbSet<Veranstaltung> Veranstaltungen { get; set; }
         public DbSet<VeranstaltungsTag> VeranstaltungsTage { get; set; }
         public DbSet<VeranstaltungBlock> VeranstaltungBloecke { get; set; }

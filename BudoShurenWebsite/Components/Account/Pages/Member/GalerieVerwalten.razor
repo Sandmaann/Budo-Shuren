@@ -697,6 +697,7 @@
         if (firstRender)
         {
             await LoadData();
+            await EntwurfWiederherstellenAsync();
 
             try
             {
@@ -729,7 +730,33 @@
         }
     }
 
-    public string[] suchdata = { "Aikido", "Bujinkan", "Genbukan", "Iaido", "Jodo", "Home", "Öffentlich" };
+    /// <summary>
+    /// War die Seitenleiste beim letzten Mal offen und ungespeichert (Tab-Wechsel auf dem Handy, Seite neu geladen),
+    /// öffnet sie sich wieder mit ihrem Stand (EditGalerie sichert ihn als Entwurf).
+    /// </summary>
+    private async Task EntwurfWiederherstellenAsync()
+    {
+        try
+        {
+            if (!CanEdit || SidebarIsVisible)
+                return;
+
+            if (await editGalerie.EntwurfWiederherstellenAsync(Einträge) is { } eintraege)
+            {
+                SelectedEinträge = eintraege;
+                // Nicht über toggleSlideoverBlazor: das würde die Seitenleiste leeren
+                SidebarIsVisible = true;
+                await JSRuntime.InvokeVoidAsync("toggleSlideover");
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Wiederherstellen des Entwurfs");
+        }
+    }
+
+    public string[] suchdata ={ "Aikido", "Bujinkan", "Genbukan", "Iaido", "Jodo", "Home", "Öffentlich" };
 
     private async Task toggleSlideoverBlazor()
     {

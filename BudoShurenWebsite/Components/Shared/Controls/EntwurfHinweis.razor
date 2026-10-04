@@ -1,0 +1,25 @@
+@*
+    Gehört auf jede Bearbeitungsseite, die ihren Stand als Entwurf sichert (Services/Entwuerfe/EntwurfSicherung).
+    Zeigt nach dem Wiederherstellen einen Hinweis mit "Änderungen verwerfen".
+    Die Markierung data-entwurf-sicherung braucht js/script.js: verlässt man den Tab, meldet es dem Server die Eingabe
+    des Felds, in dem man gerade schreibt.
+*@
+
+<span hidden data-entwurf-sicherung></span>
+@if (VomUtc is { } vomUtc)
+{
+    <div class="font-ptsans mb-4 rounded border border-amber-500 bg-amber-50 p-3 text-sm" role="status">
+        Deine nicht gespeicherten Änderungen vom @Ortszeit.AusUtc(vomUtc).ToString("dd.MM.yyyy, HH:mm") Uhr wurden wiederhergestellt.
+        Sie gelten erst nach dem Speichern.
+        <button type="button" class="ml-1 font-bold hover:underline" @onclick="OnVerwerfen">Änderungen verwerfen</button>
+    </div>
+}
+
+@code {
+    /// <summary>Letzte Sicherung des wiederhergestellten Entwurfs; null = es wurde nichts wiederhergestellt.</summary>
+    [Parameter]
+    public DateTime? VomUtc { get; set; }
+
+    [Parameter]
+    public EventCallback OnVerwerfen { get; set; }
+}

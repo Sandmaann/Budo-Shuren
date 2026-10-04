@@ -214,6 +214,9 @@ namespace BudoShurenWebsite.Services
         {
             _context.WissenBloecke.Add(block);
             await _context.SaveChangesAsync();
+            // Im Editor hochgeladene Bilder sind bis hierhin vorläufig (BildAufraeumJob)
+            if (block.BildId is { } bildId)
+                await BildVerwendung.AlsGespeichertMarkierenAsync(_context, [bildId]);
             await InvalidateCacheForBeitragAsync(block.BeitragId);
             return block;
         }
@@ -222,6 +225,9 @@ namespace BudoShurenWebsite.Services
         {
             _context.WissenBloecke.Update(block);
             await _context.SaveChangesAsync();
+            // Im Editor hochgeladene Bilder sind bis hierhin vorläufig (BildAufraeumJob)
+            if (block.BildId is { } bildId)
+                await BildVerwendung.AlsGespeichertMarkierenAsync(_context, [bildId]);
             await InvalidateCacheForBeitragAsync(block.BeitragId);
             return block;
         }

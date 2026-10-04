@@ -56,7 +56,12 @@ namespace BudoShurenWebsite
 
                 // Add services to the container.
                 builder.Services.AddRazorComponents()
-                    .AddInteractiveServerComponents();
+                    .AddInteractiveServerComponents(optionen =>
+                    {
+                        // Standard sind 3 Minuten. Wer auf dem Handy den Tab wechselt, soll danach ohne Neuladen weiterarbeiten.
+                        // Reicht das nicht (oder verwirft der Browser die Seite), stellt EntwurfSicherung die Bearbeitung wieder her.
+                        optionen.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(30);
+                    });
                 builder.Services.AddSyncfusionBlazor();
                 // Register the locale service to localize the  SyncfusionBlazor components.
                 builder.Services.AddSingleton(typeof(ISyncfusionStringLocalizer), typeof(SyncfusionLocalizer));
@@ -92,6 +97,8 @@ namespace BudoShurenWebsite
                 builder.Services.AddScoped<IAktuellesService, AktuellesService>();
                 //Nie gespeicherte Bilder aus den Editoren (Aktuelles, Veranstaltungen) aufraeumen, siehe BildAufraeumJob
                 builder.Services.AddSingleton<BildAufraeumJob>();
+                builder.Services.AddSingleton<BudoShurenWebsite.Services.Entwuerfe.IEntwurfSpeicher, BudoShurenWebsite.Services.Entwuerfe.EntwurfSpeicher>();
+                builder.Services.AddSingleton<IBildUpload, BildUpload>();
                 builder.Services.AddHostedService<BildAufraeumHostedService>();
 
                 //Mailversand: SMTP-Transport, Warteschlange und Hintergrundversand (siehe Services/Mail)

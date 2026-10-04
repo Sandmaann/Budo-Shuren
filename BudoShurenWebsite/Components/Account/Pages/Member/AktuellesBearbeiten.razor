@@ -5,6 +5,7 @@
 @using BudoShurenWebsite.Models
 @using BudoShurenWebsite.Models.Enums
 @using BudoShurenWebsite.Services
+@using BudoShurenWebsite.Services.Entwuerfe
 @using BudoShurenWebsite.Data
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
@@ -16,6 +17,11 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject ApplicationDbContext DbContext
+@inject UserService UserService
+@inject IEntwurfSpeicher Entwuerfe
+@inject ILogger<AktuellesBearbeiten> Logger
+
+@implements IAsyncDisposable
 
 <div class="container mx-auto max-w-screen-md">
     <div class="mx-10">
@@ -32,6 +38,8 @@
         }
         else
         {
+            <EntwurfHinweis VomUtc="_entwurfVomUtc" OnVerwerfen="EntwurfVerwerfenAsync" />
+
             <div class="space-y-6">
 
                 <!-- Metadaten -->
@@ -212,10 +220,11 @@
                         </button>
                     }
 
-                    <a href="/Account/Member/Aktuelles"
-                       class="font-ptsans rounded border border-gray-400 px-5 py-2 text-sm tracking-wider hover:bg-gray-50">
+                    @* Button statt Link: Abbrechen verwirft auch den Entwurf *@
+                    <button type="button" @onclick="AbbrechenAsync"
+                            class="font-ptsans rounded border border-gray-400 px-5 py-2 text-sm tracking-wider hover:bg-gray-50">
                         Abbrechen
-                    </a>
+                    </button>
                 </div>
             </div>
         }
@@ -234,6 +243,11 @@
     private bool _meldungBeiButtons;
     private bool _isError = false;
     private bool _slugManuallyEdited = false;
+
+    // Ungespeicherte Eingaben überstehen ein Neuladen der Seite (Tab-Wechsel auf dem Handy)
+    private EntwurfSicherung<AktuellesEntwurf>? _sicherung;
+    private DateTime? _entwurfVomUtc;
+    private bool _geladen;
 
     protected override async Task OnInitializedAsync()
     {
@@ -259,7 +273,56 @@
             _beitrag.Bloecke = new List<AktuellesBlock>();
         }
 
+        if (!_isError)
+            await EntwurfUebernehmenAsync();
+
         _isLoading = false;
+    }
+
+    /// <summary>Überträgt den Entwurf auf den geladenen Beitrag, falls es einen gibt, und sichert ab jetzt jede Änderung.</summary>
+    private async Task EntwurfUebernehmenAsync()
+    {
+        await UserService.InitializeAsync();
+        if (UserService.CurrentUser.User?.Id is not { } benutzerId)
+            return;
+
+        _sicherung = new(Entwuerfe, Logger, benutzerId, Id is { } id ? $"aktuelles:{id}" : "aktuelles:neu",
+            () => _geladen ? AktuellesEntwurf.Aus(_beitrag, _slugManuallyEdited) : null, e => e.BildIds());
+
+        if (await _sicherung.LadenAsync() is { } entwurf)
+        {
+            var fehlend = await Entwuerfe.FehlendeBilderAsync(entwurf.Daten.BildIds().ToList());
+            entwurf.Daten.AnwendenAuf(_beitrag, fehlend);
+            _slugManuallyEdited = entwurf.Daten.SlugManuell;
+            _entwurfVomUtc = entwurf.GeaendertUtc;
+        }
+
+        _geladen = true;
+        _sicherung.AusgangMerken();
+        // Beim Prerendering gibt es noch nichts zu sichern
+        if (RendererInfo.IsInteractive)
+            _sicherung.Starten(InvokeAsync);
+    }
+
+    /// <summary>Der Beitrag ist ein Objekt der Datenbank und trägt die Änderungen des Entwurfs: deshalb die Seite ganz neu laden.</summary>
+    private async Task EntwurfVerwerfenAsync()
+    {
+        if (_sicherung is not null)
+            await _sicherung.LoeschenAsync();
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    private async Task AbbrechenAsync()
+    {
+        if (_sicherung is not null)
+            await _sicherung.LoeschenAsync();
+        NavigationManager.NavigateTo("Account/Member/Aktuelles");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_sicherung is not null)
+            await _sicherung.DisposeAsync();
     }
 
     private void OnTitelChanged(Microsoft.AspNetCore.Components.ChangeEventArgs e)
@@ -359,6 +422,14 @@
         {
             NormalizeSortierung();
             await AktuellesService.Speichern(_beitrag);
+
+            // Gespeichert: der Entwurf hat seinen Zweck erfüllt, der gespeicherte Stand ist der neue Ausgang
+            if (_sicherung is not null)
+            {
+                await _sicherung.LoeschenAsync();
+                _sicherung.AusgangMerken();
+            }
+            _entwurfVomUtc = null;
 
             if (!Id.HasValue)
             {

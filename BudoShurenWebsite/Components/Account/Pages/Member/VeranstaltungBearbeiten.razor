@@ -1,13 +1,17 @@
 @page "/Account/Member/Veranstaltungen/Bearbeiten"
 @page "/Account/Member/Veranstaltungen/Bearbeiten/{Id:int}"
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 
 @using BudoShurenWebsite.Models.Enums
+@using BudoShurenWebsite.Services.Entwuerfe
 @using Microsoft.AspNetCore.Authorization
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Abteilungsleiter}")]
 
 @inject IVeranstaltungVerwaltungService Verwaltung
+@inject IEntwurfSpeicher Entwuerfe
+@inject ILogger<VeranstaltungBearbeiten> Logger
 @inject UserService UserService
 @inject IOptions<VeranstaltungenOptionen> Optionen
 @inject NavigationManager NavigationManager
@@ -48,6 +52,8 @@
             {
                 @Meldungen
             }
+
+            <EntwurfHinweis VomUtc="_entwurfVomUtc" OnVerwerfen="EntwurfVerwerfenAsync" />
 
             <EditForm Model="_eingabe" OnValidSubmit="SpeichernAsync" FormName="veranstaltung-bearbeiten">
                 <DataAnnotationsValidator />
@@ -380,6 +386,12 @@
     private string? _gespeicherterTermin;
     private bool _terminGeaendert;
 
+    // Ungespeicherte Eingaben überstehen ein Neuladen der Seite (Tab-Wechsel auf dem Handy)
+    private EntwurfSicherung<VeranstaltungEingabe>? _sicherung;
+    private DateTime? _entwurfVomUtc;
+
+    private string EntwurfSchluessel => Id is { } id ? $"veranstaltung:{id}" : "veranstaltung:neu";
+
     protected override async Task OnParametersSetAsync()
     {
         if (!Optionen.Value.Aktiviert)
@@ -409,6 +421,66 @@
         {
             _eingabe = await Verwaltung.NeueEingabeAsync(_benutzer!);
         }
+
+        await EntwurfUebernehmenAsync();
+    }
+
+    /// <summary>Ersetzt den geladenen Stand durch den Entwurf, falls es einen gibt, und sichert ab jetzt jede Änderung.</summary>
+    private async Task EntwurfUebernehmenAsync()
+    {
+        _entwurfVomUtc = null;
+        if (_eingabe is null)
+            return;
+
+        if (_sicherung?.Schluessel != EntwurfSchluessel)
+        {
+            if (_sicherung is not null)
+                await _sicherung.DisposeAsync();
+            _sicherung = new(Entwuerfe, Logger, _benutzer!.UserId, EntwurfSchluessel, () => _eingabe, e => e.Bloecke.SelectMany(b => b.BildIds));
+        }
+
+        if (await _sicherung.LadenAsync() is { } entwurf)
+        {
+            var fehlend = await Entwuerfe.FehlendeBilderAsync(entwurf.Daten.Bloecke.SelectMany(b => b.BildIds).ToList());
+            foreach (var block in entwurf.Daten.Bloecke)
+                block.BildIds.RemoveAll(fehlend.Contains);
+
+            // Nur zur Anzeige, deshalb aus dem gespeicherten Stand. Hat sich die Veranstaltung seit dem Entwurf geändert,
+            // lehnt das Speichern ihn ab (RowVersion des Entwurfs).
+            entwurf.Daten.Status = _eingabe.Status;
+            entwurf.Daten.WarVeroeffentlicht = _eingabe.WarVeroeffentlicht;
+
+            _eingabe = entwurf.Daten;
+            _entwurfVomUtc = entwurf.GeaendertUtc;
+        }
+
+        _sicherung.AusgangMerken();
+        // Beim Prerendering gibt es noch nichts zu sichern
+        if (RendererInfo.IsInteractive)
+            _sicherung.Starten(InvokeAsync);
+    }
+
+    private async Task EntwurfVerwerfenAsync()
+    {
+        if (_sicherung is not null)
+            await _sicherung.LoeschenAsync();
+        _meldungen = [];
+        await EingabeLadenAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_sicherung is not null)
+            await _sicherung.DisposeAsync();
+    }
+
+    /// <summary>Speichert das Formular. Danach ist der Entwurf überflüssig.</summary>
+    private async Task<VerwaltungsErgebnis> FormularSpeichernAsync()
+    {
+        var ergebnis = await AusfuehrenAsync(() => Verwaltung.SpeichernAsync(_eingabe!, _benutzer!), "Gespeichert.");
+        if (ergebnis.Erfolgreich && _sicherung is not null)
+            await _sicherung.LoeschenAsync();
+        return ergebnis;
     }
 
     private void TagHinzufuegen()
@@ -457,7 +529,7 @@
     private async Task SpeichernAsync()
     {
         var vorher = _gespeicherterTermin;
-        var ergebnis = await AusfuehrenAsync(() => Verwaltung.SpeichernAsync(_eingabe!, _benutzer!), "Gespeichert.");
+        var ergebnis = await FormularSpeichernAsync();
         await NachSpeichernAsync(ergebnis);
 
         // Nur wer schon Anmeldungen bekommen kann, muss informiert werden (Plan 6.2); bleibt stehen, bis die Seite verlassen wird
@@ -468,7 +540,7 @@
     /// <summary>Nur für bereits gespeicherte Entwürfe (der Button erscheint erst dann).</summary>
     private async Task SpeichernUndVeroeffentlichenAsync()
     {
-        var ergebnis = await AusfuehrenAsync(() => Verwaltung.SpeichernAsync(_eingabe!, _benutzer!), "Gespeichert.");
+        var ergebnis = await FormularSpeichernAsync();
         if (ergebnis.Erfolgreich)
         {
             // Neu laden, damit die Veröffentlichung den gespeicherten Stand sieht und Fehler sich darauf beziehen
@@ -518,6 +590,10 @@
         var ergebnis = await AusfuehrenAsync(() => Verwaltung.LoeschenAsync(Id!.Value, _benutzer!), "Gelöscht.");
         _loeschenBestaetigen = false;
         if (ergebnis.Erfolgreich)
+        {
+            if (_sicherung is not null)
+                await _sicherung.LoeschenAsync();
             NavigationManager.NavigateTo("Account/Member/Veranstaltungen");
+        }
     }
 }

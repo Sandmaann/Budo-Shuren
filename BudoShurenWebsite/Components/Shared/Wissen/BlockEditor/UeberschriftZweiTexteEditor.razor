@@ -1,7 +1,5 @@
 @using BudoShurenWebsite.Models
 @using Markdig
-@using Syncfusion.Blazor.Inputs
-@using System.Text.Json
 @inject BudoShurenWebsite.Services.ImageService ImageService
 
 <div class="rounded border border-gray-300 p-4">
@@ -80,14 +78,7 @@
         }
         else
         {
-            <SfUploader ID="UploadFiles"
-                        AllowedExtensions=".png, .jpg, .jpeg, .webp"
-                        MaxFileSize="5242880"
-                        AutoUpload="true">
-                <UploaderAsyncSettings SaveUrl="Account/Member/Filesave/Save"
-                                       RemoveUrl="Account/Member/Filesave/Remove" />
-                <UploaderEvents Success="SuccessHandler" OnFailure="FailureHandler" />
-            </SfUploader>
+            <BildAuswahl OnHochgeladen="BildHochgeladen" />
         }
         @if (!string.IsNullOrEmpty(_uploadError))
         {
@@ -191,47 +182,10 @@
             .Select(a => a.Trim())
             .Where(a => a.Length > 0);
 
-    private async void SuccessHandler(SuccessEventArgs args)
+    private void BildHochgeladen(HochgeladenesBild bild)
     {
-        try
-        {
-            if (args.Operation == "upload")
-            {
-                var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var resp = JsonSerializer.Deserialize<UploadResponse>(args.Response.ResponseText, opts);
-                if (resp?.Success == true && resp.Files.FirstOrDefault() is { } f)
-                {
-                    Block.BildId = f.Id;
-                    _uploadError = string.Empty;
-                }
-                else
-                {
-                    _uploadError = $"Server-Antwort ungültig: {args.Response.ResponseText}";
-                }
-                StateHasChanged();
-            }
-        }
-        catch (Exception ex)
-        {
-            _uploadError = $"Fehler: {ex.Message}";
-            StateHasChanged();
-        }
-    }
-
-    private void FailureHandler(Syncfusion.Blazor.Inputs.FailureEventArgs args)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(args.Response.ResponseText);
-            _uploadError = doc.RootElement.TryGetProperty("message", out var msg)
-                ? msg.GetString() ?? "Upload fehlgeschlagen."
-                : $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
-        }
-        catch
-        {
-            _uploadError = $"Upload fehlgeschlagen (HTTP {args.Response.StatusCode})";
-        }
-        StateHasChanged();
+        Block.BildId = bild.Id;
+        _uploadError = string.Empty;
     }
 
     private async Task RemoveBild()
@@ -248,7 +202,4 @@
     private void InsertItalic1() => Block.TextInhalt  += "*kursiver Text*";
     private void InsertBold2()   => Block.TextInhalt2 += "**fetter Text**";
     private void InsertItalic2() => Block.TextInhalt2 += "*kursiver Text*";
-
-    private record UploadResponse(bool Success, List<UploadedFile> Files);
-    private record UploadedFile(string FileName, int Id);
 }
