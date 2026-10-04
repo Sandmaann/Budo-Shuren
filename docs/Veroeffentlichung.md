@@ -1,16 +1,18 @@
 # Repository veröffentlichen
 
-Anleitung, um das Repository öffentlich zu machen. Geplant vor dem Release von v2.1, wenn die Bugfixes am Veranstaltungsmodul fertig sind.
+Anleitung, um das Repository öffentlich zu machen.
+
+**Stand 04.10.2026:** Teil A ist umgesetzt. Offen sind die Teile B, C und D.
 
 Diese Datei enthält bewusst keine Geheimnisse, nur wo sie stehen und wie man sie entfernt. Nach der Veröffentlichung kann sie gelöscht werden.
 
-## Ausgangslage (Prüfung vom 02.10.2026)
+## Ausgangslage (Prüfung vom 02.10.2026, vor Teil A)
 
 ### Geheimnisse
 
 | Was | Wo im aktuellen Stand | Wo in der Historie |
 |---|---|---|
-| Syncfusion-Lizenzschlüssel | `Program.cs`, `RegisterLicense("***ENTFERNT***")` | dazu drei ältere Schlüssel in früheren Commits |
+| Syncfusion-Lizenzschlüssel | `Program.cs`, `RegisterLicense("***ENTFERNT***")` | insgesamt sechs verschiedene Schlüssel in sieben Commits |
 | BetterStack-Token | `nlog.config`, Attribut `sourceToken` | seit Commit „Logging: betterstack als dump eingebaut“ (23.08.2026) |
 | SQL-Server-Passwort (Server im internen Netz, Benutzer mit Passwort) | nicht mehr vorhanden | Commit „Release 1“ (02.11.2024), Datei `appsettings - Kopieren.Development.json` |
 | Data-Protection-Schlüssel, unverschlüsselt, abgelaufen 2025 | `BudoShurenWebsite/keys/key-….xml` | seit „Release 1“ |
@@ -39,58 +41,36 @@ Deshalb: Historie in einer Kopie bereinigen und in ein **neues** Repository push
 
 ## Reihenfolge
 
-1. Bugfixes am Veranstaltungsmodul fertigstellen.
-2. Teil A: Code bereinigen, per PR nach `release/v2.1`.
+1. ~~Bugfixes am Veranstaltungsmodul fertigstellen.~~
+2. ~~Teil A: Code bereinigen, per PR nach `release/v2.1`.~~
 3. Teil B: Server vorbereiten.
 4. Teil C: Zugangsdaten ändern.
 5. `release/v2.1` nach `main` mergen (im alten Repository).
 6. Teil D: Historie bereinigen und ins neue Repository pushen.
 7. Im neuen Repository taggen (`v2.1.0.0`) und deployen.
 
-## Teil A: Code bereinigen
+## Teil A: Code bereinigen (erledigt)
 
-Eigener Branch von `release/v2.1`, PR nach `release/v2.1`.
-
-### A1 Syncfusion-Schlüssel aus der Konfiguration lesen
-
-- `Program.cs` liest den Schlüssel aus `Syncfusion:LicenseKey` statt aus dem Code.
-- Fehlt der Wert, nur eine Warnung loggen. Syncfusion zeigt dann einen Lizenzhinweis, die App läuft aber. Tests und CI brauchen den Schlüssel nicht.
-- Lokal setzen:
-
-```sh
-dotnet user-secrets set "Syncfusion:LicenseKey" "<schlüssel>"
-```
-
-### A2 BetterStack-Token aus der Konfiguration lesen
-
-- In `nlog.config` den Token durch einen Platzhalter ersetzen, z. B. `${environment:BETTERSTACK_SOURCE_TOKEN}`.
-- **Prüfen:** NLog lädt `nlog.config` vor dem Host. Ob `sourceToken` beim BetterStack-Target Layout-Platzhalter auflöst, ist nicht sicher. Alternative: Token nach dem Laden in `Program.cs` aus der Konfiguration lesen und am Target setzen.
-- Ohne Token darf kein Fehler entstehen. Dann nur Konsole und Datei.
-
-### A3 Verbindung in `appsettings.json` neutral setzen
-
-- Auf einen neutralen Standard wie `Server=localhost\SQLEXPRESS;Database=BudoShurenDev;…` setzen.
-- Jeder Entwickler und der Server überschreiben den Wert wie bisher (User Secrets bzw. Server-`appsettings.json`).
-
-### A4 Aufräumen
-
-- Löschen: `BudoShurenWebsite/keys/`, `BudoShurenWebsite/internal-nlog.txt`, `Properties/ServiceDependencies/`, `wwwroot/images - Kopie/`, `_BudoShurenWebsite/`, `BlazorTestApp/`.
-- Vorher prüfen, ob `serviceDependencies*.json` noch gebraucht wird (Visual-Studio-Verbindungsdienste).
-- `.gitignore` ergänzen: `keys/`, `logs/`, `internal-nlog.txt`.
-
-### A5 Lizenz und README
-
-- Lizenzdatei anlegen, z. B. MIT.
-- README: Hinweis, dass Syncfusion kommerziell ist und jeder eine eigene Lizenz braucht (Community License möglich).
-- README/CLAUDE.md: lokale Einrichtung mit allen User Secrets (Verbindung, `AdminStart`, `Syncfusion:LicenseKey`, BetterStack optional).
+- **Syncfusion:** `Program.cs` liest den Schlüssel aus `Syncfusion:LicenseKey`. Fehlt er, gibt es nur eine Warnung im Log und den Lizenzhinweis von Syncfusion.
+- **BetterStack:** Das Ziel steht nicht mehr in der `nlog.config`. `Global/BetterStackProtokoll` hängt es beim Start an, wenn `BetterStack:SourceToken` und `BetterStack:Endpoint` gesetzt sind. In der Umgebung „Test“ nie.
+- **`appsettings.json`:** neutrale Verbindung, dazu leere Schlüssel für `Syncfusion` und `BetterStack`.
+- **Gelöscht:** `BudoShurenWebsite/keys/`, `internal-nlog.txt`, `Properties/ServiceDependencies/`, `wwwroot/images - Kopie/`, `_BudoShurenWebsite/`, `BlazorTestApp/`. `.gitignore` ergänzt.
+- **Lizenz:** `LICENSE` (alle Rechte vorbehalten, Hinweis auf fremde Bestandteile), README mit Lizenz und lokaler Einrichtung.
 
 ## Teil B: Server vorbereiten
 
-**Vor** dem ersten Deploy nach Teil A, sonst fehlen auf dem Server Lizenz und Logging.
+**Vor** dem ersten Deploy nach Teil A, sonst fehlen auf dem Server Lizenz und Logging. Das Deploy ersetzt die `nlog.config` auf dem Server durch die neue ohne Token.
 
-- In die `appsettings.json` auf dem Server eintragen: `Syncfusion:LicenseKey`.
-- BetterStack-Token je nach Lösung aus A2 als Umgebungsvariable oder in der Server-`appsettings.json` setzen (neuer Token aus Teil C).
-- `DeployScript.ps1` ergänzt nur Schlüssel, die in der `appsettings.json` des Repositorys stehen. Die Geheimnisse stehen dort nicht mehr, also muss man sie auf dem Server von Hand eintragen. Vorhandene Werte auf dem Server bleiben bei jedem Deploy erhalten.
+In die `appsettings.json` auf dem Server eintragen:
+
+```json
+"Syncfusion": { "LicenseKey": "<schlüssel>" },
+"BetterStack": { "SourceToken": "<neuer token aus Teil C>", "Endpoint": "<https://…betterstackdata.com>" }
+```
+
+`DeployScript.ps1` legt die leeren Schlüssel beim Deploy selbst an, füllt sie aber nicht. Vorhandene Werte auf dem Server bleiben bei jedem Deploy erhalten.
+
+Kontrolle nach dem Deploy: Im Log steht keine Warnung „… ist nicht gesetzt“, die Syncfusion-Komponenten zeigen keinen Lizenzhinweis, und in BetterStack kommen Meldungen an.
 
 ## Teil C: Zugangsdaten ändern
 
@@ -124,6 +104,7 @@ Datei `ersetzungen.txt` **außerhalb** der Kopie anlegen:
 ```text
 regex:RegisterLicense\("[^"]+"\)==>RegisterLicense("***ENTFERNT***")
 regex:sourceToken="***ENTFERNT***"$]+"==>sourceToken="***ENTFERNT***"
+regex:endpoint="https://[^"]*betterstackdata[^"]*"==>endpoint="***ENTFERNT***"
 regex:(?i)(Password|Pwd)=[^;"]+==>\1=***ENTFERNT***
 ```
 
@@ -162,7 +143,11 @@ git filter-repo --sensitive-data-removal \
   --path "BudoShurenWebsite/appsettings_astrum.json" \
   --path "BudoShurenWebsite/appsettings_astrum.Development.json" \
   --path "BudoShurenWebsite/keys/" \
-  --path "BudoShurenWebsite/internal-nlog.txt"
+  --path "BudoShurenWebsite/internal-nlog.txt" \
+  --path "BudoShurenWebsite/Properties/ServiceDependencies/" \
+  --path "BudoShurenWebsite/wwwroot/images - Kopie/" \
+  --path "_BudoShurenWebsite/" \
+  --path "BlazorTestApp/"
 ```
 
 ### D6 Prüfen
@@ -174,7 +159,7 @@ git log --all -p | grep -E "RegisterLicense\(\"[^*]"
 git log --all -p | grep -E "sourceToken=\"[^*$]"
 git log --all -p | grep -iE "(Password|Pwd)=[^*;\"]"
 git log --all --format="%ae" | sort -u | grep -v users.noreply.github.com
-git log --all --name-only --format= | grep -E "keys/|internal-nlog|Kopieren|astrum"
+git log --all --name-only --format= | grep -E "keys/|internal-nlog|Kopieren|astrum|ServiceDependencies/|images - Kopie|^_BudoShurenWebsite/|^BlazorTestApp/"
 ```
 
 Zusätzlich stichprobenartig die Original-Geheimnisse direkt suchen (z. B. die ersten Zeichen des Tokens mit `git log --all -S"<anfang>"`).

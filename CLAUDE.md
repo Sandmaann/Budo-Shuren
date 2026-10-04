@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Website for the Budo Shuren Dojo Augsburg: Blazor (.NET 10, Interactive Server render mode) + TailwindCSS, SQL Server via EF Core, ASP.NET Identity. UI text, domain names and code comments are German — keep it that way.
 
-`BudoShuren.sln` contains `BudoShurenWebsite/` (the app) and `BudoShurenWebsite.Tests/` (tests, see below). Stopping the app and applying migrations manually is done from the admin page (`/Account/Member/Admin`) via `AdminMaintenanceService`. `_BudoShurenWebsite/` and `BlazorTestApp/` are old/experimental copies, not part of the solution — don't edit them.
+`BudoShuren.sln` contains `BudoShurenWebsite/` (the app) and `BudoShurenWebsite.Tests/` (tests, see below). Stopping the app and applying migrations manually is done from the admin page (`/Account/Member/Admin`) via `AdminMaintenanceService`.
 
 ## Git workflow
 
@@ -38,7 +38,12 @@ The connection string in `appsettings.json` points to a local named SQL Server i
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost\SQLEXPRESS;Database=BudoShurenDev;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
 dotnet user-secrets set "AdminStart:Email" "<email>"        # first admin on a new DB, see Architecture/Startup
 dotnet user-secrets set "AdminStart:Passwort" "<password>"
+dotnet user-secrets set "Syncfusion:LicenseKey" "<key>"     # without it the app runs, Syncfusion shows a license banner
+dotnet user-secrets set "BetterStack:SourceToken" "<token>" # optional, together with BetterStack:Endpoint
+dotnet user-secrets set "BetterStack:Endpoint" "<url>"
 ```
+
+The repository is going to be public: never commit secrets, real connection strings or private e-mail addresses. Secrets live in user secrets locally and in the server's `appsettings.json` (empty keys in the repo's `appsettings.json` make `DeployScript.ps1` create them there).
 
 ## Tests
 
@@ -59,7 +64,7 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
 
 ## Architecture
 
-- **Startup (`Program.cs`)**: registers all services, then on every start runs `Database.Migrate()`, creates the `DataProtectionKeys` table via the `DataProtectionKeyContext` migration only if it is missing (older DBs have it without history entry), and seeds the roles from `Global/Roles.cs` (Admin, Abteilungsleiter, Editor, Mitglied, Gast). If no user has the Admin role, `Services/AdminBenutzerAnlage` creates one from the config section `AdminStart` (`Email`, `Passwort`; set via user secrets, never in `appsettings.json`) or promotes an existing user with that email; without that section it only logs a warning. Culture is forced to `de-DE`. Logging is NLog (`nlog.config`, BetterStack target), not the default providers.
+- **Startup (`Program.cs`)**: registers all services, then on every start runs `Database.Migrate()`, creates the `DataProtectionKeys` table via the `DataProtectionKeyContext` migration only if it is missing (older DBs have it without history entry), and seeds the roles from `Global/Roles.cs` (Admin, Abteilungsleiter, Editor, Mitglied, Gast). If no user has the Admin role, `Services/AdminBenutzerAnlage` creates one from the config section `AdminStart` (`Email`, `Passwort`; set via user secrets, never in `appsettings.json`) or promotes an existing user with that email; without that section it only logs a warning. Culture is forced to `de-DE`. Logging is NLog (`nlog.config`: file and console), not the default providers. The BetterStack target is added in code by `Global/BetterStackProtokoll` when `BetterStack:SourceToken` and `BetterStack:Endpoint` are configured, never in the `Test` environment.
 - **Authorization**: Identity with `RequireConfirmedAccount`. Policies: `Aktiviert` (custom `VerifiedUserHandler` — checks `ApplicationUser.Verified`, i.e. admin-approved), `NotGuest`, `AdminOnly`. Member/admin management pages live under `Components/Account/Pages/Member/` (route prefix `/Account/Member/...`); `Ausgemustert/` holds retired Identity pages.
 - **Data access**: `ApplicationDbContext` is registered both as a factory and scoped. Syncfusion components (`SfGrid`, `SfSchedule`) get their data through custom `DataAdaptor` subclasses in `Data/*Adaptor.cs`, which do search/sort/paging in memory via `DataOperations`. Separate `DataProtectionKeyContext` persists data-protection keys in the DB.
 - **Mail** (`Services/Mail/`): all SMTP traffic goes through `IMailTransport` (`MailKitTransport`, credentials from the `EmailSettings` row with `IsMain`; sender is always that system address). Two ways to send:
@@ -103,6 +108,6 @@ dotnet test --solution BudoShuren.sln --filter-not-trait "Category=Integration" 
   - `wwwroot/js/script.js` sends the value of the focused field to the server when the tab is hidden (pages with `data-entwurf-sicherung`).
   - `DisconnectedCircuitRetentionPeriod` is 30 minutes (`Program.cs`), so a short tab switch needs no reload at all.
 - **Maintenance mode**: `MaintenanceMiddleware` (first in the pipeline) returns a 503 page whenever `<ContentRootPath>/maintenance.flag` exists. `DeployScript.ps1` creates/removes this flag, backs up the IIS target, merges `appsettings.json` (only fills missing/empty keys, never overwrites server values), copies the main DLL last and touches `web.config` to recycle IIS. Keep the flag path in sync between the two.
-- Syncfusion license key is registered in `Program.cs`; Syncfusion UI strings are localized via `Resources/SfResources.resx` + `SyncfusionLocalizer`.
+- The Syncfusion license key is read from `Syncfusion:LicenseKey` in `Program.cs` (only a warning if missing); Syncfusion UI strings are localized via `Resources/SfResources.resx` + `SyncfusionLocalizer`.
 - **Success/error messages** go where the page is after the action: if it reloads or navigates (static SSR form POST, `NavigateTo`), it shows the top, so the message goes at the top; in interactive components the page does not scroll, so the message goes right next to the button that triggered it (several buttons → several places, see `VeranstaltungUebersichtSeite`). `InteresseFormular` decides via `RendererInfo.IsInteractive`.
 - **Links** in new code are relative to `<base href>` (appsettings `BaseHref`): no leading `/` and no bare `#anker`, see `VeranstaltungLinks` and the test helper `ModulLinks`.

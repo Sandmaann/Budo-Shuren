@@ -54,6 +54,13 @@ namespace BudoShurenWebsite
 
                 var builder = WebApplication.CreateBuilder(args);
 
+                // BetterStack erst hier: Token und Endpoint kommen aus der Konfiguration. In der Umgebung "Test" nie.
+                if (!builder.Environment.IsEnvironment("Test")
+                    && !BetterStackProtokoll.Einrichten(NLog.LogManager.LogFactory, builder.Configuration))
+                {
+                    logger.Warn("BetterStack:SourceToken oder BetterStack:Endpoint ist nicht gesetzt. Es wird nur auf Konsole und in die Datei geloggt.");
+                }
+
                 // Add services to the container.
                 builder.Services.AddRazorComponents()
                     .AddInteractiveServerComponents(optionen =>
@@ -148,7 +155,16 @@ namespace BudoShurenWebsite
                     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
                 }).AddIdentityCookies();
 
-                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("***ENTFERNT***");
+                // Lizenzschlüssel aus der Konfiguration (User Secrets bzw. appsettings.json auf dem Server), nie im Code.
+                var syncfusionSchluessel = builder.Configuration["Syncfusion:LicenseKey"];
+                if (string.IsNullOrWhiteSpace(syncfusionSchluessel))
+                {
+                    logger.Warn("Syncfusion:LicenseKey ist nicht gesetzt. Die Syncfusion-Komponenten zeigen einen Lizenzhinweis.");
+                }
+                else
+                {
+                    Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionSchluessel);
+                }
 
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
                 if (string.IsNullOrWhiteSpace(connectionString))

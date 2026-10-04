@@ -2,6 +2,29 @@
 
 Die Webseite wird mit Blazor .NET 10 und TailwindCSS aufgebaut.
 
+## Lizenz
+
+Alle Rechte vorbehalten, siehe [LICENSE](LICENSE). Der Quelltext ist nur zur Ansicht veröffentlicht. Code, Design und Inhalte (Texte, Bilder, Logos) dürfen nur nach vorheriger Rückfrage und schriftlicher Zustimmung verwendet werden.
+
+Die Oberfläche nutzt Komponenten von [Syncfusion](https://www.syncfusion.com/). Sie sind kommerziell lizenziert. Wer das Projekt baut oder betreibt, braucht einen eigenen Lizenzschlüssel (z. B. über die Community License).
+
+## Lokale Einrichtung
+
+Geheimnisse stehen nie im Repository. Lokal kommen sie in die User Secrets, auf dem Server in die dortige `appsettings.json`. Aus `BudoShurenWebsite/BudoShurenWebsite/`:
+
+```sh
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<verbindung>"   # nur, wenn der Standard aus appsettings.json nicht passt
+dotnet user-secrets set "AdminStart:Email" "<email>"                           # erster Admin in einer neuen Datenbank
+dotnet user-secrets set "AdminStart:Passwort" "<passwort>"
+dotnet user-secrets set "Syncfusion:LicenseKey" "<schlüssel>"
+dotnet user-secrets set "BetterStack:SourceToken" "<token>"                    # optional
+dotnet user-secrets set "BetterStack:Endpoint" "<https://…betterstackdata.com>"
+```
+
+- Ohne `Syncfusion:LicenseKey` läuft die App, die Syncfusion-Komponenten zeigen aber einen Lizenzhinweis.
+- Ohne `BetterStack:SourceToken` und `BetterStack:Endpoint` wird nur auf Konsole und in `logs/` geloggt.
+- Tests und CI brauchen keinen dieser Werte.
+
 ## Branches & Releases
 
 Einfacher GitHub Flow:

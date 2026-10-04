@@ -1,0 +1,27 @@
+Copyright © 2024–2026 Sandmaann. Alle Rechte vorbehalten.
+
+Dieses Repository ist nur zur Ansicht veröffentlicht. Es ist keine Open-Source-Lizenz erteilt.
+
+Ohne vorherige Rückfrage und schriftliche Zustimmung des Urhebers ist es nicht gestattet,
+Quelltext, Design (Gestaltung, Layout, Stylesheets, Grafiken) oder Inhalte (Texte, Bilder,
+Logos, Dokumente) ganz oder in Teilen zu kopieren, zu verändern, zu verbreiten oder für
+eigene Zwecke zu verwenden.
+
+Unberührt bleiben die Rechte, die GitHub-Nutzer nach den GitHub-Nutzungsbedingungen haben
+(Ansehen und Forken des Repositorys auf GitHub).
+
+Anfragen: per Issue in diesem Repository.
+
+Fremde Bestandteile
+
+Dieser Hinweis gilt nicht für Bestandteile Dritter. Für sie gelten die Lizenzen der
+jeweiligen Rechteinhaber, unter anderem:
+
+- Syncfusion Blazor-Komponenten: kommerzielle Lizenz von Syncfusion. Wer das Projekt baut
+  oder betreibt, braucht eine eigene Lizenz (z. B. die Community License).
+- Übrige NuGet-Pakete (u. a. ASP.NET Core, Entity Framework Core, NLog, MailKit, Markdig,
+  SixLabors.ImageSharp, BetterStack.Logs.NLog): jeweilige Lizenz des Pakets.
+- Tailwind CSS: MIT-Lizenz.
+- Schriften über Google Fonts (PT Sans, Yuji Syuku, Material Symbols): jeweilige Lizenz
+  der Schrift.
+- Einzelne Bilder stammen von Dritten und werden unter deren Lizenz verwendet.

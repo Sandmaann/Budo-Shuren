@@ -364,3 +364,7 @@ FodyWeavers.xsd
 /BlazorServerAuthTest
 /HabIchDasNichtGesehen
 /Tailwind
+
+# Lokale Schlüssel und Logdateien
+keys/
+internal-nlog.txt
