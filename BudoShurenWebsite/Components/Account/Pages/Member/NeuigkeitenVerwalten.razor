@@ -96,7 +96,9 @@
                             }
                             else if (!_eingabe.Id.HasValue)
                             {
-                                <BildAuswahl OnHochgeladen="bild => _eingabe.DbImageId = bild.Id" />
+                                @* Format: siehe BildZuschnitt *@
+                                <BildAuswahl OnHochgeladen="bild => _eingabe.DbImageId = bild.Id"
+                                             Hinweis="Auf der Startseite erscheint das Bild im Format 4:3 (Querformat) oder 3:4 (Hochformat). Was darüber hinausgeht, wird an den Rändern abgeschnitten." />
                             }
                         </div>
 

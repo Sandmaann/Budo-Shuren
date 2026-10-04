@@ -27,6 +27,38 @@ window.saveScrollPositionOnUnload = function (dotnetHelper) {
     });
 };
 
+// Seitenleiste zum Bearbeiten von Galeriebildern (GalerieVerwalten.razor, ImageDetail.razor)
+window.toggleSlideover = function () {
+    document.getElementById('slideover-container').classList.toggle('invisible');
+    document.getElementById('slideover-bg').classList.toggle('opacity-0');
+    document.getElementById('slideover-bg').classList.toggle('opacity-50');
+    document.getElementById('slideover').classList.toggle('translate-x-full');
+};
+
+// Galerie: meldet der Seite Beginn und Ende des Scrollens (Galerie.razor, GalerieVerwalten.razor).
+// Steht hier und nicht in den Komponenten: ein <script> dort läuft zweimal (vorgerendert und interaktiv).
+(function () {
+    var scrollTimeout;
+    var dotNetObject = null;
+
+    window.addEventListener('scroll', function () {
+        clearTimeout(scrollTimeout);
+        if (dotNetObject) {
+            dotNetObject.invokeMethodAsync('OnScrollStart');
+        }
+
+        scrollTimeout = setTimeout(function () {
+            if (dotNetObject) {
+                dotNetObject.invokeMethodAsync('OnScrollEnd');
+            }
+        }, 100);
+    });
+
+    window.registerScrolling = function (obj) {
+        dotNetObject = obj;
+    };
+})();
+
 // Neuigkeiten auf der Startseite: lange Texte sind per CSS gekürzt (siehe Home/Neuigkeiten.razor).
 // Wo nichts abgeschnitten ist, wird data-passt gesetzt; dort blendet das CSS Verlauf und "Weiterlesen" aus.
 // Gemessen wird neu, sobald sich die Seite ändert (Karussell kommt, Folie auf- oder zugeklappt, Fensterbreite).

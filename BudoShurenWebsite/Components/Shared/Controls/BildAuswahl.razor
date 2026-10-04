@@ -8,7 +8,7 @@
 @* Neuer Schlüssel nach jedem Upload: sonst zeigt das Feld weiter die alte Auswahl an *@
 <InputFile @key="_runde" multiple="@Mehrere" accept=".jpg,.jpeg,.png,.webp" disabled="@(_laedt || Gesperrt)"
            OnChange="HochladenAsync" class="font-ptsans text-xs" aria-label="@(Mehrere ? "Bilder auswählen" : "Bild auswählen")" />
-<p class="font-ptsans mt-1 text-xs text-gray-500">JPG, PNG oder WebP, höchstens 5 MB je Bild. Große Bilder werden verkleinert.</p>
+<p class="font-ptsans mt-1 text-xs text-gray-500">JPG, PNG oder WebP, höchstens 5 MB je Bild. Große Bilder werden verkleinert. @Hinweis</p>
 @if (_laedt)
 {
     <p class="font-ptsans mt-1 text-xs" role="status">Wird hochgeladen...</p>
@@ -30,6 +30,10 @@
 
     [Parameter]
     public bool Gesperrt { get; set; }
+
+    /// <summary>Zusatz zum Hinweis unter dem Feld, z. B. in welchem Format das Bild später erscheint.</summary>
+    [Parameter]
+    public string? Hinweis { get; set; }
 
     [Parameter]
     public EventCallback<HochgeladenesBild> OnHochgeladen { get; set; }

@@ -74,7 +74,7 @@
                         <div class="">Abteilung: @((context as AppointmentData)?.Abteilung)</div>
                         @if ((context as AppointmentData)?.VeranstaltungSlug is { } slug)
                         {
-                            <a href="@VeranstaltungLinks.Veranstaltung("", slug)" class="knopf-primaer mt-3">Zur Veranstaltung und Anmeldung</a>
+                            <a href="@VeranstaltungLinks.Veranstaltung("", slug)" class="knopf-primaer mt-3 h-auto min-h-10 w-full py-2 text-center tracking-wider">Zur Veranstaltung und Anmeldung</a>
                         }
                     </div>
                 }

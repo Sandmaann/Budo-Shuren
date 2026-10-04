@@ -67,7 +67,8 @@
                     <label class="@Label" for="@($"bilder-{index}")">Bilder hinzufügen</label>
                     <InputFile id="@($"bilder-{index}")" multiple accept=".jpg,.jpeg,.png,.webp" disabled="@(_laedtHoch is not null)"
                                OnChange="e => HochladenAsync(block, e)" class="font-ptsans text-xs" />
-                    <p class="@Hinweis">JPG, PNG oder WebP, höchstens 5 MB je Bild. Große Bilder werden verkleinert. Sie erscheinen nach dem Speichern auf der Seite.</p>
+                    <p class="@Hinweis">JPG, PNG oder WebP, höchstens 5 MB je Bild. Große Bilder werden verkleinert. Sie erscheinen nach dem Speichern auf der Seite.
+                        Bei mehreren Bildern pro Reihe erscheinen sie im Format 4:3 und werden dafür an den Rändern abgeschnitten; ein Klick öffnet das ganze Bild.</p>
                     @if (_laedtHoch == block)
                     {
                         <p class="font-ptsans mt-1 text-xs">Wird hochgeladen...</p>

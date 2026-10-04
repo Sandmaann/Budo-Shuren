@@ -604,32 +604,3 @@
         StateHasChanged();
     }
 }
-
-<script>
-    function toggleSlideover() {
-        document.getElementById('slideover-container').classList.toggle('invisible');
-        document.getElementById('slideover-bg').classList.toggle('opacity-0');
-        document.getElementById('slideover-bg').classList.toggle('opacity-50');
-        document.getElementById('slideover').classList.toggle('translate-x-full');
-    }
-
-    let scrollTimeout;
-    let dotNetObject = null;
-
-    window.addEventListener('scroll', function() {
-        clearTimeout(scrollTimeout);
-        if (dotNetObject) {
-            dotNetObject.invokeMethodAsync('OnScrollStart');
-        }
-
-        scrollTimeout = setTimeout(() => {
-            if (dotNetObject) {
-                dotNetObject.invokeMethodAsync('OnScrollEnd');
-            }
-        }, 100);
-    });
-
-    window.registerScrolling = function(obj) {
-        dotNetObject = obj;
-    }
-</script>

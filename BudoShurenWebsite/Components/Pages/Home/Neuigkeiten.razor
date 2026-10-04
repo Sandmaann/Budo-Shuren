@@ -23,12 +23,6 @@
             @* Vorgerenderte Liste: alle Neuigkeiten stehen für Suchmaschinen im HTML, sichtbar ist wie im Karussell
                nur die erste. Die Liste bleibt auch unter dem Karussell stehen und hält die Höhe, damit die Seite
                beim Umschalten nicht springt (siehe Stile unten). Ohne JavaScript sind alle Neuigkeiten sichtbar. *@
-            <noscript>
-                <style>
-                    .neuigkeiten-stapel { display: block; }
-                    .neuigkeiten-stapel > article { visibility: visible; }
-                </style>
-            </noscript>
             <div class="neuigkeiten-stapel @(_interactiveReady ? "abgeloest" : "")">
             @foreach (var neuigkeit in NeuigkeitenData)
             {
@@ -253,7 +247,7 @@
             }
     }
 
-    /* Ohne JavaScript lässt sich nichts aufklappen: alles ungekürzt zeigen. Nicht im noscript-Block oben, denn
+    /* Ohne JavaScript lässt sich nichts aufklappen: alles ungekürzt zeigen. Nicht in einem noscript-Block, denn
        dessen Stile gelten auch mit JavaScript, sobald Blazor die Seite übernommen hat. */
     @@media (scripting: none) {
         .neuigkeit-inhalt:not(.offen),
@@ -292,6 +286,17 @@
             .neuigkeiten-stapel > article:first-child {
                 visibility: visible;
             }
+
+    /* Ohne JavaScript gibt es kein Karussell: alle Neuigkeiten untereinander. Muss nach den Regeln darüber stehen. */
+    @@media (scripting: none) {
+        .neuigkeiten-stapel {
+            display: block;
+        }
+
+            .neuigkeiten-stapel > article {
+                visibility: visible;
+            }
+    }
 
     /* Sobald das Karussell seine Folien hat, übernimmt es; die Liste hält unsichtbar weiter die Höhe.
        Browser ohne :has() entfernen die Liste stattdessen, wenn das Karussell kommt. */
