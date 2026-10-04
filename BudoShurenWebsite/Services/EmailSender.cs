@@ -56,17 +56,21 @@ namespace BudoShurenWebsite.Services
             await verbindung.SendenAsync(message, CancellationToken.None);
         }
 
+        // Wie die Buttons der Veranstaltungs-Mails (VeranstaltungMailVorlagen.Button): Grün der Website mit hellerem Rand,
+        // auf hellem wie auf dunklem Hintergrund erkennbar. Direkt am Link, weil manche Mailprogramme <style> entfernen.
+        private const string ButtonStil = "display:inline-block;padding:10px 20px;background-color:#2A6749;border:1px solid #6FB08F;color:#ffffff;text-decoration:none;";
+
         public async Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
         {
             string subject = "Bitte bestätige deine E-Mail Adresse";
-            string text = HtmlLayout_EmailConfirmation.Replace("[CONFIRMLINK]", $"<a href='{confirmationLink}'>Klicke hier, um deine E-Mail Adresse zu bestätigen</a>");
+            string text = HtmlLayout_EmailConfirmation.Replace("[CONFIRMLINK]", $"<a href='{confirmationLink}' style='{ButtonStil}'>E-Mail Adresse bestätigen</a>");
 
             await SendEmailAsync(email, subject, text);
         }
         public async Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
         {
             string subject = "Passwort zurücksetzen";
-            string text = HtmlLayout_PasswortResetLink.Replace("[RESETLINK]", $"<a href='{resetLink}'>Passwort jetzt zurücksetzen</a>");
+            string text = HtmlLayout_PasswortResetLink.Replace("[RESETLINK]", $"<a href='{resetLink}' style='{ButtonStil}'>Passwort jetzt zurücksetzen</a>");
 
             await SendEmailAsync(email, subject, text);
         }
@@ -127,7 +131,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;
@@ -194,7 +199,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;
@@ -260,7 +266,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;
@@ -317,7 +324,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;
@@ -381,7 +389,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;
@@ -440,7 +449,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;
@@ -498,7 +508,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;
@@ -556,7 +567,8 @@ namespace BudoShurenWebsite.Services
         .button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #000000;
+            background-color: #2A6749;
+            border: 1px solid #6FB08F;
             color: #ffffff;
             text-decoration: none;
             margin-top: 20px;

@@ -11,13 +11,17 @@
 
     @if (SmallLayout)
     {
-        <div id="imhere" class="columns-1 gap-4 space-y-4 py-8 sm:columns-2 lg:columns-3">
+        @* Zeilen statt fester Spalten: jede Kachel bekommt eine Breite passend zu ihrem Seitenverhältnis und wächst,
+           bis die Zeile voll ist. So bleibt keine Spalte leer, und wenige Bilder werden entsprechend größer. *@
+        <div class="flex flex-wrap items-center justify-center gap-4 py-8">
             @foreach (var eintrag in Gruppe.Items)
             {
-                <ImageCard Eintrag="@eintrag"
-                           OnSelectionChanged="SelectionChanged"
-                           OnImageClicked="OnImageClicked"
-                           IsScrolling="IsScrolling" />
+                <div class="min-w-0 [&_img]:w-full" style="@ZeilenStil(eintrag)">
+                    <ImageCard Eintrag="@eintrag"
+                               OnSelectionChanged="SelectionChanged"
+                               OnImageClicked="OnImageClicked"
+                               IsScrolling="IsScrolling" />
+                </div>
             }
         </div>
     }
@@ -53,6 +57,22 @@
     // Beim "SmallLayout" hat die Ansicht weniger Spalten - z.B. für das Mini.Carousel
     // -> weniger horizontaler Platz zur Verfügung
 
+
+    // Zeilenhöhe der kleinen Galerie: angestrebt wird die Grundhöhe, wenige Bilder wachsen bis zur Maximalhöhe.
+    // Breiter als die Kachel-Fassung (BildZuschnitt.GalerieKachelMaxBreite) wird ein Bild nicht, sonst wäre es unscharf.
+    private const double ZeilenGrundHoeheRem = 13;
+    private const double ZeilenMaxHoeheRem = 22;
+
+    private static string ZeilenStil(GalerieEintrag eintrag)
+    {
+        // Sind die Maße noch nicht bekannt, wird ein Querformat angenommen
+        var verhaeltnis = eintrag.KachelBreite > 0 && eintrag.KachelHoehe > 0
+            ? Math.Clamp((double)eintrag.KachelBreite.Value / eintrag.KachelHoehe.Value, 0.5, 3)
+            : 4d / 3;
+
+        return FormattableString.Invariant(
+            $"flex: {verhaeltnis:0.###} 1 {verhaeltnis * ZeilenGrundHoeheRem:0.##}rem; max-width: min({verhaeltnis * ZeilenMaxHoeheRem:0.##}rem, {BildZuschnitt.GalerieKachelMaxBreite}px)");
+    }
 
     public bool HasSelectedItems { get; set; } = false;
 

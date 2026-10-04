@@ -43,7 +43,7 @@
                     var bildPosition = Block.BildPosition?.ToLower() == "rechts" ? "md:col-start-2 md:row-span-2" : "md:col-start-1 md:row-span-2";
                     var textPosition = Block.BildPosition?.ToLower() == "rechts" ? "md:col-start-1 md:row-start-2" : "md:col-start-2 md:row-start-2";
 
-                    <img class="@bildPosition" src="/Account/Member/Filesave/GetImage/@Block.BildId" alt="@Block.AltText" />
+                    <img class="@bildPosition" src="/Account/Member/Filesave/GetImage/@Block.BildId" alt="@Block.AltText" data-grossbild />
 
                     <div class="@textPosition mx-10 mt-2 md:ml-24 md:mr-0">
                         <p class="font-ptsans text-sm tracking-wider">
@@ -58,7 +58,7 @@
             @if (Block.BildId.HasValue)
             {
                 <div class="mt-10 flex justify-center">
-                    <img class="max-w-full md:max-w-72" src="/Account/Member/Filesave/GetImage/@Block.BildId" alt="@Block.AltText" />
+                    <img class="max-w-full md:max-w-72" src="/Account/Member/Filesave/GetImage/@Block.BildId" alt="@Block.AltText" data-grossbild />
                 </div>
             }
             break;
@@ -101,7 +101,7 @@
                             <div class="flex justify-center md:float-right md:flex-grow">
                                 <img class="mb-4 max-w-full md:max-w-72 md:ml-16"
                                      src="/Account/Member/Filesave/GetImage/@Block.BildId"
-                                     alt="@Block.AltText" />
+                                     alt="@Block.AltText" data-grossbild />
                             </div>
                         }
                         @foreach (var absatz in GetAbsaetze(Block.TextInhalt))
@@ -183,7 +183,7 @@
                         <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
                             <img class="mb-4 max-w-64 md:ml-16"
                                  src="/Account/Member/Filesave/GetImage/@Block.BildId"
-                                 alt="@Block.AltText" />
+                                 alt="@Block.AltText" data-grossbild />
                         </div>
                     }
                     @foreach (var absatz in GetAbsaetze(Block.TextInhalt2))
@@ -249,7 +249,7 @@
                             <div class="mx-10 flex justify-center md:float-right md:flex-grow md:mx-0">
                                 <img class="mb-4 max-w-64 md:ml-16"
                                      src="/Account/Member/Filesave/GetImage/@Block.BildId"
-                                     alt="@Block.AltText" />
+                                     alt="@Block.AltText" data-grossbild />
                             </div>
                         }
                         @foreach (var absatz in GetAbsaetze(Block.TextInhalt))

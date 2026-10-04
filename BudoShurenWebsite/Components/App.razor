@@ -35,7 +35,16 @@
 
 <body onclick="bodyClick(event)">
     <Routes />
-     
+
+    @* Ersetzt den eingebauten Dialog von Blazor ("Rejoining the server..."), der die ganze Seite sperrt: Blazor
+       verwendet das Element mit dieser Id und setzt daran die Klassen components-reconnect-*. Hier nur ein kleiner
+       Hinweis am unteren Rand, die Seite bleibt lesbar (Stile in budo-shuren.css, Verhalten in script.js). *@
+    <div id="components-reconnect-modal" class="verbindung-hinweis" role="status" aria-live="polite">
+        <span class="verbindung-warten">Verbindung wird wiederhergestellt …</span>
+        <span class="verbindung-fehler">Die Verbindung zum Server ist unterbrochen.</span>
+        <button type="button" class="verbindung-fehler" onclick="location.reload()">Seite neu laden</button>
+    </div>
+
     <script src="_framework/blazor.web.js"></script>
     <script src="js/script.js" defer></script>
 

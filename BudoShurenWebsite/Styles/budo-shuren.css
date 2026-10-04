@@ -4,7 +4,15 @@
 
 
 
-/* Custom CSS */    
+/* Custom CSS */
+
+/* FocusOnNavigate (Routes.razor) setzt nach dem Laden den Fokus auf die erste h1, damit Screenreader die Seite
+   ansagen. Die Überschrift ist nicht bedienbar, der Fokusrahmen des Browsers wäre hier nur störend. */
+@layer base {
+    h1:focus {
+        outline: none;
+    }
+}
 
 /* Aus Markdown erzeugtes HTML (Aktuelles, Veranstaltungen): Preflight setzt Überschriften und Listen sonst auf Fließtext zurück */
 @layer components {
@@ -93,5 +101,132 @@
         .galerie-raster {
             grid-template-columns: repeat(var(--spalten), minmax(0, 1fr));
         }
+    }
+}
+
+/* Großansicht für Bilder (script.js, data-grossbild), gestaltet wie das Popup der kleinen Galerie. Nicht in einem
+   @layer: die Klassen stehen nur im Skript, Tailwind würde sie dort als unbenutzt entfernen. */
+[data-grossbild] {
+    /* iOS meldet Klicks auf Bilder nur mit diesem Mauszeiger an das Skript */
+    cursor: pointer;
+}
+
+.grossbild {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+}
+
+.grossbild-rahmen {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-width: 95vw;
+    max-height: 95vh;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: #fff;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    cursor: default;
+}
+
+.grossbild-rahmen img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: calc(95vw - 2rem);
+    max-height: calc(95vh - 11rem);
+    margin: 4rem 1rem 1rem;
+    object-fit: contain;
+}
+
+.grossbild-schliessen {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    background: #111827;
+    color: #fff;
+}
+
+.grossbild-schliessen:hover {
+    background: #374151;
+}
+
+.grossbild-text {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    font-family: "PT Sans", sans-serif;
+    font-size: 0.875rem;
+}
+
+/* Hinweis bei unterbrochener Verbindung zum Server (App.razor, script.js). Blazor setzt die Klassen
+   components-reconnect-*. Kurze Unterbrechungen bleiben unsichtbar: der Hinweis erscheint erst nach 2 Sekunden. */
+.verbindung-hinweis {
+    display: none;
+    position: fixed;
+    left: 50%;
+    bottom: 1rem;
+    z-index: 10001;
+    transform: translateX(-50%);
+    align-items: center;
+    gap: 0.75rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    background: #111827;
+    color: #fff;
+    font-family: "PT Sans", sans-serif;
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.verbindung-hinweis.components-reconnect-show,
+.verbindung-hinweis.components-reconnect-retrying,
+.verbindung-hinweis.components-reconnect-paused {
+    display: flex;
+    animation: verbindung-einblenden 0.3s 2s both;
+}
+
+.verbindung-hinweis.components-reconnect-failed,
+.verbindung-hinweis.components-reconnect-rejected,
+.verbindung-hinweis.components-reconnect-resume-failed {
+    display: flex;
+}
+
+.verbindung-hinweis .verbindung-fehler,
+.verbindung-hinweis.components-reconnect-failed .verbindung-warten,
+.verbindung-hinweis.components-reconnect-rejected .verbindung-warten,
+.verbindung-hinweis.components-reconnect-resume-failed .verbindung-warten {
+    display: none;
+}
+
+.verbindung-hinweis.components-reconnect-failed .verbindung-fehler,
+.verbindung-hinweis.components-reconnect-rejected .verbindung-fehler,
+.verbindung-hinweis.components-reconnect-resume-failed .verbindung-fehler {
+    display: inline;
+}
+
+.verbindung-hinweis button {
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+@keyframes verbindung-einblenden {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
     }
 }

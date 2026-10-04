@@ -182,8 +182,10 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
 
         internal static string E(string? wert) => Encoder.Encode(wert ?? string.Empty);
 
+        // Grün der Website (Tailwind "primary") mit hellerem Rand: ein schwarzer Button verschwindet, wenn das
+        // Mailprogramm im Dunkelmodus den Hintergrund dunkel färbt. Grün mit weißer Schrift ist auf Weiß wie auf Dunkel erkennbar.
         internal static string Button(string url, string text) =>
-            $"<p style=\"margin:24px 0;\"><a href=\"{E(url)}\" style=\"display:inline-block;padding:10px 20px;background-color:#000000;color:#ffffff;text-decoration:none;\">{E(text)}</a></p>" +
+            $"<p style=\"margin:24px 0;\"><a href=\"{E(url)}\" style=\"display:inline-block;padding:10px 20px;background-color:#2A6749;border:1px solid #6FB08F;color:#ffffff;text-decoration:none;\">{E(text)}</a></p>" +
             $"<p style=\"font-size:12px;color:#555;word-break:break-all;\">Falls der Button nicht funktioniert: {E(url)}</p>";
 
         /// <summary>Termine nach Datum gruppiert (Datum fett, darunter Uhrzeit und Titel), danach der Ort.</summary>

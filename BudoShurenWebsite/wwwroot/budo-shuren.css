@@ -446,6 +446,10 @@ video {
   display: none;
 }
 
+h1:focus {
+  outline: none;
+}
+
 *, ::before, ::after {
   --tw-border-spacing-x: 0;
   --tw-border-spacing-y: 0;
@@ -1629,11 +1633,6 @@ video {
   list-style-type: disc;
 }
 
-.columns-1 {
-  -moz-columns: 1;
-       columns: 1;
-}
-
 .columns-2 {
   -moz-columns: 2;
        columns: 2;
@@ -1835,6 +1834,11 @@ video {
   white-space: nowrap;
 }
 
+.hyphens-auto {
+  -webkit-hyphens: auto;
+          hyphens: auto;
+}
+
 .\!whitespace-nowrap {
   white-space: nowrap !important;
 }
@@ -1853,6 +1857,10 @@ video {
 
 .text-balance {
   text-wrap: balance;
+}
+
+.break-words {
+  overflow-wrap: break-word;
 }
 
 .break-all {
@@ -2556,8 +2564,16 @@ video {
   letter-spacing: 0.21rem;
 }
 
+.tracking-\[0\.25rem\] {
+  letter-spacing: 0.25rem;
+}
+
 .tracking-\[0\.375rem\] {
   letter-spacing: 0.375rem;
+}
+
+.tracking-\[0\.5rem\] {
+  letter-spacing: 0.5rem;
 }
 
 .tracking-\[1\.0rem\] {
@@ -2793,11 +2809,144 @@ video {
 
 /* Custom CSS */
 
+/* FocusOnNavigate (Routes.razor) setzt nach dem Laden den Fokus auf die erste h1, damit Screenreader die Seite
+   ansagen. Die Überschrift ist nicht bedienbar, der Fokusrahmen des Browsers wäre hier nur störend. */
+
 /* Aus Markdown erzeugtes HTML (Aktuelles, Veranstaltungen): Preflight setzt Überschriften und Listen sonst auf Fließtext zurück */
 
 /* Hauptknopf wie im Kontaktformular (InteresseFormular), für <button> und <a> */
 
 /* Bildergalerie der Veranstaltungen: Spalten aus den Einstellungen des Bausteins, auf dem Handy höchstens zwei (InhaltsBlock.razor) */
+
+/* Großansicht für Bilder (script.js, data-grossbild), gestaltet wie das Popup der kleinen Galerie. Nicht in einem
+   @layer: die Klassen stehen nur im Skript, Tailwind würde sie dort als unbenutzt entfernen. */
+
+[data-grossbild] {
+  /* iOS meldet Klicks auf Bilder nur mit diesem Mauszeiger an das Skript */
+  cursor: pointer;
+}
+
+.grossbild {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+}
+
+.grossbild-rahmen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  cursor: default;
+}
+
+.grossbild-rahmen img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(95vw - 2rem);
+  max-height: calc(95vh - 11rem);
+  margin: 4rem 1rem 1rem;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+
+.grossbild-schliessen {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background: #111827;
+  color: #fff;
+}
+
+.grossbild-schliessen:hover {
+  background: #374151;
+}
+
+.grossbild-text {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  font-family: "PT Sans", sans-serif;
+  font-size: 0.875rem;
+}
+
+/* Hinweis bei unterbrochener Verbindung zum Server (App.razor, script.js). Blazor setzt die Klassen
+   components-reconnect-*. Kurze Unterbrechungen bleiben unsichtbar: der Hinweis erscheint erst nach 2 Sekunden. */
+
+.verbindung-hinweis {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 10001;
+  transform: translateX(-50%);
+  align-items: center;
+  gap: 0.75rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  background: #111827;
+  color: #fff;
+  font-family: "PT Sans", sans-serif;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.verbindung-hinweis.components-reconnect-show,
+.verbindung-hinweis.components-reconnect-retrying,
+.verbindung-hinweis.components-reconnect-paused {
+  display: flex;
+  animation: verbindung-einblenden 0.3s 2s both;
+}
+
+.verbindung-hinweis.components-reconnect-failed,
+.verbindung-hinweis.components-reconnect-rejected,
+.verbindung-hinweis.components-reconnect-resume-failed {
+  display: flex;
+}
+
+.verbindung-hinweis .verbindung-fehler,
+.verbindung-hinweis.components-reconnect-failed .verbindung-warten,
+.verbindung-hinweis.components-reconnect-rejected .verbindung-warten,
+.verbindung-hinweis.components-reconnect-resume-failed .verbindung-warten {
+  display: none;
+}
+
+.verbindung-hinweis.components-reconnect-failed .verbindung-fehler,
+.verbindung-hinweis.components-reconnect-rejected .verbindung-fehler,
+.verbindung-hinweis.components-reconnect-resume-failed .verbindung-fehler {
+  display: inline;
+}
+
+.verbindung-hinweis button {
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+@keyframes verbindung-einblenden {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
 
 .placeholder\:tracking-widest::-moz-placeholder {
   letter-spacing: 0.1em;
@@ -2988,11 +3137,6 @@ video {
     margin-top: 0px;
   }
 
-  .sm\:columns-2 {
-    -moz-columns: 2;
-         columns: 2;
-  }
-
   .sm\:justify-around {
     justify-content: space-around;
   }
@@ -3009,14 +3153,42 @@ video {
     padding-right: 1.5rem;
   }
 
+  .sm\:text-3xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  .sm\:text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+
+  .sm\:text-5xl {
+    font-size: 3rem;
+    line-height: 1;
+  }
+
   .sm\:text-7xl {
     font-size: 4.5rem;
     line-height: 1;
   }
 
+  .sm\:text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
   .sm\:text-xl {
     font-size: 1.25rem;
     line-height: 1.75rem;
+  }
+
+  .sm\:tracking-\[0\.4rem\] {
+    letter-spacing: 0.4rem;
+  }
+
+  .sm\:tracking-\[0\.8rem\] {
+    letter-spacing: 0.8rem;
   }
 
   .sm\:tracking-\[1\.3rem\] {
@@ -3588,6 +3760,11 @@ video {
     line-height: 1;
   }
 
+  .md\:text-6xl {
+    font-size: 3.75rem;
+    line-height: 1;
+  }
+
   .md\:text-8xl {
     font-size: 6rem;
     line-height: 1;
@@ -3612,6 +3789,14 @@ video {
     font-weight: 700;
   }
 
+  .md\:tracking-\[0\.5rem\] {
+    letter-spacing: 0.5rem;
+  }
+
+  .md\:tracking-\[1\.0rem\] {
+    letter-spacing: 1.0rem;
+  }
+
   .md\:tracking-\[1\.4rem\] {
     letter-spacing: 1.4rem;
   }
@@ -3625,11 +3810,6 @@ video {
   .lg\:-mx-32 {
     margin-left: -8rem;
     margin-right: -8rem;
-  }
-
-  .lg\:columns-3 {
-    -moz-columns: 3;
-         columns: 3;
   }
 
   .lg\:columns-4 {
@@ -3663,6 +3843,11 @@ video {
 }
 
 @media (min-width: 390px) {
+  .xs\:text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
   .xs\:text-xl {
     font-size: 1.25rem;
     line-height: 1.75rem;
@@ -3718,4 +3903,8 @@ video {
     --tw-text-opacity: 1;
     color: rgb(255 255 255 / var(--tw-text-opacity));
   }
+}
+
+.\[\&_img\]\:w-full img {
+  width: 100%;
 }

@@ -15,7 +15,8 @@ else if (Block.BildIds.Count > 0)
         <div class="galerie-raster" style="--spalten: @Spalten; --spalten-mobil: @Math.Min(Spalten, 2)">
             @foreach (var id in Block.BildIds)
             {
-                <a href="@BildUrl(id)" target="_blank" rel="noopener" class="block overflow-hidden" title="Bild in voller Größe öffnen">
+                @* script.js zeigt das Bild als Großansicht über der Seite; ohne JavaScript öffnet der Link es im selben Tab *@
+                <a href="@BildUrl(id)" data-enhance-nav="false" data-grossbild="@(Block.BildUnterschrift ?? "")" class="block overflow-hidden" title="Bild in voller Größe öffnen">
                     <img src="@BildUrl(id)" alt="@(Block.BildUnterschrift ?? AltText)" loading="lazy"
                          class="@(Spalten == 1 ? "h-auto w-full" : "aspect-[4/3] h-full w-full object-cover")" />
                 </a>

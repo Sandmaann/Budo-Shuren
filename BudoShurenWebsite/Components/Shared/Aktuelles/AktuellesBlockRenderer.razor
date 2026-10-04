@@ -28,6 +28,7 @@ else if (Block.Typ == AktuellesBlockTyp.BilderGalerie)
                         <div class="overflow-hidden rounded">
                             <img src="data:@bild.Bild.ContentType;base64,@Convert.ToBase64String(bild.Bild.ImageData)"
                                  alt="@bild.Bild.Title"
+                                 data-grossbild="@(Block.BildUnterschrift ?? "")"
                                  class="h-full w-full object-contain" />
                         </div>
                     }
