@@ -640,6 +640,53 @@ namespace BudoShurenWebsite.Migrations
                     b.ToTable("Galerie", (string)null);
                 });
 
+            modelBuilder.Entity("BudoShurenWebsite.Models.KontaktAnfrage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AbsenderEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<string>("Abteilung")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("AnzahlMails")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Hinweis")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("Interaktiv")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nachricht")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Seite")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ZeitpunktUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZeitpunktUtc");
+
+                    b.ToTable("KontaktAnfragen", (string)null);
+                });
+
             modelBuilder.Entity("BudoShurenWebsite.Models.Neuigkeit", b =>
                 {
                     b.Property<int>("ID")

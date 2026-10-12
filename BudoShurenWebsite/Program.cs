@@ -139,6 +139,11 @@ namespace BudoShurenWebsite
                 builder.Services.AddHostedService<VeranstaltungJobsHostedService>();
                 builder.Services.AddRateLimiter(VeranstaltungRateLimit.Konfigurieren);
 
+                //Kontaktformular (InteresseFormular): Spam-Schutz und Protokoll, siehe Services/Kontakt
+                builder.Services.AddSingleton<BudoShurenWebsite.Services.Kontakt.KontaktLimit>();
+                builder.Services.AddSingleton<BudoShurenWebsite.Services.Kontakt.KontaktSchutz>();
+                builder.Services.AddSingleton<BudoShurenWebsite.Services.Kontakt.KontaktProtokoll>();
+
                 //Health Checks: GET /health (Betrieb) und /health/alle, nur Admins oder mit Systemzustand:Token (siehe Services/Systemzustand)
                 builder.Services.AddSystemzustand(builder.Configuration);
 

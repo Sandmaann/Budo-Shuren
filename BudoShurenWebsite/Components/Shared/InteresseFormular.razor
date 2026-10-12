@@ -3,12 +3,16 @@
 @inject EmailSender EmailSender
 @inject VisitorCounterService VisitorCounterService
 @inject UserManager<ApplicationUser> UserManager
+@inject KontaktSchutz Schutz
+@inject KontaktProtokoll Protokoll
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
 
+@using BudoShurenWebsite.Models.Enums
+@using BudoShurenWebsite.Services.Kontakt
 @using Microsoft.Extensions.Options
 @using System.ComponentModel.DataAnnotations
 @using Syncfusion.Blazor.DropDowns;
-@using System.Text.Json;
-@using System.Text.Json.Serialization;
 @using Microsoft.AspNetCore.Identity
 
 <div class="h-full">
@@ -75,11 +79,13 @@
             <ValidationMessage For="() => Input.Text" class="text-error" />
         </div>
 
-        <!-- Honeypot-Feld -->
-        <div style="display:none">
-            <InputText id="website" @bind-Value="Input.Website" />
+        @* Honeypot: für Menschen unsichtbar und nicht per Tastatur erreichbar. Kein display:none, das erkennen Bots. *@
+        <div class="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
+            <label for="website">Website</label>
+            <InputText id="website" @bind-Value="Input.Website" tabindex="-1" autocomplete="off" />
         </div>
-
+        @* Verschlüsselter Zeitpunkt des Auslieferns (KontaktSchutz) *@
+        <InputText type="hidden" @bind-Value="Input.Zeitstempel" />
 
         <div class="mt-8 flex justify-end">
             <button type="submit" class="font-yuji h-10 transform bg-black px-5 text-center text-sm font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-primary active:scale-90">
@@ -164,12 +170,20 @@
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
+    /// <summary>Nur beim statischen Rendern gesetzt.</summary>
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
     public string DropVal = string.Empty;
     private IEnumerable<Abteilung> Abteilungen = Array.Empty<Abteilung>();
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        // Ein abgeschicktes Formular bringt seinen Zeitstempel mit. Fehlt er dort, gilt die Nachricht als zu schnell abgeschickt.
+        if (string.IsNullOrEmpty(Input.Zeitstempel))
+            Input.Zeitstempel = Schutz.Zeitstempel();
 
         using var context = DbContextFactory.CreateDbContext();
         Abteilungen = await context.Abteilungen.ToListAsync();
@@ -183,99 +197,121 @@
     {
         errorMessage = null;
         _gesendet = false;
+
+        // Die Abteilung wird hier überall über den Namen angegeben (Auswahl, Seiten-Parameter, ApplicationUser.Abteilung)
+        if (Abteilungen.FirstOrDefault(x => x.Name == Input.SelectedAbteilung) is not Abteilung abteilung)
+        {
+            // Ohne Abteilung gibt es keinen Empfänger (früher brach das Formular hier ohne jede Meldung ab)
+            errorMessage = "Bitte wähle aus, an wen deine Nachricht gehen soll.";
+            return;
+        }
+
+        string nachricht = Input.Text;
+        var anfrage = new KontaktAnfrage
+        {
+            Abteilung = abteilung.Name,
+            AbsenderEmail = Input.Email,
+            Nachricht = nachricht,
+            Seite = Seite(),
+            Interaktiv = RendererInfo.IsInteractive
+        };
+
+        var pruefung = Schutz.Pruefen(Input.Website, Input.Zeitstempel, Input.Email, nachricht, IpAdresse());
+        if (pruefung.Abgelehnt is { } grund)
+        {
+            anfrage.Status = grund;
+            anfrage.Hinweis = pruefung.Hinweis;
+            await Protokoll.EintragenAsync(anfrage);
+
+            // Mit einem neuen Zeitstempel klappt der zweite Versuch
+            if (grund == KontaktAnfrageStatus.FormularUngueltig)
+                Input.Zeitstempel = Schutz.Zeitstempel();
+            errorMessage = KontaktSchutz.Meldung(grund);
+            await RueckmeldenAsync(false);
+            return;
+        }
+
+        string name = abteilung.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
+        const string betreff = "Neue Anfrage von der Budo-Shuren-Dojo Webseite";
+        int mails = 0;
+
+        //E-Mail an die "Abteilung" senden - die die in der DB zur Abteilung hinterlegt ist.
+        if (!string.IsNullOrWhiteSpace(abteilung.Email))
+        {
+            try
+            {
+                await EmailSender.SendEmailAsync(abteilung.Email, betreff, EmailSender.InteresseMail(name, nachricht, Input.Email));
+                mails++;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Fehler beim Senden der Nachricht an Abteilung {abteilung.Name}");
+            }
+        }
+
+        //E-Mail an Abteilungsleiter senden
         try
         {
-            // Überprüfen, ob das Honeypot-Feld ausgefüllt ist
-            if (!string.IsNullOrEmpty(Input.Website))
+            var users = await UserManager.GetUsersInRoleAsync(Roles.Abteilungsleiter);
+            foreach (var user in users.Where(x => x.Abteilung == abteilung.Name && x.Email != abteilung.Email))
             {
-                // Spam erkannt
-                errorMessage = "Spam erkannt";
-                return;
-            }
-
-            // Die Abteilung wird hier überall über den Namen angegeben (Auswahl, Seiten-Parameter, ApplicationUser.Abteilung)
-            if (Abteilungen.FirstOrDefault(x => x.Name == Input.SelectedAbteilung) is Abteilung abteilung)
-            {
-                string nachricht = Input.Text;
-                string name = abteilung?.Abteilungsleiter?.Split(" ")[0] ?? "unbekannter Abteilungsleiter";
-                bool oneMailSended = false;
-
-                //E-Mail an Abteilung senden
-                if (!string.IsNullOrWhiteSpace(abteilung?.Email))
-                {
-                    try
-                    {
-                        //E-Mail an die "Abteilung" senden - die die in der DB zur Abteilung hinterlegt ist.
-                        string text = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", name).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
-                        await EmailSender.SendEmailAsync(abteilung?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", text);
-                        oneMailSended = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex, $"Fehler beim Senden der Nachricht an Abteilung {abteilung.Name}");
-                    }
-                }
-
-                //E-Mail an Abteilungsleiter senden
-                var users = await UserManager.GetUsersInRoleAsync(Roles.Abteilungsleiter);
-                users = users.Where(x => x.Abteilung == abteilung.Name).ToList();
-
-                foreach (var user in users)
-                {
-                    if (user.Email != abteilung.Email)
-                    {
-                        try
-                        {
-                            //E-Mail an Abteilungsleiter senden
-                            string userText = EmailSender.HtmlLayout_InteresseFormular.Replace("[NAME]", user.Vorname).Replace("[NACHRICHT]", nachricht).Replace("[EMAIL]", Input.Email);
-                            await EmailSender.SendEmailAsync(user?.Email ?? "", "Neue Anfrage von der Budo-Shuren-Dojo Webseite", userText);
-                            oneMailSended = true;
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogError(ex, $"Fehler beim Senden der Nachricht an Abteilungsleiter {user.UserName}");
-                        }
-                    }
-                }
-
-                if (oneMailSended)
-                {
-                    //Bestätigungsemail an den Absender schicken
-                    // string infoAnAbsender = EmailSender.HtmlLayout_InteresseBestätigung.Replace("[NACHRICHT]", nachricht);
-                    await EmailSender.SendKontaktformularConfirmation(nachricht, Input.Email);
-                }
-                else
-                {
-                    throw new Exception("An keine einzige der Abteilungs / Abteilungsleiter-Adressen konnte eine E-Mail geschickt werden.");
-                }
-
-                //Counter
                 try
                 {
-                    await VisitorCounterService.AddVisitorAsync(Input.Email, "InteresseEmail_" + abteilung?.Name ?? "unbekannt");
+                    await EmailSender.SendEmailAsync(user.Email ?? "", betreff, EmailSender.InteresseMail(user.Vorname, nachricht, Input.Email));
+                    mails++;
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "Fehler beim Zählen eines Besuchers (Interesse Formular)");
+                    Logger.LogError(ex, $"Fehler beim Senden der Nachricht an Abteilungsleiter {user.UserName}");
                 }
-
-                await RueckmeldenAsync(true);
-
-                Input.Text = string.Empty;
-                Input.Email = string.Empty;
-            }
-            else
-            {
-                // Ohne Abteilung gibt es keinen Empfänger (früher brach das Formular hier ohne jede Meldung ab)
-                errorMessage = "Bitte wähle aus, an wen deine Nachricht gehen soll.";
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Fehler beim Senden der Nachricht");
+            Logger.LogError(ex, $"Fehler beim Ermitteln der Abteilungsleiter von {abteilung.Name}");
+        }
+
+        anfrage.AnzahlMails = mails;
+        if (mails == 0)
+        {
+            Logger.LogError("An keine einzige der Abteilungs / Abteilungsleiter-Adressen konnte eine E-Mail geschickt werden.");
+            anfrage.Status = KontaktAnfrageStatus.VersandFehler;
+            anfrage.Hinweis = "Keine Mail an die Abteilung oder ihre Abteilungsleiter verschickt, siehe Log";
+            await Protokoll.EintragenAsync(anfrage);
+
             errorMessage = "Die Nachricht konnte leider nicht versendet werden! Du kannst auch direkt an info@budo-shuren-dojo.de schreiben. In unserem Impressum findest du auch die einzelnen Kontaktdaten der Abteilungsleiter.";
             await RueckmeldenAsync(false);
+            return;
         }
+
+        //Bestätigungsemail an den Absender schicken. Schlägt sie fehl, ist die Nachricht trotzdem angekommen.
+        try
+        {
+            await EmailSender.SendKontaktformularConfirmation(Input.Email);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Senden der Bestätigung an den Absender (Interesse Formular)");
+            anfrage.Hinweis = "Bestätigung an den Absender konnte nicht verschickt werden";
+        }
+
+        anfrage.Status = KontaktAnfrageStatus.Zugestellt;
+        await Protokoll.EintragenAsync(anfrage);
+
+        //Counter
+        try
+        {
+            await VisitorCounterService.AddVisitorAsync(Input.Email, "InteresseEmail_" + abteilung.Name);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Zählen eines Besuchers (Interesse Formular)");
+        }
+
+        await RueckmeldenAsync(true);
+
+        Input.Text = string.Empty;
+        Input.Email = string.Empty;
     }
 
     /// <summary>Interaktiv zeigt das Formular die Rückmeldung selbst unter dem Button, statisch die Seite oben (OnSend).</summary>
@@ -287,6 +323,29 @@
             await OnSend.InvokeAsync(erfolgreich);
     }
 
+    /// <summary>Seite, auf der das Formular steht, ohne Query (für das Protokoll).</summary>
+    private string Seite()
+    {
+        var pfad = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?', '#')[0];
+        return pfad.Length == 0 ? "Home" : pfad;
+    }
+
+    /// <summary>
+    /// Adresse des Absenders für KontaktLimit. Interaktiv gibt es keine Anfrage, nur die der Verbindung:
+    /// die ist nicht immer greifbar, dann gelten die Grenzen je E-Mail-Adresse und insgesamt.
+    /// </summary>
+    private string? IpAdresse()
+    {
+        try
+        {
+            return (HttpContext ?? HttpContextAccessor.HttpContext)?.Connection.RemoteIpAddress?.ToString();
+        }
+        catch (ObjectDisposedException)
+        {
+            return null;
+        }
+    }
+
     private sealed class InputModel
     {
         [Required(ErrorMessage = Messages.EmailRequiredErrorMessage)]
@@ -295,6 +354,7 @@
         public string Email { get; set; } = "";
 
         [Required(ErrorMessage = Messages.NachrichtRequiredErrorMessage)]
+        [StringLength(KontaktAnfrage.MaxNachricht, ErrorMessage = "Deine Nachricht ist zu lang (höchstens 4000 Zeichen).")]
         [Display(Name = "Deine Nachricht")]
         [DataType(DataType.Text)]
         public string Text { get; set; } = "";
@@ -305,20 +365,8 @@
         // Honeypot-Feld
         public string Website { get; set; } = "";
 
-
-        public string? RecaptchaToken { get; set; } // Neues Feld für reCAPTCHA
-    }
-
-    private class RecaptchaResult
-    {
-        [JsonPropertyName("success")]
-        public bool Success { get; set; }
-
-        [JsonPropertyName("challenge_ts")]
-        public DateTime ChallengeTimestamp { get; set; }
-
-        [JsonPropertyName("hostname")]
-        public string Hostname { get; set; }
+        /// <summary>Verschlüsselter Ladezeitpunkt (KontaktSchutz).</summary>
+        public string? Zeitstempel { get; set; }
     }
 
 }

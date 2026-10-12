@@ -30,20 +30,23 @@ namespace BudoShurenWebsite.Services.Veranstaltungen
         /// true, wenn das Absenden nach einem Bot aussieht: Honeypot gefüllt, Zeitstempel fehlt,
         /// ist manipuliert oder das Formular wurde schneller als in Mindestdauer abgeschickt.
         /// </summary>
-        public bool IstVerdaechtig(string? honeypot, string? zeitstempel)
+        public bool IstVerdaechtig(string? honeypot, string? zeitstempel) =>
+            !string.IsNullOrWhiteSpace(honeypot) || Alter(zeitstempel) is not { } alter || alter < Mindestdauer;
+
+        /// <summary>Zeit seit dem Ausliefern des Formulars; null, wenn der Zeitstempel fehlt oder manipuliert ist.</summary>
+        public TimeSpan? Alter(string? zeitstempel)
         {
-            if (!string.IsNullOrWhiteSpace(honeypot) || string.IsNullOrEmpty(zeitstempel))
-                return true;
+            if (string.IsNullOrEmpty(zeitstempel))
+                return null;
 
             try
             {
                 var ticks = long.Parse(_schutz.Unprotect(zeitstempel), CultureInfo.InvariantCulture);
-                var geladen = new DateTimeOffset(ticks, TimeSpan.Zero);
-                return _zeit.GetUtcNow() - geladen < Mindestdauer;
+                return _zeit.GetUtcNow() - new DateTimeOffset(ticks, TimeSpan.Zero);
             }
             catch (Exception ex) when (ex is CryptographicException or FormatException or OverflowException or ArgumentOutOfRangeException)
             {
-                return true;
+                return null;
             }
         }
     }

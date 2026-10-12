@@ -95,12 +95,23 @@ namespace BudoShurenWebsite.Services
             await SendEmailAsync(email, subject, text);
         }
 
-        public async Task SendKontaktformularConfirmation(string nachricht, string email)
+        public async Task SendKontaktformularConfirmation(string email)
         {
             string subject = "Bestätigung Kontaktformular Budo-Shuren-Dojo";
-            string text = HtmlLayout_InteresseBestätigung.Replace("[NACHRICHT]", nachricht);
-            await SendEmailAsync(email, subject, text);
+            // Ohne den Text der Nachricht: die Adresse ist ungeprüft, sonst ließe sich über das Formular beliebiger Text an Fremde schicken
+            await SendEmailAsync(email, subject, HtmlLayout_InteresseBestätigung);
         }
+
+        /// <summary>Mail an die Abteilung bzw. einen Abteilungsleiter zu einer Nachricht aus dem Kontaktformular.</summary>
+        public static string InteresseMail(string? name, string nachricht, string absenderEmail) =>
+            HtmlLayout_InteresseFormular
+                .Replace("[NAME]", System.Net.WebUtility.HtmlEncode(name))
+                .Replace("[EMAIL]", System.Net.WebUtility.HtmlEncode(absenderEmail))
+                .Replace("[NACHRICHT]", AlsHtml(nachricht));
+
+        // Eingaben aus dem Formular nie ungeprüft in die Mail: sonst könnte ein Absender dort eigenes HTML (Links, Bilder) unterbringen
+        private static string AlsHtml(string text) =>
+            System.Net.WebUtility.HtmlEncode(text).ReplaceLineEndings("<br>");
 
         public static readonly string HtmlLayout_InteresseBestätigung = @"<!DOCTYPE html>
 <html>
@@ -137,10 +148,6 @@ namespace BudoShurenWebsite.Services
             text-decoration: none;
             margin-top: 20px;
         }
-        p.blockquote {
-          font: 14px/22px normal helvetica, sans-serif;
-          border-left: 3px solid #ccc;
-        } 
     </style>
 </head>
 <body>
@@ -152,13 +159,6 @@ namespace BudoShurenWebsite.Services
         <div class=""content"">
             <p>Vielen Dank für dein Interesse!</p>
             <p>Wir haben deine Nachricht an den Abteilungsleiter weitergeleitet. Du solltest in Kürze eine Antwort erhalten.</p>
-            <p>Diese Nachricht haben wir von dir bekommen:</p>
-            <br>            
-            <p class=""blockquote"">
-            [NACHRICHT]
-            </p>
-            <br>
-            <br>
             <p>Mit freundlichen Grüßen</p>
             <p>Dein Budo Shuren Dojo</p>            
         </div>
