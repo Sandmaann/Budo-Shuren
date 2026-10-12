@@ -172,6 +172,11 @@ namespace BudoShurenWebsite.Data
                 .HasForeignKey(e => e.BenutzerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // KontaktAnfrage configuration (Protokoll des Kontaktformulars, siehe Services/Kontakt)
+            builder.Entity<KontaktAnfrage>().ToTable("KontaktAnfragen");
+            // Auswertung nach Zeitraum und das Leeren alter Einträge
+            builder.Entity<KontaktAnfrage>().HasIndex(a => a.ZeitpunktUtc);
+
             KonfiguriereVeranstaltungen(builder);
         }
 
@@ -309,6 +314,7 @@ namespace BudoShurenWebsite.Data
         public DbSet<AktuellesBild> AktuellesBilder { get; set; }
         public DbSet<EmailAusgang> EmailAusgang { get; set; }
         public DbSet<BearbeitungsEntwurf> BearbeitungsEntwuerfe { get; set; }
+        public DbSet<KontaktAnfrage> KontaktAnfragen { get; set; }
         public DbSet<Veranstaltung> Veranstaltungen { get; set; }
         public DbSet<VeranstaltungsTag> VeranstaltungsTage { get; set; }
         public DbSet<VeranstaltungBlock> VeranstaltungBloecke { get; set; }

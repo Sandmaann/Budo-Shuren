@@ -1,0 +1,247 @@
+@* Auswertung des Kontaktformulars auf der Admin-Seite: Zahlen je Abteilung und der Verlauf der einzelnen Nachrichten (KontaktProtokoll). *@
+@using BudoShurenWebsite.Models.Enums
+@using BudoShurenWebsite.Services.Kontakt
+
+@inject KontaktProtokoll Protokoll
+@inject TimeProvider Zeit
+@inject ILogger<KontaktStatistik> Logger
+
+<div class="mx-10 mt-10">
+    <SectionBanner Titel="Kontaktformular" />
+
+    <div class="-mx-8 flex flex-col gap-6 md:mx-0">
+        @if (_fehler)
+        {
+            <StatusMessage ShowAsError="true" Message="Die Auswertung des Kontaktformulars konnte nicht geladen werden." />
+        }
+
+        <div class="border border-black p-6">
+            <h4 class="font-yuji mb-4 text-lg">Nachrichten nach Abteilung</h4>
+
+            <div class="mb-4 flex flex-wrap gap-2 border-b border-gray-300">
+                @foreach (var zeitraum in Enum.GetValues<Zeitraum>())
+                {
+                    <button @onclick="() => ZeitraumWaehlenAsync(zeitraum)"
+                            class="@TabKlasse(zeitraum) font-ptsans px-4 py-2 text-sm tracking-wider">
+                        @Titel(zeitraum)
+                    </button>
+                }
+            </div>
+
+            <div class="overflow-x-auto sm:overflow-x-visible">
+                <table class="min-w-[450px] border border-gray-200 bg-white">
+                    <thead>
+                        <tr>
+                            <th class="font-ptsans border-b px-4 py-2 text-left text-sm font-normal tracking-wider text-black">Abteilung</th>
+                            <th class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Zugestellte Nachrichten</th>
+                            <th class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Verschickte Mails</th>
+                            <th class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Versandfehler</th>
+                            <th class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Abgelehnt (Spam)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_auswertung.Abteilungen.Count > 0)
+                        {
+                            @foreach (var zeile in _auswertung.Abteilungen)
+                            {
+                                <tr>
+                                    <td class="font-ptsans border-b px-4 py-2 text-sm font-normal tracking-wider text-black">@(zeile.Abteilung ?? "ohne Abteilung")</td>
+                                    <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@zeile.Zugestellt</td>
+                                    <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@zeile.Mails</td>
+                                    <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@zeile.VersandFehler</td>
+                                    <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">@zeile.Abgelehnt</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="font-ptsans border-b px-4 py-2 text-sm font-bold tracking-wider text-black">Gesamt</td>
+                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-bold tracking-wider text-black">@_auswertung.Abteilungen.Sum(z => z.Zugestellt)</td>
+                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-bold tracking-wider text-black">@_auswertung.Abteilungen.Sum(z => z.Mails)</td>
+                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-bold tracking-wider text-black">@_auswertung.Abteilungen.Sum(z => z.VersandFehler)</td>
+                                <td class="font-ptsans border-b px-4 py-2 text-center text-sm font-bold tracking-wider text-black">@_auswertung.Abteilungen.Sum(z => z.Abgelehnt)</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="font-ptsans border-b px-4 py-2 text-center text-sm font-normal tracking-wider text-black">Keine Nachrichten in diesem Zeitraum</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (_auswertung.Ablehnungen.Count > 0)
+            {
+                <p class="font-ptsans mt-4 text-sm font-normal tracking-wider text-black">Abgelehnt nach Grund:</p>
+                <ul class="list-disc pl-6">
+                    @foreach (var ablehnung in _auswertung.Ablehnungen)
+                    {
+                        <li class="font-ptsans text-sm font-normal tracking-wider text-black">@ablehnung.Grund.Bezeichnung(): <span class="font-bold">@ablehnung.Anzahl</span></li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="border border-black p-6">
+            <h4 class="font-yuji mb-4 text-lg">Verlauf</h4>
+
+            <p class="font-ptsans mb-4 text-sm font-normal tracking-wider text-black">
+                Absender und Nachricht werden nach @((int)KontaktProtokoll.AufbewahrenFuer.TotalDays) Tagen gelöscht, die Zahlen oben bleiben.
+                „Formular-POST“ heißt: ohne die Live-Verbindung der Seite abgeschickt, wie es auch ein einfaches Skript kann.
+            </p>
+
+            <label class="font-ptsans mb-4 flex items-center gap-2 text-sm font-normal tracking-wider text-black">
+                <input type="checkbox" checked="@_mitAbgelehnten" @onchange="AbgelehnteUmschaltenAsync" />
+                Auch abgelehnte Nachrichten zeigen
+            </label>
+
+            @if (_verlauf.Count == 0)
+            {
+                <p class="font-ptsans text-sm font-normal tracking-wider text-black">Noch keine Nachrichten</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var anfrage in _verlauf)
+                    {
+                        <li @key="anfrage.Id" class="border-b border-gray-300 py-3">
+                            <p class="font-ptsans break-words text-sm font-normal tracking-wider text-black">
+                                <span class="font-bold">@Ortszeit.AusUtc(anfrage.ZeitpunktUtc).ToString("dd.MM.yyyy HH:mm")</span>
+                                · an @(anfrage.Abteilung ?? "ohne Abteilung")
+                                · von @(anfrage.AbsenderEmail ?? "(gelöscht)")
+                            </p>
+                            <p class="font-ptsans break-words text-sm font-normal tracking-wider text-black">
+                                <span class="@StatusKlasse(anfrage.Status) font-bold">@anfrage.Status.Bezeichnung()</span>
+                                @if (!string.IsNullOrEmpty(anfrage.Hinweis))
+                                {
+                                    <span> (@anfrage.Hinweis)</span>
+                                }
+                                · @anfrage.AnzahlMails @(anfrage.AnzahlMails == 1 ? "Mail" : "Mails")
+                                · Seite @anfrage.Seite
+                                · @(anfrage.Interaktiv ? "interaktiv" : "Formular-POST")
+                            </p>
+                            @if (!string.IsNullOrEmpty(anfrage.Nachricht))
+                            {
+                                <details class="mt-1">
+                                    <summary class="font-ptsans cursor-pointer text-sm font-normal tracking-wider text-black underline">Nachricht</summary>
+                                    <p class="font-ptsans mt-2 whitespace-pre-wrap break-words text-sm font-normal tracking-wider text-black">@anfrage.Nachricht</p>
+                                </details>
+                            }
+                        </li>
+                    }
+                </ul>
+
+                @if (_gibtWeitere)
+                {
+                    <button @onclick="WeitereLadenAsync"
+                            class="font-yuji mt-4 h-10 transform bg-primary px-4 text-center font-normal leading-tight tracking-widest text-white transition duration-150 ease-in-out hover:bg-black active:scale-90">
+                        Weitere laden
+                    </button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private const int Seitengroesse = 25;
+
+    private enum Zeitraum { Heute, Tage7, Tage30, Monate12 }
+
+    private Zeitraum _zeitraum = Zeitraum.Tage30;
+    private KontaktAuswertung _auswertung = new([], []);
+    private List<KontaktAnfrage> _verlauf = [];
+    private int _anzahl = Seitengroesse;
+    private bool _gibtWeitere;
+    private bool _mitAbgelehnten;
+    private bool _fehler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuswertungLadenAsync();
+        await VerlaufLadenAsync();
+    }
+
+    private async Task ZeitraumWaehlenAsync(Zeitraum zeitraum)
+    {
+        _zeitraum = zeitraum;
+        await AuswertungLadenAsync();
+    }
+
+    private async Task AbgelehnteUmschaltenAsync(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+    {
+        _mitAbgelehnten = e.Value is true;
+        _anzahl = Seitengroesse;
+        await VerlaufLadenAsync();
+    }
+
+    private async Task WeitereLadenAsync()
+    {
+        _anzahl += Seitengroesse;
+        await VerlaufLadenAsync();
+    }
+
+    private async Task AuswertungLadenAsync()
+    {
+        try
+        {
+            _auswertung = await Protokoll.AuswertenAsync(Beginn(_zeitraum));
+            _fehler = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Laden der Auswertung des Kontaktformulars");
+            _fehler = true;
+        }
+    }
+
+    private async Task VerlaufLadenAsync()
+    {
+        try
+        {
+            // Einen mehr laden: so ist bekannt, ob es weitere gibt
+            var anfragen = await Protokoll.LetzteAsync(_anzahl + 1, _mitAbgelehnten);
+            _gibtWeitere = anfragen.Count > _anzahl;
+            _verlauf = anfragen.Take(_anzahl).ToList();
+            _fehler = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Fehler beim Laden des Verlaufs des Kontaktformulars");
+            _fehler = true;
+        }
+    }
+
+    /// <summary>Beginn des Zeitraums in UTC; "Heute" beginnt um Mitternacht Ortszeit.</summary>
+    private DateTime Beginn(Zeitraum zeitraum)
+    {
+        var jetzt = Zeit.GetUtcNow().UtcDateTime;
+        return zeitraum switch
+        {
+            Zeitraum.Heute => Ortszeit.NachUtc(Ortszeit.Jetzt(Zeit).Date),
+            Zeitraum.Tage7 => jetzt.AddDays(-7),
+            Zeitraum.Tage30 => jetzt.AddDays(-30),
+            _ => jetzt.AddMonths(-12)
+        };
+    }
+
+    private static string Titel(Zeitraum zeitraum) => zeitraum switch
+    {
+        Zeitraum.Heute => "Heute",
+        Zeitraum.Tage7 => "Letzte 7 Tage",
+        Zeitraum.Tage30 => "Letzte 30 Tage",
+        _ => "Letzte 12 Monate"
+    };
+
+    private string TabKlasse(Zeitraum zeitraum) =>
+        _zeitraum == zeitraum
+            ? "border-b-2 border-primary font-bold text-black"
+            : "text-gray-600 hover:text-black";
+
+    private static string StatusKlasse(KontaktAnfrageStatus status) => status switch
+    {
+        KontaktAnfrageStatus.Zugestellt => "text-black",
+        KontaktAnfrageStatus.VersandFehler => "text-red-700",
+        _ => "text-amber-700"
+    };
+}
