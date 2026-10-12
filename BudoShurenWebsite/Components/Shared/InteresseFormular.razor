@@ -298,10 +298,10 @@
         anfrage.Status = KontaktAnfrageStatus.Zugestellt;
         await Protokoll.EintragenAsync(anfrage);
 
-        //Counter
+        //Counter: unter der Id des Besuchers, nicht unter der E-Mail-Adresse (die Besuche werden nie gelöscht)
         try
         {
-            await VisitorCounterService.AddVisitorAsync(Input.Email, "InteresseEmail_" + abteilung.Name);
+            await VisitorCounterService.AddVisitorAsync(null, "InteresseEmail_" + abteilung.Name);
         }
         catch (Exception ex)
         {

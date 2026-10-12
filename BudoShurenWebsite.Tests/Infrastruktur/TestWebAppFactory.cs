@@ -37,6 +37,8 @@ public sealed class TestWebAppFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("Veranstaltungen__HintergrundJobsAktiviert", "false");
         // Ebenso das Aufräumen nicht gespeicherter Bilder (BildAufraeumJob)
         Environment.SetEnvironmentVariable("BildAufraeumen__Aktiviert", "false");
+        // Ebenso das Leeren alter Einträge im Protokoll des Kontaktformulars (KontaktAufraeumJob)
+        Environment.SetEnvironmentVariable("Kontaktformular__AufraeumenAktiviert", "false");
         Environment.SetEnvironmentVariable("Systemzustand__Token", HealthToken);
     }
 

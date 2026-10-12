@@ -11,8 +11,6 @@ namespace BudoShurenWebsite.Services.Kontakt
     /// </summary>
     public sealed class KontaktProtokoll
     {
-        /// <summary>Danach werden Absender und Nachricht geleert; Zeitpunkt, Abteilung und Ergebnis bleiben für die Zahlen.</summary>
-        public static readonly TimeSpan AufbewahrenFuer = TimeSpan.FromDays(90);
 
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
         private readonly TimeProvider _zeit;
@@ -26,7 +24,7 @@ namespace BudoShurenWebsite.Services.Kontakt
         }
 
         /// <summary>
-        /// Trägt eine Nachricht ein (der Zeitpunkt wird hier gesetzt) und leert bei der Gelegenheit abgelaufene Einträge.
+        /// Trägt eine Nachricht ein (der Zeitpunkt wird hier gesetzt). Absender und Nachricht leert später KontaktAufraeumJob.
         /// Wirft nie: ein Fehler im Protokoll darf das Formular nicht stören.
         /// </summary>
         public async Task EintragenAsync(KontaktAnfrage anfrage)
@@ -48,13 +46,6 @@ namespace BudoShurenWebsite.Services.Kontakt
                 await using var kontext = await _dbFactory.CreateDbContextAsync();
                 kontext.KontaktAnfragen.Add(anfrage);
                 await kontext.SaveChangesAsync();
-
-                var grenze = jetzt - AufbewahrenFuer;
-                await kontext.KontaktAnfragen
-                    .Where(a => a.ZeitpunktUtc < grenze && (a.AbsenderEmail != null || a.Nachricht != null))
-                    .ExecuteUpdateAsync(s => s
-                        .SetProperty(a => a.AbsenderEmail, (string?)null)
-                        .SetProperty(a => a.Nachricht, (string?)null));
             }
             catch (Exception ex)
             {

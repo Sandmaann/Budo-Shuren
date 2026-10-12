@@ -42,7 +42,7 @@ namespace BudoShurenWebsite.Services
         /// Greift auf Anfrage und Antwort zu und muss deshalb in der Anfrage selbst laufen, nie in einem Hintergrund-Task:
         /// der HttpContext verträgt keinen gleichzeitigen Zugriff (die Seite setzt währenddessen eigene Header).
         /// </summary>
-        /// <param name="visitorId">Feste Id statt des Cookies (z. B. die E-Mail-Adresse beim Interesse-Formular).</param>
+        /// <param name="visitorId">Feste Id statt des Cookies. Keine personenbezogenen Angaben wie E-Mail-Adressen: Besuche werden nie gelöscht.</param>
         public (bool IstBot, string? VisitorId) BesucherErmitteln(string? visitorId = null)
         {
             try

@@ -143,6 +143,8 @@ namespace BudoShurenWebsite
                 builder.Services.AddSingleton<BudoShurenWebsite.Services.Kontakt.KontaktLimit>();
                 builder.Services.AddSingleton<BudoShurenWebsite.Services.Kontakt.KontaktSchutz>();
                 builder.Services.AddSingleton<BudoShurenWebsite.Services.Kontakt.KontaktProtokoll>();
+                builder.Services.AddSingleton<BudoShurenWebsite.Services.Kontakt.KontaktAufraeumJob>();
+                builder.Services.AddHostedService<BudoShurenWebsite.Services.Kontakt.KontaktAufraeumHostedService>();
 
                 //Health Checks: GET /health (Betrieb) und /health/alle, nur Admins oder mit Systemzustand:Token (siehe Services/Systemzustand)
                 builder.Services.AddSystemzustand(builder.Configuration);

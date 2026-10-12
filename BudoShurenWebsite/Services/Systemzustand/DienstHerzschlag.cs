@@ -26,9 +26,10 @@ namespace BudoShurenWebsite.Services.Systemzustand
         public const string EmailVersand = "Mailversand";
         public const string Veranstaltungen = "Veranstaltungen (Benachrichtigungen, Wartung)";
         public const string BildAufraeumen = "Bilder aufräumen";
+        public const string KontaktAufraeumen = "Kontaktformular aufräumen";
 
         /// <summary>Diese Dienste müssen sich nach dem Start gemeldet haben (gestartet oder abgeschaltet).</summary>
-        public static readonly IReadOnlyList<string> Erwartet = [EmailVersand, Veranstaltungen, BildAufraeumen];
+        public static readonly IReadOnlyList<string> Erwartet = [EmailVersand, Veranstaltungen, BildAufraeumen, KontaktAufraeumen];
 
         private readonly ConcurrentDictionary<string, DienstStand> _staende = new();
         private readonly TimeProvider _zeit;

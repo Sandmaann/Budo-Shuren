@@ -59,27 +59,6 @@ public class KontaktProtokollTests(SqlServerFixture datenbank) : DatenbankTest(d
     }
 
     [DatenbankFact]
-    public async Task Nach_der_Aufbewahrungsfrist_werden_Absender_und_Nachricht_geleert_die_Zeile_bleibt()
-    {
-        await Protokoll.EintragenAsync(Anfrage("Aikido", mails: 1));
-        _zeit.Advance(KontaktProtokoll.AufbewahrenFuer - TimeSpan.FromMinutes(1));
-        await Protokoll.EintragenAsync(Anfrage("Bujinkan", mails: 1));
-
-        (await AlleAsync()).Select(a => a.AbsenderEmail).ShouldBe(["max@example.org", "max@example.org"], "die Frist ist noch nicht um");
-
-        _zeit.Advance(TimeSpan.FromMinutes(2));
-        await Protokoll.EintragenAsync(Anfrage("Genbukan", mails: 1));
-
-        var alle = await AlleAsync();
-        alle.Select(a => a.Abteilung).ShouldBe(["Aikido", "Bujinkan", "Genbukan"]);
-        alle[0].AbsenderEmail.ShouldBeNull();
-        alle[0].Nachricht.ShouldBeNull();
-        alle[0].AnzahlMails.ShouldBe(1);
-        alle[1].AbsenderEmail.ShouldBe("max@example.org");
-        alle[2].Nachricht.ShouldBe("Hallo");
-    }
-
-    [DatenbankFact]
     public async Task Auswertung_zaehlt_je_Abteilung_und_Ablehnungen_je_Grund_nur_im_Zeitraum()
     {
         await Protokoll.EintragenAsync(Anfrage("Aikido", mails: 5)); // vor dem Zeitraum

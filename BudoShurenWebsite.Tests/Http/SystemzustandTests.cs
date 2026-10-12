@@ -71,13 +71,14 @@ public class SystemzustandTests(SqlServerFixture datenbank) : DatenbankTest(date
         json.RootElement.GetProperty("status").GetString().ShouldBe("Degraded");
         json.RootElement.GetProperty("version").GetString().ShouldBe(AppVersion.Text);
         Pruefungen(json).ShouldBe(["Datenbank", "Hintergrunddienste", "Mail-Warteschlange"]);
-        // Alle drei Dienste haben sich beim Start gemeldet, hier als (ungewollt) abgeschaltet
+        // Alle Dienste haben sich beim Start gemeldet, hier als (ungewollt) abgeschaltet
         var dienste = json.RootElement.GetProperty("pruefungen").EnumerateArray()
             .Single(p => p.GetProperty("name").GetString() == "Hintergrunddienste")
             .GetProperty("beschreibung").GetString().ShouldNotBeNull();
         dienste.ShouldContain($"{DienstHerzschlag.EmailVersand}: abgeschaltet (EmailVersand:Aktiviert=false)");
         dienste.ShouldContain($"{DienstHerzschlag.Veranstaltungen}: abgeschaltet (Veranstaltungen:HintergrundJobsAktiviert=false)");
         dienste.ShouldContain($"{DienstHerzschlag.BildAufraeumen}: abgeschaltet (BildAufraeumen:Aktiviert=false)");
+        dienste.ShouldContain($"{DienstHerzschlag.KontaktAufraeumen}: abgeschaltet (Kontaktformular:AufraeumenAktiviert=false)");
     }
 
     [DatenbankFact]
@@ -92,7 +93,7 @@ public class SystemzustandTests(SqlServerFixture datenbank) : DatenbankTest(date
         antwort.StatusCode.ShouldBe(HttpStatusCode.OK);
         using var json = JsonDocument.Parse(await antwort.Content.ReadAsStringAsync(Abbruch));
         Pruefungen(json).ShouldBe(
-            ["Datenbank", "Hintergrunddienste", "Mail-Warteschlange", "Bilder", "Veranstaltungen: Wartung", "Veranstaltungen: Kalender", "Veranstaltungen: Anmeldungen"],
+            ["Datenbank", "Hintergrunddienste", "Mail-Warteschlange", "Bilder", "Kontaktformular", "Veranstaltungen: Wartung", "Veranstaltungen: Kalender", "Veranstaltungen: Anmeldungen"],
             ignoreOrder: true);
     }
 
