@@ -86,6 +86,12 @@ public class KontaktformularTests(SqlServerFixture datenbank) : DatenbankTest(da
         eintrag.Seite.ShouldBe("Bujinkan");
         eintrag.Interaktiv.ShouldBeFalse();
         eintrag.ZeitpunktUtc.ShouldBe(_zeit.GetUtcNow().UtcDateTime);
+
+        // Der Besucherzähler zählt die Nachricht, aber nicht unter der E-Mail-Adresse: Besuche werden nie gelöscht
+        await using var kontext = Datenbank.NeuerKontext();
+        var besuch = (await kontext.Visits.AsNoTracking().Where(v => v.PageName == "InteresseEmail_Bujinkan").ToListAsync(Abbruch)).ShouldHaveSingleItem();
+        besuch.VisitorID.ShouldNotBe(Absender);
+        (await kontext.Visits.AnyAsync(v => v.VisitorID == Absender, Abbruch)).ShouldBeFalse();
     }
 
     [DatenbankFact]
