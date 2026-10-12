@@ -56,6 +56,12 @@ Allgemeine ToDos:
 - mögliche Optimierungen ermitteln (Performance)
 - "Wissens"-Beiträge schreiben (verbessert auch SEO)
 
+Version 2.2.0.1 (Oktober 2026): Nachtrag zum Kontaktformular
+
+- Datenschutzerklärung um den Abschnitt "Kontaktformular" ergänzt
+- Absender und Text im Protokoll werden nach 90 Tagen von einem Hintergrundlauf gelöscht; Prüfung dazu im Systemzustand
+- Der Besucherzähler speichert die E-Mail-Adresse des Absenders nicht mehr
+
 Version 2.2.0.0 (Oktober 2026): Kontaktformular
 
 - Protokoll aller Nachrichten aus dem Kontaktformular; Auswertung auf der Admin-Seite (Zahlen je Abteilung und Zeitraum, Verlauf)
