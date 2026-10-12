@@ -5,7 +5,7 @@ namespace BudoShurenWebsite.Models
 {
     /// <summary>
     /// Protokoll des Kontaktformulars (InteresseFormular): jede abgeschickte Nachricht, auch die als Spam abgelehnten.
-    /// Geschrieben von KontaktProtokoll. Absender und Nachricht werden nach KontaktProtokoll.AufbewahrenFuer geleert,
+    /// Geschrieben von KontaktProtokoll. Absender und Nachricht werden nach KontaktAufraeumJob.AufbewahrenFuer geleert,
     /// die Zeile bleibt für die Auswertung im Adminbereich.
     /// </summary>
     public class KontaktAnfrage

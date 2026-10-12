@@ -49,6 +49,7 @@ namespace BudoShurenWebsite.Services.Systemzustand
                 .AddCheck<HintergrundDiensteCheck>("Hintergrunddienste", tags: [Betrieb])
                 .AddCheck<MailWarteschlangeCheck>("Mail-Warteschlange", tags: [Betrieb], timeout: DatenbankTimeout)
                 .AddCheck<BilderCheck>("Bilder", failureStatus: HealthStatus.Degraded, tags: [Daten], timeout: DatenbankTimeout)
+                .AddCheck<KontaktProtokollCheck>("Kontaktformular", failureStatus: HealthStatus.Degraded, tags: [Daten], timeout: DatenbankTimeout)
                 .AddCheck<VeranstaltungWartungCheck>("Veranstaltungen: Wartung", failureStatus: HealthStatus.Degraded, tags: [Daten], timeout: DatenbankTimeout)
                 .AddCheck<VeranstaltungKalenderCheck>("Veranstaltungen: Kalender", failureStatus: HealthStatus.Degraded, tags: [Daten], timeout: DatenbankTimeout)
                 .AddCheck<VeranstaltungAnmeldungenCheck>("Veranstaltungen: Anmeldungen", failureStatus: HealthStatus.Degraded, tags: [Daten], timeout: DatenbankTimeout);

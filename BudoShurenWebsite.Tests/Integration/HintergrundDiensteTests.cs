@@ -1,5 +1,6 @@
 using BudoShurenWebsite.Data;
 using BudoShurenWebsite.Services;
+using BudoShurenWebsite.Services.Kontakt;
 using BudoShurenWebsite.Services.Mail;
 using BudoShurenWebsite.Services.Systemzustand;
 using BudoShurenWebsite.Services.Veranstaltungen;
@@ -33,8 +34,12 @@ public class HintergrundDiensteTests(SqlServerFixture datenbank) : DatenbankTest
         public ApplicationDbContext CreateDbContext() => throw new InvalidOperationException("Datenbank nicht erreichbar");
     }
 
-    private static IConfiguration Konfiguration(bool bildAufraeumen = true) =>
-        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["BildAufraeumen:Aktiviert"] = bildAufraeumen.ToString() }).Build();
+    private static IConfiguration Konfiguration(bool bildAufraeumen = true, bool kontaktAufraeumen = true) =>
+        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["BildAufraeumen:Aktiviert"] = bildAufraeumen.ToString(),
+            ["Kontaktformular:AufraeumenAktiviert"] = kontaktAufraeumen.ToString()
+        }).Build();
 
     /// <summary>Startet den Dienst, wartet auf den ersten gemeldeten Durchlauf und hält ihn wieder an.</summary>
     private async Task<DienstStand> ErsterDurchlaufAsync(BackgroundService dienst, string name)
@@ -87,6 +92,42 @@ public class HintergrundDiensteTests(SqlServerFixture datenbank) : DatenbankTest
 
         var stand = Herzschlag.Stand(DienstHerzschlag.BildAufraeumen).ShouldNotBeNull();
         stand.Abgeschaltet.ShouldBe("BildAufraeumen:Aktiviert=false");
+        DienstHerzschlag.Bewerten(stand, _zeit.GetUtcNow()).Status.ShouldBe(HealthStatus.Degraded);
+    }
+
+    [DatenbankFact]
+    public async Task Kontaktformular_aufraeumen_meldet_Durchlauf()
+    {
+        var dienst = new KontaktAufraeumHostedService(new KontaktAufraeumJob(new TestKontextFabrik(Datenbank), _zeit), _zeit, Konfiguration(), Herzschlag, NullLogger<KontaktAufraeumHostedService>.Instance);
+
+        var stand = await ErsterDurchlaufAsync(dienst, DienstHerzschlag.KontaktAufraeumen);
+
+        stand.LetzterLaufUtc.ShouldNotBeNull();
+        stand.LetzterLaufOk.ShouldBeTrue();
+        DienstHerzschlag.Bewerten(stand, _zeit.GetUtcNow()).Status.ShouldBe(HealthStatus.Healthy);
+    }
+
+    [DatenbankFact]
+    public async Task Kontaktformular_aufraeumen_meldet_Fehler_und_laeuft_weiter()
+    {
+        var dienst = new KontaktAufraeumHostedService(new KontaktAufraeumJob(new KaputteFabrik(), _zeit), _zeit, Konfiguration(), Herzschlag, NullLogger<KontaktAufraeumHostedService>.Instance);
+
+        var stand = await ErsterDurchlaufAsync(dienst, DienstHerzschlag.KontaktAufraeumen);
+
+        stand.LetzterLaufOk.ShouldBeFalse();
+        DienstHerzschlag.Bewerten(stand, _zeit.GetUtcNow()).Status.ShouldBe(HealthStatus.Degraded);
+    }
+
+    [DatenbankFact]
+    public async Task Kontaktformular_aufraeumen_meldet_sich_abgeschaltet()
+    {
+        var dienst = new KontaktAufraeumHostedService(new KontaktAufraeumJob(new TestKontextFabrik(Datenbank), _zeit), _zeit, Konfiguration(kontaktAufraeumen: false), Herzschlag, NullLogger<KontaktAufraeumHostedService>.Instance);
+
+        await dienst.StartAsync(TestContext.Current.CancellationToken);
+        await (dienst.ExecuteTask ?? Task.CompletedTask);
+
+        var stand = Herzschlag.Stand(DienstHerzschlag.KontaktAufraeumen).ShouldNotBeNull();
+        stand.Abgeschaltet.ShouldBe("Kontaktformular:AufraeumenAktiviert=false");
         DienstHerzschlag.Bewerten(stand, _zeit.GetUtcNow()).Status.ShouldBe(HealthStatus.Degraded);
     }
 
