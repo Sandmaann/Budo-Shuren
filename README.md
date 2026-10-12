@@ -56,6 +56,12 @@ Allgemeine ToDos:
 - mögliche Optimierungen ermitteln (Performance)
 - "Wissens"-Beiträge schreiben (verbessert auch SEO)
 
+Version 2.2.0.0 (Oktober 2026): Kontaktformular
+
+- Protokoll aller Nachrichten aus dem Kontaktformular; Auswertung auf der Admin-Seite (Zahlen je Abteilung und Zeitraum, Verlauf)
+- Besserer Spam-Schutz ohne Captcha: Zeit bis zum Absenden, Inhalt (Links), Anzahl der Nachrichten
+- Die Bestätigung an den Absender enthält den Text der Nachricht nicht mehr
+
 Version 2.1.0.0 (Oktober 2026): Modul "Veranstaltungen"
 
 - Veranstaltungen (ein- und mehrtägig) anlegen, veröffentlichen, absagen; Eintrag im Kalender
